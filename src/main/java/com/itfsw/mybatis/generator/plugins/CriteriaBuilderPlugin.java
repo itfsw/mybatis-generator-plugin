@@ -49,7 +49,6 @@ public class CriteriaBuilderPlugin extends PluginAdapter {
      * @param topLevelClass
      * @param introspectedTable
      * @return
-     * @author hewei
      */
     @Override
     public boolean modelExampleClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -65,7 +64,7 @@ public class CriteriaBuilderPlugin extends PluginAdapter {
             if (!"createCriteriaInternal".equals(method.getName()))
                 continue;
             method.getBodyLines().set(0, "Criteria criteria = new Criteria(this);");
-            logger.info("hw:CriteriaBuilder修改Example的createCriteriaInternal方法，修改构造Criteria时传入Example对象");
+            logger.info("itfsw:CriteriaBuilder修改Example的createCriteriaInternal方法，修改构造Criteria时传入Example对象");
         }
         return true;
     }
@@ -76,7 +75,6 @@ public class CriteriaBuilderPlugin extends PluginAdapter {
      * @param topLevelClass
      * @param innerClass
      * @param introspectedTable
-     * @author hewei
      */
     private void addFactoryMethodToCriteria(TopLevelClass topLevelClass, InnerClass innerClass, IntrospectedTable introspectedTable) {
         Field f = new Field("example", topLevelClass.getType());
@@ -89,7 +87,7 @@ public class CriteriaBuilderPlugin extends PluginAdapter {
             if (method.isConstructor()) {
                 method.addParameter(new Parameter(topLevelClass.getType(), "example"));
                 method.addBodyLine("this.example = example;");
-                logger.info("hw:CriteriaBuilder修改Criteria的构造方法，增加example参数");
+                logger.info("itfsw:CriteriaBuilder修改Criteria的构造方法，增加example参数");
             }
         }
 
@@ -100,6 +98,6 @@ public class CriteriaBuilderPlugin extends PluginAdapter {
         method.addBodyLine("return this.example;");
         CommentTools.addGeneralMethodComment(method, introspectedTable);
         innerClass.addMethod(method);
-        logger.info("hw:CriteriaBuilder增加工厂方法example");
+        logger.info("itfsw:CriteriaBuilder增加工厂方法example");
     }
 }

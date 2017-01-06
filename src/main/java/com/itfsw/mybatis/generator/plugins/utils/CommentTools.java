@@ -39,7 +39,6 @@ public class CommentTools {
      *
      * @param field
      * @param introspectedTable
-     * @author hewei
      */
     public static void addFieldComment(Field field, IntrospectedTable introspectedTable) {
         StringBuilder sb = new StringBuilder();
@@ -61,7 +60,6 @@ public class CommentTools {
      *
      * @param innerClass 类
      * @param introspectedTable 表
-     * @author hewei
      */
     public static void addClassComment(InnerClass innerClass, IntrospectedTable introspectedTable) {
         StringBuilder sb = new StringBuilder();
@@ -81,7 +79,6 @@ public class CommentTools {
      *
      * @param method 方法
      * @param introspectedTable 表
-     * @author hewei
      */
     public static void addGeneralMethodComment(Method method, IntrospectedTable introspectedTable) {
         StringBuilder sb = new StringBuilder();
@@ -100,7 +97,6 @@ public class CommentTools {
      * 生成xml element 注释
      *
      * @param xmlElement the xml element
-     * @author hewei
      */
     public static void addComment(XmlElement xmlElement) {
 
