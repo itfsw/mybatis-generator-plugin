@@ -1,0 +1,162 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.itfsw</groupId>
+    <artifactId>mybatis-generator-plugin</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>mybatis-generator-plugin</name>
+    <description>Mybatis Generator Plugins</description>
+    <url>https://github.com/itfsw/mybatis-generator-plugin</url>
+
+    <!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ license ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++项目properties配置++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <properties>
+        <!-- java version -->
+        <java.version>1.8</java.version>
+        <!-- 构建编码 -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++依赖管理++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <dependencies>
+        <!-- mybatis generator -->
+        <dependency>
+            <groupId>org.mybatis.generator</groupId>
+            <artifactId>mybatis-generator-core</artifactId>
+            <version>1.3.5</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- 日志 -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.22</version>
+        </dependency>
+        <!-- junit -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++profiles++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.0.1</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>2.10.4</version>
+                        <configuration>
+                            <charset>${project.build.sourceEncoding}</charset>
+                            <encoding>${project.build.sourceEncoding}</encoding>
+                            <docencoding>${project.build.sourceEncoding}</docencoding>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- gpg 签名 -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.6</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++build++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <build>
+        <!-- 配置java版本 不配置的话默认父类配置的是1.6-->
+        <pluginManagement>
+            <plugins>
+                <!-- 由于历史原因 maven-compiler只支持编译Java 1.3 所以要自己手动配置其支持1.5 不然跑test的时候不能使用
+				@Test 注解！！ -->
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++developers++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <developers>
+        <developer>
+            <name>hewei</name>
+            <email>hewei@itfsw.com</email>
+            <organization>itfsw</organization>
+            <organizationUrl>http://blog.itfsw.com</organizationUrl>
+        </developer>
+    </developers>
+
+    <!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++scm++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <scm>
+        <connection>
+            scm:git:https://github.com/itfsw/mybatis-generator-plugin.git
+        </connection>
+        <developerConnection>
+            scm:git:https://github.com/itfsw/mybatis-generator-plugin.git
+        </developerConnection>
+        <url>https://github.com/itfsw/mybatis-generator-plugin</url>
+        <tag>v1.0.0</tag>
+    </scm>
+
+    <!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++distribution++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <distributionManagement>
+        <snapshotRepository>
+            <id>sonatype</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>sonatype</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+</project>
