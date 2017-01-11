@@ -8,6 +8,15 @@
 + 数据Model链式构建插件
 + 查询条件链式构建插件
 ---------------------------------------
+Maven引用：  
+```xml
+<dependency>
+  <groupId>com.itfsw</groupId>
+  <artifactId>mybatis-generator-plugin</artifactId>
+  <version>1.0.0</version>
+</dependency>
+```
+---------------------------------------
 ### 1. 查询单条数据插件
 对应表Mapper接口增加了方法  
 插件：
