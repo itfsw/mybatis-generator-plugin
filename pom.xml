@@ -184,6 +184,7 @@
         http://central.sonatype.org/pages/working-with-pgp-signatures.html
         http://www.cnblogs.com/gaoxing/p/4359795.html
         http://blog.csdn.net/ssrc0604hx/article/details/51513414
+        http://www.trinea.cn/dev-tools/upload-java-jar-or-android-aar-to-maven-center-repository/
     -->
     <distributionManagement>
         <snapshotRepository>
