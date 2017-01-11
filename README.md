@@ -1,12 +1,12 @@
 # 这是 MyBatis Generator 插件的拓展插件包
-应该说使用Mybatis就一定离不开[MyBatis Generator](https://github.com/mybatis/generator)这款代码生成插件，而这款插件自身还提供了插件拓展功能用于强化插件本身，官方已经提供了一些拓展插件（[详情](http://www.mybatis.org/generator/reference/plugins.html)），本项目的目的也是通过该插件机制来强化Mybatis Generator本身，方便和减少我们平时的代码开发量。  
+应该说使用Mybatis就一定离不开[MyBatis Generator](https://github.com/mybatis/generator)这款代码生成插件，而这款插件自身还提供了插件拓展功能用于强化插件本身，官方已经提供了一些[拓展插件](http://www.mybatis.org/generator/reference/plugins.html)，本项目的目的也是通过该插件机制来强化Mybatis Generator本身，方便和减少我们平时的代码开发量。  
 因为插件是本人兴之所至所临时发布的项目（本人已近三年未做JAVA开发，代码水平请大家见谅），但基本插件都是在实际项目中经过检验的请大家放心使用，但因为项目目前主要数据库为MySQL，Mybatis实现使用Mapper.xml方式，所以代码生成时对于其他数据库和注解方式的支持未予考虑，请大家见谅。
 ---------------------------------------
 插件列表：  
-+ 查询单条数据插件
-+ MySQL分页插件
-+ 数据Model链式构建插件
-+ 查询条件链式构建插件
+* 查询单条数据插件
+* MySQL分页插件
+* 数据Model链式构建插件
+* 查询条件链式构建插件
 ---------------------------------------
 Maven引用：  
 ```xml
