@@ -69,7 +69,7 @@ public class LimitPlugin extends PluginAdapter {
         rows.setType(integerWrapper);
         CommentTools.addFieldComment(rows, introspectedTable);
         topLevelClass.addField(rows);
-        logger.info("itfsw:分页插件增加Example的offset和rows字段");
+        logger.debug("itfsw:分页插件增加Example的offset和rows字段");
 
         // 增加getter && setter 方法
         Method setOffset = new Method();
@@ -103,7 +103,7 @@ public class LimitPlugin extends PluginAdapter {
         getRows.addBodyLine("return rows;");
         CommentTools.addGeneralMethodComment(getRows, introspectedTable);
         topLevelClass.addMethod(getRows);
-        logger.info("itfsw:分页插件增加Example的offset和rows的getter和setter");
+        logger.debug("itfsw:分页插件增加Example的offset和rows的getter和setter");
 
         // 提供几个快捷方法
         Method setLimit = new Method();
@@ -123,7 +123,7 @@ public class LimitPlugin extends PluginAdapter {
         setLimit2.addBodyLine("this.rows = rows;");
         CommentTools.addGeneralMethodComment(setLimit2, introspectedTable);
         topLevelClass.addMethod(setLimit2);
-        logger.info("itfsw:分页插件增加Example的limit方法");
+        logger.debug("itfsw:分页插件增加Example的limit方法");
 
         Method setPage = new Method();
         setPage.setVisibility(JavaVisibility.PUBLIC);
@@ -134,7 +134,7 @@ public class LimitPlugin extends PluginAdapter {
         setPage.addBodyLine("this.rows = pageSize;");
         CommentTools.addGeneralMethodComment(setPage, introspectedTable);
         topLevelClass.addMethod(setPage);
-        logger.info("itfsw:分页插件增加Example的page方法");
+        logger.debug("itfsw:分页插件增加Example的page方法");
 
         // !!! clear 方法增加 offset 和 rows的清理
         List<Method> methodList = topLevelClass.getMethods();
@@ -142,7 +142,7 @@ public class LimitPlugin extends PluginAdapter {
             if (method.getName().equals("clear")){
                 method.addBodyLine("rows = null;");
                 method.addBodyLine("offset = null;");
-                logger.info("itfsw:分页插件修正Example的clear方法,增加rows和offset字段的清空");
+                logger.debug("itfsw:分页插件修正Example的clear方法,增加rows和offset字段的清空");
             }
         }
 

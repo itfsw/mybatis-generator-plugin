@@ -64,7 +64,7 @@ public class CriteriaBuilderPlugin extends PluginAdapter {
             if (!"createCriteriaInternal".equals(method.getName()))
                 continue;
             method.getBodyLines().set(0, "Criteria criteria = new Criteria(this);");
-            logger.info("itfsw:CriteriaBuilder修改Example的createCriteriaInternal方法，修改构造Criteria时传入Example对象");
+            logger.debug("itfsw:CriteriaBuilder修改Example的createCriteriaInternal方法，修改构造Criteria时传入Example对象");
         }
         return true;
     }
@@ -87,7 +87,7 @@ public class CriteriaBuilderPlugin extends PluginAdapter {
             if (method.isConstructor()) {
                 method.addParameter(new Parameter(topLevelClass.getType(), "example"));
                 method.addBodyLine("this.example = example;");
-                logger.info("itfsw:CriteriaBuilder修改Criteria的构造方法，增加example参数");
+                logger.debug("itfsw:CriteriaBuilder修改Criteria的构造方法，增加example参数");
             }
         }
 
@@ -98,6 +98,6 @@ public class CriteriaBuilderPlugin extends PluginAdapter {
         method.addBodyLine("return this.example;");
         CommentTools.addGeneralMethodComment(method, introspectedTable);
         innerClass.addMethod(method);
-        logger.info("itfsw:CriteriaBuilder增加工厂方法example");
+        logger.debug("itfsw:CriteriaBuilder增加工厂方法example");
     }
 }

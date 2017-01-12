@@ -63,7 +63,7 @@ public class SelectOneByExamplePlugin extends PluginAdapter {
      */
     @Override
     public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        logger.info("itfsw:生成"+interfaze.getType()+"对应SelectOneByExample方法...");
+        logger.debug("itfsw:生成"+interfaze.getType()+"对应SelectOneByExample方法...");
         // 方法生成
         Method method = new Method(METHOD_NAME);
         // 方法可见性
@@ -92,7 +92,7 @@ public class SelectOneByExamplePlugin extends PluginAdapter {
      */
     @Override
     public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
-        logger.info("itfsw:生成表"+introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()+"("+ (introspectedTable.hasBLOBColumns() ? "有" : "无")+"Blob类型)的mapping.xml对应SelectOneByExample方法...");
+        logger.debug("itfsw:生成表"+introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()+"("+ (introspectedTable.hasBLOBColumns() ? "有" : "无")+"Blob类型)的mapping.xml对应SelectOneByExample方法...");
 
         //数据库表名
         String tableName = introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime();
