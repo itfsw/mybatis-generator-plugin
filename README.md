@@ -8,6 +8,7 @@
 * MySQL分页插件
 * 数据Model链式构建插件
 * Example Criteria 增强插件
+* Example 目标包修改插件
   
 ---------------------------------------
 Maven引用：  
@@ -159,4 +160,14 @@ public class Test {
                    .example();
     }
 }
+```
+### 5. Example 目标包修改插件
+Mybatis Generator 插件默认把Model类和Example类都生成到一个包下，这样该包下类就会很多不方便区分，该插件目的就是把Example类独立到一个新包下，方便查看。  
+插件：
+```xml
+<!-- Example 目标包修改插件 -->
+<plugin type="com.itfsw.mybatis.generator.plugins.ExampleTargetPlugin">
+    <!-- 修改Example类生成到目标包下 -->
+    <property name="targetPackage" value="com.itfsw.mybatis.generator.dao.example"/>
+</plugin>
 ```
