@@ -19,6 +19,7 @@ package com.itfsw.mybatis.generator.plugins.utils;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.Field;
 import org.mybatis.generator.api.dom.java.InnerClass;
+import org.mybatis.generator.api.dom.java.Interface;
 import org.mybatis.generator.api.dom.java.Method;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
@@ -111,4 +112,24 @@ public class CommentTools {
 
         xmlElement.addElement(new TextElement("-->")); //$NON-NLS-1$
     }
+
+    /**
+     * 生成通用接口注解
+     *
+     * @param interf 接口
+     * @param introspectedTable 表
+     */
+    public static void addInterfaceComment(Interface interf, IntrospectedTable introspectedTable) {
+        StringBuilder sb = new StringBuilder();
+        interf.addJavaDocLine("/**"); //$NON-NLS-1$
+        interf.addJavaDocLine(" * 这是Mybatis Generator拓展插件生成的接口(请勿删除)."); //$NON-NLS-1$
+        sb.append(" * This class corresponds to the database table "); //$NON-NLS-1$
+        sb.append(introspectedTable.getFullyQualifiedTable());
+        interf.addJavaDocLine(sb.toString());
+        interf.addJavaDocLine(" *");
+        interf.addJavaDocLine(" * "+MergeConstants.NEW_ELEMENT_TAG);
+        interf.addJavaDocLine(" * @author hewei");
+        interf.addJavaDocLine(" */"); //$NON-NLS-1$
+    }
+
 }

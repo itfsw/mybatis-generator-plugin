@@ -17,6 +17,8 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.CommentTools;
+import com.itfsw.mybatis.generator.plugins.utils.InnerInterface;
+import com.itfsw.mybatis.generator.plugins.utils.InnerInterfaceWrapperToInnerClass;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.*;
@@ -55,7 +57,10 @@ public class CriteriaBuilderPlugin extends PluginAdapter {
         List<InnerClass> innerClasses = topLevelClass.getInnerClasses();
         for (InnerClass innerClass : innerClasses) {
             if ("Criteria".equals(innerClass.getType().getShortName())) {
+                // 工厂方法
                 addFactoryMethodToCriteria(topLevelClass, innerClass, introspectedTable);
+                // andIf
+                addAndIfMethodToCriteria(topLevelClass, innerClass, introspectedTable);
             }
         }
 
@@ -99,5 +104,46 @@ public class CriteriaBuilderPlugin extends PluginAdapter {
         CommentTools.addGeneralMethodComment(method, introspectedTable);
         innerClass.addMethod(method);
         logger.debug("itfsw:CriteriaBuilder增加工厂方法example");
+    }
+
+
+    /**
+     * 增强Criteria的链式调用，添加andIf(boolean addIf, CriteriaAdd add)方法，实现链式调用中按条件增加查询语句
+     *
+     * @param topLevelClass
+     * @param innerClass
+     * @param introspectedTable
+     */
+    private void addAndIfMethodToCriteria(TopLevelClass topLevelClass, InnerClass innerClass, IntrospectedTable introspectedTable){
+        // 添加接口CriteriaAdd
+        InnerInterface criteriaAddInterface = new InnerInterface("ICriteriaAdd");
+        criteriaAddInterface.setVisibility(JavaVisibility.PUBLIC);
+        CommentTools.addInterfaceComment(criteriaAddInterface, introspectedTable);
+
+        // ICriteriaAdd增加接口add
+        Method addMethod = new Method("add");
+        addMethod.setReturnType(innerClass.getType());
+        addMethod.addParameter(new Parameter(innerClass.getType(), "add"));
+        CommentTools.addGeneralMethodComment(addMethod, introspectedTable);
+        criteriaAddInterface.addMethod(addMethod);
+        logger.debug("itfsw:Criteria.ICriteriaAdd增加接口add");
+
+        InnerClass innerClassWrapper = new InnerInterfaceWrapperToInnerClass(criteriaAddInterface);
+        innerClass.addInnerClass(innerClassWrapper);
+
+        // 添加andIf方法
+        Method method = new Method("andIf");
+        method.setVisibility(JavaVisibility.PUBLIC);
+        method.setReturnType(innerClass.getType());
+        method.addParameter(new Parameter(FullyQualifiedJavaType.getBooleanPrimitiveInstance(), "ifAdd"));
+        method.addParameter(new Parameter(criteriaAddInterface.getType(), "add"));
+
+        method.addBodyLine("if (ifAdd) {");
+        method.addBodyLine("add.add(this);");
+        method.addBodyLine("}");
+        method.addBodyLine("return this;");
+        CommentTools.addGeneralMethodComment(method, introspectedTable);
+        innerClass.addMethod(method);
+        logger.debug("itfsw:Criteria增加方法andIf");
     }
 }
