@@ -7,7 +7,7 @@
 * 查询单条数据插件
 * MySQL分页插件
 * 数据Model链式构建插件
-* 查询条件链式构建插件
+* Example Criteria 增强插件
   
 ---------------------------------------
 Maven引用：  
@@ -140,18 +140,18 @@ public class Test {
     }
 }
 ```
-### 4. 数据Model链式构建插件
-表Example增加Criteria的快速快速构建方式  
+### 4. Example Criteria 增强插件
+表Example增加Criteria的快速返回example()方法。  
 插件：
 ```xml
-<!-- 查询条件链式构建插件 -->
+<!-- Example Criteria 增强插件 -->
 <plugin type="com.itfsw.mybatis.generator.plugins.CriteriaBuilderPlugin"/>
 ```
 使用：  
 ```java
 public class Test {
     public static void main(String[] args) {
-        // 表Example.Criteria增加了工厂方法example()和链式构建支持，使用后可链式构建查询条件使用example()返回Example对象
+        // 表Example.Criteria增加了工厂方法example()支持，使用后可链式构建查询条件使用example()返回Example对象
         TbExample ex = new TbExample()
                    .createCriteria()
                    .andField1EqualTo(1)
