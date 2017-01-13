@@ -71,6 +71,7 @@ public class BatchInsertPlugin extends PluginAdapter {
     /**
      * Java Client Methods 生成
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     *
      * @param interfaze
      * @param topLevelClass
      * @param introspectedTable
@@ -101,6 +102,7 @@ public class BatchInsertPlugin extends PluginAdapter {
     /**
      * SQL Map Methods 生成
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     *
      * @param document
      * @param introspectedTable
      * @return

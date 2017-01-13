@@ -41,7 +41,7 @@ public class ExampleTargetPlugin extends PluginAdapter {
     public static final String TARGET_PACKAGE_KEY = "targetPackage";  // 配置targetPackage名
     private static final Logger logger = LoggerFactory.getLogger(ExampleTargetPlugin.class);
 
-    private String targetPackage;   // 目标包
+    private static String targetPackage;   // 目标包
 
     /**
      * {@inheritDoc}
