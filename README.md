@@ -4,11 +4,13 @@
   
 ---------------------------------------
 插件列表：  
-* 查询单条数据插件
-* MySQL分页插件
-* 数据Model链式构建插件
-* Example Criteria 增强插件(example,andIf)
-* Example 目标包修改插件
+* 查询单条数据插件（SelectOneByExamplePlugin）
+* MySQL分页插件（LimitPlugin）
+* 数据Model链式构建插件（ModelBuilderPlugin）
+* Example Criteria 增强插件（CriteriaBuilderPlugin）
+* Example 目标包修改插件（ExampleTargetPlugin）
+* 批量插入插件（BatchInsertPlugin）
+* 逻辑删除插件（LogicalDeletePlugin）
   
 ---------------------------------------
 Maven引用：  
@@ -16,7 +18,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.0.2</version>
+  <version>1.0.3</version>
 </dependency>
 ```
 ---------------------------------------
@@ -210,4 +212,85 @@ Mybatis Generator 插件默认把Model类和Example类都生成到一个包下�
     <!-- 修改Example类生成到目标包下 -->
     <property name="targetPackage" value="com.itfsw.mybatis.generator.dao.example"/>
 </plugin>
+```
+### 6. 批量插入插件
+提供了一个批量插入batchInsert方法，因为方法使用了使用了JDBC的getGenereatedKeys方法返回插入主键，所以只能在MYSQL和SQLServer下使用。  
+插件：
+```xml
+<!-- 批量插入插件 -->
+<plugin type="com.itfsw.mybatis.generator.plugins.BatchInsertPlugin"/>
+```
+使用：  
+```java
+public class Test {
+    public static void main(String[] args) {
+        // 构建插入数据
+        List<Tb> list = new ArrayList<>();
+        list.add(new Tb.Builder()
+                .field1(0)
+                .field2("xx0")
+                .field3(0)
+                .field4(new Date())
+                .build()
+        );
+        list.add(new Tb.Builder()
+                .field1(1)
+                .field2("xx1")
+                .field3(1)
+                .field4(new Date())
+                .build()
+        );
+        int inserted = this.tbMapper.batchInsert(list);
+    }
+}
+```
+### 7. 逻辑删除插件
+因为很多实际项目数据都不允许物理删除，多采用逻辑删除，所以单独为逻辑删除做了一个插件，方便使用。  
+插件：
+```xml
+<xml>
+    <!-- 逻辑删除插件 -->
+    <plugin type="com.itfsw.mybatis.generator.plugins.LogicalDeletePlugin">
+        <!-- 这里配置的是全局逻辑删除列和逻辑删除值，当然在table中配置的值会覆盖该全局配置 -->
+        <!-- 逻辑删除列类型只能为数字、字符串或者布尔类型 -->
+        <property name="logicalDeleteColumn" value="del_flag"/>
+        <!-- 未设置该属性或者该属性的值为null或者NULL,逻辑删除时会把该字段置为NULL。 -->
+        <property name="logicalDeleteValue" value="9"/>
+    </plugin>
+    
+    <table tableName="tb">
+        <!-- 这里可以单独表配置逻辑删除列和删除值，覆盖全局配置 -->
+        <property name="logicalDeleteColumn" value="del_flag"/>
+        <property name="logicalDeleteValue" value="1"/>
+    </table>
+</xml>
+```
+使用：  
+```java
+public class Test {
+    public static void main(String[] args) {
+        // 1. 逻辑删除ByExample
+        TbExample ex = new TbExample()
+                .createCriteria()
+                .andField1EqualTo(1)
+                .example();
+        
+        this.tbMapper.logicalDeleteByExample(ex);
+        
+        // 2. 逻辑删除ByPrimaryKey
+        this.tbMapper.logicalDeleteByPrimaryKey(1L);
+        
+        // 3. 同时Example中提供了一个快捷方法来过滤逻辑删除数据
+        TbExample selEx = new TbExample()
+                .createCriteria()
+                .andField1EqualTo(1)
+                // 新增了一个andDeleted方法过滤逻辑删除数据
+                .andDeleted(true)
+                // 当然也可直接使用逻辑删除列的查询方法，我们数据Model中定义了一个逻辑删除常量DEL_FLAG
+                .andDelFlagEqualTo(Tb.DEL_FLAG)
+                .example();
+        
+        List<Tb> list = this.tbMapper.selectByExample(selEx);
+    }
+}
 ```
