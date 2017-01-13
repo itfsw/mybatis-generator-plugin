@@ -23,6 +23,7 @@ import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
+import org.mybatis.generator.internal.util.StringUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +44,16 @@ public class LimitPlugin extends PluginAdapter {
      */
     @Override
     public boolean validate(List<String> warnings) {
+        // 插件使用前提是targetRuntime为MyBatis3
+        if (StringUtility.stringHasValue(getContext().getTargetRuntime()) && "MyBatis3".equalsIgnoreCase(getContext().getTargetRuntime()) == false ){
+            logger.warn("itfsw:插件"+this.getClass().getTypeName()+"要求运行targetRuntime必须为MyBatis3！");
+            return false;
+        }
+        // 该插件只支持MYSQL
+        if ("com.mysql.jdbc.Driver".equalsIgnoreCase(this.getContext().getJdbcConnectionConfiguration().getDriverClass()) == false){
+            logger.warn("itfsw:插件"+this.getClass().getTypeName()+"只支持MySQL数据库！");
+            return false;
+        }
         return true;
     }
 

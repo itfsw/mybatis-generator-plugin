@@ -17,13 +17,24 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.CommentTools;
+import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
+import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
+import org.mybatis.generator.api.dom.OutputUtilities;
 import org.mybatis.generator.api.dom.java.*;
+import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.Document;
+import org.mybatis.generator.api.dom.xml.TextElement;
+import org.mybatis.generator.api.dom.xml.XmlElement;
+import org.mybatis.generator.codegen.mybatis3.ListUtilities;
+import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
+import org.mybatis.generator.config.GeneratedKey;
+import org.mybatis.generator.internal.util.StringUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -38,18 +49,23 @@ public class BatchInsertPlugin extends PluginAdapter {
     private static final Logger logger = LoggerFactory.getLogger(BatchInsertPlugin.class);
     public static final String METHOD_BATCH_INSERT = "batchInsert";  // 方法名
     public static final String METHOD_BATCH_INSERT_SELECTIVE = "batchInsertSelective";  // 方法名
+
     /**
      * {@inheritDoc}
      */
     @Override
     public boolean validate(List<String> warnings) {
+        // 插件使用前提是targetRuntime为MyBatis3
+        if (StringUtility.stringHasValue(getContext().getTargetRuntime()) && "MyBatis3".equalsIgnoreCase(getContext().getTargetRuntime()) == false) {
+            logger.warn("itfsw:插件" + this.getClass().getTypeName() + "要求运行targetRuntime必须为MyBatis3！");
+            return false;
+        }
         return true;
     }
 
     /**
      * Java Client Methods 生成
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     *
      * @param interfaze
      * @param topLevelClass
      * @param introspectedTable
@@ -57,7 +73,7 @@ public class BatchInsertPlugin extends PluginAdapter {
      */
     @Override
     public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        logger.debug("itfsw:生成"+interfaze.getType()+"对应batchInsert方法...");
+        logger.debug("itfsw:生成" + interfaze.getType() + "对应batchInsert方法...");
         // 方法生成
         Method method = new Method(METHOD_BATCH_INSERT);
         // 方法可见性 interface会忽略
@@ -74,36 +90,110 @@ public class BatchInsertPlugin extends PluginAdapter {
         // interface 增加方法
         interfaze.addMethod(method);
 
-        logger.debug("itfsw:生成"+interfaze.getType()+"对应batchInsertSelective方法...");
-        // 方法生成
-        Method method1 = new Method(METHOD_BATCH_INSERT_SELECTIVE);
-        // 方法可见性 interface会忽略
-        // method1.setVisibility(JavaVisibility.PUBLIC);
-        // 返回值类型
-        method1.setReturnType(FullyQualifiedJavaType.getIntInstance());
-        // 添加参数
-        FullyQualifiedJavaType type1 = FullyQualifiedJavaType.getNewListInstance();
-        type1.addTypeArgument(interfaze.getType());
-        method1.addParameter(new Parameter(type1, "list", "@Param(\"list\")"));
-        // 添加方法说明
-        CommentTools.addGeneralMethodComment(method1, introspectedTable);
-
-        // interface 增加方法
-        interfaze.addMethod(method1);
-
         return true;
     }
 
     /**
      * SQL Map Methods 生成
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     *
      * @param document
      * @param introspectedTable
      * @return
      */
     @Override
     public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
+        // batchInsert
+        this.generatorBatchInsertXml(document, introspectedTable);
         return true;
+    }
+
+    /**
+     * 生成BatchInsert对应的xml
+     * @param document
+     * @param introspectedTable
+     */
+    private void generatorBatchInsertXml(Document document, IntrospectedTable introspectedTable) {
+        XmlElement element = new XmlElement("insert"); //$NON-NLS-1$
+
+        element.addAttribute(new Attribute("id", METHOD_BATCH_INSERT)); //$NON-NLS-1$
+
+        // 参数类型
+        element.addAttribute(new Attribute("parameterType", FullyQualifiedJavaType.getNewListInstance().getFullyQualifiedName()));
+
+        // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
+        CommentTools.addComment(element);
+
+        GeneratedKey gk = introspectedTable.getGeneratedKey();
+        if (gk != null) {
+            IntrospectedColumn introspectedColumn = introspectedTable.getColumn(gk.getColumn());
+            // if the column is null, then it's a configuration error. The
+            // warning has already been reported
+            if (introspectedColumn != null) {
+                if (gk.isJdbcStandard()) {
+                    element.addAttribute(new Attribute("useGeneratedKeys", "true")); //$NON-NLS-1$ //$NON-NLS-2$
+                    element.addAttribute(new Attribute("keyProperty", introspectedColumn.getJavaProperty())); //$NON-NLS-1$
+                    element.addAttribute(new Attribute("keyColumn", introspectedColumn.getActualColumnName())); //$NON-NLS-1$
+                } else {
+                    element.addElement(XmlElementGeneratorTools.getSelectKey(introspectedColumn, gk));
+                }
+            }
+        }
+
+        StringBuilder insertClause = new StringBuilder();
+        StringBuilder valuesClause = new StringBuilder();
+
+        insertClause.append("insert into "); //$NON-NLS-1$
+        insertClause.append(introspectedTable.getFullyQualifiedTableNameAtRuntime());
+        insertClause.append(" ("); //$NON-NLS-1$
+
+        valuesClause.append(" ("); //$NON-NLS-1$
+
+        List<String> valuesClauses = new ArrayList<String>();
+        List<IntrospectedColumn> columns = ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns());
+        for (int i = 0; i < columns.size(); i++) {
+            IntrospectedColumn introspectedColumn = columns.get(i);
+
+            insertClause.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
+            valuesClause.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
+            if (i + 1 < columns.size()) {
+                insertClause.append(", "); //$NON-NLS-1$
+                valuesClause.append(", "); //$NON-NLS-1$
+            }
+
+            if (valuesClause.length() > 80) {
+                element.addElement(new TextElement(insertClause.toString()));
+                insertClause.setLength(0);
+                OutputUtilities.xmlIndent(insertClause, 1);
+
+                valuesClauses.add(valuesClause.toString());
+                valuesClause.setLength(0);
+                OutputUtilities.xmlIndent(valuesClause, 1);
+            }
+        }
+
+        insertClause.append(')');
+        element.addElement(new TextElement(insertClause.toString()));
+
+        valuesClause.append(')');
+        valuesClauses.add(valuesClause.toString());
+
+
+        // 添加foreach节点
+        XmlElement foreachElement = new XmlElement("foreach");
+        foreachElement.addAttribute(new Attribute("collection", "list"));
+        foreachElement.addAttribute(new Attribute("item", "item"));
+        foreachElement.addAttribute(new Attribute("separator", ","));
+
+        for (String clause : valuesClauses) {
+            foreachElement.addElement(new TextElement(clause));
+        }
+
+        // values 构建
+        element.addElement(new TextElement("values"));
+        element.addElement(foreachElement);
+
+        if (context.getPlugins().sqlMapInsertElementGenerated(element, introspectedTable)) {
+            document.getRootElement().addElement(element);
+        }
     }
 }

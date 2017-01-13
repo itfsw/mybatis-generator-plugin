@@ -22,6 +22,7 @@ import com.itfsw.mybatis.generator.plugins.utils.InnerInterfaceWrapperToInnerCla
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.*;
+import org.mybatis.generator.internal.util.StringUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +43,11 @@ public class CriteriaBuilderPlugin extends PluginAdapter {
      */
     @Override
     public boolean validate(List<String> warnings) {
+        // 插件使用前提是targetRuntime为MyBatis3
+        if (StringUtility.stringHasValue(getContext().getTargetRuntime()) && "MyBatis3".equalsIgnoreCase(getContext().getTargetRuntime()) == false ){
+            logger.warn("itfsw:插件"+this.getClass().getTypeName()+"要求运行targetRuntime必须为MyBatis3！");
+            return false;
+        }
         return true;
     }
 
