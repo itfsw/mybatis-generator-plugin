@@ -17,11 +17,9 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.CommentTools;
-import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
-import org.mybatis.generator.api.dom.OutputUtilities;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.Document;
@@ -60,6 +58,13 @@ public class BatchInsertPlugin extends PluginAdapter {
             logger.warn("itfsw:插件" + this.getClass().getTypeName() + "要求运行targetRuntime必须为MyBatis3！");
             return false;
         }
+        // 插件使用前提是数据库为MySQL或者SQLserver，因为返回主键使用了JDBC的getGenereatedKeys方法获取主键
+        if ("com.mysql.jdbc.Driver".equalsIgnoreCase(this.getContext().getJdbcConnectionConfiguration().getDriverClass()) == false
+                && "com.microsoft.jdbc.sqlserver.SQLServer".equalsIgnoreCase(this.getContext().getJdbcConnectionConfiguration().getDriverClass()) == false
+                && "com.microsoft.sqlserver.jdbc.SQLServerDriver".equalsIgnoreCase(this.getContext().getJdbcConnectionConfiguration().getDriverClass()) == false){
+            logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件使用前提是数据库为MySQL或者SQLserver，因为返回主键使用了JDBC的getGenereatedKeys方法获取主键！");
+            return false;
+        }
         return true;
     }
 
@@ -82,7 +87,7 @@ public class BatchInsertPlugin extends PluginAdapter {
         method.setReturnType(FullyQualifiedJavaType.getIntInstance());
         // 添加参数
         FullyQualifiedJavaType type = FullyQualifiedJavaType.getNewListInstance();
-        type.addTypeArgument(interfaze.getType());
+        type.addTypeArgument(introspectedTable.getRules().calculateAllFieldsClass());
         method.addParameter(new Parameter(type, "list", "@Param(\"list\")"));
         // 添加方法说明
         CommentTools.addGeneralMethodComment(method, introspectedTable);
@@ -129,13 +134,10 @@ public class BatchInsertPlugin extends PluginAdapter {
             // if the column is null, then it's a configuration error. The
             // warning has already been reported
             if (introspectedColumn != null) {
-                if (gk.isJdbcStandard()) {
-                    element.addAttribute(new Attribute("useGeneratedKeys", "true")); //$NON-NLS-1$ //$NON-NLS-2$
-                    element.addAttribute(new Attribute("keyProperty", introspectedColumn.getJavaProperty())); //$NON-NLS-1$
-                    element.addAttribute(new Attribute("keyColumn", introspectedColumn.getActualColumnName())); //$NON-NLS-1$
-                } else {
-                    element.addElement(XmlElementGeneratorTools.getSelectKey(introspectedColumn, gk));
-                }
+                // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
+                element.addAttribute(new Attribute("useGeneratedKeys", "true")); //$NON-NLS-1$ //$NON-NLS-2$
+                element.addAttribute(new Attribute("keyProperty", introspectedColumn.getJavaProperty())); //$NON-NLS-1$
+                element.addAttribute(new Attribute("keyColumn", introspectedColumn.getActualColumnName())); //$NON-NLS-1$
             }
         }
 
@@ -154,20 +156,12 @@ public class BatchInsertPlugin extends PluginAdapter {
             IntrospectedColumn introspectedColumn = columns.get(i);
 
             insertClause.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
-            valuesClause.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
+
+            // 生成foreach下插入values
+            valuesClause.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, "item."));
             if (i + 1 < columns.size()) {
                 insertClause.append(", "); //$NON-NLS-1$
                 valuesClause.append(", "); //$NON-NLS-1$
-            }
-
-            if (valuesClause.length() > 80) {
-                element.addElement(new TextElement(insertClause.toString()));
-                insertClause.setLength(0);
-                OutputUtilities.xmlIndent(insertClause, 1);
-
-                valuesClauses.add(valuesClause.toString());
-                valuesClause.setLength(0);
-                OutputUtilities.xmlIndent(valuesClause, 1);
             }
         }
 
