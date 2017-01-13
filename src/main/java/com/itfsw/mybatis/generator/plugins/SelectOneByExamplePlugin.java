@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014.
+ * Copyright (c) 2017.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,8 +66,8 @@ public class SelectOneByExamplePlugin extends PluginAdapter {
         logger.debug("itfsw:生成"+interfaze.getType()+"对应SelectOneByExample方法...");
         // 方法生成
         Method method = new Method(METHOD_NAME);
-        // 方法可见性
-        method.setVisibility(JavaVisibility.PUBLIC);
+        // 方法可见性 interface会忽略
+        // method.setVisibility(JavaVisibility.PUBLIC);
         // 返回值类型
         FullyQualifiedJavaType returnType = introspectedTable.getRules().calculateAllFieldsClass();
         method.setReturnType(returnType);

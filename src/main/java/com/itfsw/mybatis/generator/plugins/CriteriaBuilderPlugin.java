@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014.
+ * Copyright (c) 2017.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,6 +40,7 @@ public class CriteriaBuilderPlugin extends PluginAdapter {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean validate(List<String> warnings) {
         return true;
     }
