@@ -18,7 +18,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.0.3</version>
+  <version>1.0.4</version>
 </dependency>
 ```
 ---------------------------------------
@@ -124,6 +124,19 @@ public class TbExample {
         offset = null;
     }
 }
+public class Test {
+    public static void main(String[] args) {
+        this.tbMapper.selectByExample(
+                new TbExample()
+                .createCriteria()
+                .andField1GreaterThan(1)
+                .example()
+                .limit(10)  // 查询前10条
+                .limit(10, 10)  // 查询10~20条
+                .page(1, 10)    // 查询第2页数据（每页10条）
+        );
+    }
+}
 ```
 ### 3. 数据Model链式构建插件
 这个是仿jquery的链式调用强化了表的Model的赋值操作  
@@ -184,26 +197,42 @@ public class Test {
         this.tbMapper.selectByExample(oldEx);
 
         // new
-        TbExample newEx;
-        newEx = new TbExample()
+        this.tbMapper.selectByExample(
+                new TbExample()
+                        .createCriteria()
+                        .andField1EqualTo(1)
+                        .andField2EqualTo("xxx")
+                        // 如果随机数大于0.5，附加Field3查询条件
+                        .andIf(Math.random() > 0.5, new TbExample.Criteria.ICriteriaAdd() {
+                            @Override
+                            public TbExample.Criteria add(TbExample.Criteria add) {
+                                return add.andField3EqualTo(2)
+                                        .andField4EqualTo(new Date());
+                            }
+                        })
+                        // 当然最简洁的写法是采用java8的Lambda表达式，当然你的项目是Java8+
+                        .andIf(Math.random() > 0.5, add -> add
+                                .andField3EqualTo(2)
+                                .andField4EqualTo(new Date())
+                        )
+                        .example()
+        );
+        
+        // -----------------------------------orderBy-----------------------------------
+        // old
+        TbExample ex = new TbExample();
+        ex.createCriteria().andField1GreaterThan(1);
+        ex.setOrderByClause("field1 DESC");
+        this.tbMapper.selectByExample(ex);
+
+        // new
+        this.tbMapper.selectByExample(
+                new TbExample()
                 .createCriteria()
-                .andField1EqualTo(1)
-                .andField2EqualTo("xxx")
-                // 如果随机数大于0.5，附加Field3查询条件
-                .andIf(Math.random() > 0.5, new TbExample.Criteria.CriteriaAdd() {
-                    @Override
-                    public TbExample.Criteria add(TbExample.Criteria add) {
-                        return add.andField3EqualTo(2)
-                                .andField4EqualTo(new Date());
-                    }
-                })
-                // 当然最简洁的写法是采用java8的Lambda表达式，当然你的项目是Java8+
-                .andIf(Math.random() > 0.5, add -> add
-                        .andField3EqualTo(2)
-                        .andField4EqualTo(new Date())
-                )
-                .example();
-        this.tbMapper.selectByExample(newEx);
+                .andField1GreaterThan(1)
+                .example()
+                .orderBy("field1 DESC")
+        );
     }
 }
 ```
