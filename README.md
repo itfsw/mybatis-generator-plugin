@@ -43,7 +43,7 @@ public interface TbMapper {
 }
 ```
 ### 2. MySQL分页插件
-对应表Example类增加了方法  
+对应表Example类增加了Mysql分页方法，limit(Integer rows)、limit(Integer offset, Integer rows)和page(Integer page, Integer pageSize)  
 插件：
 ```xml
 <!-- MySQL分页插件 -->
@@ -76,8 +76,9 @@ public class TbExample {
      * @mbg.generated
      * @author hewei
      */
-    public void limit(Integer rows) {
+    public TbExample limit(Integer rows) {
         this.rows = rows;
+        return this;
     }
 
     /**
@@ -87,9 +88,10 @@ public class TbExample {
      * @mbg.generated
      * @author hewei
      */
-    public void limit(Integer offset, Integer rows) {
+    public TbExample limit(Integer offset, Integer rows) {
         this.offset = offset;
         this.rows = rows;
+        return this;
     }
 
     /**
@@ -99,9 +101,10 @@ public class TbExample {
      * @mbg.generated
      * @author hewei
      */
-    public void page(Integer page, Integer pageSize) {
+    public TbExample page(Integer page, Integer pageSize) {
         this.offset = page * pageSize;
         this.rows = pageSize;
+        return this;
     }
     
     // offset 和 rows 的getter&setter

@@ -121,30 +121,36 @@ public class LimitPlugin extends PluginAdapter {
         // 提供几个快捷方法
         Method setLimit = new Method();
         setLimit.setVisibility(JavaVisibility.PUBLIC);
+        setLimit.setReturnType(topLevelClass.getType());
         setLimit.setName("limit");
         setLimit.addParameter(new Parameter(integerWrapper, "rows"));
         setLimit.addBodyLine("this.rows = rows;");
+        setLimit.addBodyLine("return this;");
         CommentTools.addGeneralMethodComment(setLimit, introspectedTable);
         topLevelClass.addMethod(setLimit);
 
         Method setLimit2 = new Method();
         setLimit2.setVisibility(JavaVisibility.PUBLIC);
+        setLimit2.setReturnType(topLevelClass.getType());
         setLimit2.setName("limit");
         setLimit2.addParameter(new Parameter(integerWrapper, "offset"));
         setLimit2.addParameter(new Parameter(integerWrapper, "rows"));
         setLimit2.addBodyLine("this.offset = offset;");
         setLimit2.addBodyLine("this.rows = rows;");
+        setLimit2.addBodyLine("return this;");
         CommentTools.addGeneralMethodComment(setLimit2, introspectedTable);
         topLevelClass.addMethod(setLimit2);
         logger.debug("itfsw:分页插件增加Example的limit方法");
 
         Method setPage = new Method();
         setPage.setVisibility(JavaVisibility.PUBLIC);
+        setPage.setReturnType(topLevelClass.getType());
         setPage.setName("page");
         setPage.addParameter(new Parameter(integerWrapper, "page"));
         setPage.addParameter(new Parameter(integerWrapper, "pageSize"));
         setPage.addBodyLine("this.offset = page * pageSize;");
         setPage.addBodyLine("this.rows = pageSize;");
+        setPage.addBodyLine("return this;");
         CommentTools.addGeneralMethodComment(setPage, introspectedTable);
         topLevelClass.addMethod(setPage);
         logger.debug("itfsw:分页插件增加Example的page方法");
