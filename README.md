@@ -260,21 +260,23 @@ public class Test {
     public static void main(String[] args) {
         // 构建插入数据
         List<Tb> list = new ArrayList<>();
-        list.add(new Tb.Builder()
+        list.add(
+                new Tb.Builder()
                 .field1(0)
                 .field2("xx0")
                 .field3(0)
                 .field4(new Date())
                 .build()
         );
-        list.add(new Tb.Builder()
+        list.add(
+                new Tb.Builder()
                 .field1(1)
                 .field2("xx1")
                 .field3(1)
                 .field4(new Date())
                 .build()
         );
-        int inserted = this.tbMapper.batchInsert(list);
+        this.tbMapper.batchInsert(list);
     }
 }
 ```
@@ -304,27 +306,27 @@ public class Test {
 public class Test {
     public static void main(String[] args) {
         // 1. 逻辑删除ByExample
-        TbExample ex = new TbExample()
+        this.tbMapper.logicalDeleteByExample(
+                new TbExample()
                 .createCriteria()
                 .andField1EqualTo(1)
-                .example();
-        
-        this.tbMapper.logicalDeleteByExample(ex);
-        
+                .example()
+        );
+
         // 2. 逻辑删除ByPrimaryKey
         this.tbMapper.logicalDeleteByPrimaryKey(1L);
-        
+
         // 3. 同时Example中提供了一个快捷方法来过滤逻辑删除数据
-        TbExample selEx = new TbExample()
+        this.tbMapper.selectByExample(
+                new TbExample()
                 .createCriteria()
                 .andField1EqualTo(1)
                 // 新增了一个andDeleted方法过滤逻辑删除数据
                 .andDeleted(true)
                 // 当然也可直接使用逻辑删除列的查询方法，我们数据Model中定义了一个逻辑删除常量DEL_FLAG
                 .andDelFlagEqualTo(Tb.DEL_FLAG)
-                .example();
-        
-        List<Tb> list = this.tbMapper.selectByExample(selEx);
+                .example()
+        );
     }
 }
 ```
