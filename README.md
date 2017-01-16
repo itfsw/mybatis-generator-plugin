@@ -174,12 +174,13 @@ public class Test {
     public static void main(String[] args) {
         // -----------------------------------example-----------------------------------
         // 表Example.Criteria增加了工厂方法example()支持，使用后可链式构建查询条件使用example()返回Example对象
-        TbExample ex = new TbExample()
-                    .createCriteria()
-                    .andField1EqualTo(1)
-                    .andField2EqualTo("xxx")
-                    .example();
-        this.tbMapper.selectByExample(ex);
+        this.tbMapper.selectByExample(
+                new TbExample()
+                .createCriteria()
+                .andField1EqualTo(1)
+                .andField2EqualTo("xxx")
+                .example()
+        );
         
         // -----------------------------------andIf-----------------------------------
         // Criteria增强了链式调用，现在一些按条件增加的查询条件不会打乱链式调用了
@@ -199,23 +200,23 @@ public class Test {
         // new
         this.tbMapper.selectByExample(
                 new TbExample()
-                        .createCriteria()
-                        .andField1EqualTo(1)
-                        .andField2EqualTo("xxx")
-                        // 如果随机数大于0.5，附加Field3查询条件
-                        .andIf(Math.random() > 0.5, new TbExample.Criteria.ICriteriaAdd() {
-                            @Override
-                            public TbExample.Criteria add(TbExample.Criteria add) {
-                                return add.andField3EqualTo(2)
-                                        .andField4EqualTo(new Date());
-                            }
-                        })
-                        // 当然最简洁的写法是采用java8的Lambda表达式，当然你的项目是Java8+
-                        .andIf(Math.random() > 0.5, add -> add
-                                .andField3EqualTo(2)
-                                .andField4EqualTo(new Date())
-                        )
-                        .example()
+                .createCriteria()
+                .andField1EqualTo(1)
+                .andField2EqualTo("xxx")
+                // 如果随机数大于0.5，附加Field3查询条件
+                .andIf(Math.random() > 0.5, new TbExample.Criteria.ICriteriaAdd() {
+                    @Override
+                    public TbExample.Criteria add(TbExample.Criteria add) {
+                        return add.andField3EqualTo(2)
+                                .andField4EqualTo(new Date());
+                    }
+                })
+                // 当然最简洁的写法是采用java8的Lambda表达式，当然你的项目是Java8+
+                .andIf(Math.random() > 0.5, add -> add
+                        .andField3EqualTo(2)
+                        .andField4EqualTo(new Date())
+                )
+                .example()
         );
         
         // -----------------------------------orderBy-----------------------------------
