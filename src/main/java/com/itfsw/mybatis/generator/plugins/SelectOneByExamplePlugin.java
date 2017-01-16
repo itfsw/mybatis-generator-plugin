@@ -69,7 +69,6 @@ public class SelectOneByExamplePlugin extends PluginAdapter {
      */
     @Override
     public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        logger.debug("itfsw:生成"+interfaze.getType()+"对应SelectOneByExample方法...");
         // 方法生成
         Method method = new Method(METHOD_NAME);
         // 方法可见性 interface会忽略
@@ -85,6 +84,7 @@ public class SelectOneByExamplePlugin extends PluginAdapter {
 
         // interface 增加方法
         interfaze.addMethod(method);
+        logger.debug("itfsw(查询单条数据插件):"+interfaze.getType().getShortName()+"增加SelectOneByExample方法。");
         return true;
     }
 
@@ -98,8 +98,6 @@ public class SelectOneByExamplePlugin extends PluginAdapter {
      */
     @Override
     public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
-        logger.debug("itfsw:生成表"+introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()+"("+ (introspectedTable.hasBLOBColumns() ? "有" : "无")+"Blob类型)的mapping.xml对应SelectOneByExample方法...");
-
         //数据库表名
         String tableName = introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime();
 
@@ -178,6 +176,7 @@ public class SelectOneByExamplePlugin extends PluginAdapter {
 
         // 添加到根节点
         document.getRootElement().addElement(selectOneElement);
+        logger.debug("itfsw(查询单条数据插件):"+introspectedTable.getMyBatis3XmlMapperFileName()+"增加SelectOneByExample方法("+(introspectedTable.hasBLOBColumns() ? "有" : "无")+"Blob类型))。");
 
         return true;
     }

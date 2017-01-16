@@ -70,7 +70,7 @@ public class ModelBuilderPlugin extends PluginAdapter {
         innerClass.setVisibility(JavaVisibility.PUBLIC);
         innerClass.setStatic(true);
         CommentTools.addClassComment(innerClass, introspectedTable);
-        logger.debug("itfsw:生成内部Builder类");
+        logger.debug("itfsw(数据Model链式构建插件):"+topLevelClass.getType().getShortName()+"增加内部Builder类。");
 
         // 构建内部obj变量
         Field f = new Field("obj", topLevelClass.getType());
@@ -84,7 +84,7 @@ public class ModelBuilderPlugin extends PluginAdapter {
         constructor.addBodyLine(new StringBuilder("this.obj = new ")
                 .append(topLevelClass.getType().getShortName()).append("();").toString());
         innerClass.addMethod(constructor);
-        logger.debug("itfsw:生成内部Builder类构造方法");
+        logger.debug("itfsw(数据Model链式构建插件):"+topLevelClass.getType().getShortName()+".Builder增加的构造方法。");
 
         // ！！可能Model存在复合主键情况，字段要加上这些
         if (topLevelClass.getSuperClass() != null && topLevelClass.getSuperClass().compareTo(new FullyQualifiedJavaType(introspectedTable.getPrimaryKeyType())) == 0){
@@ -101,7 +101,7 @@ public class ModelBuilderPlugin extends PluginAdapter {
                 method.addBodyLine(new StringBuilder().append("return this;").toString());
                 CommentTools.addGeneralMethodComment(method, introspectedTable);
                 innerClass.addMethod(method);
-                logger.debug("itfsw:生成内部Builder类的复合主键字段对应方法"+field.getName());
+                logger.debug("itfsw(数据Model链式构建插件):"+topLevelClass.getType().getShortName()+".Builder增加"+method.getName()+"方法(复合主键)。");
             }
         }
 
@@ -119,7 +119,7 @@ public class ModelBuilderPlugin extends PluginAdapter {
             method.addBodyLine(new StringBuilder().append("return this;").toString());
             CommentTools.addGeneralMethodComment(method, introspectedTable);
             innerClass.addMethod(method);
-            logger.debug("itfsw:生成内部Builder类的普通字段对应方法"+field.getName());
+            logger.debug("itfsw(数据Model链式构建插件):"+topLevelClass.getType().getShortName()+".Builder增加"+method.getName()+"方法。");
         }
 
         Method build = new Method("build");
@@ -128,7 +128,7 @@ public class ModelBuilderPlugin extends PluginAdapter {
         build.addBodyLine("return this.obj;");
         CommentTools.addGeneralMethodComment(build, introspectedTable);
         innerClass.addMethod(build);
-        logger.debug("itfsw:生成内部Builder类的build方法");
+        logger.debug("itfsw(数据Model链式构建插件):"+topLevelClass.getType().getShortName()+".Builder增加build方法。");
 
         topLevelClass.addInnerClass(innerClass);
         return true;

@@ -16,6 +16,11 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+
 /**
  * ---------------------------------------------------------------------------
  * 增加Criteria Builder方法
@@ -26,5 +31,14 @@ package com.itfsw.mybatis.generator.plugins;
  */
 @Deprecated
 public class CriteriaBuilderPlugin extends ExampleEnhancedPlugin{
+    private static final Logger logger = LoggerFactory.getLogger(CriteriaBuilderPlugin.class);
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean validate(List<String> warnings) {
+        logger.warn("itfsw:插件"+this.getClass().getTypeName()+"插件已经过时，请使用com.itfsw.mybatis.generator.plugins.ExampleEnhancedPlugin插件替换！");
+        return super.validate(warnings);
+    }
 }

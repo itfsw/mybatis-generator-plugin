@@ -79,7 +79,6 @@ public class BatchInsertPlugin extends PluginAdapter {
      */
     @Override
     public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        logger.debug("itfsw:生成" + interfaze.getType() + "对应batchInsert方法...");
         // 方法生成
         Method method = new Method(METHOD_BATCH_INSERT);
         // 方法可见性 interface会忽略
@@ -95,6 +94,7 @@ public class BatchInsertPlugin extends PluginAdapter {
 
         // interface 增加方法
         interfaze.addMethod(method);
+        logger.debug("itfsw(批量插入插件):" + interfaze.getType().getShortName() + "增加batchInsert方法。");
 
         return true;
     }
@@ -190,6 +190,7 @@ public class BatchInsertPlugin extends PluginAdapter {
 
         if (context.getPlugins().sqlMapInsertElementGenerated(element, introspectedTable)) {
             document.getRootElement().addElement(element);
+            logger.debug("itfsw(批量插入插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加batchInsert实现方法。");
         }
     }
 }

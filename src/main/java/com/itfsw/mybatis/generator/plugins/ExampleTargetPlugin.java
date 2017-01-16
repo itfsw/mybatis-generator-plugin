@@ -80,7 +80,7 @@ public class ExampleTargetPlugin extends PluginAdapter {
 
         introspectedTable.setExampleType(newExampleType);
 
-        logger.debug("itfsw:修改"+exampleType+"的包到"+this.targetPackage);
+        logger.debug("itfsw(Example 目标包修改插件):修改"+introspectedTable.getExampleType()+"的包到"+this.targetPackage);
     }
 
 }

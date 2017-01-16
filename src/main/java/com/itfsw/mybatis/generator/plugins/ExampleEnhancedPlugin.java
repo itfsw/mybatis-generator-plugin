@@ -21,7 +21,7 @@ import java.util.List;
  * ---------------------------------------------------------------------------
  */
 public class ExampleEnhancedPlugin  extends PluginAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(CriteriaBuilderPlugin.class);
+    private static final Logger logger = LoggerFactory.getLogger(ExampleEnhancedPlugin.class);
     /**
      * {@inheritDoc}
      */
