@@ -60,8 +60,12 @@ public class ExampleEnhancedPlugin  extends PluginAdapter {
             if (!"createCriteriaInternal".equals(method.getName()))
                 continue;
             method.getBodyLines().set(0, "Criteria criteria = new Criteria(this);");
-            logger.debug("itfsw:CriteriaBuilder修改Example的createCriteriaInternal方法，修改构造Criteria时传入Example对象");
+            logger.debug("itfsw(Example增强插件):"+topLevelClass.getType().getShortName()+"修改createCriteriaInternal方法，修改构造Criteria时传入Example对象");
         }
+
+        // orderBy方法
+        addOrderByMethodToExample(topLevelClass, introspectedTable);
+
         return true;
     }
 
@@ -83,7 +87,7 @@ public class ExampleEnhancedPlugin  extends PluginAdapter {
             if (method.isConstructor()) {
                 method.addParameter(new Parameter(topLevelClass.getType(), "example"));
                 method.addBodyLine("this.example = example;");
-                logger.debug("itfsw:CriteriaBuilder修改Criteria的构造方法，增加example参数");
+                logger.debug("itfsw(Example增强插件):"+topLevelClass.getType().getShortName()+"修改构造方法，增加example参数");
             }
         }
 
@@ -94,7 +98,7 @@ public class ExampleEnhancedPlugin  extends PluginAdapter {
         method.addBodyLine("return this.example;");
         CommentTools.addGeneralMethodComment(method, introspectedTable);
         innerClass.addMethod(method);
-        logger.debug("itfsw:CriteriaBuilder增加工厂方法example");
+        logger.debug("itfsw(Example增强插件):"+topLevelClass.getType().getShortName()+"."+innerClass.getType().getShortName()+"增加工厂方法example");
     }
 
 
@@ -110,6 +114,7 @@ public class ExampleEnhancedPlugin  extends PluginAdapter {
         InnerInterface criteriaAddInterface = new InnerInterface("ICriteriaAdd");
         criteriaAddInterface.setVisibility(JavaVisibility.PUBLIC);
         CommentTools.addInterfaceComment(criteriaAddInterface, introspectedTable);
+        logger.debug("itfsw(Example增强插件):"+topLevelClass.getType().getShortName()+"."+innerClass.getType().getShortName()+"增加接口ICriteriaAdd");
 
         // ICriteriaAdd增加接口add
         Method addMethod = new Method("add");
@@ -117,7 +122,7 @@ public class ExampleEnhancedPlugin  extends PluginAdapter {
         addMethod.addParameter(new Parameter(innerClass.getType(), "add"));
         CommentTools.addGeneralMethodComment(addMethod, introspectedTable);
         criteriaAddInterface.addMethod(addMethod);
-        logger.debug("itfsw:Criteria.ICriteriaAdd增加接口add");
+        logger.debug("itfsw(Example增强插件):"+topLevelClass.getType().getShortName()+"."+innerClass.getType().getShortName()+"."+criteriaAddInterface.getType().getShortName()+"增加方法add");
 
         InnerClass innerClassWrapper = new InnerInterfaceWrapperToInnerClass(criteriaAddInterface);
         innerClass.addInnerClass(innerClassWrapper);
@@ -135,6 +140,27 @@ public class ExampleEnhancedPlugin  extends PluginAdapter {
         method.addBodyLine("return this;");
         CommentTools.addGeneralMethodComment(method, introspectedTable);
         innerClass.addMethod(method);
-        logger.debug("itfsw:Criteria增加方法andIf");
+        logger.debug("itfsw(Example增强插件):"+topLevelClass.getType().getShortName()+"."+innerClass.getType().getShortName()+"增加方法andIf");
+    }
+
+    /**
+     * Example增强了setOrderByClause方法，新增orderBy(String orderByClause)方法直接返回example，增强链式调用，可以一路.下去了。
+     *
+     * @param topLevelClass
+     * @param introspectedTable
+     */
+    private void addOrderByMethodToExample(TopLevelClass topLevelClass, IntrospectedTable introspectedTable){
+        // 添加orderBy
+        Method method = new Method("orderBy");
+        method.setVisibility(JavaVisibility.PUBLIC);
+        method.setReturnType(topLevelClass.getType());
+        method.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "orderByClause"));
+
+        method.addBodyLine("this.setOrderByClause(orderByClause);");
+        method.addBodyLine("return this;");
+
+        CommentTools.addGeneralMethodComment(method, introspectedTable);
+        topLevelClass.addMethod(method);
+        logger.debug("itfsw(Example增强插件):"+topLevelClass.getType().getShortName()+"增加方法orderBy");
     }
 }

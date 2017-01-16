@@ -7,7 +7,7 @@
 * 查询单条数据插件（SelectOneByExamplePlugin）
 * MySQL分页插件（LimitPlugin）
 * 数据Model链式构建插件（ModelBuilderPlugin）
-* Example Criteria 增强插件（CriteriaBuilderPlugin）
+* Example Criteria 增强插件（ExampleEnhancedPlugin（CriteriaBuilderPlugin这个是老版本叫法，已经弃用））
 * Example 目标包修改插件（ExampleTargetPlugin）
 * 批量插入插件（BatchInsertPlugin）
 * 逻辑删除插件（LogicalDeletePlugin）
@@ -146,13 +146,14 @@ public class Test {
     }
 }
 ```
-### 4. Example Criteria 增强插件(example,andIf)
-* 表Example增加Criteria的快速返回example()方法。  
-* Criteria链式调用增强，以前如果有按条件增加的查询语句会打乱链式查询构建，现在有了andIf(boolean ifAdd, CriteriaAdd add)方法可一直使用链式调用下去。  
+### 4. Example 增强插件(example,andIf)
+* Criteria的快速返回example()方法。  
+* Criteria链式调用增强，以前如果有按条件增加的查询语句会打乱链式查询构建，现在有了andIf(boolean ifAdd, CriteriaAdd add)方法可一直使用链式调用下去。
+* Example增强了setOrderByClause方法，新增orderBy(String orderByClause)方法直接返回example，增强链式调用，可以一路.下去了。
 插件：
 ```xml
 <!-- Example Criteria 增强插件 -->
-<plugin type="com.itfsw.mybatis.generator.plugins.CriteriaBuilderPlugin"/>
+<plugin type="com.itfsw.mybatis.generator.plugins.ExampleEnhancedPlugin"/>
 ```
 使用：  
 ```java
