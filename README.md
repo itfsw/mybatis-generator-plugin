@@ -159,7 +159,7 @@ public class Test {
     }
 }
 ```
-### 4. Example 增强插件(example,andIf)
+### 4. Example 增强插件(example,andIf,orderBy)
 * Criteria的快速返回example()方法。  
 * Criteria链式调用增强，以前如果有按条件增加的查询语句会打乱链式查询构建，现在有了andIf(boolean ifAdd, CriteriaAdd add)方法可一直使用链式调用下去。
 * Example增强了setOrderByClause方法，新增orderBy(String orderByClause)方法直接返回example，增强链式调用，可以一路.下去了。
