@@ -17,10 +17,7 @@
 package com.itfsw.mybatis.generator.plugins.utils;
 
 import org.mybatis.generator.api.IntrospectedTable;
-import org.mybatis.generator.api.dom.java.Field;
-import org.mybatis.generator.api.dom.java.InnerClass;
-import org.mybatis.generator.api.dom.java.Interface;
-import org.mybatis.generator.api.dom.java.Method;
+import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.config.MergeConstants;
@@ -62,7 +59,7 @@ public class CommentTools {
      * @param innerClass 类
      * @param introspectedTable 表
      */
-    public static void addClassComment(InnerClass innerClass, IntrospectedTable introspectedTable) {
+    public static void addInnerClassComment(InnerClass innerClass, IntrospectedTable introspectedTable) {
         StringBuilder sb = new StringBuilder();
         innerClass.addJavaDocLine("/**"); //$NON-NLS-1$
         innerClass.addJavaDocLine(" * 这是Mybatis Generator拓展插件生成的类(请勿删除)."); //$NON-NLS-1$
@@ -73,6 +70,25 @@ public class CommentTools {
         innerClass.addJavaDocLine(" * "+MergeConstants.NEW_ELEMENT_TAG);
         innerClass.addJavaDocLine(" * @author hewei");
         innerClass.addJavaDocLine(" */"); //$NON-NLS-1$
+    }
+
+    /**
+     * 生成通用内部Enum注释
+     *
+     * @param innerEnum 类
+     * @param introspectedTable 表
+     */
+    public static void addInnerEnumComment(InnerEnum innerEnum, IntrospectedTable introspectedTable) {
+        StringBuilder sb = new StringBuilder();
+        innerEnum.addJavaDocLine("/**"); //$NON-NLS-1$
+        innerEnum.addJavaDocLine(" * 这是Mybatis Generator拓展插件生成的枚举(请勿删除)."); //$NON-NLS-1$
+        sb.append(" * This class corresponds to the database table "); //$NON-NLS-1$
+        sb.append(introspectedTable.getFullyQualifiedTable());
+        innerEnum.addJavaDocLine(sb.toString());
+        innerEnum.addJavaDocLine(" *");
+        innerEnum.addJavaDocLine(" * "+MergeConstants.NEW_ELEMENT_TAG);
+        innerEnum.addJavaDocLine(" * @author hewei");
+        innerEnum.addJavaDocLine(" */"); //$NON-NLS-1$
     }
 
     /**

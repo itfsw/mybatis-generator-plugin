@@ -11,6 +11,7 @@
 * Example 目标包修改插件（ExampleTargetPlugin）
 * 批量插入插件（BatchInsertPlugin）
 * 逻辑删除插件（LogicalDeletePlugin）
+* 数据Model属性对应Column获取插件（ModelColumnPlugin）
   
 ---------------------------------------
 Maven引用：  
@@ -18,7 +19,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.0.4</version>
+  <version>1.0.5</version>
 </dependency>
 ```
 ---------------------------------------
@@ -163,6 +164,7 @@ public class Test {
 * Criteria的快速返回example()方法。  
 * Criteria链式调用增强，以前如果有按条件增加的查询语句会打乱链式查询构建，现在有了andIf(boolean ifAdd, CriteriaAdd add)方法可一直使用链式调用下去。
 * Example增强了setOrderByClause方法，新增orderBy(String orderByClause)方法直接返回example，增强链式调用，可以一路.下去了。
+* 继续增强orderBy(String orderByClause)方法，增加orderBy(String ... orderByClauses)方法，配合数据Model属性对应Column获取插件（ModelColumnPlugin）使用效果更佳。   
 插件：
 ```xml
 <!-- Example Criteria 增强插件 -->
@@ -233,6 +235,8 @@ public class Test {
                 .andField1GreaterThan(1)
                 .example()
                 .orderBy("field1 DESC")
+                // 这个配合数据Model属性对应Column获取插件（ModelColumnPlugin）使用
+                .orderBy(Tb.Column.field1.asc(), Tb.Column.field3.desc())
         );
     }
 }
@@ -248,7 +252,8 @@ Mybatis Generator 插件默认把Model类和Example类都生成到一个包下�
 </plugin>
 ```
 ### 6. 批量插入插件
-提供了一个批量插入batchInsert方法，因为方法使用了使用了JDBC的getGenereatedKeys方法返回插入主键，所以只能在MYSQL和SQLServer下使用。  
+提供了一个批量插入batchInsert方法，因为方法使用了使用了JDBC的getGenereatedKeys方法返回插入主键，所以只能在MYSQL和SQLServer下使用。
+建议配合数据Model属性对应Column获取插件（ModelColumnPlugin）插件使用，会把批量插入方法从batchInsert(@Param("list") List<Tb> list)增强为batchInsert(@Param("list") List<Tb> list, @Param("insertColumns") Tb.Column ... insertColumns)，实现类似于insertSelective插入列！  
 插件：
 ```xml
 <!-- 批量插入插件 -->
@@ -265,7 +270,7 @@ public class Test {
                 .field1(0)
                 .field2("xx0")
                 .field3(0)
-                .field4(new Date())
+                .createTime(new Date())
                 .build()
         );
         list.add(
@@ -273,10 +278,13 @@ public class Test {
                 .field1(1)
                 .field2("xx1")
                 .field3(1)
-                .field4(new Date())
+                .createTime(new Date())
                 .build()
         );
+        // 普通插入，插入所有列
         this.tbMapper.batchInsert(list);
+        // !!!下面按需插入指定列（类似于insertSelective），需要数据Model属性对应Column获取插件（ModelColumnPlugin）插件
+        this.tbMapper.batchInsert(list, Tb.Column.field1, Tb.Column.field2, Tb.Column.field3, Tb.Column.createTime);
     }
 }
 ```
@@ -327,6 +335,67 @@ public class Test {
                 .andDelFlagEqualTo(Tb.DEL_FLAG)
                 .example()
         );
+    }
+}
+```
+### 8. 数据Model属性对应Column获取插件
+项目中我们有时需要获取数据Model对应数据库字段的名称，一般直接根据数据Model的属性就可以猜出数据库对应column的名字，可是有的时候当column使用了columnOverride或者columnRenamingRule时就需要去看数据库设计了，所以提供了这个插件获取model对应的数据库Column。  
+* 配合Example Criteria 增强插件（ExampleEnhancedPlugin）使用，这个插件还提供了asc()和desc()方法配合Example的orderBy方法效果更佳。
+* 配合批量插入插件（BatchInsertPlugin）使用，批量插入会被增强成batchInsert(@Param("list") List<XXX> list, @Param("insertColumns") XXX.Column ... insertColumns)。  
+
+插件：
+```xml
+<!-- 数据Model属性对应Column获取插件 -->
+<plugin type="com.itfsw.mybatis.generator.plugins.ModelColumnPlugin"/>
+```
+使用：  
+```java
+public class Test {
+    public static void main(String[] args) {
+        // 1. 获取Model对应column
+        String column = Tb.Column.createTime.value();
+
+        // 2. 配合Example Criteria 增强插件（ExampleEnhancedPlugin）使用orderBy方法
+        // old
+        this.tbMapper.selectByExample(
+                new TbExample()
+                .createCriteria()
+                .andField1GreaterThan(1)
+                .example()
+                .orderBy("field1 DESC, field3 ASC")
+        );
+
+        // better
+        this.tbMapper.selectByExample(
+                new TbExample()
+                .createCriteria()
+                .andField1GreaterThan(1)
+                .example()
+                .orderBy(Tb.Column.field1.desc(), Tb.Column.field3.asc())
+        );
+        
+        // 3. 配合批量插入插件（BatchInsertPlugin）使用实现按需插入指定列
+        List<Tb> list = new ArrayList<>();
+        list.add(
+                new Tb.Builder()
+                .field1(0)
+                .field2("xx0")
+                .field3(0)
+                .field4(new Date())
+                .build()
+        );
+        list.add(
+                new Tb.Builder()
+                .field1(1)
+                .field2("xx1")
+                .field3(1)
+                .field4(new Date())
+                .build()
+        );
+        // 这个会插入表所有列
+        this.tbMapper.batchInsert(list);
+        // 下面按需插入指定列（类似于insertSelective）
+        this.tbMapper.batchInsert(list, Tb.Column.field1, Tb.Column.field2, Tb.Column.field3, Tb.Column.createTime);
     }
 }
 ```

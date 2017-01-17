@@ -162,5 +162,25 @@ public class ExampleEnhancedPlugin  extends PluginAdapter {
         CommentTools.addGeneralMethodComment(method, introspectedTable);
         topLevelClass.addMethod(method);
         logger.debug("itfsw(Example增强插件):"+topLevelClass.getType().getShortName()+"增加方法orderBy");
+
+        // 添加orderBy
+        Method mOrderByMore = new Method("orderBy");
+        mOrderByMore.setVisibility(JavaVisibility.PUBLIC);
+        mOrderByMore.setReturnType(topLevelClass.getType());
+        mOrderByMore.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "orderByClauses", true));
+
+        mOrderByMore.addBodyLine("StringBuffer sb = new StringBuffer();");
+        mOrderByMore.addBodyLine("for (int i = 0; i < orderByClauses.length; i++) {");
+        mOrderByMore.addBodyLine("sb.append(orderByClauses[i]);");
+        mOrderByMore.addBodyLine("if (i < orderByClauses.length - 1) {");
+        mOrderByMore.addBodyLine("sb.append(\" , \");");
+        mOrderByMore.addBodyLine("}");
+        mOrderByMore.addBodyLine("}");
+        mOrderByMore.addBodyLine("this.setOrderByClause(sb.toString());");
+        mOrderByMore.addBodyLine("return this;");
+
+        CommentTools.addGeneralMethodComment(mOrderByMore, introspectedTable);
+        topLevelClass.addMethod(mOrderByMore);
+        logger.debug("itfsw(Example增强插件):"+topLevelClass.getType().getShortName()+"增加方法orderBy(String ... orderByClauses)");
     }
 }

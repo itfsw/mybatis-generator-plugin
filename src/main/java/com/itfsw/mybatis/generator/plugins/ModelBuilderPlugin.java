@@ -69,20 +69,21 @@ public class ModelBuilderPlugin extends PluginAdapter {
         InnerClass innerClass = new InnerClass(BUILDER_CLASS_NAME);
         innerClass.setVisibility(JavaVisibility.PUBLIC);
         innerClass.setStatic(true);
-        CommentTools.addClassComment(innerClass, introspectedTable);
+        CommentTools.addInnerClassComment(innerClass, introspectedTable);
         logger.debug("itfsw(数据Model链式构建插件):"+topLevelClass.getType().getShortName()+"增加内部Builder类。");
 
         // 构建内部obj变量
         Field f = new Field("obj", topLevelClass.getType());
         f.setVisibility(JavaVisibility.PRIVATE);
+        CommentTools.addFieldComment(f, introspectedTable);
         innerClass.addField(f);
 
         // 构造构造方法
         Method constructor = new Method(BUILDER_CLASS_NAME);
         constructor.setVisibility(JavaVisibility.PUBLIC);
         constructor.setConstructor(true);
-        constructor.addBodyLine(new StringBuilder("this.obj = new ")
-                .append(topLevelClass.getType().getShortName()).append("();").toString());
+        constructor.addBodyLine(new StringBuilder("this.obj = new ").append(topLevelClass.getType().getShortName()).append("();").toString());
+        CommentTools.addGeneralMethodComment(constructor, introspectedTable);
         innerClass.addMethod(constructor);
         logger.debug("itfsw(数据Model链式构建插件):"+topLevelClass.getType().getShortName()+".Builder增加的构造方法。");
 
