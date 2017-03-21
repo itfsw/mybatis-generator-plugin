@@ -252,8 +252,10 @@ Mybatis Generator 插件默认把Model类和Example类都生成到一个包下�
 </plugin>
 ```
 ### 6. 批量插入插件
-提供了一个批量插入batchInsert方法，因为方法使用了使用了JDBC的getGenereatedKeys方法返回插入主键，所以只能在MYSQL和SQLServer下使用。
-建议配合数据Model属性对应Column获取插件（ModelColumnPlugin）插件使用，会把批量插入方法从batchInsert(@Param("list") List<Tb> list)增强为batchInsert(@Param("list") List<Tb> list, @Param("insertColumns") Tb.Column ... insertColumns)，实现类似于insertSelective插入列！  
+提供了批量插入batchInsert和batchInsertSelective方法，因为方法使用了使用了JDBC的getGenereatedKeys方法返回插入主键，所以只能在MYSQL和SQLServer下使用。
+需配合数据Model属性对应Column获取插件（ModelColumnPlugin）插件使用，实现类似于insertSelective插入列！  
+PS:为了和Mybatis官方代码风格保持一致，1.0.5+版本把批量插入方法分开了，基于老版本1.0.5-版本生成的代码请继续使用“com.itfsw.mybatis.generator.plugins.BatchInsertOldPlugin”不影响使用  
+PS:继续PS，本来想继续保留老版本代码，不影响老版本已经生成代码使用的，但是始终没有绕过BindingException，只能把代码移入BatchInsertOldPlugin类~~~~~  
 插件：
 ```xml
 <!-- 批量插入插件 -->
@@ -284,7 +286,7 @@ public class Test {
         // 普通插入，插入所有列
         this.tbMapper.batchInsert(list);
         // !!!下面按需插入指定列（类似于insertSelective），需要数据Model属性对应Column获取插件（ModelColumnPlugin）插件
-        this.tbMapper.batchInsert(list, Tb.Column.field1, Tb.Column.field2, Tb.Column.field3, Tb.Column.createTime);
+        this.tbMapper.batchInsertSelective(list, Tb.Column.field1, Tb.Column.field2, Tb.Column.field3, Tb.Column.createTime);
     }
 }
 ```
@@ -341,7 +343,7 @@ public class Test {
 ### 8. 数据Model属性对应Column获取插件
 项目中我们有时需要获取数据Model对应数据库字段的名称，一般直接根据数据Model的属性就可以猜出数据库对应column的名字，可是有的时候当column使用了columnOverride或者columnRenamingRule时就需要去看数据库设计了，所以提供了这个插件获取model对应的数据库Column。  
 * 配合Example Criteria 增强插件（ExampleEnhancedPlugin）使用，这个插件还提供了asc()和desc()方法配合Example的orderBy方法效果更佳。
-* 配合批量插入插件（BatchInsertPlugin）使用，批量插入会被增强成batchInsert(@Param("list") List<XXX> list, @Param("insertColumns") XXX.Column ... insertColumns)。  
+* 配合批量插入插件（BatchInsertPlugin）使用，batchInsertSelective(@Param("list") List<XXX> list, @Param("selective") XXX.Column ... insertColumns)。  
 
 插件：
 ```xml
@@ -395,7 +397,7 @@ public class Test {
         // 这个会插入表所有列
         this.tbMapper.batchInsert(list);
         // 下面按需插入指定列（类似于insertSelective）
-        this.tbMapper.batchInsert(list, Tb.Column.field1, Tb.Column.field2, Tb.Column.field3, Tb.Column.createTime);
+        this.tbMapper.batchInsertSelective(list, Tb.Column.field1, Tb.Column.field2, Tb.Column.field3, Tb.Column.createTime);
     }
 }
 ```

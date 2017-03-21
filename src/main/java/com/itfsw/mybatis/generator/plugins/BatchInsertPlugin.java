@@ -48,7 +48,7 @@ import java.util.List;
 public class BatchInsertPlugin extends PluginAdapter {
     private static final Logger logger = LoggerFactory.getLogger(BatchInsertPlugin.class);
     public static final String METHOD_BATCH_INSERT = "batchInsert";  // 方法名
-    private boolean hasModelBuilderPlugin;  // 是否配置了ModelBuilderPlugin插件
+    public static final String METHOD_BATCH_INSERT_SELECTIVE = "batchInsertSelective";  // 方法名
 
     /**
      * {@inheritDoc}
@@ -68,35 +68,39 @@ public class BatchInsertPlugin extends PluginAdapter {
             logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件使用前提是数据库为MySQL或者SQLserver，因为返回主键使用了JDBC的getGenereatedKeys方法获取主键！");
             return false;
         }
-        return true;
-    }
 
-    /**
-     * 初始化
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     *
-     * @param introspectedTable
-     * @return
-     */
-    @Override
-    public void initialized(IntrospectedTable introspectedTable) {
+
         // 插件使用前提是使用了ModelColumnPlugin插件
-        Context ctx = getContext();
-        // 利用反射获取pluginConfigurations属性
         try {
+            Context ctx = getContext();
+            // 利用反射获取pluginConfigurations属性
             java.lang.reflect.Field field = Context.class.getDeclaredField("pluginConfigurations");
             field.setAccessible(true);
             List<PluginConfiguration> list = (List<PluginConfiguration>) field.get(ctx);
             // 检查是否配置了ModelColumnPlugin插件
+            boolean unFind = true;
             for (PluginConfiguration config: list) {
                 if (ModelColumnPlugin.class.getName().equals(config.getConfigurationType())){
-                    this.hasModelBuilderPlugin = true;
+                    unFind = false;
                 }
+            }
+
+            // 建议使用ModelColumnPlugin插件
+            if (unFind){
+                logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件需配合com.itfsw.mybatis.generator.plugins.ModelColumnPlugin插件使用！");
+                return false;
             }
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage());
         }
+
+        // TODO
+        logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件如之前使用1.0.5-的插件可继续使用com.itfsw.mybatis.generator.plugins.BatchInsertOldPlugin或者修改batchInsert(@Param(\"list\") List<Tb> list, @Param(\"insertColumns\") Tb.Column ... selective)调用为batchInsertSelective！");
+
+        return true;
     }
+
+
 
     /**
      * Java Client Methods 生成
@@ -109,41 +113,31 @@ public class BatchInsertPlugin extends PluginAdapter {
      */
     @Override
     public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        if (hasModelBuilderPlugin){
-            // 方法生成
-            Method method = new Method(METHOD_BATCH_INSERT);
-            // 返回值类型
-            method.setReturnType(FullyQualifiedJavaType.getIntInstance());
-            // 添加参数
-            FullyQualifiedJavaType type = FullyQualifiedJavaType.getNewListInstance();
-            type.addTypeArgument(introspectedTable.getRules().calculateAllFieldsClass());
-            method.addParameter(new Parameter(type, "list", "@Param(\"list\")"));
-            FullyQualifiedJavaType type1 = new FullyQualifiedJavaType(introspectedTable.getRules().calculateAllFieldsClass().getShortName()+"."+ModelColumnPlugin.ENUM_NAME);
-            method.addParameter(new Parameter(type1, "insertColumns", "@Param(\"insertColumns\")", true));
-            // 添加方法说明
-            CommentTools.addGeneralMethodComment(method, introspectedTable);
+        // 1. batchInsert
+        Method mBatchInsert = new Method(METHOD_BATCH_INSERT);
+        mBatchInsert.setReturnType(FullyQualifiedJavaType.getIntInstance());
+        // 添加参数
+        FullyQualifiedJavaType tList = FullyQualifiedJavaType.getNewListInstance();
+        tList.addTypeArgument(introspectedTable.getRules().calculateAllFieldsClass());
+        mBatchInsert.addParameter(new Parameter(tList, "list", "@Param(\"list\")"));
+        // 添加方法说明
+        CommentTools.addGeneralMethodComment(mBatchInsert, introspectedTable);
+        // interface 增加方法
+        interfaze.addMethod(mBatchInsert);
+        logger.debug("itfsw(批量插入插件):" + interfaze.getType().getShortName() + "增加batchInsert方法。");
 
-            // interface 增加方法
-            interfaze.addMethod(method);
-            logger.debug("itfsw(批量插入插件):" + interfaze.getType().getShortName() + "增加batchInsert方法。");
-        } else {
-            // 方法生成
-            Method method = new Method(METHOD_BATCH_INSERT);
-            // 方法可见性 interface会忽略
-            // method.setVisibility(JavaVisibility.PUBLIC);
-            // 返回值类型
-            method.setReturnType(FullyQualifiedJavaType.getIntInstance());
-            // 添加参数
-            FullyQualifiedJavaType type = FullyQualifiedJavaType.getNewListInstance();
-            type.addTypeArgument(introspectedTable.getRules().calculateAllFieldsClass());
-            method.addParameter(new Parameter(type, "list", "@Param(\"list\")"));
-            // 添加方法说明
-            CommentTools.addGeneralMethodComment(method, introspectedTable);
-
-            // interface 增加方法
-            interfaze.addMethod(method);
-            logger.debug("itfsw(批量插入插件):" + interfaze.getType().getShortName() + "增加batchInsert方法。");
-        }
+        // 2. batchInsertSelective
+        Method mBatchInsertSelective = new Method(METHOD_BATCH_INSERT_SELECTIVE);
+        mBatchInsertSelective.setReturnType(FullyQualifiedJavaType.getIntInstance());
+        // 添加参数
+        FullyQualifiedJavaType tSelective = new FullyQualifiedJavaType(introspectedTable.getRules().calculateAllFieldsClass().getShortName()+"."+ModelColumnPlugin.ENUM_NAME);
+        mBatchInsertSelective.addParameter(new Parameter(tList, "list", "@Param(\"list\")"));
+        mBatchInsertSelective.addParameter(new Parameter(tSelective, "selective", "@Param(\"selective\")", true));
+        // 添加方法说明
+        CommentTools.addGeneralMethodComment(mBatchInsertSelective, introspectedTable);
+        // interface 增加方法
+        interfaze.addMethod(mBatchInsertSelective);
+        logger.debug("itfsw(批量插入插件):" + interfaze.getType().getShortName() + "增加batchInsertSelective方法。");
 
         return true;
     }
@@ -158,128 +152,13 @@ public class BatchInsertPlugin extends PluginAdapter {
      */
     @Override
     public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
-        if (hasModelBuilderPlugin){
-            XmlElement element = new XmlElement("insert");
-            element.addAttribute(new Attribute("id", METHOD_BATCH_INSERT));
-            // 参数类型
-            element.addAttribute(new Attribute("parameterType", "map"));
-            // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
-            CommentTools.addComment(element);
-
-            GeneratedKey gk = introspectedTable.getGeneratedKey();
-            if (gk != null) {
-                IntrospectedColumn introspectedColumn = introspectedTable.getColumn(gk.getColumn());
-                // if the column is null, then it's a configuration error. The
-                // warning has already been reported
-                if (introspectedColumn != null) {
-                    // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-                    element.addAttribute(new Attribute("useGeneratedKeys", "true")); //$NON-NLS-1$ //$NON-NLS-2$
-                    element.addAttribute(new Attribute("keyProperty", introspectedColumn.getJavaProperty())); //$NON-NLS-1$
-                    element.addAttribute(new Attribute("keyColumn", introspectedColumn.getActualColumnName())); //$NON-NLS-1$
-                }
-            }
-
-            // choose 节点
-            XmlElement choose = new XmlElement("choose");
-            // when 节点
-            XmlElement when = new XmlElement("when");
-            when.addAttribute(new Attribute("test", "insertColumns.length != 0"));
-            when.addElement(new TextElement("insert into "+introspectedTable.getFullyQualifiedTableNameAtRuntime()+" ("));
-
-            XmlElement foreachInsertColumns = new XmlElement("foreach");
-            foreachInsertColumns.addAttribute(new Attribute("collection", "insertColumns"));
-            foreachInsertColumns.addAttribute(new Attribute("item", "column"));
-            foreachInsertColumns.addAttribute(new Attribute("separator", ","));
-            foreachInsertColumns.addElement(new TextElement("${column.value}"));
-
-            when.addElement(foreachInsertColumns);
-
-            when.addElement(new TextElement(")"));
-
-            // values
-            when.addElement(new TextElement("values"));
-
-            // foreach values
-            XmlElement foreachValues = new XmlElement("foreach");
-            foreachValues.addAttribute(new Attribute("collection", "list"));
-            foreachValues.addAttribute(new Attribute("item", "item"));
-            foreachValues.addAttribute(new Attribute("separator", ","));
-
-            foreachValues.addElement(new TextElement("("));
-
-            // foreach 所有插入的列，比较是否存在
-            XmlElement foreachInsertColumnsCheck = new XmlElement("foreach");
-            foreachInsertColumnsCheck.addAttribute(new Attribute("collection", "insertColumns"));
-            foreachInsertColumnsCheck.addAttribute(new Attribute("item", "column"));
-            foreachInsertColumnsCheck.addAttribute(new Attribute("separator", ","));
-
-            // 所有表字段
-            List<IntrospectedColumn> columns = ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns());
-            for (int i = 0; i < columns.size(); i++) {
-                IntrospectedColumn introspectedColumn = columns.get(i);
-                XmlElement check = new XmlElement("if");
-                check.addAttribute(new Attribute("test", "'"+introspectedColumn.getActualColumnName()+"' == column.value"));
-                check.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, "item.")));
-
-                foreachInsertColumnsCheck.addElement(check);
-            }
-            foreachValues.addElement(foreachInsertColumnsCheck);
-
-            foreachValues.addElement(new TextElement(")"));
-
-            when.addElement(foreachValues);
-            choose.addElement(when);
-
-            // 普通不带insertColumns参数实现
-            XmlElement otherwise = new XmlElement("otherwise");
-            this.addNormalBatchInsertXml(otherwise, introspectedTable);
-            choose.addElement(otherwise);
-
-            element.addElement(choose);
-            if (context.getPlugins().sqlMapInsertElementGenerated(element, introspectedTable)) {
-                document.getRootElement().addElement(element);
-                logger.debug("itfsw(批量插入插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加batchInsert实现方法。");
-            }
-        } else {
-            XmlElement element = new XmlElement("insert"); //$NON-NLS-1$
-
-            element.addAttribute(new Attribute("id", METHOD_BATCH_INSERT)); //$NON-NLS-1$
-
-            // 参数类型
-            element.addAttribute(new Attribute("parameterType", FullyQualifiedJavaType.getNewListInstance().getFullyQualifiedName()));
-
-            // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
-            CommentTools.addComment(element);
-
-            GeneratedKey gk = introspectedTable.getGeneratedKey();
-            if (gk != null) {
-                IntrospectedColumn introspectedColumn = introspectedTable.getColumn(gk.getColumn());
-                // if the column is null, then it's a configuration error. The
-                // warning has already been reported
-                if (introspectedColumn != null) {
-                    // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-                    element.addAttribute(new Attribute("useGeneratedKeys", "true")); //$NON-NLS-1$ //$NON-NLS-2$
-                    element.addAttribute(new Attribute("keyProperty", introspectedColumn.getJavaProperty())); //$NON-NLS-1$
-                    element.addAttribute(new Attribute("keyColumn", introspectedColumn.getActualColumnName())); //$NON-NLS-1$
-                }
-            }
-
-            // 普通插入语句
-            this.addNormalBatchInsertXml(element, introspectedTable);
-
-            document.getRootElement().addElement(element);
-            logger.debug("itfsw(批量插入插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加batchInsert实现方法。");
-        }
-        return true;
-    }
-
-    /**
-     * 普通不带insertColumns的插入语句Xml实现
-     *
-     * @param element
-     * @param introspectedTable
-     */
-    private void addNormalBatchInsertXml(XmlElement element, IntrospectedTable introspectedTable) {
+        // 1. batchInsert
+        XmlElement batchInsertEle = new XmlElement("insert");
+        batchInsertEle.addAttribute(new Attribute("id", METHOD_BATCH_INSERT));
+        // 参数类型
+        batchInsertEle.addAttribute(new Attribute("parameterType", "map"));
+        // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
+        CommentTools.addComment(batchInsertEle);
 
         StringBuilder insertClause = new StringBuilder();
         StringBuilder valuesClause = new StringBuilder();
@@ -306,7 +185,7 @@ public class BatchInsertPlugin extends PluginAdapter {
         }
 
         insertClause.append(')');
-        element.addElement(new TextElement(insertClause.toString()));
+        batchInsertEle.addElement(new TextElement(insertClause.toString()));
 
         valuesClause.append(')');
         valuesClauses.add(valuesClause.toString());
@@ -323,7 +202,85 @@ public class BatchInsertPlugin extends PluginAdapter {
         }
 
         // values 构建
+        batchInsertEle.addElement(new TextElement("values"));
+        batchInsertEle.addElement(foreachElement);
+        if (context.getPlugins().sqlMapInsertElementGenerated(batchInsertEle, introspectedTable)) {
+            document.getRootElement().addElement(batchInsertEle);
+            logger.debug("itfsw(批量插入插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加batchInsert实现方法。");
+        }
+
+        // 2. batchInsertSelective
+        XmlElement element = new XmlElement("insert");
+        element.addAttribute(new Attribute("id", METHOD_BATCH_INSERT_SELECTIVE));
+        // 参数类型
+        element.addAttribute(new Attribute("parameterType", "map"));
+        // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
+        CommentTools.addComment(element);
+
+        GeneratedKey gk = introspectedTable.getGeneratedKey();
+        if (gk != null) {
+            IntrospectedColumn introspectedColumn = introspectedTable.getColumn(gk.getColumn());
+            // if the column is null, then it's a configuration error. The
+            // warning has already been reported
+            if (introspectedColumn != null) {
+                // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
+                element.addAttribute(new Attribute("useGeneratedKeys", "true")); //$NON-NLS-1$ //$NON-NLS-2$
+                element.addAttribute(new Attribute("keyProperty", introspectedColumn.getJavaProperty())); //$NON-NLS-1$
+                element.addAttribute(new Attribute("keyColumn", introspectedColumn.getActualColumnName())); //$NON-NLS-1$
+            }
+        }
+
+        element.addElement(new TextElement("insert into "+introspectedTable.getFullyQualifiedTableNameAtRuntime()+" ("));
+
+        XmlElement foreachInsertColumns = new XmlElement("foreach");
+        foreachInsertColumns.addAttribute(new Attribute("collection", "selective"));
+        foreachInsertColumns.addAttribute(new Attribute("item", "column"));
+        foreachInsertColumns.addAttribute(new Attribute("separator", ","));
+        foreachInsertColumns.addElement(new TextElement("${column.value}"));
+
+        element.addElement(foreachInsertColumns);
+
+        element.addElement(new TextElement(")"));
+
+        // values
         element.addElement(new TextElement("values"));
-        element.addElement(foreachElement);
+
+        // foreach values
+        XmlElement foreachValues = new XmlElement("foreach");
+        foreachValues.addAttribute(new Attribute("collection", "list"));
+        foreachValues.addAttribute(new Attribute("item", "item"));
+        foreachValues.addAttribute(new Attribute("separator", ","));
+
+        foreachValues.addElement(new TextElement("("));
+
+        // foreach 所有插入的列，比较是否存在
+        XmlElement foreachInsertColumnsCheck = new XmlElement("foreach");
+        foreachInsertColumnsCheck.addAttribute(new Attribute("collection", "selective"));
+        foreachInsertColumnsCheck.addAttribute(new Attribute("item", "column"));
+        foreachInsertColumnsCheck.addAttribute(new Attribute("separator", ","));
+
+        // 所有表字段
+        List<IntrospectedColumn> columns1 = ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns());
+        for (int i = 0; i < columns1.size(); i++) {
+            IntrospectedColumn introspectedColumn = columns.get(i);
+            XmlElement check = new XmlElement("if");
+            check.addAttribute(new Attribute("test", "'"+introspectedColumn.getActualColumnName()+"' == column.value"));
+            check.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, "item.")));
+
+            foreachInsertColumnsCheck.addElement(check);
+        }
+        foreachValues.addElement(foreachInsertColumnsCheck);
+
+        foreachValues.addElement(new TextElement(")"));
+
+        element.addElement(foreachValues);
+
+        if (context.getPlugins().sqlMapInsertElementGenerated(element, introspectedTable)) {
+            document.getRootElement().addElement(element);
+            logger.debug("itfsw(批量插入插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加batchInsertSelective实现方法。");
+        }
+
+        return true;
     }
+
 }
