@@ -16,6 +16,7 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
+import com.itfsw.mybatis.generator.plugins.utils.CommTools;
 import com.itfsw.mybatis.generator.plugins.utils.CommentTools;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
@@ -28,7 +29,6 @@ import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.mybatis3.ListUtilities;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 import org.mybatis.generator.config.Context;
-import org.mybatis.generator.config.GeneratedKey;
 import org.mybatis.generator.config.PluginConfiguration;
 import org.mybatis.generator.internal.util.StringUtility;
 import org.slf4j.Logger;
@@ -170,18 +170,8 @@ public class BatchInsertOldPlugin extends PluginAdapter {
             // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
             CommentTools.addComment(element);
 
-            GeneratedKey gk = introspectedTable.getGeneratedKey();
-            if (gk != null) {
-                IntrospectedColumn introspectedColumn = introspectedTable.getColumn(gk.getColumn());
-                // if the column is null, then it's a configuration error. The
-                // warning has already been reported
-                if (introspectedColumn != null) {
-                    // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-                    element.addAttribute(new Attribute("useGeneratedKeys", "true")); //$NON-NLS-1$ //$NON-NLS-2$
-                    element.addAttribute(new Attribute("keyProperty", introspectedColumn.getJavaProperty())); //$NON-NLS-1$
-                    element.addAttribute(new Attribute("keyColumn", introspectedColumn.getActualColumnName())); //$NON-NLS-1$
-                }
-            }
+            // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
+            CommTools.useGeneratedKeys(element, introspectedTable);
 
             // choose 节点
             XmlElement choose = new XmlElement("choose");
@@ -255,18 +245,8 @@ public class BatchInsertOldPlugin extends PluginAdapter {
             // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
             CommentTools.addComment(element);
 
-            GeneratedKey gk = introspectedTable.getGeneratedKey();
-            if (gk != null) {
-                IntrospectedColumn introspectedColumn = introspectedTable.getColumn(gk.getColumn());
-                // if the column is null, then it's a configuration error. The
-                // warning has already been reported
-                if (introspectedColumn != null) {
-                    // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-                    element.addAttribute(new Attribute("useGeneratedKeys", "true")); //$NON-NLS-1$ //$NON-NLS-2$
-                    element.addAttribute(new Attribute("keyProperty", introspectedColumn.getJavaProperty())); //$NON-NLS-1$
-                    element.addAttribute(new Attribute("keyColumn", introspectedColumn.getActualColumnName())); //$NON-NLS-1$
-                }
-            }
+            // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
+            CommTools.useGeneratedKeys(element, introspectedTable);
 
             // 普通插入语句
             this.addNormalBatchInsertXml(element, introspectedTable);
