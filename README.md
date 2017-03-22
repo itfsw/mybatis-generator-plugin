@@ -12,6 +12,7 @@
 * 批量插入插件（BatchInsertPlugin）
 * 逻辑删除插件（LogicalDeletePlugin）
 * 数据Model属性对应Column获取插件（ModelColumnPlugin）
+* 存在即更新插件（UpsertPlugin） 
   
 ---------------------------------------
 Maven引用：  
@@ -19,7 +20,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.0.5</version>
+  <version>1.0.6</version>
 </dependency>
 ```
 ---------------------------------------
@@ -398,6 +399,40 @@ public class Test {
         this.tbMapper.batchInsert(list);
         // 下面按需插入指定列（类似于insertSelective）
         this.tbMapper.batchInsertSelective(list, Tb.Column.field1, Tb.Column.field2, Tb.Column.field3, Tb.Column.createTime);
+    }
+}
+```
+### 9. 存在即更新插件
+使用MySQL的[“insert ... on duplicate key update”](https://dev.mysql.com/doc/refman/5.7/en/insert-on-duplicate.html)实现存在即更新操作，简化数据入库操作（[[issues#2]](https://github.com/itfsw/mybatis-generator-plugin/issues/2)）。
+
+插件：
+```xml
+<!-- 存在即更新插件 -->
+<plugin type="com.itfsw.mybatis.generator.plugins.UpsertPlugin"/>
+```
+使用：  
+```java
+public class Test {
+    public static void main(String[] args) {
+        // 1. 未入库数据入库，执行insert
+        Tb tb = new Tb.Builder()
+                .field1(1)
+                .field2("xx0")
+                .delFlag((short)0)
+                .build();
+        int k0 = this.tbMapper.upsert(tb);
+        // 2. 已入库数据再次入库,执行update（！！需要注意如触发update其返回的受影响行数为2）
+        tb.setField2("xx1");
+        int k1 = this.tbMapper.upsert(tb);
+
+        // 3. 类似insertSelective实现选择入库
+        Tb tb1 = new Tb.Builder()
+                .field1(1)
+                .field2("xx0")
+                .build();
+        int k2 = this.tbMapper.upsertSelective(tb1);
+        tb1.setField2("xx1");
+        int k3 = this.tbMapper.upsertSelective(tb1);
     }
 }
 ```
