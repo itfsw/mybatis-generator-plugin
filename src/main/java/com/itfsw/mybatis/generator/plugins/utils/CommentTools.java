@@ -40,17 +40,17 @@ public class CommentTools {
      */
     public static void addFieldComment(Field field, IntrospectedTable introspectedTable) {
         StringBuilder sb = new StringBuilder();
-        field.addJavaDocLine("/**"); //$NON-NLS-1$
-        field.addJavaDocLine(" * 这是Mybatis Generator拓展插件生成的属性(请勿删除)."); //$NON-NLS-1$
-        sb.append(" * This field corresponds to the database table "); //$NON-NLS-1$
+        field.addJavaDocLine("/**");
+        field.addJavaDocLine(" * 这是Mybatis Generator拓展插件生成的属性(请勿删除).");
+        sb.append(" * This field corresponds to the database table ");
         sb.append(introspectedTable.getFullyQualifiedTable());
         field.addJavaDocLine(sb.toString());
 
         field.addJavaDocLine(" *");
         field.addJavaDocLine(" * "+MergeConstants.NEW_ELEMENT_TAG);
-        field.addJavaDocLine(" * @author hewei");
+        field.addJavaDocLine(" * @project https://github.com/itfsw/mybatis-generator-plugin");
 
-        field.addJavaDocLine(" */"); //$NON-NLS-1$
+        field.addJavaDocLine(" */");
     }
 
     /**
@@ -61,15 +61,16 @@ public class CommentTools {
      */
     public static void addInnerClassComment(InnerClass innerClass, IntrospectedTable introspectedTable) {
         StringBuilder sb = new StringBuilder();
-        innerClass.addJavaDocLine("/**"); //$NON-NLS-1$
-        innerClass.addJavaDocLine(" * 这是Mybatis Generator拓展插件生成的类(请勿删除)."); //$NON-NLS-1$
-        sb.append(" * This class corresponds to the database table "); //$NON-NLS-1$
+        innerClass.addJavaDocLine("/**");
+        innerClass.addJavaDocLine(" * 这是Mybatis Generator拓展插件生成的类(请勿删除).");
+        sb.append(" * This class corresponds to the database table ");
         sb.append(introspectedTable.getFullyQualifiedTable());
         innerClass.addJavaDocLine(sb.toString());
         innerClass.addJavaDocLine(" *");
         innerClass.addJavaDocLine(" * "+MergeConstants.NEW_ELEMENT_TAG);
-        innerClass.addJavaDocLine(" * @author hewei");
-        innerClass.addJavaDocLine(" */"); //$NON-NLS-1$
+        innerClass.addJavaDocLine(" * @project https://github.com/itfsw/mybatis-generator-plugin");
+
+        innerClass.addJavaDocLine(" */");
     }
 
     /**
@@ -80,15 +81,16 @@ public class CommentTools {
      */
     public static void addInnerEnumComment(InnerEnum innerEnum, IntrospectedTable introspectedTable) {
         StringBuilder sb = new StringBuilder();
-        innerEnum.addJavaDocLine("/**"); //$NON-NLS-1$
-        innerEnum.addJavaDocLine(" * 这是Mybatis Generator拓展插件生成的枚举(请勿删除)."); //$NON-NLS-1$
-        sb.append(" * This class corresponds to the database table "); //$NON-NLS-1$
+        innerEnum.addJavaDocLine("/**");
+        innerEnum.addJavaDocLine(" * 这是Mybatis Generator拓展插件生成的枚举(请勿删除).");
+        sb.append(" * This class corresponds to the database table ");
         sb.append(introspectedTable.getFullyQualifiedTable());
         innerEnum.addJavaDocLine(sb.toString());
         innerEnum.addJavaDocLine(" *");
         innerEnum.addJavaDocLine(" * "+MergeConstants.NEW_ELEMENT_TAG);
-        innerEnum.addJavaDocLine(" * @author hewei");
-        innerEnum.addJavaDocLine(" */"); //$NON-NLS-1$
+        innerEnum.addJavaDocLine(" * @project https://github.com/itfsw/mybatis-generator-plugin");
+
+        innerEnum.addJavaDocLine(" */");
     }
 
     /**
@@ -99,15 +101,16 @@ public class CommentTools {
      */
     public static void addGeneralMethodComment(Method method, IntrospectedTable introspectedTable) {
         StringBuilder sb = new StringBuilder();
-        method.addJavaDocLine("/**"); //$NON-NLS-1$
+        method.addJavaDocLine("/**");
         method.addJavaDocLine(" * 这是Mybatis Generator拓展插件生成的方法(请勿删除).");
         sb.append(" * This method corresponds to the database table ");
         sb.append(introspectedTable.getFullyQualifiedTable());
         method.addJavaDocLine(sb.toString());
         method.addJavaDocLine(" *");
         method.addJavaDocLine(" * "+MergeConstants.NEW_ELEMENT_TAG);
-        method.addJavaDocLine(" * @author hewei");
-        method.addJavaDocLine(" */"); //$NON-NLS-1$
+        method.addJavaDocLine(" * @project https://github.com/itfsw/mybatis-generator-plugin");
+
+        method.addJavaDocLine(" */");
     }
 
     /**
@@ -117,16 +120,16 @@ public class CommentTools {
      */
     public static void addComment(XmlElement xmlElement) {
 
-        xmlElement.addElement(new TextElement("<!--")); //$NON-NLS-1$
+        xmlElement.addElement(new TextElement("<!--"));
 
         StringBuilder sb = new StringBuilder();
-        sb.append("  WARNING - "); //$NON-NLS-1$
+        sb.append("  WARNING - ");
         sb.append(MergeConstants.NEW_ELEMENT_TAG);
         xmlElement.addElement(new TextElement(sb.toString()));
-        xmlElement.addElement(new TextElement("  这个节点为代码生成工具生成，请不要修改!")); //$NON-NLS-1$
-        xmlElement.addElement(new TextElement("  @author hewei"));
+        xmlElement.addElement(new TextElement("  这个节点为代码生成工具生成，请不要修改!"));
+        xmlElement.addElement(new TextElement("  @project https://github.com/itfsw/mybatis-generator-plugin"));
 
-        xmlElement.addElement(new TextElement("-->")); //$NON-NLS-1$
+        xmlElement.addElement(new TextElement("-->"));
     }
 
     /**
@@ -137,15 +140,16 @@ public class CommentTools {
      */
     public static void addInterfaceComment(Interface interf, IntrospectedTable introspectedTable) {
         StringBuilder sb = new StringBuilder();
-        interf.addJavaDocLine("/**"); //$NON-NLS-1$
-        interf.addJavaDocLine(" * 这是Mybatis Generator拓展插件生成的接口(请勿删除)."); //$NON-NLS-1$
-        sb.append(" * This class corresponds to the database table "); //$NON-NLS-1$
+        interf.addJavaDocLine("/**");
+        interf.addJavaDocLine(" * 这是Mybatis Generator拓展插件生成的接口(请勿删除).");
+        sb.append(" * This class corresponds to the database table ");
         sb.append(introspectedTable.getFullyQualifiedTable());
         interf.addJavaDocLine(sb.toString());
         interf.addJavaDocLine(" *");
         interf.addJavaDocLine(" * "+MergeConstants.NEW_ELEMENT_TAG);
-        interf.addJavaDocLine(" * @author hewei");
-        interf.addJavaDocLine(" */"); //$NON-NLS-1$
+        interf.addJavaDocLine(" * @project https://github.com/itfsw/mybatis-generator-plugin");
+
+        interf.addJavaDocLine(" */");
     }
 
 }

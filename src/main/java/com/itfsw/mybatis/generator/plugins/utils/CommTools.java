@@ -39,6 +39,17 @@ public class CommTools {
      * @param introspectedTable
      */
     public static void useGeneratedKeys(XmlElement element, IntrospectedTable introspectedTable){
+        useGeneratedKeys(element, introspectedTable, null);
+    }
+
+    /**
+     * 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
+     *
+     * @param element
+     * @param introspectedTable
+     * @param prefix
+     */
+    public static void useGeneratedKeys(XmlElement element, IntrospectedTable introspectedTable, String prefix){
         GeneratedKey gk = introspectedTable.getGeneratedKey();
         if (gk != null) {
             IntrospectedColumn introspectedColumn = introspectedTable.getColumn(gk.getColumn());
@@ -47,7 +58,7 @@ public class CommTools {
             if (introspectedColumn != null) {
                 // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
                 element.addAttribute(new Attribute("useGeneratedKeys", "true")); //$NON-NLS-1$ //$NON-NLS-2$
-                element.addAttribute(new Attribute("keyProperty", introspectedColumn.getJavaProperty())); //$NON-NLS-1$
+                element.addAttribute(new Attribute("keyProperty", (prefix == null ? "" : prefix) + introspectedColumn.getJavaProperty())); //$NON-NLS-1$
                 element.addAttribute(new Attribute("keyColumn", introspectedColumn.getActualColumnName())); //$NON-NLS-1$
             }
         }

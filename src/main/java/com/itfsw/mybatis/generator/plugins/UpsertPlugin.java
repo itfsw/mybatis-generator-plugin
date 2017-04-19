@@ -18,17 +18,21 @@ package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.CommTools;
 import com.itfsw.mybatis.generator.plugins.utils.CommentTools;
+import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.*;
+import org.mybatis.generator.codegen.mybatis3.ListUtilities;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 import org.mybatis.generator.internal.util.StringUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * ---------------------------------------------------------------------------
@@ -42,6 +46,10 @@ public class UpsertPlugin extends PluginAdapter {
     private static final Logger logger = LoggerFactory.getLogger(BatchInsertPlugin.class);
     public static final String METHOD_UPSERT = "upsert";  // 方法名
     public static final String METHOD_UPSERT_SELECTIVE = "upsertSelective";  // 方法名
+    public static final String METHOD_UPSERT_BY_EXAMPLE = "upsertByExample";   // 方法名
+
+    public static final String PRE_ALLOW_MULTI_QUERIES = "allowMultiQueries";   // property allowMultiQueries
+    private boolean allowMultiQueries = false;  // 是否允许多sql提交
 
     /**
      * {@inheritDoc}
@@ -58,6 +66,15 @@ public class UpsertPlugin extends PluginAdapter {
         if ("com.mysql.jdbc.Driver".equalsIgnoreCase(this.getContext().getJdbcConnectionConfiguration().getDriverClass()) == false){
             logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件使用前提是数据库为MySQL！");
             return false;
+        }
+
+        // 插件是否开启了多sql提交
+        Properties properties = this.getProperties();
+        String allowMultiQueries = properties.getProperty(PRE_ALLOW_MULTI_QUERIES);
+        this.allowMultiQueries = allowMultiQueries == null ? false : StringUtility.isTrue(allowMultiQueries);
+        if (this.allowMultiQueries){
+            // 提示用户注意信息
+            logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件您开启了allowMultiQueries支持，注意在jdbc url 配置中增加“allowMultiQueries=true”支持（不怎么建议使用该功能，开启多sql提交会增加sql注入的风险，请确保你所有sql都使用MyBatis书写，请不要使用statement进行sql提交）！");
         }
 
         return true;
@@ -98,6 +115,21 @@ public class UpsertPlugin extends PluginAdapter {
         interfaze.addMethod(mUpsertSelective);
         logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertSelective方法。");
 
+        if (this.allowMultiQueries){
+            // ====================================== 3. upsertByExample ======================================
+            Method mUpsertByExample = new Method(METHOD_UPSERT_BY_EXAMPLE);
+            // 返回值类型
+            mUpsertByExample.setReturnType(null);
+            // 添加参数
+            mUpsertByExample.addParameter(new Parameter(introspectedTable.getRules().calculateAllFieldsClass(), "record", "@Param(\"record\")"));
+            mUpsertByExample.addParameter(new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")"));
+            // 添加方法说明
+            CommentTools.addGeneralMethodComment(mUpsertByExample, introspectedTable);
+            // interface 增加方法
+            interfaze.addMethod(mUpsertByExample);
+            logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertByExample方法。");
+        }
+
         return true;
     }
 
@@ -128,7 +160,9 @@ public class UpsertPlugin extends PluginAdapter {
         eleUpsert.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
         eleUpsert.addElement(this.generateInsertClause(introspectedTable));
         eleUpsert.addElement(new TextElement("values"));
+        eleUpsert.addElement(new TextElement("("));
         eleUpsert.addElement(this.generateValuesClause(introspectedTable));
+        eleUpsert.addElement(new TextElement(")"));
         eleUpsert.addElement(new TextElement("on duplicate key update "));
         eleUpsert.addElement(this.generateDuplicateClause(introspectedTable));
 
@@ -158,7 +192,69 @@ public class UpsertPlugin extends PluginAdapter {
         document.getRootElement().addElement(eleUpsertSelective);
         logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsertSelective实现方法。");
 
+        if (this.allowMultiQueries){
+            // ====================================== 2. upsertByExample ======================================
+            XmlElement eleUpsertByExample = new XmlElement("insert");
+            eleUpsertByExample.addAttribute(new Attribute("id", METHOD_UPSERT_BY_EXAMPLE));
+            // 参数类型
+            eleUpsertByExample.addAttribute(new Attribute("parameterType", "map"));
+            // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
+            CommentTools.addComment(eleUpsertByExample);
+
+            // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
+            CommTools.useGeneratedKeys(eleUpsertByExample, introspectedTable, "record.");
+
+            // insert
+            eleUpsertByExample.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
+            eleUpsertByExample.addElement(this.generateInsertClause(introspectedTable));
+            this.generateExistsClause(introspectedTable, eleUpsertByExample);
+
+            // multiQueries
+            eleUpsertByExample.addElement(new TextElement(";"));
+
+            // update
+            eleUpsertByExample.addElement(new TextElement("update " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
+            eleUpsertByExample.addElement(new TextElement("set"));
+            Iterator<IntrospectedColumn> iterator = ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()).iterator();
+            StringBuffer sb = new StringBuffer();
+            while (iterator.hasNext()){
+                IntrospectedColumn column = iterator.next();
+                sb.append(MyBatis3FormattingUtilities.getAliasedEscapedColumnName(column));
+                sb.append(" = ");
+                sb.append(MyBatis3FormattingUtilities.getParameterClause(column, "record."));
+
+                if (iterator.hasNext()){
+                    sb.append(",");
+                }
+            }
+            eleUpsertByExample.addElement(new TextElement(sb.toString()));
+            // update where
+            eleUpsertByExample.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
+
+            document.getRootElement().addElement(eleUpsertByExample);
+            logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsertSelective实现方法。");
+        }
+
         return true;
+    }
+
+    /**
+     * exists 语句
+     *
+     * @param introspectedTable
+     * @return
+     */
+    private void generateExistsClause(IntrospectedTable introspectedTable, XmlElement element){
+        element.addElement(new TextElement("select"));
+        element.addElement(this.generateValuesClause(introspectedTable, "record."));
+        element.addElement(new TextElement("from dual where not exists"));
+        element.addElement(new TextElement("("));
+        element.addElement(new TextElement("select 1 from " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
+
+        // if example
+        element.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
+
+        element.addElement(new TextElement(")"));
     }
 
     /**
@@ -195,21 +291,28 @@ public class UpsertPlugin extends PluginAdapter {
      * @return
      */
     private Element generateValuesClause(IntrospectedTable introspectedTable){
-        StringBuilder valuesClause = new StringBuilder();
+        return this.generateValuesClause(introspectedTable, null);
+    }
 
-        valuesClause.append(" (");
+    /**
+     * 普通 values
+     *
+     * @param introspectedTable
+     * @param prefix
+     * @return
+     */
+    private Element generateValuesClause(IntrospectedTable introspectedTable, String prefix){
+        StringBuilder valuesClause = new StringBuilder();
 
         List<IntrospectedColumn> columns = introspectedTable.getAllColumns();
         for (int i = 0; i < columns.size(); i++) {
             IntrospectedColumn introspectedColumn = columns.get(i);
 
-            valuesClause.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
+            valuesClause.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
             if (i + 1 < columns.size()) {
                 valuesClause.append(", ");
             }
         }
-
-        valuesClause.append(") ");
 
         return new TextElement(valuesClause.toString());
     }
