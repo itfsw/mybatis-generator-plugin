@@ -18,6 +18,7 @@ package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.CommTools;
 import com.itfsw.mybatis.generator.plugins.utils.CommentTools;
+import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
@@ -34,7 +35,6 @@ import org.mybatis.generator.internal.util.StringUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -163,36 +163,8 @@ public class BatchInsertPlugin extends PluginAdapter {
         // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
         CommTools.useGeneratedKeys(batchInsertEle, introspectedTable);
 
-        StringBuilder insertClause = new StringBuilder();
-        StringBuilder valuesClause = new StringBuilder();
-
-        insertClause.append("insert into "); //$NON-NLS-1$
-        insertClause.append(introspectedTable.getFullyQualifiedTableNameAtRuntime());
-        insertClause.append(" ("); //$NON-NLS-1$
-
-        valuesClause.append(" ("); //$NON-NLS-1$
-
-        List<String> valuesClauses = new ArrayList<String>();
-        List<IntrospectedColumn> columns = ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns());
-        for (int i = 0; i < columns.size(); i++) {
-            IntrospectedColumn introspectedColumn = columns.get(i);
-
-            insertClause.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
-
-            // 生成foreach下插入values
-            valuesClause.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, "item."));
-            if (i + 1 < columns.size()) {
-                insertClause.append(", "); //$NON-NLS-1$
-                valuesClause.append(", "); //$NON-NLS-1$
-            }
-        }
-
-        insertClause.append(')');
-        batchInsertEle.addElement(new TextElement(insertClause.toString()));
-
-        valuesClause.append(')');
-        valuesClauses.add(valuesClause.toString());
-
+        batchInsertEle.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
+        batchInsertEle.addElement(XmlElementGeneratorTools.generateKeys(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns())));
 
         // 添加foreach节点
         XmlElement foreachElement = new XmlElement("foreach");
@@ -200,9 +172,8 @@ public class BatchInsertPlugin extends PluginAdapter {
         foreachElement.addAttribute(new Attribute("item", "item"));
         foreachElement.addAttribute(new Attribute("separator", ","));
 
-        for (String clause : valuesClauses) {
-            foreachElement.addElement(new TextElement(clause));
-        }
+        foreachElement.addElement(XmlElementGeneratorTools.generateValues(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()), "item."));
+
 
         // values 构建
         batchInsertEle.addElement(new TextElement("values"));
@@ -253,6 +224,7 @@ public class BatchInsertPlugin extends PluginAdapter {
         foreachInsertColumnsCheck.addAttribute(new Attribute("separator", ","));
 
         // 所有表字段
+        List<IntrospectedColumn> columns = ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns());
         List<IntrospectedColumn> columns1 = ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns());
         for (int i = 0; i < columns1.size(); i++) {
             IntrospectedColumn introspectedColumn = columns.get(i);
