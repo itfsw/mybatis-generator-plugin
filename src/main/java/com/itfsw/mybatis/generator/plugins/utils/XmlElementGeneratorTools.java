@@ -19,9 +19,14 @@ package com.itfsw.mybatis.generator.plugins.utils;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.xml.Attribute;
+import org.mybatis.generator.api.dom.xml.Element;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
+import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 import org.mybatis.generator.config.GeneratedKey;
+
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * ---------------------------------------------------------------------------
@@ -36,14 +41,11 @@ public class XmlElementGeneratorTools {
     /**
      * This method should return an XmlElement for the select key used to
      * automatically generate keys.
-     *
-     * @param introspectedColumn
-     *            the column related to the select key statement
-     * @param generatedKey
-     *            the generated key for the current table
+     * @param introspectedColumn the column related to the select key statement
+     * @param generatedKey       the generated key for the current table
      * @return the selectKey element
      */
-    public static XmlElement getSelectKey(IntrospectedColumn introspectedColumn, GeneratedKey generatedKey) {
+    public static Element getSelectKey(IntrospectedColumn introspectedColumn, GeneratedKey generatedKey) {
         String identityColumnType = introspectedColumn
                 .getFullyQualifiedJavaType().getFullyQualifiedName();
 
@@ -60,21 +62,21 @@ public class XmlElementGeneratorTools {
         return answer;
     }
 
-    public static XmlElement getBaseColumnListElement(IntrospectedTable introspectedTable) {
+    public static Element getBaseColumnListElement(IntrospectedTable introspectedTable) {
         XmlElement answer = new XmlElement("include"); //$NON-NLS-1$
         answer.addAttribute(new Attribute("refid", //$NON-NLS-1$
                 introspectedTable.getBaseColumnListId()));
         return answer;
     }
 
-    public static XmlElement getBlobColumnListElement(IntrospectedTable introspectedTable) {
+    public static Element getBlobColumnListElement(IntrospectedTable introspectedTable) {
         XmlElement answer = new XmlElement("include"); //$NON-NLS-1$
         answer.addAttribute(new Attribute("refid", //$NON-NLS-1$
                 introspectedTable.getBlobColumnListId()));
         return answer;
     }
 
-    public static XmlElement getExampleIncludeElement(IntrospectedTable introspectedTable) {
+    public static Element getExampleIncludeElement(IntrospectedTable introspectedTable) {
         XmlElement ifElement = new XmlElement("if"); //$NON-NLS-1$
         ifElement.addAttribute(new Attribute("test", "_parameter != null")); //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -86,7 +88,7 @@ public class XmlElementGeneratorTools {
         return ifElement;
     }
 
-    public static XmlElement getUpdateByExampleIncludeElement(IntrospectedTable introspectedTable) {
+    public static Element getUpdateByExampleIncludeElement(IntrospectedTable introspectedTable) {
         XmlElement ifElement = new XmlElement("if"); //$NON-NLS-1$
         ifElement.addAttribute(new Attribute("test", "_parameter != null")); //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -97,4 +99,250 @@ public class XmlElementGeneratorTools {
 
         return ifElement;
     }
+
+    /**
+     * 生成keys Ele
+     * @param columns
+     * @return
+     */
+    public static Element generateKeys(List<IntrospectedColumn> columns) {
+        return generateKeys(columns, true);
+    }
+
+    /**
+     * 生成keys Ele
+     * @param columns
+     * @param bracket
+     * @return
+     */
+    public static Element generateKeys(List<IntrospectedColumn> columns, boolean bracket) {
+        return generateCommColumns(columns, null, bracket, 1);
+    }
+
+    /**
+     * 生成keys Selective Ele
+     * @param columns
+     * @return
+     */
+    public static Element generateKeysSelective(List<IntrospectedColumn> columns) {
+        return generateKeysSelective(columns, null);
+    }
+
+    /**
+     * 生成keys Selective Ele
+     * @param columns
+     * @param prefix
+     * @return
+     */
+    public static Element generateKeysSelective(List<IntrospectedColumn> columns, String prefix) {
+        return generateKeysSelective(columns, prefix, true);
+    }
+
+    /**
+     * 生成keys Selective Ele
+     * @param columns
+     * @param prefix
+     * @param bracket
+     * @return
+     */
+    public static Element generateKeysSelective(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
+        return generateCommColumnsSelective(columns, prefix, bracket, 1);
+    }
+
+    /**
+     * 生成values Ele
+     * @param columns
+     * @return
+     */
+    public static Element generateValues(List<IntrospectedColumn> columns) {
+        return generateValues(columns, null);
+    }
+
+    /**
+     * 生成values Ele
+     * @param columns
+     * @param prefix
+     * @return
+     */
+    public static Element generateValues(List<IntrospectedColumn> columns, String prefix) {
+        return generateValues(columns, prefix, true);
+    }
+
+    /**
+     * 生成values Ele
+     * @param columns
+     * @param prefix
+     * @param bracket
+     * @return
+     */
+    public static Element generateValues(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
+        return generateCommColumns(columns, prefix, bracket, 2);
+    }
+
+    /**
+     * 生成values Selective Ele
+     * @param columns
+     * @return
+     */
+    public static Element generateValuesSelective(List<IntrospectedColumn> columns) {
+        return generateValuesSelective(columns, null);
+    }
+
+    /**
+     * 生成values Selective Ele
+     * @param columns
+     * @param prefix
+     * @return
+     */
+    public static Element generateValuesSelective(List<IntrospectedColumn> columns, String prefix) {
+        return generateValuesSelective(columns, prefix, true);
+    }
+
+    /**
+     * 生成values Selective Ele
+     * @param columns
+     * @param prefix
+     * @param bracket
+     * @return
+     */
+    public static Element generateValuesSelective(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
+        return generateCommColumnsSelective(columns, prefix, bracket, 2);
+    }
+
+    /**
+     * 生成sets Ele
+     * @param columns
+     * @return
+     */
+    public static Element generateSets(List<IntrospectedColumn> columns) {
+        return generateSets(columns, null, false);
+    }
+
+    /**
+     * 生成sets Ele
+     * @param columns
+     * @param prefix
+     * @return
+     */
+    public static Element generateSets(List<IntrospectedColumn> columns, String prefix) {
+        return generateSets(columns, prefix, false);
+    }
+
+    /**
+     * 生成sets Ele
+     * @param columns
+     * @param prefix
+     * @param bracket
+     * @return
+     */
+    public static Element generateSets(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
+        return generateCommColumns(columns, prefix, bracket, 3);
+    }
+
+    /**
+     * 生成sets Selective Ele
+     * @param columns
+     * @return
+     */
+    public static Element generateSetsSelective(List<IntrospectedColumn> columns) {
+        return generateSetsSelective(columns, null, false);
+    }
+
+    /**
+     * 生成sets Selective Ele
+     * @param columns
+     * @param prefix
+     * @return
+     */
+    public static Element generateSetsSelective(List<IntrospectedColumn> columns, String prefix) {
+        return generateSetsSelective(columns, prefix, false);
+    }
+
+    /**
+     * 生成sets Selective Ele
+     * @param columns
+     * @param prefix
+     * @param bracket
+     * @return
+     */
+    public static Element generateSetsSelective(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
+        return generateCommColumnsSelective(columns, prefix, bracket, 3);
+    }
+
+    /**
+     * 通用遍历columns
+     * @param columns
+     * @param prefix
+     * @param bracket
+     * @param type    1:key,2:value,3:set
+     * @return
+     */
+    private static Element generateCommColumns(List<IntrospectedColumn> columns, String prefix, boolean bracket, int type) {
+        StringBuffer sb = new StringBuffer(bracket ? "(" : "");
+        Iterator<IntrospectedColumn> columnIterator = columns.iterator();
+        while (columnIterator.hasNext()) {
+            IntrospectedColumn introspectedColumn = columnIterator.next();
+
+            switch (type) {
+                case 3:
+                    sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
+                    sb.append(" = ");
+                    sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
+                    break;
+                case 2:
+                    sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
+                    break;
+                case 1:
+                    sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
+                    break;
+            }
+
+            if (columnIterator.hasNext()) {
+                sb.append(", ");
+            }
+        }
+
+        return new TextElement(sb.append(bracket ? ")" : "").toString());
+    }
+
+    /**
+     * 通用遍历columns
+     * @param columns
+     * @param prefix
+     * @param bracket
+     * @param type    1:key,2:value,3:set
+     * @return
+     */
+    private static Element generateCommColumnsSelective(List<IntrospectedColumn> columns, String prefix, boolean bracket, int type) {
+        XmlElement eleTrim = new XmlElement("trim");
+        if (bracket) {
+            eleTrim.addAttribute(new Attribute("prefix", "("));
+            eleTrim.addAttribute(new Attribute("suffix", ")"));
+            eleTrim.addAttribute(new Attribute("suffixOverrides", ","));
+        } else {
+            eleTrim.addAttribute(new Attribute("suffixOverrides", ","));
+        }
+
+        for (IntrospectedColumn introspectedColumn : columns) {
+            XmlElement eleIf = new XmlElement("if");
+            eleIf.addAttribute(new Attribute("test", introspectedColumn.getJavaProperty(prefix) + " != null"));
+
+            switch (type) {
+                case 3:
+                    eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = " + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
+                    break;
+                case 2:
+                    eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
+                    break;
+                case 1:
+                    eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + ","));
+                    break;
+            }
+
+            eleTrim.addElement(eleIf);
+        }
+
+        return eleTrim;
+    }
+
 }
