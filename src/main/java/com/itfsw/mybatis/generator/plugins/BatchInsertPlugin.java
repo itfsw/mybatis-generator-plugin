@@ -16,8 +16,8 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.CommTools;
 import com.itfsw.mybatis.generator.plugins.utils.CommentTools;
+import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
 import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
@@ -29,8 +29,6 @@ import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.mybatis3.ListUtilities;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
-import org.mybatis.generator.config.Context;
-import org.mybatis.generator.config.PluginConfiguration;
 import org.mybatis.generator.internal.util.StringUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,27 +69,9 @@ public class BatchInsertPlugin extends PluginAdapter {
 
 
         // 插件使用前提是使用了ModelColumnPlugin插件
-        try {
-            Context ctx = getContext();
-            // 利用反射获取pluginConfigurations属性
-            java.lang.reflect.Field field = Context.class.getDeclaredField("pluginConfigurations");
-            field.setAccessible(true);
-            List<PluginConfiguration> list = (List<PluginConfiguration>) field.get(ctx);
-            // 检查是否配置了ModelColumnPlugin插件
-            boolean unFind = true;
-            for (PluginConfiguration config: list) {
-                if (ModelColumnPlugin.class.getName().equals(config.getConfigurationType())){
-                    unFind = false;
-                }
-            }
-
-            // 建议使用ModelColumnPlugin插件
-            if (unFind){
-                logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件需配合com.itfsw.mybatis.generator.plugins.ModelColumnPlugin插件使用！");
-                return false;
-            }
-        } catch (Exception e) {
-            logger.error(e.getLocalizedMessage());
+        if (!PluginTools.checkDependencyPlugin(ModelColumnPlugin.class, null)) {
+            logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件需配合com.itfsw.mybatis.generator.plugins.ModelColumnPlugin插件使用！");
+            return false;
         }
 
         // TODO
@@ -161,7 +141,7 @@ public class BatchInsertPlugin extends PluginAdapter {
         CommentTools.addComment(batchInsertEle);
 
         // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-        CommTools.useGeneratedKeys(batchInsertEle, introspectedTable);
+        XmlElementGeneratorTools.useGeneratedKeys(batchInsertEle, introspectedTable);
 
         batchInsertEle.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
         batchInsertEle.addElement(XmlElementGeneratorTools.generateKeys(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns())));
@@ -192,7 +172,7 @@ public class BatchInsertPlugin extends PluginAdapter {
         CommentTools.addComment(element);
 
         // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-        CommTools.useGeneratedKeys(element, introspectedTable);
+        XmlElementGeneratorTools.useGeneratedKeys(element, introspectedTable);
 
         element.addElement(new TextElement("insert into "+introspectedTable.getFullyQualifiedTableNameAtRuntime()+" ("));
 

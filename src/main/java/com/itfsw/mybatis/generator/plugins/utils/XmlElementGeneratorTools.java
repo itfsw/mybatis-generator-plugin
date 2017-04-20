@@ -49,11 +49,11 @@ public class XmlElementGeneratorTools {
         String identityColumnType = introspectedColumn
                 .getFullyQualifiedJavaType().getFullyQualifiedName();
 
-        XmlElement answer = new XmlElement("selectKey"); //$NON-NLS-1$
-        answer.addAttribute(new Attribute("resultType", identityColumnType)); //$NON-NLS-1$
+        XmlElement answer = new XmlElement("selectKey"); 
+        answer.addAttribute(new Attribute("resultType", identityColumnType)); 
         answer.addAttribute(new Attribute(
-                "keyProperty", introspectedColumn.getJavaProperty())); //$NON-NLS-1$
-        answer.addAttribute(new Attribute("order", //$NON-NLS-1$
+                "keyProperty", introspectedColumn.getJavaProperty())); 
+        answer.addAttribute(new Attribute("order", 
                 generatedKey.getMyBatis3Order()));
 
         answer.addElement(new TextElement(generatedKey
@@ -63,25 +63,25 @@ public class XmlElementGeneratorTools {
     }
 
     public static Element getBaseColumnListElement(IntrospectedTable introspectedTable) {
-        XmlElement answer = new XmlElement("include"); //$NON-NLS-1$
-        answer.addAttribute(new Attribute("refid", //$NON-NLS-1$
+        XmlElement answer = new XmlElement("include"); 
+        answer.addAttribute(new Attribute("refid", 
                 introspectedTable.getBaseColumnListId()));
         return answer;
     }
 
     public static Element getBlobColumnListElement(IntrospectedTable introspectedTable) {
-        XmlElement answer = new XmlElement("include"); //$NON-NLS-1$
-        answer.addAttribute(new Attribute("refid", //$NON-NLS-1$
+        XmlElement answer = new XmlElement("include"); 
+        answer.addAttribute(new Attribute("refid", 
                 introspectedTable.getBlobColumnListId()));
         return answer;
     }
 
     public static Element getExampleIncludeElement(IntrospectedTable introspectedTable) {
-        XmlElement ifElement = new XmlElement("if"); //$NON-NLS-1$
-        ifElement.addAttribute(new Attribute("test", "_parameter != null")); //$NON-NLS-1$ //$NON-NLS-2$
+        XmlElement ifElement = new XmlElement("if"); 
+        ifElement.addAttribute(new Attribute("test", "_parameter != null"));  
 
-        XmlElement includeElement = new XmlElement("include"); //$NON-NLS-1$
-        includeElement.addAttribute(new Attribute("refid", //$NON-NLS-1$
+        XmlElement includeElement = new XmlElement("include"); 
+        includeElement.addAttribute(new Attribute("refid", 
                 introspectedTable.getExampleWhereClauseId()));
         ifElement.addElement(includeElement);
 
@@ -89,15 +89,47 @@ public class XmlElementGeneratorTools {
     }
 
     public static Element getUpdateByExampleIncludeElement(IntrospectedTable introspectedTable) {
-        XmlElement ifElement = new XmlElement("if"); //$NON-NLS-1$
-        ifElement.addAttribute(new Attribute("test", "_parameter != null")); //$NON-NLS-1$ //$NON-NLS-2$
+        XmlElement ifElement = new XmlElement("if"); 
+        ifElement.addAttribute(new Attribute("test", "_parameter != null"));  
 
-        XmlElement includeElement = new XmlElement("include"); //$NON-NLS-1$
-        includeElement.addAttribute(new Attribute("refid", //$NON-NLS-1$
+        XmlElement includeElement = new XmlElement("include"); 
+        includeElement.addAttribute(new Attribute("refid", 
                 introspectedTable.getMyBatis3UpdateByExampleWhereClauseId()));
         ifElement.addElement(includeElement);
 
         return ifElement;
+    }
+
+    /**
+     * 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
+     *
+     * @param element
+     * @param introspectedTable
+     */
+    public static void useGeneratedKeys(XmlElement element, IntrospectedTable introspectedTable){
+        useGeneratedKeys(element, introspectedTable, null);
+    }
+
+    /**
+     * 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
+     *
+     * @param element
+     * @param introspectedTable
+     * @param prefix
+     */
+    public static void useGeneratedKeys(XmlElement element, IntrospectedTable introspectedTable, String prefix){
+        GeneratedKey gk = introspectedTable.getGeneratedKey();
+        if (gk != null) {
+            IntrospectedColumn introspectedColumn = introspectedTable.getColumn(gk.getColumn());
+            // if the column is null, then it's a configuration error. The
+            // warning has already been reported
+            if (introspectedColumn != null) {
+                // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
+                element.addAttribute(new Attribute("useGeneratedKeys", "true"));  
+                element.addAttribute(new Attribute("keyProperty", (prefix == null ? "" : prefix) + introspectedColumn.getJavaProperty())); 
+                element.addAttribute(new Attribute("keyColumn", introspectedColumn.getActualColumnName())); 
+            }
+        }
     }
 
     /**

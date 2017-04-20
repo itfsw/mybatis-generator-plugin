@@ -16,7 +16,6 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.CommTools;
 import com.itfsw.mybatis.generator.plugins.utils.CommentTools;
 import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedTable;
@@ -168,7 +167,7 @@ public class UpsertPlugin extends PluginAdapter {
         eleUpsert.addAttribute(new Attribute("parameterType", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
 
         // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-        CommTools.useGeneratedKeys(eleUpsert, introspectedTable);
+        XmlElementGeneratorTools.useGeneratedKeys(eleUpsert, introspectedTable);
 
         // insert
         eleUpsert.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
@@ -191,7 +190,7 @@ public class UpsertPlugin extends PluginAdapter {
         eleUpsertSelective.addAttribute(new Attribute("parameterType", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
 
         // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-        CommTools.useGeneratedKeys(eleUpsertSelective, introspectedTable);
+        XmlElementGeneratorTools.useGeneratedKeys(eleUpsertSelective, introspectedTable);
 
         // insert
         eleUpsertSelective.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
@@ -214,7 +213,7 @@ public class UpsertPlugin extends PluginAdapter {
             CommentTools.addComment(eleUpsertByExample);
 
             // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-            CommTools.useGeneratedKeys(eleUpsertByExample, introspectedTable, "record.");
+            XmlElementGeneratorTools.useGeneratedKeys(eleUpsertByExample, introspectedTable, "record.");
 
             // insert
             eleUpsertByExample.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
@@ -243,7 +242,7 @@ public class UpsertPlugin extends PluginAdapter {
             CommentTools.addComment(eleUpsertByExampleSelective);
 
             // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-            CommTools.useGeneratedKeys(eleUpsertByExampleSelective, introspectedTable, "record.");
+            XmlElementGeneratorTools.useGeneratedKeys(eleUpsertByExampleSelective, introspectedTable, "record.");
 
             // insert
             eleUpsertByExampleSelective.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));

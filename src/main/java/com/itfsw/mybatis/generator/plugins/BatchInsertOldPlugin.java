@@ -16,7 +16,7 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.CommTools;
+import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.CommentTools;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
@@ -171,7 +171,7 @@ public class BatchInsertOldPlugin extends PluginAdapter {
             CommentTools.addComment(element);
 
             // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-            CommTools.useGeneratedKeys(element, introspectedTable);
+            XmlElementGeneratorTools.useGeneratedKeys(element, introspectedTable);
 
             // choose 节点
             XmlElement choose = new XmlElement("choose");
@@ -246,7 +246,7 @@ public class BatchInsertOldPlugin extends PluginAdapter {
             CommentTools.addComment(element);
 
             // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-            CommTools.useGeneratedKeys(element, introspectedTable);
+            XmlElementGeneratorTools.useGeneratedKeys(element, introspectedTable);
 
             // 普通插入语句
             this.addNormalBatchInsertXml(element, introspectedTable);

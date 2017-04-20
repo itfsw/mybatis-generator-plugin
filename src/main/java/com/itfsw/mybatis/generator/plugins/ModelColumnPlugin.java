@@ -36,7 +36,7 @@ import java.util.List;
  * @time:2017/1/17 11:20
  * ---------------------------------------------------------------------------
  */
-public class ModelColumnPlugin  extends PluginAdapter {
+public class ModelColumnPlugin extends PluginAdapter {
     public static final String ENUM_NAME = "Column";  // 内部Enum名
     private static final Logger logger = LoggerFactory.getLogger(ModelColumnPlugin.class);
 
@@ -46,8 +46,8 @@ public class ModelColumnPlugin  extends PluginAdapter {
     @Override
     public boolean validate(List<String> warnings) {
         // 插件使用前提是targetRuntime为MyBatis3
-        if (StringUtility.stringHasValue(getContext().getTargetRuntime()) && "MyBatis3".equalsIgnoreCase(getContext().getTargetRuntime()) == false ){
-            logger.warn("itfsw:插件"+this.getClass().getTypeName()+"要求运行targetRuntime必须为MyBatis3！");
+        if (StringUtility.stringHasValue(getContext().getTargetRuntime()) && "MyBatis3".equalsIgnoreCase(getContext().getTargetRuntime()) == false) {
+            logger.warn("itfsw:插件" + this.getClass().getTypeName() + "要求运行targetRuntime必须为MyBatis3！");
             return false;
         }
         return true;
@@ -56,7 +56,6 @@ public class ModelColumnPlugin  extends PluginAdapter {
     /**
      * Model Methods 生成
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     *
      * @param topLevelClass
      * @param introspectedTable
      * @return
@@ -70,7 +69,7 @@ public class ModelColumnPlugin  extends PluginAdapter {
         innerEnum.setVisibility(JavaVisibility.PUBLIC);
         innerEnum.setStatic(true);
         CommentTools.addInnerEnumComment(innerEnum, introspectedTable);
-        logger.debug("itfsw(数据Model属性对应Column获取插件):"+topLevelClass.getType().getShortName()+"增加内部Builder类。");
+        logger.debug("itfsw(数据Model属性对应Column获取插件):" + topLevelClass.getType().getShortName() + "增加内部Builder类。");
 
         // 生成属性和构造函数
         Field columnField = new Field("column", FullyQualifiedJavaType.getStringInstance());
@@ -99,7 +98,7 @@ public class ModelColumnPlugin  extends PluginAdapter {
         constructor.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "column"));
         CommentTools.addGeneralMethodComment(constructor, introspectedTable);
         innerEnum.addMethod(constructor);
-        logger.debug("itfsw(数据Model属性对应Column获取插件):"+topLevelClass.getType().getShortName()+".Column增加构造方法和column属性。");
+        logger.debug("itfsw(数据Model属性对应Column获取插件):" + topLevelClass.getType().getShortName() + ".Column增加构造方法和column属性。");
 
         // Enum枚举
         for (IntrospectedColumn introspectedColumn : introspectedTable.getAllColumns()) {
