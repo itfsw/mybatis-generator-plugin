@@ -61,6 +61,11 @@ public class SelectiveEnhancedPlugin extends PluginAdapter {
             return false;
         }
 
+        // 插件配置位置最好是在末尾
+        if (PluginTools.getConfigPlugins(getContext()).size() - 1 != PluginTools.getPluginIndex(SelectiveEnhancedPlugin.class, getContext())){
+            logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件建议配置在所有插件末尾以便最后调用，否则某些Selective方法得不到增强！");
+        }
+
         return true;
     }
 

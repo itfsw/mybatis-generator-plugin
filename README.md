@@ -23,7 +23,7 @@ Maven引用：
   <artifactId>mybatis-generator-plugin</artifactId>
   <!-- 稳定版本 -->
   <version>1.0.6</version>
-  <!-- 快照版本(最新提交到中央库，增加了部分功能，未完成测试) -->
+  <!-- 快照版本(最新提交到中央库，增加了部分功能，欢迎测试反馈) -->
   <version>1.0.7-SNAPSHOT</version>
 </dependency>
 ```

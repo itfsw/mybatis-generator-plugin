@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -37,27 +38,47 @@ public class PluginTools {
 
     /**
      * 检查插件依赖
+     * @param plugin 插件
+     * @param ctx    上下文
+     * @return
+     */
+    public static boolean checkDependencyPlugin(Class plugin, Context ctx) {
+        return getPluginIndex(plugin, ctx) >= 0;
+    }
+
+    /**
+     * 获取插件所在位置
      *
      * @param plugin 插件
      * @param ctx 上下文
+     * @return -1:未找到
+     */
+    public static int getPluginIndex(Class plugin, Context ctx) {
+        List<PluginConfiguration> list = getConfigPlugins(ctx);
+        // 检查是否配置了ModelColumnPlugin插件
+        for (int i = 0; i < list.size(); i++) {
+            PluginConfiguration config = list.get(i);
+            if (plugin.getName().equals(config.getConfigurationType())) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * 获取插件列表
+     * @param ctx 上下文
      * @return
      */
-    public static boolean checkDependencyPlugin(Class plugin, Context ctx){
+    public static List<PluginConfiguration> getConfigPlugins(Context ctx) {
         try {
             // 利用反射获取pluginConfigurations属性
             Field field = Context.class.getDeclaredField("pluginConfigurations");
             field.setAccessible(true);
-            List<PluginConfiguration> list = (List<PluginConfiguration>) field.get(ctx);
-            // 检查是否配置了ModelColumnPlugin插件
-            for (PluginConfiguration config: list) {
-                if (plugin.getName().equals(config.getConfigurationType())){
-                    return true;
-                }
-            }
+            return (List<PluginConfiguration>) field.get(ctx);
         } catch (Exception e) {
             logger.error("插件检查反射异常", e);
         }
-
-        return false;
+        return new ArrayList<>();
     }
 }
