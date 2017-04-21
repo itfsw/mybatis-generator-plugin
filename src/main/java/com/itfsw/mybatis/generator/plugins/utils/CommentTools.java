@@ -99,7 +99,7 @@ public class CommentTools {
      * @param method 方法
      * @param introspectedTable 表
      */
-    public static void addGeneralMethodComment(Method method, IntrospectedTable introspectedTable) {
+    public static void addMethodComment(Method method, IntrospectedTable introspectedTable) {
         StringBuilder sb = new StringBuilder();
         method.addJavaDocLine("/**");
         method.addJavaDocLine(" * 这是Mybatis Generator拓展插件生成的方法(请勿删除).");

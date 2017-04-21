@@ -69,7 +69,7 @@ public class BatchInsertPlugin extends PluginAdapter {
 
 
         // 插件使用前提是使用了ModelColumnPlugin插件
-        if (!PluginTools.checkDependencyPlugin(ModelColumnPlugin.class, null)) {
+        if (!PluginTools.checkDependencyPlugin(ModelColumnPlugin.class, getContext())) {
             logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件需配合com.itfsw.mybatis.generator.plugins.ModelColumnPlugin插件使用！");
             return false;
         }
@@ -101,7 +101,7 @@ public class BatchInsertPlugin extends PluginAdapter {
         tList.addTypeArgument(introspectedTable.getRules().calculateAllFieldsClass());
         mBatchInsert.addParameter(new Parameter(tList, "list", "@Param(\"list\")"));
         // 添加方法说明
-        CommentTools.addGeneralMethodComment(mBatchInsert, introspectedTable);
+        CommentTools.addMethodComment(mBatchInsert, introspectedTable);
         // interface 增加方法
         interfaze.addMethod(mBatchInsert);
         logger.debug("itfsw(批量插入插件):" + interfaze.getType().getShortName() + "增加batchInsert方法。");
@@ -114,7 +114,7 @@ public class BatchInsertPlugin extends PluginAdapter {
         mBatchInsertSelective.addParameter(new Parameter(tList, "list", "@Param(\"list\")"));
         mBatchInsertSelective.addParameter(new Parameter(tSelective, "selective", "@Param(\"selective\")", true));
         // 添加方法说明
-        CommentTools.addGeneralMethodComment(mBatchInsertSelective, introspectedTable);
+        CommentTools.addMethodComment(mBatchInsertSelective, introspectedTable);
         // interface 增加方法
         interfaze.addMethod(mBatchInsertSelective);
         logger.debug("itfsw(批量插入插件):" + interfaze.getType().getShortName() + "增加batchInsertSelective方法。");

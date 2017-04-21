@@ -125,7 +125,7 @@ public class BatchInsertOldPlugin extends PluginAdapter {
             FullyQualifiedJavaType type1 = new FullyQualifiedJavaType(introspectedTable.getRules().calculateAllFieldsClass().getShortName()+"."+ModelColumnPlugin.ENUM_NAME);
             method.addParameter(new Parameter(type1, "insertColumns", "@Param(\"insertColumns\")", true));
             // 添加方法说明
-            CommentTools.addGeneralMethodComment(method, introspectedTable);
+            CommentTools.addMethodComment(method, introspectedTable);
 
             // interface 增加方法
             interfaze.addMethod(method);
@@ -142,7 +142,7 @@ public class BatchInsertOldPlugin extends PluginAdapter {
             type.addTypeArgument(introspectedTable.getRules().calculateAllFieldsClass());
             method.addParameter(new Parameter(type, "list", "@Param(\"list\")"));
             // 添加方法说明
-            CommentTools.addGeneralMethodComment(method, introspectedTable);
+            CommentTools.addMethodComment(method, introspectedTable);
 
             // interface 增加方法
             interfaze.addMethod(method);

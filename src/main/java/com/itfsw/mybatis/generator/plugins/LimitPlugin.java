@@ -90,7 +90,7 @@ public class LimitPlugin extends PluginAdapter {
         setOffset.setName("setOffset");
         setOffset.addParameter(new Parameter(integerWrapper, "offset"));
         setOffset.addBodyLine("this.offset = offset;");
-        CommentTools.addGeneralMethodComment(setOffset, introspectedTable);
+        CommentTools.addMethodComment(setOffset, introspectedTable);
         topLevelClass.addMethod(setOffset);
 
         Method getOffset = new Method();
@@ -98,7 +98,7 @@ public class LimitPlugin extends PluginAdapter {
         getOffset.setReturnType(integerWrapper);
         getOffset.setName("getOffset");
         getOffset.addBodyLine("return offset;");
-        CommentTools.addGeneralMethodComment(getOffset, introspectedTable);
+        CommentTools.addMethodComment(getOffset, introspectedTable);
         topLevelClass.addMethod(getOffset);
 
         Method setRows = new Method();
@@ -106,7 +106,7 @@ public class LimitPlugin extends PluginAdapter {
         setRows.setName("setRows");
         setRows.addParameter(new Parameter(integerWrapper, "rows"));
         setRows.addBodyLine("this.rows = rows;");
-        CommentTools.addGeneralMethodComment(setRows, introspectedTable);
+        CommentTools.addMethodComment(setRows, introspectedTable);
         topLevelClass.addMethod(setRows);
 
         Method getRows = new Method();
@@ -114,7 +114,7 @@ public class LimitPlugin extends PluginAdapter {
         getRows.setReturnType(integerWrapper);
         getRows.setName("getRows");
         getRows.addBodyLine("return rows;");
-        CommentTools.addGeneralMethodComment(getRows, introspectedTable);
+        CommentTools.addMethodComment(getRows, introspectedTable);
         topLevelClass.addMethod(getRows);
         logger.debug("itfsw(MySQL分页插件):"+topLevelClass.getType().getShortName()+"增加offset和rows的getter和setter实现。");
 
@@ -126,7 +126,7 @@ public class LimitPlugin extends PluginAdapter {
         setLimit.addParameter(new Parameter(integerWrapper, "rows"));
         setLimit.addBodyLine("this.rows = rows;");
         setLimit.addBodyLine("return this;");
-        CommentTools.addGeneralMethodComment(setLimit, introspectedTable);
+        CommentTools.addMethodComment(setLimit, introspectedTable);
         topLevelClass.addMethod(setLimit);
 
         Method setLimit2 = new Method();
@@ -138,7 +138,7 @@ public class LimitPlugin extends PluginAdapter {
         setLimit2.addBodyLine("this.offset = offset;");
         setLimit2.addBodyLine("this.rows = rows;");
         setLimit2.addBodyLine("return this;");
-        CommentTools.addGeneralMethodComment(setLimit2, introspectedTable);
+        CommentTools.addMethodComment(setLimit2, introspectedTable);
         topLevelClass.addMethod(setLimit2);
         logger.debug("itfsw(MySQL分页插件):"+topLevelClass.getType().getShortName()+"增加limit方法。");
 
@@ -151,7 +151,7 @@ public class LimitPlugin extends PluginAdapter {
         setPage.addBodyLine("this.offset = page * pageSize;");
         setPage.addBodyLine("this.rows = pageSize;");
         setPage.addBodyLine("return this;");
-        CommentTools.addGeneralMethodComment(setPage, introspectedTable);
+        CommentTools.addMethodComment(setPage, introspectedTable);
         topLevelClass.addMethod(setPage);
         logger.debug("itfsw(MySQL分页插件):"+topLevelClass.getType().getShortName()+"增加page方法");
 

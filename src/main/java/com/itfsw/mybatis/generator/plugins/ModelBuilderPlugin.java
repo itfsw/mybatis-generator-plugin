@@ -83,7 +83,7 @@ public class ModelBuilderPlugin extends PluginAdapter {
         constructor.setVisibility(JavaVisibility.PUBLIC);
         constructor.setConstructor(true);
         constructor.addBodyLine(new StringBuilder("this.obj = new ").append(topLevelClass.getType().getShortName()).append("();").toString());
-        CommentTools.addGeneralMethodComment(constructor, introspectedTable);
+        CommentTools.addMethodComment(constructor, introspectedTable);
         innerClass.addMethod(constructor);
         logger.debug("itfsw(数据Model链式构建插件):"+topLevelClass.getType().getShortName()+".Builder增加的构造方法。");
 
@@ -100,7 +100,7 @@ public class ModelBuilderPlugin extends PluginAdapter {
                 method.addBodyLine(new StringBuilder().append("obj.").append(setterMethod.getName())
                         .append("(").append(field.getName()).append(");").toString());
                 method.addBodyLine(new StringBuilder().append("return this;").toString());
-                CommentTools.addGeneralMethodComment(method, introspectedTable);
+                CommentTools.addMethodComment(method, introspectedTable);
                 innerClass.addMethod(method);
                 logger.debug("itfsw(数据Model链式构建插件):"+topLevelClass.getType().getShortName()+".Builder增加"+method.getName()+"方法(复合主键)。");
             }
@@ -118,7 +118,7 @@ public class ModelBuilderPlugin extends PluginAdapter {
             method.addBodyLine(new StringBuilder().append("obj.").append(field.getName())
                     .append(" = ").append(field.getName()).append(";").toString());
             method.addBodyLine(new StringBuilder().append("return this;").toString());
-            CommentTools.addGeneralMethodComment(method, introspectedTable);
+            CommentTools.addMethodComment(method, introspectedTable);
             innerClass.addMethod(method);
             logger.debug("itfsw(数据Model链式构建插件):"+topLevelClass.getType().getShortName()+".Builder增加"+method.getName()+"方法。");
         }
@@ -127,7 +127,7 @@ public class ModelBuilderPlugin extends PluginAdapter {
         build.setReturnType(topLevelClass.getType());
         build.setVisibility(JavaVisibility.PUBLIC);
         build.addBodyLine("return this.obj;");
-        CommentTools.addGeneralMethodComment(build, introspectedTable);
+        CommentTools.addMethodComment(build, introspectedTable);
         innerClass.addMethod(build);
         logger.debug("itfsw(数据Model链式构建插件):"+topLevelClass.getType().getShortName()+".Builder增加build方法。");
 

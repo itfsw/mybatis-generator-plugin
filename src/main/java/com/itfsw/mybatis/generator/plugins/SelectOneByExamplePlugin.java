@@ -80,7 +80,7 @@ public class SelectOneByExamplePlugin extends PluginAdapter {
         FullyQualifiedJavaType type = new FullyQualifiedJavaType(introspectedTable.getExampleType());
         method.addParameter(new Parameter(type, "example"));
         // 添加方法说明
-        CommentTools.addGeneralMethodComment(method, introspectedTable);
+        CommentTools.addMethodComment(method, introspectedTable);
 
         // interface 增加方法
         interfaze.addMethod(method);

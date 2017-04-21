@@ -98,7 +98,7 @@ public class UpsertPlugin extends PluginAdapter {
         // 添加参数
         mUpsert.addParameter(new Parameter(introspectedTable.getRules().calculateAllFieldsClass(), "record"));
         // 添加方法说明
-        CommentTools.addGeneralMethodComment(mUpsert, introspectedTable);
+        CommentTools.addMethodComment(mUpsert, introspectedTable);
         // interface 增加方法
         interfaze.addMethod(mUpsert);
         logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsert方法。");
@@ -110,7 +110,7 @@ public class UpsertPlugin extends PluginAdapter {
         // 添加参数
         mUpsertSelective.addParameter(new Parameter(introspectedTable.getRules().calculateAllFieldsClass(), "record"));
         // 添加方法说明
-        CommentTools.addGeneralMethodComment(mUpsertSelective, introspectedTable);
+        CommentTools.addMethodComment(mUpsertSelective, introspectedTable);
         // interface 增加方法
         interfaze.addMethod(mUpsertSelective);
         logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertSelective方法。");
@@ -124,7 +124,7 @@ public class UpsertPlugin extends PluginAdapter {
             mUpsertByExample.addParameter(new Parameter(introspectedTable.getRules().calculateAllFieldsClass(), "record", "@Param(\"record\")"));
             mUpsertByExample.addParameter(new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")"));
             // 添加方法说明
-            CommentTools.addGeneralMethodComment(mUpsertByExample, introspectedTable);
+            CommentTools.addMethodComment(mUpsertByExample, introspectedTable);
             // interface 增加方法
             interfaze.addMethod(mUpsertByExample);
             logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertByExample方法。");
@@ -137,7 +137,7 @@ public class UpsertPlugin extends PluginAdapter {
             mUpsertByExampleSelective.addParameter(new Parameter(introspectedTable.getRules().calculateAllFieldsClass(), "record", "@Param(\"record\")"));
             mUpsertByExampleSelective.addParameter(new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")"));
             // 添加方法说明
-            CommentTools.addGeneralMethodComment(mUpsertByExampleSelective, introspectedTable);
+            CommentTools.addMethodComment(mUpsertByExampleSelective, introspectedTable);
             // interface 增加方法
             interfaze.addMethod(mUpsertByExampleSelective);
             logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertByExampleSelective方法。");

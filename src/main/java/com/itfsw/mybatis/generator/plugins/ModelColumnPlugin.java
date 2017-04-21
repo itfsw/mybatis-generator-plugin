@@ -82,21 +82,21 @@ public class ModelColumnPlugin extends PluginAdapter {
         mValue.setVisibility(JavaVisibility.PUBLIC);
         mValue.setReturnType(FullyQualifiedJavaType.getStringInstance());
         mValue.addBodyLine("return this.column;");
-        CommentTools.addGeneralMethodComment(mValue, introspectedTable);
+        CommentTools.addMethodComment(mValue, introspectedTable);
         innerEnum.addMethod(mValue);
 
         Method mGetValue = new Method("getValue");
         mGetValue.setVisibility(JavaVisibility.PUBLIC);
         mGetValue.setReturnType(FullyQualifiedJavaType.getStringInstance());
         mGetValue.addBodyLine("return this.column;");
-        CommentTools.addGeneralMethodComment(mGetValue, introspectedTable);
+        CommentTools.addMethodComment(mGetValue, introspectedTable);
         innerEnum.addMethod(mGetValue);
 
         Method constructor = new Method(ENUM_NAME);
         constructor.setConstructor(true);
         constructor.addBodyLine("this.column = column;");
         constructor.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "column"));
-        CommentTools.addGeneralMethodComment(constructor, introspectedTable);
+        CommentTools.addMethodComment(constructor, introspectedTable);
         innerEnum.addMethod(constructor);
         logger.debug("itfsw(数据Model属性对应Column获取插件):" + topLevelClass.getType().getShortName() + ".Column增加构造方法和column属性。");
 
@@ -119,14 +119,14 @@ public class ModelColumnPlugin extends PluginAdapter {
         desc.setVisibility(JavaVisibility.PUBLIC);
         desc.setReturnType(FullyQualifiedJavaType.getStringInstance());
         desc.addBodyLine("return this.column + \" DESC\";");
-        CommentTools.addGeneralMethodComment(desc, introspectedTable);
+        CommentTools.addMethodComment(desc, introspectedTable);
         innerEnum.addMethod(desc);
 
         Method asc = new Method("asc");
         asc.setVisibility(JavaVisibility.PUBLIC);
         asc.setReturnType(FullyQualifiedJavaType.getStringInstance());
         asc.addBodyLine("return this.column + \" ASC\";");
-        CommentTools.addGeneralMethodComment(asc, introspectedTable);
+        CommentTools.addMethodComment(asc, introspectedTable);
         innerEnum.addMethod(asc);
         logger.debug("itfsw(数据Model属性对应Column获取插件):" + topLevelClass.getType().getShortName() + ".Column增加asc()和desc()方法。");
 

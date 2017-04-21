@@ -146,7 +146,7 @@ public class LogicalDeletePlugin extends PluginAdapter {
             FullyQualifiedJavaType type = new FullyQualifiedJavaType(introspectedTable.getExampleType());
             mLogicalDeleteByExample.addParameter(new Parameter(type, "example"));
             // 添加方法说明
-            CommentTools.addGeneralMethodComment(mLogicalDeleteByExample, introspectedTable);
+            CommentTools.addMethodComment(mLogicalDeleteByExample, introspectedTable);
             // interface 增加方法
             interfaze.addMethod(mLogicalDeleteByExample);
             logger.debug("itfsw(逻辑删除插件):"+interfaze.getType().getShortName()+"增加方法logicalDeleteByExample。");
@@ -191,7 +191,7 @@ public class LogicalDeletePlugin extends PluginAdapter {
                 }
 
                 // 添加方法说明
-                CommentTools.addGeneralMethodComment(mLogicalDeleteByPrimaryKey, introspectedTable);
+                CommentTools.addMethodComment(mLogicalDeleteByPrimaryKey, introspectedTable);
                 // interface 增加方法
                 interfaze.addImportedTypes(importedTypes);
                 interfaze.addMethod(mLogicalDeleteByPrimaryKey);
@@ -375,7 +375,7 @@ public class LogicalDeletePlugin extends PluginAdapter {
                 if ("Criteria".equals(innerClass.getType().getShortName())) {
                     // 增加逻辑删除条件
                     Method method = new Method(METHOD_LOGICAL_DELETE);
-                    CommentTools.addGeneralMethodComment(method, introspectedTable);
+                    CommentTools.addMethodComment(method, introspectedTable);
                     method.setVisibility(JavaVisibility.PUBLIC);
                     method.setReturnType(innerClass.getType());
                     method.addParameter(new Parameter(FullyQualifiedJavaType.getBooleanPrimitiveInstance(), "deleted"));

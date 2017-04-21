@@ -96,7 +96,7 @@ public class ExampleEnhancedPlugin  extends PluginAdapter {
         method.setVisibility(JavaVisibility.PUBLIC);
         method.setReturnType(topLevelClass.getType());
         method.addBodyLine("return this.example;");
-        CommentTools.addGeneralMethodComment(method, introspectedTable);
+        CommentTools.addMethodComment(method, introspectedTable);
         innerClass.addMethod(method);
         logger.debug("itfsw(Example增强插件):"+topLevelClass.getType().getShortName()+"."+innerClass.getType().getShortName()+"增加工厂方法example");
     }
@@ -120,7 +120,7 @@ public class ExampleEnhancedPlugin  extends PluginAdapter {
         Method addMethod = new Method("add");
         addMethod.setReturnType(innerClass.getType());
         addMethod.addParameter(new Parameter(innerClass.getType(), "add"));
-        CommentTools.addGeneralMethodComment(addMethod, introspectedTable);
+        CommentTools.addMethodComment(addMethod, introspectedTable);
         criteriaAddInterface.addMethod(addMethod);
         logger.debug("itfsw(Example增强插件):"+topLevelClass.getType().getShortName()+"."+innerClass.getType().getShortName()+"."+criteriaAddInterface.getType().getShortName()+"增加方法add");
 
@@ -138,7 +138,7 @@ public class ExampleEnhancedPlugin  extends PluginAdapter {
         method.addBodyLine("add.add(this);");
         method.addBodyLine("}");
         method.addBodyLine("return this;");
-        CommentTools.addGeneralMethodComment(method, introspectedTable);
+        CommentTools.addMethodComment(method, introspectedTable);
         innerClass.addMethod(method);
         logger.debug("itfsw(Example增强插件):"+topLevelClass.getType().getShortName()+"."+innerClass.getType().getShortName()+"增加方法andIf");
     }
@@ -159,7 +159,7 @@ public class ExampleEnhancedPlugin  extends PluginAdapter {
         method.addBodyLine("this.setOrderByClause(orderByClause);");
         method.addBodyLine("return this;");
 
-        CommentTools.addGeneralMethodComment(method, introspectedTable);
+        CommentTools.addMethodComment(method, introspectedTable);
         topLevelClass.addMethod(method);
         logger.debug("itfsw(Example增强插件):"+topLevelClass.getType().getShortName()+"增加方法orderBy");
 
@@ -179,7 +179,7 @@ public class ExampleEnhancedPlugin  extends PluginAdapter {
         mOrderByMore.addBodyLine("this.setOrderByClause(sb.toString());");
         mOrderByMore.addBodyLine("return this;");
 
-        CommentTools.addGeneralMethodComment(mOrderByMore, introspectedTable);
+        CommentTools.addMethodComment(mOrderByMore, introspectedTable);
         topLevelClass.addMethod(mOrderByMore);
         logger.debug("itfsw(Example增强插件):"+topLevelClass.getType().getShortName()+"增加方法orderBy(String ... orderByClauses)");
     }
