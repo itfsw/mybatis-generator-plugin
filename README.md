@@ -349,6 +349,12 @@ public class Test {
                 .andDelFlagEqualTo(Tb.DEL_FLAG)
                 .example()
         );
+        
+        // 4. 逻辑删除和未删除常量
+        Tb tb = new Tb.Builder()
+                .delFlag(Tb.DEL_FLAG_OFF)   // 删除
+                .delFlag(Tb.DEL_FLAG_ON)    // 未删除
+                .build();
     }
 }
 ```
@@ -437,7 +443,7 @@ public class Test {
         Tb tb = new Tb.Builder()
                 .field1(1)
                 .field2("xx0")
-                .delFlag((short)0)
+                .delFlag(Tb.DEL_FLAG_ON)
                 .build();
         int k0 = this.tbMapper.upsert(tb);
         // 2. 已入库数据再次入库,执行update（！！需要注意如触发update其返回的受影响行数为2）
@@ -458,7 +464,7 @@ public class Test {
                 .field1(1)
                 .field2("xx0")
                 .field3(1003)
-                .delFlag((short) 0)
+                .delFlag(Tb.DEL_FLAG_ON)
                 .build();
         int k4 = this.tbMapper.upsertByExample(tb2,
                 new TbExample()
@@ -499,7 +505,7 @@ public class Test {
                 .field3(1)
                 .field4(new Date())
                 .createTime(new Date())
-                .delFlag(Tb.DEL_FLAG)
+                .delFlag(Tb.DEL_FLAG_ON)
                 .build();
         // 只插入或者更新field1,field2字段
         this.tbMapper.insertSelective(tb.selective(Tb.Column.field1, Tb.Column.field2));
