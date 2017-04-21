@@ -297,6 +297,10 @@ public class Test {
 ```
 ### 7. 逻辑删除插件
 因为很多实际项目数据都不允许物理删除，多采用逻辑删除，所以单独为逻辑删除做了一个插件，方便使用。  
+- 增加logicalDeleteByExample和logicalDeleteByPrimaryKey方法；  
+- 查询构造工具中增加逻辑删除条件andDeleted(boolean)； 
+- 增加逻辑删除常量DEL_FLAG_OFF（已删除）、DEL_FLAG_ON（未删除）（1.0.7-SNAPSHOT）；
+ 
 插件：
 ```xml
 <xml>
@@ -305,14 +309,17 @@ public class Test {
         <!-- 这里配置的是全局逻辑删除列和逻辑删除值，当然在table中配置的值会覆盖该全局配置 -->
         <!-- 逻辑删除列类型只能为数字、字符串或者布尔类型 -->
         <property name="logicalDeleteColumn" value="del_flag"/>
-        <!-- 未设置该属性或者该属性的值为null或者NULL,逻辑删除时会把该字段置为NULL。 -->
+        <!-- 逻辑删除-已删除值 -->
         <property name="logicalDeleteValue" value="9"/>
+        <!-- 逻辑删除-未删除值 -->
+        <property name="logicalUnDeleteValue" value="0"/>
     </plugin>
     
     <table tableName="tb">
         <!-- 这里可以单独表配置逻辑删除列和删除值，覆盖全局配置 -->
         <property name="logicalDeleteColumn" value="del_flag"/>
         <property name="logicalDeleteValue" value="1"/>
+        <property name="logicalUnDeleteValue" value="-1"/>
     </table>
 </xml>
 ```
