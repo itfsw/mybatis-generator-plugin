@@ -13,6 +13,7 @@
 * 逻辑删除插件（LogicalDeletePlugin）
 * 数据Model属性对应Column获取插件（ModelColumnPlugin）
 * 存在即更新插件（UpsertPlugin） 
+* Selective选择插入更新增强插件（SelectiveEnhancedPlugin（1.0.7-SNAPSHOT）） 
   
 ---------------------------------------
 Maven引用：  
@@ -20,7 +21,10 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
+  <!-- 稳定版本 -->
   <version>1.0.6</version>
+  <!-- 快照版本(最新提交到中央库，增加了部分功能，未完成测试) -->
+  <version>1.0.7-SNAPSHOT</version>
 </dependency>
 ```
 ---------------------------------------
@@ -403,12 +407,20 @@ public class Test {
 }
 ```
 ### 9. 存在即更新插件
-使用MySQL的[“insert ... on duplicate key update”](https://dev.mysql.com/doc/refman/5.7/en/insert-on-duplicate.html)实现存在即更新操作，简化数据入库操作（[[issues#2]](https://github.com/itfsw/mybatis-generator-plugin/issues/2)）。
+1. 使用MySQL的[“insert ... on duplicate key update”](https://dev.mysql.com/doc/refman/5.7/en/insert-on-duplicate.html)实现存在即更新操作，简化数据入库操作（[[issues#2]](https://github.com/itfsw/mybatis-generator-plugin/issues/2)）。  
+2. 在开启allowMultiQueries=true（默认不会开启）情况下支持upsertByExample，upsertByExampleSelective操作，但强力建议不要使用（需保证团队没有使用statement提交sql,否则会存在sql注入风险）（1.0.7-SNAPSHOT）（[[issues#2]](https://github.com/itfsw/mybatis-generator-plugin/issues/2)）。
 
 插件：
 ```xml
 <!-- 存在即更新插件 -->
-<plugin type="com.itfsw.mybatis.generator.plugins.UpsertPlugin"/>
+<plugin type="com.itfsw.mybatis.generator.plugins.UpsertPlugin">
+    <!-- 
+    支持upsertByExample，upsertByExampleSelective操作
+    ！需开启allowMultiQueries=true多条sql提交操作，所以不建议使用！
+    ! 目前在1.0.7-SNAPSHOT支持，有需要的可以下载试用
+    -->
+    <property name="allowMultiQueries" value="true"/>
+</plugin>
 ```
 使用：  
 ```java
@@ -433,6 +445,80 @@ public class Test {
         int k2 = this.tbMapper.upsertSelective(tb1);
         tb1.setField2("xx1");
         int k3 = this.tbMapper.upsertSelective(tb1);
+
+        // 4. 开启allowMultiQueries后增加upsertByExample，upsertByExampleSelective但强力建议不要使用（需保证团队没有使用statement提交sql,否则会存在sql注入风险）
+        Tb tb2 = new Tb.Builder()
+                .field1(1)
+                .field2("xx0")
+                .field3(1003)
+                .delFlag((short) 0)
+                .build();
+        int k4 = this.tbMapper.upsertByExample(tb2,
+                new TbExample()
+                        .createCriteria()
+                        .andField3EqualTo(1003)
+                        .example()
+        );
+        tb2.setField2("xx1");
+        // !!! upsertByExample,upsertByExampleSelective触发更新时，更新条数返回是有问题的，这里只会返回0
+        // 这是mybatis自身问题，也是不怎么建议开启allowMultiQueries功能原因之一
+        int k5 = this.tbMapper.upsertByExample(tb2,
+                new TbExample()
+                        .createCriteria()
+                        .andField3EqualTo(1003)
+                        .example()
+        );
+        // upsertByExampleSelective 用法类似
+    }
+}
+```
+### 10. Selective选择插入更新增强插件（1.0.7-SNAPSHOT）
+项目中往往需要指定某些字段进行插入或者更新，或者把某些字段进行设置null处理，这种情况下原生xxxSelective方法往往不能达到需求，因为它的判断条件是对象字段是否为null，这种情况下可使用该插件对xxxSelective方法进行增强。  
+WAREN:配置插件时请把插件配置在所有插件末尾最后执行，这样才能把上面提供的某些插件的Selective方法也同时增强！
+
+插件：
+```xml
+<!-- Selective选择插入更新增强插件！请配在所有插件末尾以便最后执行 -->
+<plugin type="com.itfsw.mybatis.generator.plugins.SelectiveEnhancedPlugin"/>
+```
+使用：  
+```java
+public class Test {
+    public static void main(String[] args) {
+        // 1. 指定插入或更新字段
+        Tb tb = new Tb.Builder()
+                .field1(1)
+                .field2("xx2")
+                .field3(1)
+                .field4(new Date())
+                .createTime(new Date())
+                .delFlag(Tb.DEL_FLAG)
+                .build();
+        // 只插入或者更新field1,field2字段
+        this.tbMapper.insertSelective(tb.selective(Tb.Column.field1, Tb.Column.field2));
+        this.tbMapper.updateByExampleSelective(tb.selective(Tb.Column.field1, Tb.Column.field2),
+                new TbExample()
+                        .createCriteria()
+                        .andIdEqualTo(1l)
+                        .example()
+        );
+        this.tbMapper.updateByPrimaryKeySelective(tb.selective(Tb.Column.field1, Tb.Column.field2));
+        this.tbMapper.upsertSelective(tb.selective(Tb.Column.field1, Tb.Column.field2));
+        this.tbMapper.upsertByExampleSelective(tb.selective(Tb.Column.field1, Tb.Column.field2),
+                new TbExample()
+                        .createCriteria()
+                        .andField3EqualTo(1)
+                        .example()
+        );
+
+        // 2. 更新某些字段为null
+        this.tbMapper.updateByPrimaryKeySelective(
+                new Tb.Builder()
+                .id(1l)
+                .field1(null)   // 方便展示，不用设也可以
+                .build()
+                .selective(Tb.Column.field1)
+        );
     }
 }
 ```
