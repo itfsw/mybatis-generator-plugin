@@ -119,7 +119,7 @@ public class UpsertPlugin extends PluginAdapter {
             // ====================================== 3. upsertByExample ======================================
             Method mUpsertByExample = new Method(METHOD_UPSERT_BY_EXAMPLE);
             // 返回值类型
-            mUpsertByExample.setReturnType(null);
+            mUpsertByExample.setReturnType(FullyQualifiedJavaType.getIntInstance());
             // 添加参数
             mUpsertByExample.addParameter(new Parameter(introspectedTable.getRules().calculateAllFieldsClass(), "record", "@Param(\"record\")"));
             mUpsertByExample.addParameter(new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")"));
@@ -132,7 +132,7 @@ public class UpsertPlugin extends PluginAdapter {
             // ====================================== 4. upsertByExampleSelective ======================================
             Method mUpsertByExampleSelective = new Method(METHOD_UPSERT_BY_EXAMPLE_SELECTIVE);
             // 返回值类型
-            mUpsertByExampleSelective.setReturnType(null);
+            mUpsertByExampleSelective.setReturnType(FullyQualifiedJavaType.getIntInstance());
             // 添加参数
             mUpsertByExampleSelective.addParameter(new Parameter(introspectedTable.getRules().calculateAllFieldsClass(), "record", "@Param(\"record\")"));
             mUpsertByExampleSelective.addParameter(new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")"));

@@ -18,10 +18,12 @@ package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.CommentTools;
 import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
+import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.*;
+import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 import org.mybatis.generator.internal.util.StringUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -150,7 +152,7 @@ public class SelectiveEnhancedPlugin extends PluginAdapter {
                 if ("updateByExampleSelective".equals(id)) {
                     List<XmlElement> eles = this.findEle(xmlElement, "set");
                     for (XmlElement ele : eles) {
-                        this.replaceEle(ele, "_parameter.");
+                        this.replaceEle(ele, "record.");
                     }
                 }
                 // ====================================== 3. updateByPrimaryKeySelective ======================================
@@ -170,12 +172,13 @@ public class SelectiveEnhancedPlugin extends PluginAdapter {
                 // ====================================== 5. upsertByExampleSelective ======================================
                 if ("upsertByExampleSelective".equals(id)) {
                     List<XmlElement> eles = this.findEle(xmlElement, "trim");
-                    for (XmlElement ele : eles) {
-                        this.replaceEle(ele, "_parameter.");
-                    }
+                    this.replaceEle(eles.get(0), "record.");
+                    // upsertByExampleSelective的第二个trim比较特殊，需另行处理
+                    this.replaceEleForUpsertByExampleSelective(eles.get(1), "record.", introspectedTable);
+
                     List<XmlElement> eles1 = this.findEle(xmlElement, "set");
                     for (XmlElement ele : eles1) {
-                        this.replaceEle(ele, "_parameter.");
+                        this.replaceEle(ele, "record.");
                     }
                 }
 
@@ -243,6 +246,40 @@ public class SelectiveEnhancedPlugin extends PluginAdapter {
             ifEle.addAttribute(new Attribute("test", prefix + "isSelective(\'" + field + "\')"));
             ifEle.addElement(textElement);
             whenEle.addElement(ifEle);
+        }
+
+        // otherwise
+        XmlElement otherwiseEle = new XmlElement("otherwise");
+        for (Element ele : element.getElements()) {
+            otherwiseEle.addElement(ele);
+        }
+
+        chooseEle.addElement(whenEle);
+        chooseEle.addElement(otherwiseEle);
+
+        // 清空原始节点，新增choose节点
+        element.getElements().clear();
+        element.addElement(chooseEle);
+    }
+
+    /**
+     * 替换节点upsertByExampleSelective if信息
+     * @param element
+     * @param prefix
+     * @param introspectedTable
+     */
+    private void replaceEleForUpsertByExampleSelective(XmlElement element, String prefix, IntrospectedTable introspectedTable) {
+        // choose
+        XmlElement chooseEle = new XmlElement("choose");
+        // when
+        XmlElement whenEle = new XmlElement("when");
+        whenEle.addAttribute(new Attribute("test", prefix + "isSelective()"));
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getAllColumns()) {
+            XmlElement eleIf = new XmlElement("if");
+            eleIf.addAttribute(new Attribute("test", prefix + "isSelective(\'" + MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + "\')"));
+
+            eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
+            whenEle.addElement(eleIf);
         }
 
         // otherwise
