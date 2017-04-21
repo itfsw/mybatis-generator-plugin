@@ -87,13 +87,17 @@ public class SelectiveEnhancedPlugin extends PluginAdapter {
         CommentTools.addMethodComment(mIsSelective, introspectedTable);
         mIsSelective.setVisibility(JavaVisibility.PUBLIC);
         mIsSelective.setReturnType(FullyQualifiedJavaType.getBooleanPrimitiveInstance());
-        mIsSelective.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "column"));
-        mIsSelective.addBodyLine("if (column == null) {");
         mIsSelective.addBodyLine("return this.selectiveColumns.size() > 0;");
-        mIsSelective.addBodyLine("} else {");
-        mIsSelective.addBodyLine("return this.selectiveColumns.get(column) != null;");
-        mIsSelective.addBodyLine("}");
         topLevelClass.addMethod(mIsSelective);
+
+        // Method isSelective
+        Method mIsSelective1 = new Method("isSelective");
+        CommentTools.addMethodComment(mIsSelective1, introspectedTable);
+        mIsSelective1.setVisibility(JavaVisibility.PUBLIC);
+        mIsSelective1.setReturnType(FullyQualifiedJavaType.getBooleanPrimitiveInstance());
+        mIsSelective1.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "column"));
+        mIsSelective1.addBodyLine("return this.selectiveColumns.get(column) != null;");
+        topLevelClass.addMethod(mIsSelective1);
 
         // Method selective
         Method mSelective = new Method("selective");
@@ -137,11 +141,44 @@ public class SelectiveEnhancedPlugin extends PluginAdapter {
 
                 // ====================================== 1. insertSelective ======================================
                 if ("insertSelective".equals(id)) {
-                    List<XmlElement> trimEles = this.findEle(xmlElement, "trim");
-                    for (XmlElement ele : trimEles) {
+                    List<XmlElement> eles = this.findEle(xmlElement, "trim");
+                    for (XmlElement ele : eles) {
                         this.replaceEle(ele, "_parameter.");
                     }
                 }
+                // ====================================== 2. updateByExampleSelective ======================================
+                if ("updateByExampleSelective".equals(id)) {
+                    List<XmlElement> eles = this.findEle(xmlElement, "set");
+                    for (XmlElement ele : eles) {
+                        this.replaceEle(ele, "_parameter.");
+                    }
+                }
+                // ====================================== 3. updateByPrimaryKeySelective ======================================
+                if ("updateByPrimaryKeySelective".equals(id)) {
+                    List<XmlElement> eles = this.findEle(xmlElement, "set");
+                    for (XmlElement ele : eles) {
+                        this.replaceEle(ele, "_parameter.");
+                    }
+                }
+                // ====================================== 4. upsertSelective ======================================
+                if ("upsertSelective".equals(id)) {
+                    List<XmlElement> eles = this.findEle(xmlElement, "trim");
+                    for (XmlElement ele : eles) {
+                        this.replaceEle(ele, "_parameter.");
+                    }
+                }
+                // ====================================== 5. upsertByExampleSelective ======================================
+                if ("upsertByExampleSelective".equals(id)) {
+                    List<XmlElement> eles = this.findEle(xmlElement, "trim");
+                    for (XmlElement ele : eles) {
+                        this.replaceEle(ele, "_parameter.");
+                    }
+                    List<XmlElement> eles1 = this.findEle(xmlElement, "set");
+                    for (XmlElement ele : eles1) {
+                        this.replaceEle(ele, "_parameter.");
+                    }
+                }
+
             }
         }
         return true;
@@ -187,7 +224,7 @@ public class SelectiveEnhancedPlugin extends PluginAdapter {
             String text = textElement.getContent().trim();
             String field = "";
             if (text.matches(".*\\s*=\\s*#\\{.*\\},?")) {
-                Pattern pattern = Pattern.compile("(.*)\\s*=\\s*#\\{.*},?");
+                Pattern pattern = Pattern.compile("(.*?)\\s*=\\s*#\\{.*},?");
                 Matcher matcher = pattern.matcher(text);
                 if (matcher.find()){
                     field = matcher.group(1);
@@ -203,7 +240,7 @@ public class SelectiveEnhancedPlugin extends PluginAdapter {
             }
 
             XmlElement ifEle = new XmlElement("if");
-            ifEle.addAttribute(new Attribute("test", prefix + "isSelective(" + field + ")"));
+            ifEle.addAttribute(new Attribute("test", prefix + "isSelective(\'" + field + "\')"));
             ifEle.addElement(textElement);
             whenEle.addElement(ifEle);
         }
