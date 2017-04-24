@@ -16,7 +16,7 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.CommentTools;
+import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.*;
@@ -69,89 +69,79 @@ public class LimitPlugin extends PluginAdapter {
     public boolean modelExampleClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         PrimitiveTypeWrapper integerWrapper = FullyQualifiedJavaType.getIntInstance().getPrimitiveTypeWrapper();
         // 添加offset和rows字段
-        Field offset = new Field();
-        offset.setName("offset");
-        offset.setVisibility(JavaVisibility.PROTECTED);
-        offset.setType(integerWrapper);
-        CommentTools.addFieldComment(offset, introspectedTable);
-        topLevelClass.addField(offset);
+        Field offsetField = JavaElementGeneratorTools.generateField(
+                "offset",
+                JavaVisibility.PROTECTED,
+                integerWrapper,
+                null,
+                introspectedTable
+        );
+        topLevelClass.addField(offsetField);
 
-        Field rows = new Field();
-        rows.setName("rows");
-        rows.setVisibility(JavaVisibility.PROTECTED);
-        rows.setType(integerWrapper);
-        CommentTools.addFieldComment(rows, introspectedTable);
-        topLevelClass.addField(rows);
+        Field rowsField = JavaElementGeneratorTools.generateField(
+                "rows",
+                JavaVisibility.PROTECTED,
+                integerWrapper,
+                null,
+                introspectedTable
+        );
+        topLevelClass.addField(rowsField);
         logger.debug("itfsw(MySQL分页插件):"+topLevelClass.getType().getShortName()+"增加offset和rows字段");
 
         // 增加getter && setter 方法
-        Method setOffset = new Method();
-        setOffset.setVisibility(JavaVisibility.PUBLIC);
-        setOffset.setName("setOffset");
-        setOffset.addParameter(new Parameter(integerWrapper, "offset"));
-        setOffset.addBodyLine("this.offset = offset;");
-        CommentTools.addMethodComment(setOffset, introspectedTable);
-        topLevelClass.addMethod(setOffset);
+        topLevelClass.addMethod(JavaElementGeneratorTools.generateSetterMethod(offsetField, introspectedTable));
+        topLevelClass.addMethod(JavaElementGeneratorTools.generateGetterMethod(offsetField, introspectedTable));
 
-        Method getOffset = new Method();
-        getOffset.setVisibility(JavaVisibility.PUBLIC);
-        getOffset.setReturnType(integerWrapper);
-        getOffset.setName("getOffset");
-        getOffset.addBodyLine("return offset;");
-        CommentTools.addMethodComment(getOffset, introspectedTable);
-        topLevelClass.addMethod(getOffset);
-
-        Method setRows = new Method();
-        setRows.setVisibility(JavaVisibility.PUBLIC);
-        setRows.setName("setRows");
-        setRows.addParameter(new Parameter(integerWrapper, "rows"));
-        setRows.addBodyLine("this.rows = rows;");
-        CommentTools.addMethodComment(setRows, introspectedTable);
-        topLevelClass.addMethod(setRows);
-
-        Method getRows = new Method();
-        getRows.setVisibility(JavaVisibility.PUBLIC);
-        getRows.setReturnType(integerWrapper);
-        getRows.setName("getRows");
-        getRows.addBodyLine("return rows;");
-        CommentTools.addMethodComment(getRows, introspectedTable);
-        topLevelClass.addMethod(getRows);
+        topLevelClass.addMethod(JavaElementGeneratorTools.generateSetterMethod(rowsField, introspectedTable));
+        topLevelClass.addMethod(JavaElementGeneratorTools.generateGetterMethod(rowsField, introspectedTable));
         logger.debug("itfsw(MySQL分页插件):"+topLevelClass.getType().getShortName()+"增加offset和rows的getter和setter实现。");
 
         // 提供几个快捷方法
-        Method setLimit = new Method();
-        setLimit.setVisibility(JavaVisibility.PUBLIC);
-        setLimit.setReturnType(topLevelClass.getType());
-        setLimit.setName("limit");
-        setLimit.addParameter(new Parameter(integerWrapper, "rows"));
-        setLimit.addBodyLine("this.rows = rows;");
-        setLimit.addBodyLine("return this;");
-        CommentTools.addMethodComment(setLimit, introspectedTable);
+        Method setLimit = JavaElementGeneratorTools.generateMethod(
+                "limit",
+                JavaVisibility.PUBLIC,
+                topLevelClass.getType(),
+                introspectedTable,
+                new Parameter(integerWrapper, "rows")
+        );
+        setLimit = JavaElementGeneratorTools.generateMethodBody(
+                setLimit,
+                "this.rows = rows;",
+                "return this;"
+        );
         topLevelClass.addMethod(setLimit);
 
-        Method setLimit2 = new Method();
-        setLimit2.setVisibility(JavaVisibility.PUBLIC);
-        setLimit2.setReturnType(topLevelClass.getType());
-        setLimit2.setName("limit");
-        setLimit2.addParameter(new Parameter(integerWrapper, "offset"));
-        setLimit2.addParameter(new Parameter(integerWrapper, "rows"));
-        setLimit2.addBodyLine("this.offset = offset;");
-        setLimit2.addBodyLine("this.rows = rows;");
-        setLimit2.addBodyLine("return this;");
-        CommentTools.addMethodComment(setLimit2, introspectedTable);
+        Method setLimit2 = JavaElementGeneratorTools.generateMethod(
+                "limit",
+                JavaVisibility.PUBLIC,
+                topLevelClass.getType(),
+                introspectedTable,
+                new Parameter(integerWrapper, "offset"),
+                new Parameter(integerWrapper, "rows")
+        );
+        setLimit2 = JavaElementGeneratorTools.generateMethodBody(
+                setLimit2,
+                "this.offset = offset;",
+                "this.rows = rows;",
+                "return this;"
+        );
         topLevelClass.addMethod(setLimit2);
         logger.debug("itfsw(MySQL分页插件):"+topLevelClass.getType().getShortName()+"增加limit方法。");
 
-        Method setPage = new Method();
-        setPage.setVisibility(JavaVisibility.PUBLIC);
-        setPage.setReturnType(topLevelClass.getType());
-        setPage.setName("page");
-        setPage.addParameter(new Parameter(integerWrapper, "page"));
-        setPage.addParameter(new Parameter(integerWrapper, "pageSize"));
-        setPage.addBodyLine("this.offset = page * pageSize;");
-        setPage.addBodyLine("this.rows = pageSize;");
-        setPage.addBodyLine("return this;");
-        CommentTools.addMethodComment(setPage, introspectedTable);
+        Method setPage = JavaElementGeneratorTools.generateMethod(
+                "page",
+                JavaVisibility.PUBLIC,
+                topLevelClass.getType(),
+                introspectedTable,
+                new Parameter(integerWrapper, "page"),
+                new Parameter(integerWrapper, "pageSize")
+        );
+        setPage = JavaElementGeneratorTools.generateMethodBody(
+                setPage,
+                "this.offset = page * pageSize;",
+                "this.rows = pageSize;",
+                "return this;"
+        );
         topLevelClass.addMethod(setPage);
         logger.debug("itfsw(MySQL分页插件):"+topLevelClass.getType().getShortName()+"增加page方法");
 

@@ -17,6 +17,7 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.CommentTools;
+import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
@@ -42,7 +43,7 @@ import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
  * ---------------------------------------------------------------------------
  */
 public class SelectOneByExamplePlugin extends PluginAdapter {
-    public static final String METHOD_NAME = "selectOneByExample";  // 方法名
+    public static final String METHOD_SELECT_ONE_BY_EXAMPLE = "selectOneByExample";  // 方法名
     private static final Logger logger = LoggerFactory.getLogger(SelectOneByExamplePlugin.class);
 
     /**
@@ -70,17 +71,13 @@ public class SelectOneByExamplePlugin extends PluginAdapter {
     @Override
     public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         // 方法生成
-        Method method = new Method(METHOD_NAME);
-        // 方法可见性 interface会忽略
-        // method.setVisibility(JavaVisibility.PUBLIC);
-        // 返回值类型
-        FullyQualifiedJavaType returnType = introspectedTable.getRules().calculateAllFieldsClass();
-        method.setReturnType(returnType);
-        // 添加参数
-        FullyQualifiedJavaType type = new FullyQualifiedJavaType(introspectedTable.getExampleType());
-        method.addParameter(new Parameter(type, "example"));
-        // 添加方法说明
-        CommentTools.addMethodComment(method, introspectedTable);
+        Method method = JavaElementGeneratorTools.generateMethod(
+                METHOD_SELECT_ONE_BY_EXAMPLE,
+                JavaVisibility.DEFAULT,
+                introspectedTable.getRules().calculateAllFieldsClass(),
+                introspectedTable,
+                new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example")
+        );
 
         // interface 增加方法
         interfaze.addMethod(method);
@@ -107,7 +104,7 @@ public class SelectOneByExamplePlugin extends PluginAdapter {
         CommentTools.addComment(selectOneElement);
 
         // 添加ID
-        selectOneElement.addAttribute(new Attribute("id", METHOD_NAME));
+        selectOneElement.addAttribute(new Attribute("id", METHOD_SELECT_ONE_BY_EXAMPLE));
 
         // ----------------------------------------- 表中是否有blob类型字段 ---------------------------------------
         if (introspectedTable.hasBLOBColumns()){

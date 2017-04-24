@@ -17,6 +17,7 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.CommentTools;
+import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
 import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedColumn;
@@ -94,27 +95,30 @@ public class BatchInsertPlugin extends PluginAdapter {
     @Override
     public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         // 1. batchInsert
-        Method mBatchInsert = new Method(METHOD_BATCH_INSERT);
-        mBatchInsert.setReturnType(FullyQualifiedJavaType.getIntInstance());
-        // 添加参数
-        FullyQualifiedJavaType tList = FullyQualifiedJavaType.getNewListInstance();
-        tList.addTypeArgument(introspectedTable.getRules().calculateAllFieldsClass());
-        mBatchInsert.addParameter(new Parameter(tList, "list", "@Param(\"list\")"));
-        // 添加方法说明
-        CommentTools.addMethodComment(mBatchInsert, introspectedTable);
+        FullyQualifiedJavaType listType = FullyQualifiedJavaType.getNewListInstance();
+        listType.addTypeArgument(introspectedTable.getRules().calculateAllFieldsClass());
+        Method mBatchInsert = JavaElementGeneratorTools.generateMethod(
+                METHOD_BATCH_INSERT,
+                JavaVisibility.DEFAULT,
+                FullyQualifiedJavaType.getIntInstance(),
+                introspectedTable,
+                new Parameter(listType, "list", "@Param(\"list\")")
+
+        );
         // interface 增加方法
         interfaze.addMethod(mBatchInsert);
         logger.debug("itfsw(批量插入插件):" + interfaze.getType().getShortName() + "增加batchInsert方法。");
 
         // 2. batchInsertSelective
-        Method mBatchInsertSelective = new Method(METHOD_BATCH_INSERT_SELECTIVE);
-        mBatchInsertSelective.setReturnType(FullyQualifiedJavaType.getIntInstance());
-        // 添加参数
-        FullyQualifiedJavaType tSelective = new FullyQualifiedJavaType(introspectedTable.getRules().calculateAllFieldsClass().getShortName()+"."+ModelColumnPlugin.ENUM_NAME);
-        mBatchInsertSelective.addParameter(new Parameter(tList, "list", "@Param(\"list\")"));
-        mBatchInsertSelective.addParameter(new Parameter(tSelective, "selective", "@Param(\"selective\")", true));
-        // 添加方法说明
-        CommentTools.addMethodComment(mBatchInsertSelective, introspectedTable);
+        FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(introspectedTable.getRules().calculateAllFieldsClass().getShortName()+"."+ModelColumnPlugin.ENUM_NAME);
+        Method mBatchInsertSelective = JavaElementGeneratorTools.generateMethod(
+                METHOD_BATCH_INSERT_SELECTIVE,
+                JavaVisibility.DEFAULT,
+                FullyQualifiedJavaType.getIntInstance(),
+                introspectedTable,
+                new Parameter(listType, "list", "@Param(\"list\")"),
+                new Parameter(selectiveType, "selective", "@Param(\"selective\")", true)
+        );
         // interface 增加方法
         interfaze.addMethod(mBatchInsertSelective);
         logger.debug("itfsw(批量插入插件):" + interfaze.getType().getShortName() + "增加batchInsertSelective方法。");
