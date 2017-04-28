@@ -39,7 +39,6 @@ public class ModelBuilderPlugin extends BasePlugin {
     /**
      * Model Methods 生成
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     *
      * @param topLevelClass
      * @param introspectedTable
      * @return
@@ -53,7 +52,7 @@ public class ModelBuilderPlugin extends BasePlugin {
         innerClass.setVisibility(JavaVisibility.PUBLIC);
         innerClass.setStatic(true);
         commentGenerator.addClassComment(innerClass, introspectedTable);
-        logger.debug("itfsw(数据Model链式构建插件):"+topLevelClass.getType().getShortName()+"增加内部Builder类。");
+        logger.debug("itfsw(数据Model链式构建插件):" + topLevelClass.getType().getShortName() + "增加内部Builder类。");
 
         // 构建内部obj变量
         Field f = JavaElementGeneratorTools.generateField("obj", JavaVisibility.PRIVATE, topLevelClass.getType(), null);
@@ -67,35 +66,12 @@ public class ModelBuilderPlugin extends BasePlugin {
         constructor.addBodyLine(new StringBuilder("this.obj = new ").append(topLevelClass.getType().getShortName()).append("();").toString());
         commentGenerator.addGeneralMethodComment(constructor, introspectedTable);
         innerClass.addMethod(constructor);
-        logger.debug("itfsw(数据Model链式构建插件):"+topLevelClass.getType().getShortName()+".Builder增加的构造方法。");
+        logger.debug("itfsw(数据Model链式构建插件):" + topLevelClass.getType().getShortName() + ".Builder增加的构造方法。");
 
-        // ！！可能Model存在复合主键情况，字段要加上这些
-        if (topLevelClass.getSuperClass() != null && topLevelClass.getSuperClass().compareTo(new FullyQualifiedJavaType(introspectedTable.getPrimaryKeyType())) == 0){
-            for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
-                Field field = JavaBeansUtil.getJavaBeansField(introspectedColumn, context, introspectedTable);
-                Method setterMethod = JavaBeansUtil.getJavaBeansSetter(introspectedColumn, context, introspectedTable);
 
-                Method method = JavaElementGeneratorTools.generateMethod(
-                        field.getName(),
-                        JavaVisibility.PUBLIC,
-                        innerClass.getType(),
-                        new Parameter(field.getType(), field.getName())
-                );
-                commentGenerator.addSetterComment(method, introspectedTable, introspectedColumn);
-                method = JavaElementGeneratorTools.generateMethodBody(
-                        method,
-                        "obj." + setterMethod.getName() + "(" + field.getName() + ");",
-                        "return this;"
-                );
-                innerClass.addMethod(method);
-                logger.debug("itfsw(数据Model链式构建插件):"+topLevelClass.getType().getShortName()+".Builder增加"+method.getName()+"方法(复合主键)。");
-            }
-        }
-
-        // 根据Model属性生成链式赋值方法
-        for (Field field : fields) {
-            if (field.isStatic())
-                continue;
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getAllColumns()) {
+            Field field = JavaBeansUtil.getJavaBeansField(introspectedColumn, context, introspectedTable);
+            Method setterMethod = JavaBeansUtil.getJavaBeansSetter(introspectedColumn, context, introspectedTable);
 
             Method method = JavaElementGeneratorTools.generateMethod(
                     field.getName(),
@@ -103,14 +79,14 @@ public class ModelBuilderPlugin extends BasePlugin {
                     innerClass.getType(),
                     new Parameter(field.getType(), field.getName())
             );
-            commentGenerator.addGeneralMethodComment(method, introspectedTable);
+            commentGenerator.addSetterComment(method, introspectedTable, introspectedColumn);
             method = JavaElementGeneratorTools.generateMethodBody(
                     method,
-                    "obj." + field.getName() + " = " + field.getName() + ";",
+                    "obj." + setterMethod.getName() + "(" + field.getName() + ");",
                     "return this;"
             );
             innerClass.addMethod(method);
-            logger.debug("itfsw(数据Model链式构建插件):"+topLevelClass.getType().getShortName()+".Builder增加"+method.getName()+"方法。");
+            logger.debug("itfsw(数据Model链式构建插件):" + topLevelClass.getType().getShortName() + ".Builder增加" + method.getName() + "方法(复合主键)。");
         }
 
         Method build = JavaElementGeneratorTools.generateMethod(
@@ -121,7 +97,7 @@ public class ModelBuilderPlugin extends BasePlugin {
         build.addBodyLine("return this.obj;");
         commentGenerator.addGeneralMethodComment(build, introspectedTable);
         innerClass.addMethod(build);
-        logger.debug("itfsw(数据Model链式构建插件):"+topLevelClass.getType().getShortName()+".Builder增加build方法。");
+        logger.debug("itfsw(数据Model链式构建插件):" + topLevelClass.getType().getShortName() + ".Builder增加build方法。");
 
         topLevelClass.addInnerClass(innerClass);
         return true;
