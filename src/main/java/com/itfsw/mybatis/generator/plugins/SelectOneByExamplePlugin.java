@@ -16,21 +16,15 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.CommentTools;
+import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedTable;
-import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
-import org.mybatis.generator.internal.util.StringUtility;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 
@@ -42,22 +36,8 @@ import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
  * @time:2016/12/28 14:56
  * ---------------------------------------------------------------------------
  */
-public class SelectOneByExamplePlugin extends PluginAdapter {
+public class SelectOneByExamplePlugin extends BasePlugin {
     public static final String METHOD_SELECT_ONE_BY_EXAMPLE = "selectOneByExample";  // 方法名
-    private static final Logger logger = LoggerFactory.getLogger(SelectOneByExamplePlugin.class);
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean validate(List<String> warnings) {
-        // 插件使用前提是targetRuntime为MyBatis3
-        if (StringUtility.stringHasValue(getContext().getTargetRuntime()) && "MyBatis3".equalsIgnoreCase(getContext().getTargetRuntime()) == false ){
-            logger.warn("itfsw:插件"+this.getClass().getTypeName()+"要求运行targetRuntime必须为MyBatis3！");
-            return false;
-        }
-        return true;
-    }
 
     /**
      * Java Client Methods 生成
@@ -75,9 +55,9 @@ public class SelectOneByExamplePlugin extends PluginAdapter {
                 METHOD_SELECT_ONE_BY_EXAMPLE,
                 JavaVisibility.DEFAULT,
                 introspectedTable.getRules().calculateAllFieldsClass(),
-                introspectedTable,
                 new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example")
         );
+commentGenerator.addGeneralMethodComment(method, introspectedTable);
 
         // interface 增加方法
         interfaze.addMethod(method);
@@ -101,7 +81,7 @@ public class SelectOneByExamplePlugin extends PluginAdapter {
         // 生成查询语句
         XmlElement selectOneElement = new XmlElement("select");
         // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
-        CommentTools.addComment(selectOneElement);
+        commentGenerator.addComment(selectOneElement);
 
         // 添加ID
         selectOneElement.addAttribute(new Attribute("id", METHOD_SELECT_ONE_BY_EXAMPLE));

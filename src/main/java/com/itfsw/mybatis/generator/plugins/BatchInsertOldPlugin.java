@@ -16,11 +16,10 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
+import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
-import com.itfsw.mybatis.generator.plugins.utils.CommentTools;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
-import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.Document;
@@ -30,9 +29,6 @@ import org.mybatis.generator.codegen.mybatis3.ListUtilities;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 import org.mybatis.generator.config.Context;
 import org.mybatis.generator.config.PluginConfiguration;
-import org.mybatis.generator.internal.util.StringUtility;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,8 +42,7 @@ import java.util.List;
  * ---------------------------------------------------------------------------
  */
 @Deprecated
-public class BatchInsertOldPlugin extends PluginAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(BatchInsertOldPlugin.class);
+public class BatchInsertOldPlugin extends BasePlugin {
     public static final String METHOD_BATCH_INSERT = "batchInsert";  // 方法名
     private boolean hasModelBuilderPlugin;  // 是否配置了ModelBuilderPlugin插件
 
@@ -56,12 +51,6 @@ public class BatchInsertOldPlugin extends PluginAdapter {
      */
     @Override
     public boolean validate(List<String> warnings) {
-        // 插件使用前提是targetRuntime为MyBatis3
-        if (StringUtility.stringHasValue(getContext().getTargetRuntime()) && "MyBatis3".equalsIgnoreCase(getContext().getTargetRuntime()) == false) {
-            logger.warn("itfsw:插件" + this.getClass().getTypeName() + "要求运行targetRuntime必须为MyBatis3！");
-            return false;
-        }
-
         // 插件使用前提是数据库为MySQL或者SQLserver，因为返回主键使用了JDBC的getGenereatedKeys方法获取主键
         if ("com.mysql.jdbc.Driver".equalsIgnoreCase(this.getContext().getJdbcConnectionConfiguration().getDriverClass()) == false
                 && "com.microsoft.jdbc.sqlserver.SQLServer".equalsIgnoreCase(this.getContext().getJdbcConnectionConfiguration().getDriverClass()) == false
@@ -72,7 +61,7 @@ public class BatchInsertOldPlugin extends PluginAdapter {
 
         logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件已过期，不再维护请使用com.itfsw.mybatis.generator.plugins.BatchInsertPlugin区分batchInsert和batchInsertSelective！");
 
-        return true;
+        return super.validate(warnings);
     }
 
     /**
@@ -125,7 +114,7 @@ public class BatchInsertOldPlugin extends PluginAdapter {
             FullyQualifiedJavaType type1 = new FullyQualifiedJavaType(introspectedTable.getRules().calculateAllFieldsClass().getShortName()+"."+ModelColumnPlugin.ENUM_NAME);
             method.addParameter(new Parameter(type1, "insertColumns", "@Param(\"insertColumns\")", true));
             // 添加方法说明
-            CommentTools.addMethodComment(method, introspectedTable);
+            commentGenerator.addGeneralMethodComment(method, introspectedTable);
 
             // interface 增加方法
             interfaze.addMethod(method);
@@ -142,7 +131,7 @@ public class BatchInsertOldPlugin extends PluginAdapter {
             type.addTypeArgument(introspectedTable.getRules().calculateAllFieldsClass());
             method.addParameter(new Parameter(type, "list", "@Param(\"list\")"));
             // 添加方法说明
-            CommentTools.addMethodComment(method, introspectedTable);
+            commentGenerator.addGeneralMethodComment(method, introspectedTable);
 
             // interface 增加方法
             interfaze.addMethod(method);
@@ -168,7 +157,7 @@ public class BatchInsertOldPlugin extends PluginAdapter {
             // 参数类型
             element.addAttribute(new Attribute("parameterType", "map"));
             // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
-            CommentTools.addComment(element);
+            commentGenerator.addComment(element);
 
             // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
             XmlElementGeneratorTools.useGeneratedKeys(element, introspectedTable);
@@ -243,7 +232,7 @@ public class BatchInsertOldPlugin extends PluginAdapter {
             element.addAttribute(new Attribute("parameterType", FullyQualifiedJavaType.getNewListInstance().getFullyQualifiedName()));
 
             // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
-            CommentTools.addComment(element);
+            commentGenerator.addComment(element);
 
             // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
             XmlElementGeneratorTools.useGeneratedKeys(element, introspectedTable);

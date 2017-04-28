@@ -16,21 +16,17 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.CommentTools;
+import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
-import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
-import org.mybatis.generator.internal.util.StringUtility;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.JDBCType;
 import java.util.*;
@@ -43,9 +39,7 @@ import java.util.*;
  * @time:2017/1/13 14:08
  * ---------------------------------------------------------------------------
  */
-public class LogicalDeletePlugin extends PluginAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(LogicalDeletePlugin.class);
-
+public class LogicalDeletePlugin extends BasePlugin {
     public static final String METHOD_LOGICAL_DELETE_BY_EXAMPLE = "logicalDeleteByExample";  // 方法名
     public static final String METHOD_LOGICAL_DELETE_BY_PRIMARY_KEY = "logicalDeleteByPrimaryKey";  // 方法名
 
@@ -61,19 +55,6 @@ public class LogicalDeletePlugin extends PluginAdapter {
     private IntrospectedColumn logicalDeleteColumn; // 逻辑删除列
     private String logicalDeleteValue;  // 逻辑删除值
     private String logicalUnDeleteValue;    // 逻辑删除值（未删除）
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean validate(List<String> warnings) {
-        // 插件使用前提是targetRuntime为MyBatis3
-        if (StringUtility.stringHasValue(getContext().getTargetRuntime()) && "MyBatis3".equalsIgnoreCase(getContext().getTargetRuntime()) == false ){
-            logger.warn("itfsw:插件"+this.getClass().getTypeName()+"要求运行targetRuntime必须为MyBatis3！");
-            return false;
-        }
-        return true;
-    }
 
     /**
      * 初始化阶段
@@ -159,7 +140,7 @@ public class LogicalDeletePlugin extends PluginAdapter {
             FullyQualifiedJavaType type = new FullyQualifiedJavaType(introspectedTable.getExampleType());
             mLogicalDeleteByExample.addParameter(new Parameter(type, "example"));
             // 添加方法说明
-            CommentTools.addMethodComment(mLogicalDeleteByExample, introspectedTable);
+            commentGenerator.addGeneralMethodComment(mLogicalDeleteByExample, introspectedTable);
             // interface 增加方法
             interfaze.addMethod(mLogicalDeleteByExample);
             logger.debug("itfsw(逻辑删除插件):"+interfaze.getType().getShortName()+"增加方法logicalDeleteByExample。");
@@ -204,7 +185,7 @@ public class LogicalDeletePlugin extends PluginAdapter {
                 }
 
                 // 添加方法说明
-                CommentTools.addMethodComment(mLogicalDeleteByPrimaryKey, introspectedTable);
+                commentGenerator.addGeneralMethodComment(mLogicalDeleteByPrimaryKey, introspectedTable);
                 // interface 增加方法
                 interfaze.addImportedTypes(importedTypes);
                 interfaze.addMethod(mLogicalDeleteByPrimaryKey);
@@ -229,7 +210,7 @@ public class LogicalDeletePlugin extends PluginAdapter {
             XmlElement logicalDeleteByExample = new XmlElement("update"); //$NON-NLS-1$
             logicalDeleteByExample.addAttribute(new Attribute("id", METHOD_LOGICAL_DELETE_BY_EXAMPLE));
             logicalDeleteByExample.addAttribute(new Attribute("parameterType", "map")); //$NON-NLS-1$ //$NON-NLS-2$
-            CommentTools.addComment(logicalDeleteByExample);
+            commentGenerator.addComment(logicalDeleteByExample);
 
             StringBuilder sb = new StringBuilder();
             sb.append("update "); //$NON-NLS-1$
@@ -280,7 +261,7 @@ public class LogicalDeletePlugin extends PluginAdapter {
                     }
                 }
                 logicalDeleteByPrimaryKey.addAttribute(new Attribute("parameterType", parameterClass));
-                CommentTools.addComment(logicalDeleteByPrimaryKey);
+                commentGenerator.addComment(logicalDeleteByPrimaryKey);
 
                 StringBuilder sb1 = new StringBuilder();
                 sb1.append("update "); //$NON-NLS-1$
@@ -347,7 +328,8 @@ public class LogicalDeletePlugin extends PluginAdapter {
             ArrayList<Field> fields = (ArrayList<Field>) topLevelClass.getFields();
 
             // TODO 过期的
-            Field field2 = JavaElementGeneratorTools.generateStaticFinalField("DEL_FLAG", this.logicalDeleteColumn.getFullyQualifiedJavaType(), DEL_FLAG_NAME, introspectedTable);
+            Field field2 = JavaElementGeneratorTools.generateStaticFinalField("DEL_FLAG", this.logicalDeleteColumn.getFullyQualifiedJavaType(), DEL_FLAG_NAME);
+            commentGenerator.addFieldComment(field2, introspectedTable);
             field2.addAnnotation("@Deprecated");
             // 常量插入到第一位
             fields.add(0, field2);
@@ -364,7 +346,8 @@ public class LogicalDeletePlugin extends PluginAdapter {
             } else {
                 delFlagOnValue = this.logicalDeleteValue;
             }
-            Field field = JavaElementGeneratorTools.generateStaticFinalField(DEL_FLAG_NAME, this.logicalDeleteColumn.getFullyQualifiedJavaType(), delFlagOnValue, introspectedTable);
+            Field field = JavaElementGeneratorTools.generateStaticFinalField(DEL_FLAG_NAME, this.logicalDeleteColumn.getFullyQualifiedJavaType(), delFlagOnValue);
+            commentGenerator.addFieldComment(field, introspectedTable);
             // 常量插入到第一位
             fields.add(0, field);
             logger.debug("itfsw(逻辑删除插件):"+topLevelClass.getType().getShortName()+"增加方法DEL_FLAG_OFF的常量。");
@@ -380,7 +363,8 @@ public class LogicalDeletePlugin extends PluginAdapter {
             } else {
                 unDelFlagOnValue = this.logicalUnDeleteValue;
             }
-            Field field1 = JavaElementGeneratorTools.generateStaticFinalField(UN_DEL_FLAG_NAME, this.logicalDeleteColumn.getFullyQualifiedJavaType(), unDelFlagOnValue, introspectedTable);
+            Field field1 = JavaElementGeneratorTools.generateStaticFinalField(UN_DEL_FLAG_NAME, this.logicalDeleteColumn.getFullyQualifiedJavaType(), unDelFlagOnValue);
+            commentGenerator.addFieldComment(field1, introspectedTable);
             // 常量插入到第一位
             fields.add(0, field1);
             logger.debug("itfsw(逻辑删除插件):"+topLevelClass.getType().getShortName()+"增加方法DEL_FLAG_ON的常量。");
@@ -408,7 +392,7 @@ public class LogicalDeletePlugin extends PluginAdapter {
                 if ("Criteria".equals(innerClass.getType().getShortName())) {
                     // 增加逻辑删除条件
                     Method method = new Method(METHOD_LOGICAL_DELETE);
-                    CommentTools.addMethodComment(method, introspectedTable);
+                    commentGenerator.addGeneralMethodComment(method, introspectedTable);
                     method.setVisibility(JavaVisibility.PUBLIC);
                     method.setReturnType(innerClass.getType());
                     method.addParameter(new Parameter(FullyQualifiedJavaType.getBooleanPrimitiveInstance(), "deleted"));

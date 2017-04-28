@@ -16,17 +16,13 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.CommentTools;
+import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
-import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.*;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
-import org.mybatis.generator.internal.util.StringUtility;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,19 +37,13 @@ import java.util.regex.Pattern;
  * @time:2017/4/20 15:39
  * ---------------------------------------------------------------------------
  */
-public class SelectiveEnhancedPlugin extends PluginAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(SelectiveEnhancedPlugin.class);
+public class SelectiveEnhancedPlugin extends BasePlugin {
 
     /**
      * {@inheritDoc}
      */
     @Override
     public boolean validate(List<String> warnings) {
-        // 插件使用前提是targetRuntime为MyBatis3
-        if (StringUtility.stringHasValue(getContext().getTargetRuntime()) && "MyBatis3".equalsIgnoreCase(getContext().getTargetRuntime()) == false) {
-            logger.warn("itfsw:插件" + this.getClass().getTypeName() + "要求运行targetRuntime必须为MyBatis3！");
-            return false;
-        }
 
         // 插件使用前提是使用了ModelColumnPlugin插件
         if (!PluginTools.checkDependencyPlugin(ModelColumnPlugin.class, getContext())) {
@@ -66,7 +56,7 @@ public class SelectiveEnhancedPlugin extends PluginAdapter {
             logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件建议配置在所有插件末尾以便最后调用，否则某些Selective方法得不到增强！");
         }
 
-        return true;
+        return super.validate(warnings);
     }
 
     /**
@@ -84,14 +74,14 @@ public class SelectiveEnhancedPlugin extends PluginAdapter {
 
         // field
         Field selectiveColumnsField = new Field("selectiveColumns", new FullyQualifiedJavaType("Map<String, Boolean>"));
-        CommentTools.addFieldComment(selectiveColumnsField, introspectedTable);
+        commentGenerator.addFieldComment(selectiveColumnsField, introspectedTable);
         selectiveColumnsField.setVisibility(JavaVisibility.PRIVATE);
         selectiveColumnsField.setInitializationString("new HashMap<String, Boolean>()");
         topLevelClass.addField(selectiveColumnsField);
 
         // Method isSelective
         Method mIsSelective = new Method("isSelective");
-        CommentTools.addMethodComment(mIsSelective, introspectedTable);
+        commentGenerator.addGeneralMethodComment(mIsSelective, introspectedTable);
         mIsSelective.setVisibility(JavaVisibility.PUBLIC);
         mIsSelective.setReturnType(FullyQualifiedJavaType.getBooleanPrimitiveInstance());
         mIsSelective.addBodyLine("return this.selectiveColumns.size() > 0;");
@@ -99,7 +89,7 @@ public class SelectiveEnhancedPlugin extends PluginAdapter {
 
         // Method isSelective
         Method mIsSelective1 = new Method("isSelective");
-        CommentTools.addMethodComment(mIsSelective1, introspectedTable);
+        commentGenerator.addGeneralMethodComment(mIsSelective1, introspectedTable);
         mIsSelective1.setVisibility(JavaVisibility.PUBLIC);
         mIsSelective1.setReturnType(FullyQualifiedJavaType.getBooleanPrimitiveInstance());
         mIsSelective1.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "column"));
@@ -108,7 +98,7 @@ public class SelectiveEnhancedPlugin extends PluginAdapter {
 
         // Method selective
         Method mSelective = new Method("selective");
-        CommentTools.addMethodComment(mSelective, introspectedTable);
+        commentGenerator.addGeneralMethodComment(mSelective, introspectedTable);
         mSelective.setVisibility(JavaVisibility.PUBLIC);
         mSelective.setReturnType(topLevelClass.getType());
         mSelective.addParameter(new Parameter(new FullyQualifiedJavaType(ModelColumnPlugin.ENUM_NAME), "columns", true));

@@ -16,16 +16,13 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
+import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedTable;
-import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
-import org.mybatis.generator.internal.util.StringUtility;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -37,24 +34,18 @@ import java.util.List;
  * @time:2016/12/29 18:14
  * ---------------------------------------------------------------------------
  */
-public class LimitPlugin extends PluginAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(LimitPlugin.class);
+public class LimitPlugin extends BasePlugin {
     /**
      * {@inheritDoc}
      */
     @Override
     public boolean validate(List<String> warnings) {
-        // 插件使用前提是targetRuntime为MyBatis3
-        if (StringUtility.stringHasValue(getContext().getTargetRuntime()) && "MyBatis3".equalsIgnoreCase(getContext().getTargetRuntime()) == false ){
-            logger.warn("itfsw:插件"+this.getClass().getTypeName()+"要求运行targetRuntime必须为MyBatis3！");
-            return false;
-        }
         // 该插件只支持MYSQL
         if ("com.mysql.jdbc.Driver".equalsIgnoreCase(this.getContext().getJdbcConnectionConfiguration().getDriverClass()) == false){
             logger.warn("itfsw:插件"+this.getClass().getTypeName()+"只支持MySQL数据库！");
             return false;
         }
-        return true;
+        return super.validate(warnings);
     }
 
     /**
@@ -73,27 +64,37 @@ public class LimitPlugin extends PluginAdapter {
                 "offset",
                 JavaVisibility.PROTECTED,
                 integerWrapper,
-                null,
-                introspectedTable
+                null
         );
+        commentGenerator.addFieldComment(offsetField, introspectedTable);
         topLevelClass.addField(offsetField);
 
         Field rowsField = JavaElementGeneratorTools.generateField(
                 "rows",
                 JavaVisibility.PROTECTED,
                 integerWrapper,
-                null,
-                introspectedTable
+                null
         );
+        commentGenerator.addFieldComment(rowsField, introspectedTable);
         topLevelClass.addField(rowsField);
         logger.debug("itfsw(MySQL分页插件):"+topLevelClass.getType().getShortName()+"增加offset和rows字段");
 
         // 增加getter && setter 方法
-        topLevelClass.addMethod(JavaElementGeneratorTools.generateSetterMethod(offsetField, introspectedTable));
-        topLevelClass.addMethod(JavaElementGeneratorTools.generateGetterMethod(offsetField, introspectedTable));
+        Method mSetOffset = JavaElementGeneratorTools.generateSetterMethod(offsetField);
+        commentGenerator.addGeneralMethodComment(mSetOffset, introspectedTable);
+        topLevelClass.addMethod(mSetOffset);
 
-        topLevelClass.addMethod(JavaElementGeneratorTools.generateSetterMethod(rowsField, introspectedTable));
-        topLevelClass.addMethod(JavaElementGeneratorTools.generateGetterMethod(rowsField, introspectedTable));
+        Method mGetOffset = JavaElementGeneratorTools.generateGetterMethod(offsetField);
+        commentGenerator.addGeneralMethodComment(mGetOffset, introspectedTable);
+        topLevelClass.addMethod(mGetOffset);
+
+        Method mSetRows = JavaElementGeneratorTools.generateSetterMethod(rowsField);
+        commentGenerator.addGeneralMethodComment(mSetRows, introspectedTable);
+        topLevelClass.addMethod(mSetRows);
+
+        Method mGetRows = JavaElementGeneratorTools.generateGetterMethod(rowsField);
+        commentGenerator.addGeneralMethodComment(mGetRows, introspectedTable);
+        topLevelClass.addMethod(mGetRows);
         logger.debug("itfsw(MySQL分页插件):"+topLevelClass.getType().getShortName()+"增加offset和rows的getter和setter实现。");
 
         // 提供几个快捷方法
@@ -101,9 +102,9 @@ public class LimitPlugin extends PluginAdapter {
                 "limit",
                 JavaVisibility.PUBLIC,
                 topLevelClass.getType(),
-                introspectedTable,
                 new Parameter(integerWrapper, "rows")
         );
+        commentGenerator.addGeneralMethodComment(setLimit, introspectedTable);
         setLimit = JavaElementGeneratorTools.generateMethodBody(
                 setLimit,
                 "this.rows = rows;",
@@ -115,10 +116,10 @@ public class LimitPlugin extends PluginAdapter {
                 "limit",
                 JavaVisibility.PUBLIC,
                 topLevelClass.getType(),
-                introspectedTable,
                 new Parameter(integerWrapper, "offset"),
                 new Parameter(integerWrapper, "rows")
         );
+        commentGenerator.addGeneralMethodComment(setLimit2, introspectedTable);
         setLimit2 = JavaElementGeneratorTools.generateMethodBody(
                 setLimit2,
                 "this.offset = offset;",
@@ -132,10 +133,10 @@ public class LimitPlugin extends PluginAdapter {
                 "page",
                 JavaVisibility.PUBLIC,
                 topLevelClass.getType(),
-                introspectedTable,
                 new Parameter(integerWrapper, "page"),
                 new Parameter(integerWrapper, "pageSize")
         );
+        commentGenerator.addGeneralMethodComment(setPage, introspectedTable);
         setPage = JavaElementGeneratorTools.generateMethodBody(
                 setPage,
                 "this.offset = page * pageSize;",

@@ -18,13 +18,10 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
+import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import org.mybatis.generator.api.IntrospectedTable;
-import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.config.Context;
 import org.mybatis.generator.config.JavaModelGeneratorConfiguration;
-import org.mybatis.generator.internal.util.StringUtility;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Properties;
@@ -37,10 +34,8 @@ import java.util.Properties;
  * @time:2017/1/12 12:36
  * ---------------------------------------------------------------------------
  */
-public class ExampleTargetPlugin extends PluginAdapter {
+public class ExampleTargetPlugin extends BasePlugin {
     public static final String TARGET_PACKAGE_KEY = "targetPackage";  // 配置targetPackage名
-    private static final Logger logger = LoggerFactory.getLogger(ExampleTargetPlugin.class);
-
     private static String targetPackage;   // 目标包
 
     /**
@@ -48,11 +43,6 @@ public class ExampleTargetPlugin extends PluginAdapter {
      */
     @Override
     public boolean validate(List<String> warnings) {
-        // 插件使用前提是targetRuntime为MyBatis3
-        if (StringUtility.stringHasValue(getContext().getTargetRuntime()) && "MyBatis3".equalsIgnoreCase(getContext().getTargetRuntime()) == false ){
-            logger.warn("itfsw:插件"+this.getClass().getTypeName()+"要求运行targetRuntime必须为MyBatis3！");
-            return false;
-        }
         // 获取配置的目标package
         Properties properties = getProperties();
         this.targetPackage = properties.getProperty(TARGET_PACKAGE_KEY);
@@ -60,7 +50,7 @@ public class ExampleTargetPlugin extends PluginAdapter {
             logger.warn("请配置com.itfsw.mybatis.generator.plugins.ExampleTargetPlugin插件的目标包名(targetPackage)！");
             return false;
         }
-        return true;
+        return super.validate(warnings);
     }
 
     /**

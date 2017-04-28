@@ -14,26 +14,39 @@
  * limitations under the License.
  */
 
-package com.itfsw.mybatis.generator.plugins;
+package com.itfsw.mybatis.generator.plugins.utils;
+
+import com.itfsw.mybatis.generator.plugins.utils.enhanced.IWCommentGenerator;
+import org.mybatis.generator.api.PluginAdapter;
+import org.mybatis.generator.internal.util.StringUtility;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 /**
  * ---------------------------------------------------------------------------
- * 增加Criteria Builder方法
+ * 基础plugin
  * ---------------------------------------------------------------------------
  * @author: hewei
- * @time:2016/12/28 14:56
+ * @time:2017/4/28 13:57
  * ---------------------------------------------------------------------------
  */
-@Deprecated
-public class CriteriaBuilderPlugin extends ExampleEnhancedPlugin{
+public class BasePlugin extends PluginAdapter {
+    protected static final Logger logger = LoggerFactory.getLogger(BasePlugin.class); // 日志
+    protected IWCommentGenerator commentGenerator = new IWCommentGenerator();  // 注释工具
+
     /**
      * {@inheritDoc}
      */
     @Override
     public boolean validate(List<String> warnings) {
-        logger.warn("itfsw:插件"+this.getClass().getTypeName()+"插件已经过时，请使用com.itfsw.mybatis.generator.plugins.ExampleEnhancedPlugin插件替换！");
-        return super.validate(warnings);
+        // 插件使用前提是targetRuntime为MyBatis3
+        if (StringUtility.stringHasValue(getContext().getTargetRuntime()) && "MyBatis3".equalsIgnoreCase(getContext().getTargetRuntime()) == false) {
+            logger.warn("itfsw:插件" + this.getClass().getTypeName() + "要求运行targetRuntime必须为MyBatis3！");
+            return false;
+        }
+
+        return true;
     }
 }

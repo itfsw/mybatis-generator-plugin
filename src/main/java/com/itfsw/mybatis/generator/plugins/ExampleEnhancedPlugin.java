@@ -1,15 +1,11 @@
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.CommentTools;
+import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.enhanced.InnerInterface;
 import com.itfsw.mybatis.generator.plugins.utils.enhanced.InnerInterfaceWrapperToInnerClass;
 import org.mybatis.generator.api.IntrospectedTable;
-import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.*;
-import org.mybatis.generator.internal.util.StringUtility;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -21,21 +17,7 @@ import java.util.List;
  * @time:2017/1/16 16:28
  * ---------------------------------------------------------------------------
  */
-public class ExampleEnhancedPlugin extends PluginAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(ExampleEnhancedPlugin.class);
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean validate(List<String> warnings) {
-        // 插件使用前提是targetRuntime为MyBatis3
-        if (StringUtility.stringHasValue(getContext().getTargetRuntime()) && "MyBatis3".equalsIgnoreCase(getContext().getTargetRuntime()) == false) {
-            logger.warn("itfsw:插件" + this.getClass().getTypeName() + "要求运行targetRuntime必须为MyBatis3！");
-            return false;
-        }
-        return true;
-    }
+public class ExampleEnhancedPlugin extends BasePlugin {
 
     /**
      * ModelExample Methods 生成
@@ -82,9 +64,9 @@ public class ExampleEnhancedPlugin extends PluginAdapter {
                 "example",
                 JavaVisibility.PRIVATE,
                 topLevelClass.getType(),
-                null,
-                introspectedTable
+                null
         );
+        commentGenerator.addFieldComment(exampleField, introspectedTable);
         innerClass.addField(exampleField);
 
         // overwrite constructor
@@ -93,7 +75,7 @@ public class ExampleEnhancedPlugin extends PluginAdapter {
             if (method.isConstructor()) {
                 method.addParameter(new Parameter(topLevelClass.getType(), "example"));
                 method.addBodyLine("this.example = example;");
-                CommentTools.addMethodComment(method, introspectedTable);
+                commentGenerator.addGeneralMethodComment(method, introspectedTable);
                 logger.debug("itfsw(Example增强插件):" + topLevelClass.getType().getShortName() + "修改构造方法，增加example参数");
             }
         }
@@ -102,9 +84,9 @@ public class ExampleEnhancedPlugin extends PluginAdapter {
         Method exampleMethod = JavaElementGeneratorTools.generateMethod(
                 "example",
                 JavaVisibility.PUBLIC,
-                topLevelClass.getType(),
-                introspectedTable
+                topLevelClass.getType()
         );
+        commentGenerator.addGeneralMethodComment(exampleMethod, introspectedTable);
         exampleMethod = JavaElementGeneratorTools.generateMethodBody(
                 exampleMethod,
                 "return this.example;"
@@ -124,7 +106,7 @@ public class ExampleEnhancedPlugin extends PluginAdapter {
         // 添加接口CriteriaAdd
         InnerInterface criteriaAddInterface = new InnerInterface("ICriteriaAdd");
         criteriaAddInterface.setVisibility(JavaVisibility.PUBLIC);
-        CommentTools.addInterfaceComment(criteriaAddInterface, introspectedTable);
+        commentGenerator.addInterfaceComment(criteriaAddInterface, introspectedTable);
         logger.debug("itfsw(Example增强插件):" + topLevelClass.getType().getShortName() + "." + innerClass.getType().getShortName() + "增加接口ICriteriaAdd");
 
         // ICriteriaAdd增加接口add
@@ -132,9 +114,9 @@ public class ExampleEnhancedPlugin extends PluginAdapter {
                 "add",
                 JavaVisibility.DEFAULT,
                 innerClass.getType(),
-                introspectedTable,
                 new Parameter(innerClass.getType(), "add")
         );
+        commentGenerator.addGeneralMethodComment(addMethod, introspectedTable);
         criteriaAddInterface.addMethod(addMethod);
         logger.debug("itfsw(Example增强插件):" + topLevelClass.getType().getShortName() + "." + innerClass.getType().getShortName() + "." + criteriaAddInterface.getType().getShortName() + "增加方法add");
 
@@ -146,10 +128,10 @@ public class ExampleEnhancedPlugin extends PluginAdapter {
                 "andIf",
                 JavaVisibility.PUBLIC,
                 innerClass.getType(),
-                introspectedTable,
                 new Parameter(FullyQualifiedJavaType.getBooleanPrimitiveInstance(), "ifAdd"),
                 new Parameter(criteriaAddInterface.getType(), "add")
         );
+        commentGenerator.addGeneralMethodComment(andIfMethod, introspectedTable);
         andIfMethod = JavaElementGeneratorTools.generateMethodBody(
                 andIfMethod,
                 "if (ifAdd) {",
@@ -172,9 +154,9 @@ public class ExampleEnhancedPlugin extends PluginAdapter {
                 "orderBy",
                 JavaVisibility.PUBLIC,
                 topLevelClass.getType(),
-                introspectedTable,
                 new Parameter(FullyQualifiedJavaType.getStringInstance(), "orderByClause")
         );
+        commentGenerator.addGeneralMethodComment(orderByMethod, introspectedTable);
         orderByMethod = JavaElementGeneratorTools.generateMethodBody(
                 orderByMethod,
                 "this.setOrderByClause(orderByClause);",
@@ -188,9 +170,9 @@ public class ExampleEnhancedPlugin extends PluginAdapter {
                 "orderBy",
                 JavaVisibility.PUBLIC,
                 topLevelClass.getType(),
-                introspectedTable,
                 new Parameter(FullyQualifiedJavaType.getStringInstance(), "orderByClauses", true)
         );
+        commentGenerator.addGeneralMethodComment(orderByMethod1, introspectedTable);
         orderByMethod1 = JavaElementGeneratorTools.generateMethodBody(
                 orderByMethod1,
                 "StringBuffer sb = new StringBuffer();",

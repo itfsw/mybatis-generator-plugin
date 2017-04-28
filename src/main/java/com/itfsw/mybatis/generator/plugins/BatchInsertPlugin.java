@@ -16,13 +16,12 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.CommentTools;
+import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
 import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
-import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.Document;
@@ -30,9 +29,6 @@ import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.mybatis3.ListUtilities;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
-import org.mybatis.generator.internal.util.StringUtility;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -44,8 +40,7 @@ import java.util.List;
  * @time:2017/1/13 9:33
  * ---------------------------------------------------------------------------
  */
-public class BatchInsertPlugin extends PluginAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(BatchInsertPlugin.class);
+public class BatchInsertPlugin extends BasePlugin {
     public static final String METHOD_BATCH_INSERT = "batchInsert";  // 方法名
     public static final String METHOD_BATCH_INSERT_SELECTIVE = "batchInsertSelective";  // 方法名
 
@@ -54,11 +49,6 @@ public class BatchInsertPlugin extends PluginAdapter {
      */
     @Override
     public boolean validate(List<String> warnings) {
-        // 插件使用前提是targetRuntime为MyBatis3
-        if (StringUtility.stringHasValue(getContext().getTargetRuntime()) && "MyBatis3".equalsIgnoreCase(getContext().getTargetRuntime()) == false) {
-            logger.warn("itfsw:插件" + this.getClass().getTypeName() + "要求运行targetRuntime必须为MyBatis3！");
-            return false;
-        }
 
         // 插件使用前提是数据库为MySQL或者SQLserver，因为返回主键使用了JDBC的getGenereatedKeys方法获取主键
         if ("com.mysql.jdbc.Driver".equalsIgnoreCase(this.getContext().getJdbcConnectionConfiguration().getDriverClass()) == false
@@ -78,7 +68,7 @@ public class BatchInsertPlugin extends PluginAdapter {
         // TODO
         logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件如之前使用1.0.5-的插件可继续使用com.itfsw.mybatis.generator.plugins.BatchInsertOldPlugin或者修改batchInsert(@Param(\"list\") List<Tb> list, @Param(\"insertColumns\") Tb.Column ... selective)调用为batchInsertSelective！");
 
-        return true;
+        return super.validate(warnings);
     }
 
 
@@ -101,10 +91,10 @@ public class BatchInsertPlugin extends PluginAdapter {
                 METHOD_BATCH_INSERT,
                 JavaVisibility.DEFAULT,
                 FullyQualifiedJavaType.getIntInstance(),
-                introspectedTable,
                 new Parameter(listType, "list", "@Param(\"list\")")
 
         );
+        commentGenerator.addGeneralMethodComment(mBatchInsert, introspectedTable);
         // interface 增加方法
         interfaze.addMethod(mBatchInsert);
         logger.debug("itfsw(批量插入插件):" + interfaze.getType().getShortName() + "增加batchInsert方法。");
@@ -115,10 +105,10 @@ public class BatchInsertPlugin extends PluginAdapter {
                 METHOD_BATCH_INSERT_SELECTIVE,
                 JavaVisibility.DEFAULT,
                 FullyQualifiedJavaType.getIntInstance(),
-                introspectedTable,
                 new Parameter(listType, "list", "@Param(\"list\")"),
                 new Parameter(selectiveType, "selective", "@Param(\"selective\")", true)
         );
+        commentGenerator.addGeneralMethodComment(mBatchInsertSelective, introspectedTable);
         // interface 增加方法
         interfaze.addMethod(mBatchInsertSelective);
         logger.debug("itfsw(批量插入插件):" + interfaze.getType().getShortName() + "增加batchInsertSelective方法。");
@@ -142,7 +132,7 @@ public class BatchInsertPlugin extends PluginAdapter {
         // 参数类型
         batchInsertEle.addAttribute(new Attribute("parameterType", "map"));
         // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
-        CommentTools.addComment(batchInsertEle);
+        commentGenerator.addComment(batchInsertEle);
 
         // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
         XmlElementGeneratorTools.useGeneratedKeys(batchInsertEle, introspectedTable);
@@ -173,7 +163,7 @@ public class BatchInsertPlugin extends PluginAdapter {
         // 参数类型
         element.addAttribute(new Attribute("parameterType", "map"));
         // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
-        CommentTools.addComment(element);
+        commentGenerator.addComment(element);
 
         // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
         XmlElementGeneratorTools.useGeneratedKeys(element, introspectedTable);

@@ -16,11 +16,10 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.CommentTools;
+import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedTable;
-import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.Document;
@@ -28,8 +27,6 @@ import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.mybatis3.ListUtilities;
 import org.mybatis.generator.internal.util.StringUtility;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Properties;
@@ -42,17 +39,11 @@ import java.util.Properties;
  * @time:2017/3/21 10:59
  * ---------------------------------------------------------------------------
  */
-public class UpsertPlugin extends PluginAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(BatchInsertPlugin.class);
+public class UpsertPlugin extends BasePlugin {
     public static final String METHOD_UPSERT = "upsert";  // 方法名
     public static final String METHOD_UPSERT_SELECTIVE = "upsertSelective";  // 方法名
     public static final String METHOD_UPSERT_BY_EXAMPLE = "upsertByExample";   // 方法名
     public static final String METHOD_UPSERT_BY_EXAMPLE_SELECTIVE = "upsertByExampleSelective";   // 方法名
-
-    public static final String METHOD_BATCH_UPSERT = "batchUpsert";  // 方法名
-    public static final String METHOD_BATCH_UPSERT_SELECTIVE = "batchUpsertSelective";  // 方法名
-    public static final String METHOD_BATCH_UPSERT_BY_EXAMPLE = "batchUpsertByExample";   // 方法名
-    public static final String METHOD_BATCH_UPSERT_BY_EXAMPLE_SELECTIVE = "batchUpsertByExampleSelective";   // 方法名
 
     public static final String PRE_ALLOW_MULTI_QUERIES = "allowMultiQueries";   // property allowMultiQueries
     private boolean allowMultiQueries = false;  // 是否允许多sql提交
@@ -62,11 +53,6 @@ public class UpsertPlugin extends PluginAdapter {
      */
     @Override
     public boolean validate(List<String> warnings) {
-        // 插件使用前提是targetRuntime为MyBatis3
-        if (StringUtility.stringHasValue(getContext().getTargetRuntime()) && "MyBatis3".equalsIgnoreCase(getContext().getTargetRuntime()) == false) {
-            logger.warn("itfsw:插件" + this.getClass().getTypeName() + "要求运行targetRuntime必须为MyBatis3！");
-            return false;
-        }
 
         // 插件使用前提是数据库为MySQL
         if ("com.mysql.jdbc.Driver".equalsIgnoreCase(this.getContext().getJdbcConnectionConfiguration().getDriverClass()) == false){
@@ -83,7 +69,7 @@ public class UpsertPlugin extends PluginAdapter {
             logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件您开启了allowMultiQueries支持，注意在jdbc url 配置中增加“allowMultiQueries=true”支持（不怎么建议使用该功能，开启多sql提交会增加sql注入的风险，请确保你所有sql都使用MyBatis书写，请不要使用statement进行sql提交）！");
         }
 
-        return true;
+        return super.validate(warnings);
     }
 
     /**
@@ -102,9 +88,9 @@ public class UpsertPlugin extends PluginAdapter {
                 METHOD_UPSERT,
                 JavaVisibility.DEFAULT,
                 FullyQualifiedJavaType.getIntInstance(),
-                introspectedTable,
                 new Parameter(introspectedTable.getRules().calculateAllFieldsClass(), "record")
         );
+        commentGenerator.addGeneralMethodComment(mUpsert, introspectedTable);
         // interface 增加方法
         interfaze.addMethod(mUpsert);
         logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsert方法。");
@@ -114,9 +100,9 @@ public class UpsertPlugin extends PluginAdapter {
                 METHOD_UPSERT_SELECTIVE,
                 JavaVisibility.DEFAULT,
                 FullyQualifiedJavaType.getIntInstance(),
-                introspectedTable,
                 new Parameter(introspectedTable.getRules().calculateAllFieldsClass(), "record")
         );
+        commentGenerator.addGeneralMethodComment(mUpsertSelective, introspectedTable);
         // interface 增加方法
         interfaze.addMethod(mUpsertSelective);
         logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertSelective方法。");
@@ -127,10 +113,10 @@ public class UpsertPlugin extends PluginAdapter {
                     METHOD_UPSERT_BY_EXAMPLE,
                     JavaVisibility.DEFAULT,
                     FullyQualifiedJavaType.getIntInstance(),
-                    introspectedTable,
                     new Parameter(introspectedTable.getRules().calculateAllFieldsClass(), "record", "@Param(\"record\")"),
                     new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")")
             );
+            commentGenerator.addGeneralMethodComment(mUpsertByExample, introspectedTable);
             // interface 增加方法
             interfaze.addMethod(mUpsertByExample);
             logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertByExample方法。");
@@ -140,10 +126,10 @@ public class UpsertPlugin extends PluginAdapter {
                     METHOD_UPSERT_BY_EXAMPLE_SELECTIVE,
                     JavaVisibility.DEFAULT,
                     FullyQualifiedJavaType.getIntInstance(),
-                    introspectedTable,
                     new Parameter(introspectedTable.getRules().calculateAllFieldsClass(), "record", "@Param(\"record\")"),
                     new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")")
             );
+            commentGenerator.addGeneralMethodComment(mUpsertByExampleSelective, introspectedTable);
             // interface 增加方法
             interfaze.addMethod(mUpsertByExampleSelective);
             logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertByExampleSelective方法。");
@@ -167,7 +153,7 @@ public class UpsertPlugin extends PluginAdapter {
         XmlElement eleUpsert = new XmlElement("insert");
         eleUpsert.addAttribute(new Attribute("id", METHOD_UPSERT));
         // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
-        CommentTools.addComment(eleUpsert);
+        commentGenerator.addComment(eleUpsert);
 
         // 参数类型
         eleUpsert.addAttribute(new Attribute("parameterType", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
@@ -190,7 +176,7 @@ public class UpsertPlugin extends PluginAdapter {
         XmlElement eleUpsertSelective = new XmlElement("insert");
         eleUpsertSelective.addAttribute(new Attribute("id", METHOD_UPSERT_SELECTIVE));
         // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
-        CommentTools.addComment(eleUpsertSelective);
+        commentGenerator.addComment(eleUpsertSelective);
 
         // 参数类型
         eleUpsertSelective.addAttribute(new Attribute("parameterType", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
@@ -216,7 +202,7 @@ public class UpsertPlugin extends PluginAdapter {
             // 参数类型
             eleUpsertByExample.addAttribute(new Attribute("parameterType", "map"));
             // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
-            CommentTools.addComment(eleUpsertByExample);
+            commentGenerator.addComment(eleUpsertByExample);
 
             // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
             XmlElementGeneratorTools.useGeneratedKeys(eleUpsertByExample, introspectedTable, "record.");
@@ -245,7 +231,7 @@ public class UpsertPlugin extends PluginAdapter {
             // 参数类型
             eleUpsertByExampleSelective.addAttribute(new Attribute("parameterType", "map"));
             // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
-            CommentTools.addComment(eleUpsertByExampleSelective);
+            commentGenerator.addComment(eleUpsertByExampleSelective);
 
             // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
             XmlElementGeneratorTools.useGeneratedKeys(eleUpsertByExampleSelective, introspectedTable, "record.");
