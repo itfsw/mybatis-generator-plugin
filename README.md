@@ -48,7 +48,7 @@ public interface TbMapper {
     Tb selectOneByExample(TbExample example);
 }
 ```
-### <span id="case2">2. MySQL分页插件</span>
+### <span id="case2"></span>2. MySQL分页插件
 对应表Example类增加了Mysql分页方法，limit(Integer rows)、limit(Integer offset, Integer rows)和page(Integer page, Integer pageSize)  
 插件：
 ```xml
