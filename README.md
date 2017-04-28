@@ -4,16 +4,16 @@
   
 ---------------------------------------
 插件列表：  
-* [查询单条数据插件（SelectOneByExamplePlugin）](#case1)
-* [MySQL分页插件（LimitPlugin）](#case2)
-* [数据Model链式构建插件（ModelBuilderPlugin）](#case3)
-* [Example Criteria 增强插件（ExampleEnhancedPlugin（CriteriaBuilderPlugin这个是老版本叫法，已经弃用））](#case4)
-* [Example 目标包修改插件（ExampleTargetPlugin）](#case5)
-* [批量插入插件（BatchInsertPlugin）](#case6)
-* [逻辑删除插件（LogicalDeletePlugin）](#case7)
-* [数据Model属性对应Column获取插件（ModelColumnPlugin）](#case8)
-* [存在即更新插件（UpsertPlugin）](#case9)
-* [Selective选择插入更新增强插件（SelectiveEnhancedPlugin（1.0.7-SNAPSHOT））](#case10)
+* [查询单条数据插件（SelectOneByExamplePlugin）](#1-查询单条数据插件)
+* [MySQL分页插件（LimitPlugin）](#2-mysql分页插件)
+* [数据Model链式构建插件（ModelBuilderPlugin）](#3-数据model链式构建插件)
+* [Example Criteria 增强插件（ExampleEnhancedPlugin（CriteriaBuilderPlugin这个是老版本叫法，已经弃用））](#4-example-增强插件exampleandiforderby)
+* [Example 目标包修改插件（ExampleTargetPlugin）](#5-example-目标包修改插件)
+* [批量插入插件（BatchInsertPlugin）](#6-批量插入插件)
+* [逻辑删除插件（LogicalDeletePlugin）](#7-逻辑删除插件)
+* [数据Model属性对应Column获取插件（ModelColumnPlugin）](#8-数据model属性对应column获取插件)
+* [存在即更新插件（UpsertPlugin）](#9-存在即更新插件)
+* [Selective选择插入更新增强插件（SelectiveEnhancedPlugin（1.0.7-SNAPSHOT））](#10-selective选择插入更新增强插件107-snapshot)
   
 ---------------------------------------
 Maven引用：  
@@ -28,7 +28,7 @@ Maven引用：
 </dependency>
 ```
 ---------------------------------------
-### <span id="case1">1. 查询单条数据插件</span>
+### 1. 查询单条数据插件
 对应表Mapper接口增加了方法  
 插件：
 ```xml
@@ -48,7 +48,7 @@ public interface TbMapper {
     Tb selectOneByExample(TbExample example);
 }
 ```
-### <span id="case2">2. MySQL分页插件</span>
+### 2. MySQL分页插件
 对应表Example类增加了Mysql分页方法，limit(Integer rows)、limit(Integer offset, Integer rows)和page(Integer page, Integer pageSize)  
 插件：
 ```xml
@@ -144,7 +144,7 @@ public class Test {
     }
 }
 ```
-### <span id="case3">3. 数据Model链式构建插件</span>
+### 3. 数据Model链式构建插件
 这个是仿jquery的链式调用强化了表的Model的赋值操作  
 插件：
 ```xml
@@ -165,7 +165,7 @@ public class Test {
     }
 }
 ```
-### <span id="case4">4. Example 增强插件(example,andIf,orderBy)</span>
+### 4. Example 增强插件(example,andIf,orderBy)
 * Criteria的快速返回example()方法。  
 * Criteria链式调用增强，以前如果有按条件增加的查询语句会打乱链式查询构建，现在有了andIf(boolean ifAdd, CriteriaAdd add)方法可一直使用链式调用下去。
 * Example增强了setOrderByClause方法，新增orderBy(String orderByClause)方法直接返回example，增强链式调用，可以一路.下去了。
@@ -246,7 +246,7 @@ public class Test {
     }
 }
 ```
-### <span id="case5">5. Example 目标包修改插件</span>
+### 5. Example 目标包修改插件
 Mybatis Generator 插件默认把Model类和Example类都生成到一个包下，这样该包下类就会很多不方便区分，该插件目的就是把Example类独立到一个新包下，方便查看。  
 插件：
 ```xml
@@ -256,7 +256,7 @@ Mybatis Generator 插件默认把Model类和Example类都生成到一个包下�
     <property name="targetPackage" value="com.itfsw.mybatis.generator.dao.example"/>
 </plugin>
 ```
-### <span id="case6">6. 批量插入插件</span>
+### 6. 批量插入插件
 提供了批量插入batchInsert和batchInsertSelective方法，因为方法使用了使用了JDBC的getGenereatedKeys方法返回插入主键，所以只能在MYSQL和SQLServer下使用。
 需配合数据Model属性对应Column获取插件（ModelColumnPlugin）插件使用，实现类似于insertSelective插入列！  
 PS:为了和Mybatis官方代码风格保持一致，1.0.5+版本把批量插入方法分开了，基于老版本1.0.5-版本生成的代码请继续使用“com.itfsw.mybatis.generator.plugins.BatchInsertOldPlugin”不影响使用  
@@ -295,7 +295,7 @@ public class Test {
     }
 }
 ```
-### <span id="case7">7. 逻辑删除插件</span>
+### 7. 逻辑删除插件
 因为很多实际项目数据都不允许物理删除，多采用逻辑删除，所以单独为逻辑删除做了一个插件，方便使用。  
 - 增加logicalDeleteByExample和logicalDeleteByPrimaryKey方法；  
 - 查询构造工具中增加逻辑删除条件andDeleted(boolean)； 
@@ -358,7 +358,7 @@ public class Test {
     }
 }
 ```
-### <span id="case8">8. 数据Model属性对应Column获取插件</span>
+### 8. 数据Model属性对应Column获取插件
 项目中我们有时需要获取数据Model对应数据库字段的名称，一般直接根据数据Model的属性就可以猜出数据库对应column的名字，可是有的时候当column使用了columnOverride或者columnRenamingRule时就需要去看数据库设计了，所以提供了这个插件获取model对应的数据库Column。  
 * 配合Example Criteria 增强插件（ExampleEnhancedPlugin）使用，这个插件还提供了asc()和desc()方法配合Example的orderBy方法效果更佳。
 * 配合批量插入插件（BatchInsertPlugin）使用，batchInsertSelective(@Param("list") List<XXX> list, @Param("selective") XXX.Column ... insertColumns)。  
@@ -419,7 +419,7 @@ public class Test {
     }
 }
 ```
-### <span id="case9">9. 存在即更新插件</span>
+### 9. 存在即更新插件
 1. 使用MySQL的[“insert ... on duplicate key update”](https://dev.mysql.com/doc/refman/5.7/en/insert-on-duplicate.html)实现存在即更新操作，简化数据入库操作（[[issues#2]](https://github.com/itfsw/mybatis-generator-plugin/issues/2)）。  
 2. 在开启allowMultiQueries=true（默认不会开启）情况下支持upsertByExample，upsertByExampleSelective操作，但强力建议不要使用（需保证团队没有使用statement提交sql,否则会存在sql注入风险）（1.0.7-SNAPSHOT）（[[issues#2]](https://github.com/itfsw/mybatis-generator-plugin/issues/2)）。
 
@@ -485,7 +485,7 @@ public class Test {
     }
 }
 ```
-### <span id="case10">10. Selective选择插入更新增强插件（1.0.7-SNAPSHOT）</span>
+### 10. Selective选择插入更新增强插件（1.0.7-SNAPSHOT）
 项目中往往需要指定某些字段进行插入或者更新，或者把某些字段进行设置null处理，这种情况下原生xxxSelective方法往往不能达到需求，因为它的判断条件是对象字段是否为null，这种情况下可使用该插件对xxxSelective方法进行增强。  
 WAREN:配置插件时请把插件配置在所有插件末尾最后执行，这样才能把上面提供的某些插件的Selective方法也同时增强！
 
