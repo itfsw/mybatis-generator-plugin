@@ -7,13 +7,13 @@
 * [查询单条数据插件（SelectOneByExamplePlugin）](#1-查询单条数据插件)
 * [MySQL分页插件（LimitPlugin）](#2-mysql分页插件)
 * [数据Model链式构建插件（ModelBuilderPlugin）](#3-数据model链式构建插件)
-* [Example Criteria 增强插件（ExampleEnhancedPlugin（CriteriaBuilderPlugin这个是老版本叫法，已经弃用））](#4-example-增强插件exampleandiforderby)
+* [Example Criteria 增强插件（ExampleEnhancedPlugin）](#4-example-增强插件exampleandiforderby)
 * [Example 目标包修改插件（ExampleTargetPlugin）](#5-example-目标包修改插件)
 * [批量插入插件（BatchInsertPlugin）](#6-批量插入插件)
 * [逻辑删除插件（LogicalDeletePlugin）](#7-逻辑删除插件)
 * [数据Model属性对应Column获取插件（ModelColumnPlugin）](#8-数据model属性对应column获取插件)
 * [存在即更新插件（UpsertPlugin）](#9-存在即更新插件)
-* [Selective选择插入更新增强插件（SelectiveEnhancedPlugin（1.0.7-SNAPSHOT））](#10-selective选择插入更新增强插件107-snapshot)
+* [Selective选择插入更新增强插件（SelectiveEnhancedPlugin）](#10-selective选择插入更新增强插件)
   
 ---------------------------------------
 Maven引用：  
@@ -21,10 +21,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <!-- 稳定版本 -->
-  <version>1.0.6</version>
-  <!-- 快照版本(最新提交到中央库，增加了部分功能，欢迎测试反馈) -->
-  <version>1.0.7-SNAPSHOT</version>
+  <version>1.0.7</version>
 </dependency>
 ```
 ---------------------------------------
@@ -299,7 +296,7 @@ public class Test {
 因为很多实际项目数据都不允许物理删除，多采用逻辑删除，所以单独为逻辑删除做了一个插件，方便使用。  
 - 增加logicalDeleteByExample和logicalDeleteByPrimaryKey方法；  
 - 查询构造工具中增加逻辑删除条件andDeleted(boolean)； 
-- 增加逻辑删除常量DEL_FLAG_OFF（已删除）、DEL_FLAG_ON（未删除）（1.0.7-SNAPSHOT）；
+- 增加逻辑删除常量DEL_FLAG_OFF（已删除）、DEL_FLAG_ON（未删除）；
  
 插件：
 ```xml
@@ -421,7 +418,7 @@ public class Test {
 ```
 ### 9. 存在即更新插件
 1. 使用MySQL的[“insert ... on duplicate key update”](https://dev.mysql.com/doc/refman/5.7/en/insert-on-duplicate.html)实现存在即更新操作，简化数据入库操作（[[issues#2]](https://github.com/itfsw/mybatis-generator-plugin/issues/2)）。  
-2. 在开启allowMultiQueries=true（默认不会开启）情况下支持upsertByExample，upsertByExampleSelective操作，但强力建议不要使用（需保证团队没有使用statement提交sql,否则会存在sql注入风险）（1.0.7-SNAPSHOT）（[[issues#2]](https://github.com/itfsw/mybatis-generator-plugin/issues/2)）。
+2. 在开启allowMultiQueries=true（默认不会开启）情况下支持upsertByExample，upsertByExampleSelective操作，但强力建议不要使用（需保证团队没有使用statement提交sql,否则会存在sql注入风险）（[[issues#2]](https://github.com/itfsw/mybatis-generator-plugin/issues/2)）。
 
 插件：
 ```xml
@@ -430,7 +427,6 @@ public class Test {
     <!-- 
     支持upsertByExample，upsertByExampleSelective操作
     ！需开启allowMultiQueries=true多条sql提交操作，所以不建议使用！
-    ! 目前在1.0.7-SNAPSHOT支持，有需要的可以下载试用
     -->
     <property name="allowMultiQueries" value="true"/>
 </plugin>
@@ -485,7 +481,7 @@ public class Test {
     }
 }
 ```
-### 10. Selective选择插入更新增强插件（1.0.7-SNAPSHOT）
+### 10. Selective选择插入更新增强插件
 项目中往往需要指定某些字段进行插入或者更新，或者把某些字段进行设置null处理，这种情况下原生xxxSelective方法往往不能达到需求，因为它的判断条件是对象字段是否为null，这种情况下可使用该插件对xxxSelective方法进行增强。  
 WAREN:配置插件时请把插件配置在所有插件末尾最后执行，这样才能把上面提供的某些插件的Selective方法也同时增强！
 
