@@ -133,12 +133,13 @@ public class LogicalDeletePlugin extends BasePlugin {
     public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         if (this.logicalDeleteColumn != null){
             // 1. 逻辑删除ByExample
-            Method mLogicalDeleteByExample = new Method(METHOD_LOGICAL_DELETE_BY_EXAMPLE);
-            // 返回值类型
-            mLogicalDeleteByExample.setReturnType(FullyQualifiedJavaType.getIntInstance());
-            // 添加参数
-            FullyQualifiedJavaType type = new FullyQualifiedJavaType(introspectedTable.getExampleType());
-            mLogicalDeleteByExample.addParameter(new Parameter(type, "example"));
+            Method mLogicalDeleteByExample = JavaElementGeneratorTools.generateMethod(
+                    METHOD_LOGICAL_DELETE_BY_EXAMPLE,
+                    JavaVisibility.DEFAULT,
+                    FullyQualifiedJavaType.getIntInstance(),
+                    new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")")
+            );
+
             // 添加方法说明
             commentGenerator.addGeneralMethodComment(mLogicalDeleteByExample, introspectedTable);
             // interface 增加方法
