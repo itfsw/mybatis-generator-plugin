@@ -45,8 +45,36 @@ public class ModelBuilderPlugin extends BasePlugin {
      */
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        List<Field> fields = topLevelClass.getFields();
+        // 判断是否有生成Model的WithBLOBs类
+        List<IntrospectedColumn> columns = introspectedTable.getRules().generateRecordWithBLOBsClass() ? introspectedTable.getNonBLOBColumns() : introspectedTable.getAllColumns();
+        InnerClass innerClass = this.generateModelBuilder(topLevelClass, introspectedTable, columns);
+        topLevelClass.addInnerClass(innerClass);
+        return true;
+    }
 
+    /**
+     * Model Methods 生成
+     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     * @param topLevelClass
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public boolean modelRecordWithBLOBsClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        InnerClass innerClass = this.generateModelBuilder(topLevelClass, introspectedTable, introspectedTable.getAllColumns());
+        topLevelClass.addInnerClass(innerClass);
+        return true;
+    }
+
+    /**
+     * 生成ModelBuilder
+     *
+     * @param topLevelClass
+     * @param introspectedTable
+     * @param columns
+     * @return
+     */
+    private InnerClass generateModelBuilder(TopLevelClass topLevelClass, IntrospectedTable introspectedTable, List<IntrospectedColumn> columns){
         // 生成内部Builder类
         InnerClass innerClass = new InnerClass(BUILDER_CLASS_NAME);
         innerClass.setVisibility(JavaVisibility.PUBLIC);
@@ -68,8 +96,7 @@ public class ModelBuilderPlugin extends BasePlugin {
         innerClass.addMethod(constructor);
         logger.debug("itfsw(数据Model链式构建插件):" + topLevelClass.getType().getShortName() + ".Builder增加的构造方法。");
 
-
-        for (IntrospectedColumn introspectedColumn : introspectedTable.getAllColumns()) {
+        for (IntrospectedColumn introspectedColumn : columns) {
             Field field = JavaBeansUtil.getJavaBeansField(introspectedColumn, context, introspectedTable);
             Method setterMethod = JavaBeansUtil.getJavaBeansSetter(introspectedColumn, context, introspectedTable);
 
@@ -97,9 +124,9 @@ public class ModelBuilderPlugin extends BasePlugin {
         build.addBodyLine("return this.obj;");
         commentGenerator.addGeneralMethodComment(build, introspectedTable);
         innerClass.addMethod(build);
+
         logger.debug("itfsw(数据Model链式构建插件):" + topLevelClass.getType().getShortName() + ".Builder增加build方法。");
 
-        topLevelClass.addInnerClass(innerClass);
-        return true;
+        return innerClass;
     }
 }
