@@ -65,9 +65,6 @@ public class BatchInsertPlugin extends BasePlugin {
             return false;
         }
 
-        // TODO
-        logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件如之前使用1.0.5-的插件可继续使用com.itfsw.mybatis.generator.plugins.BatchInsertOldPlugin或者修改batchInsert(@Param(\"list\") List<Tb> list, @Param(\"insertColumns\") Tb.Column ... selective)调用为batchInsertSelective！");
-
         return super.validate(warnings);
     }
 
