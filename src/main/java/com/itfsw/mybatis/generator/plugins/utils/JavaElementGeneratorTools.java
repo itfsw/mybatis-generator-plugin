@@ -16,7 +16,10 @@
 
 package com.itfsw.mybatis.generator.plugins.utils;
 
+import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
+
+import static org.mybatis.generator.internal.util.messages.Messages.getString;
 
 /**
  * ---------------------------------------------------------------------------
@@ -132,5 +135,40 @@ public class JavaElementGeneratorTools {
                 field.getType()
         );
         return generateMethodBody(method, "return this." + field.getName() + ";");
+    }
+
+    /**
+     * 获取Model没有BLOBs类时的类型
+     *
+     * @param introspectedTable
+     * @return
+     */
+    public static FullyQualifiedJavaType getModelTypeWithoutBLOBs(IntrospectedTable introspectedTable){
+        FullyQualifiedJavaType type;
+        if (introspectedTable.getRules().generateBaseRecordClass()) {
+            type = new FullyQualifiedJavaType(introspectedTable.getBaseRecordType());
+        } else if (introspectedTable.getRules().generatePrimaryKeyClass()) {
+            type = new FullyQualifiedJavaType(introspectedTable.getPrimaryKeyType());
+        } else {
+            throw new RuntimeException(getString("RuntimeError.12"));
+        }
+        return type;
+    }
+
+    /**
+     * 获取Model有BLOBs类时的类型
+     *
+     * @param introspectedTable
+     * @return
+     */
+    public static FullyQualifiedJavaType getModelTypeWithBLOBs(IntrospectedTable introspectedTable){
+        FullyQualifiedJavaType type;
+        if (introspectedTable.getRules().generateRecordWithBLOBsClass()) {
+            type = new FullyQualifiedJavaType(introspectedTable.getRecordWithBLOBsType());
+        } else {
+            // the blob fields must be rolled up into the base class
+            type = new FullyQualifiedJavaType(introspectedTable.getBaseRecordType());
+        }
+        return type;
     }
 }
