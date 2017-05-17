@@ -19,6 +19,7 @@ package com.itfsw.mybatis.generator.plugins;
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
+import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.Attribute;
@@ -44,6 +45,11 @@ public class UpsertPlugin extends BasePlugin {
     public static final String METHOD_UPSERT_SELECTIVE = "upsertSelective";  // 方法名
     public static final String METHOD_UPSERT_BY_EXAMPLE = "upsertByExample";   // 方法名
     public static final String METHOD_UPSERT_BY_EXAMPLE_SELECTIVE = "upsertByExampleSelective";   // 方法名
+
+    public static final String METHOD_UPSERT_WITH_BLOBS = "upsertWithBLOBs";  // 方法名
+    public static final String METHOD_UPSERT_SELECTIVE_WITH_BLOBS = "upsertSelectiveWithBLOBs";  // 方法名
+    public static final String METHOD_UPSERT_BY_EXAMPLE_WITH_BLOBS = "upsertByExampleWithBLOBs";   // 方法名
+    public static final String METHOD_UPSERT_BY_EXAMPLE_SELECTIVE_WITH_BLOBS = "upsertByExampleSelectiveWithBLOBs";   // 方法名
 
     public static final String PRE_ALLOW_MULTI_QUERIES = "allowMultiQueries";   // property allowMultiQueries
     private boolean allowMultiQueries = false;  // 是否允许多sql提交
@@ -88,7 +94,7 @@ public class UpsertPlugin extends BasePlugin {
                 METHOD_UPSERT,
                 JavaVisibility.DEFAULT,
                 FullyQualifiedJavaType.getIntInstance(),
-                new Parameter(introspectedTable.getRules().calculateAllFieldsClass(), "record")
+                new Parameter(JavaElementGeneratorTools.getModelTypeWithoutBLOBs(introspectedTable), "record")
         );
         commentGenerator.addGeneralMethodComment(mUpsert, introspectedTable);
         // interface 增加方法
@@ -100,7 +106,7 @@ public class UpsertPlugin extends BasePlugin {
                 METHOD_UPSERT_SELECTIVE,
                 JavaVisibility.DEFAULT,
                 FullyQualifiedJavaType.getIntInstance(),
-                new Parameter(introspectedTable.getRules().calculateAllFieldsClass(), "record")
+                new Parameter(JavaElementGeneratorTools.getModelTypeWithoutBLOBs(introspectedTable), "record")
         );
         commentGenerator.addGeneralMethodComment(mUpsertSelective, introspectedTable);
         // interface 增加方法
@@ -113,7 +119,7 @@ public class UpsertPlugin extends BasePlugin {
                     METHOD_UPSERT_BY_EXAMPLE,
                     JavaVisibility.DEFAULT,
                     FullyQualifiedJavaType.getIntInstance(),
-                    new Parameter(introspectedTable.getRules().calculateAllFieldsClass(), "record", "@Param(\"record\")"),
+                    new Parameter(JavaElementGeneratorTools.getModelTypeWithoutBLOBs(introspectedTable), "record", "@Param(\"record\")"),
                     new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")")
             );
             commentGenerator.addGeneralMethodComment(mUpsertByExample, introspectedTable);
@@ -126,13 +132,67 @@ public class UpsertPlugin extends BasePlugin {
                     METHOD_UPSERT_BY_EXAMPLE_SELECTIVE,
                     JavaVisibility.DEFAULT,
                     FullyQualifiedJavaType.getIntInstance(),
-                    new Parameter(introspectedTable.getRules().calculateAllFieldsClass(), "record", "@Param(\"record\")"),
+                    new Parameter(JavaElementGeneratorTools.getModelTypeWithoutBLOBs(introspectedTable), "record", "@Param(\"record\")"),
                     new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")")
             );
             commentGenerator.addGeneralMethodComment(mUpsertByExampleSelective, introspectedTable);
             // interface 增加方法
             interfaze.addMethod(mUpsertByExampleSelective);
             logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertByExampleSelective方法。");
+        }
+
+        if (introspectedTable.getRules().generateRecordWithBLOBsClass()){
+            // ====================================== 1. upsertWithBLOBs ======================================
+            Method mUpsertWithBLOBs = JavaElementGeneratorTools.generateMethod(
+                    METHOD_UPSERT_WITH_BLOBS,
+                    JavaVisibility.DEFAULT,
+                    FullyQualifiedJavaType.getIntInstance(),
+                    new Parameter(JavaElementGeneratorTools.getModelTypeWithBLOBs(introspectedTable), "record")
+            );
+            commentGenerator.addGeneralMethodComment(mUpsertWithBLOBs, introspectedTable);
+            // interface 增加方法
+            interfaze.addMethod(mUpsertWithBLOBs);
+            logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsert方法。");
+
+            // ====================================== 2. upsertSelectiveWithBLOBs ======================================
+            Method mUpsertSelectiveWithBLOBs = JavaElementGeneratorTools.generateMethod(
+                    METHOD_UPSERT_SELECTIVE_WITH_BLOBS,
+                    JavaVisibility.DEFAULT,
+                    FullyQualifiedJavaType.getIntInstance(),
+                    new Parameter(JavaElementGeneratorTools.getModelTypeWithBLOBs(introspectedTable), "record")
+            );
+            commentGenerator.addGeneralMethodComment(mUpsertSelectiveWithBLOBs, introspectedTable);
+            // interface 增加方法
+            interfaze.addMethod(mUpsertSelectiveWithBLOBs);
+            logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertSelective方法。");
+
+            if (this.allowMultiQueries){
+                // ====================================== 3. upsertByExampleWithBLOBs ======================================
+                Method mUpsertByExampleWithBLOBs = JavaElementGeneratorTools.generateMethod(
+                        METHOD_UPSERT_BY_EXAMPLE_WITH_BLOBS,
+                        JavaVisibility.DEFAULT,
+                        FullyQualifiedJavaType.getIntInstance(),
+                        new Parameter(JavaElementGeneratorTools.getModelTypeWithBLOBs(introspectedTable), "record", "@Param(\"record\")"),
+                        new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")")
+                );
+                commentGenerator.addGeneralMethodComment(mUpsertByExampleWithBLOBs, introspectedTable);
+                // interface 增加方法
+                interfaze.addMethod(mUpsertByExampleWithBLOBs);
+                logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertByExample方法。");
+
+                // ====================================== 4. upsertByExampleSelectiveWithBLOBs ======================================
+                Method mUpsertByExampleSelectiveWithBLOBs = JavaElementGeneratorTools.generateMethod(
+                        METHOD_UPSERT_BY_EXAMPLE_SELECTIVE_WITH_BLOBS,
+                        JavaVisibility.DEFAULT,
+                        FullyQualifiedJavaType.getIntInstance(),
+                        new Parameter(JavaElementGeneratorTools.getModelTypeWithBLOBs(introspectedTable), "record", "@Param(\"record\")"),
+                        new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")")
+                );
+                commentGenerator.addGeneralMethodComment(mUpsertByExampleSelectiveWithBLOBs, introspectedTable);
+                // interface 增加方法
+                interfaze.addMethod(mUpsertByExampleSelectiveWithBLOBs);
+                logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertByExampleSelective方法。");
+            }
         }
 
         return true;
@@ -149,6 +209,137 @@ public class UpsertPlugin extends BasePlugin {
     @Override
     public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
 
+        this.generateXmlElementWithoutBLOBs(document, introspectedTable);
+
+        if (introspectedTable.getRules().generateRecordWithBLOBsClass()){
+            this.generateXmlElementWithBLOBs(document, introspectedTable);
+        }
+
+        return true;
+    }
+
+    /**
+     * 当Model有生成WithBLOBs类时的情况
+     *
+     * @param document
+     * @param introspectedTable
+     */
+    private void generateXmlElementWithBLOBs(Document document, IntrospectedTable introspectedTable){
+        // ====================================== 1. upsert ======================================
+        XmlElement eleUpsertWithBLOBs = new XmlElement("insert");
+        eleUpsertWithBLOBs.addAttribute(new Attribute("id", METHOD_UPSERT_WITH_BLOBS));
+        // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
+        commentGenerator.addComment(eleUpsertWithBLOBs);
+
+        // 参数类型
+        eleUpsertWithBLOBs.addAttribute(new Attribute("parameterType", JavaElementGeneratorTools.getModelTypeWithBLOBs(introspectedTable).getFullyQualifiedName()));
+
+        // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
+        XmlElementGeneratorTools.useGeneratedKeys(eleUpsertWithBLOBs, introspectedTable);
+
+        // insert
+        eleUpsertWithBLOBs.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
+        eleUpsertWithBLOBs.addElement(XmlElementGeneratorTools.generateKeys(introspectedTable.getAllColumns()));
+        eleUpsertWithBLOBs.addElement(new TextElement("values"));
+        eleUpsertWithBLOBs.addElement(XmlElementGeneratorTools.generateValues(introspectedTable.getAllColumns()));
+        eleUpsertWithBLOBs.addElement(new TextElement("on duplicate key update "));
+        eleUpsertWithBLOBs.addElement(XmlElementGeneratorTools.generateSets(introspectedTable.getAllColumns()));
+
+        document.getRootElement().addElement(eleUpsertWithBLOBs);
+        logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsert实现方法。");
+
+        // ====================================== 2. upsertSelective ======================================
+        XmlElement eleUpsertSelectiveWithBLOBs = new XmlElement("insert");
+        eleUpsertSelectiveWithBLOBs.addAttribute(new Attribute("id", METHOD_UPSERT_SELECTIVE_WITH_BLOBS));
+        // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
+        commentGenerator.addComment(eleUpsertSelectiveWithBLOBs);
+
+        // 参数类型
+        eleUpsertSelectiveWithBLOBs.addAttribute(new Attribute("parameterType", JavaElementGeneratorTools.getModelTypeWithBLOBs(introspectedTable).getFullyQualifiedName()));
+
+        // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
+        XmlElementGeneratorTools.useGeneratedKeys(eleUpsertSelectiveWithBLOBs, introspectedTable);
+
+        // insert
+        eleUpsertSelectiveWithBLOBs.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
+        eleUpsertSelectiveWithBLOBs.addElement(XmlElementGeneratorTools.generateKeysSelective(introspectedTable.getAllColumns()));
+        eleUpsertSelectiveWithBLOBs.addElement(new TextElement("values"));
+        eleUpsertSelectiveWithBLOBs.addElement(XmlElementGeneratorTools.generateValuesSelective(introspectedTable.getAllColumns()));
+        eleUpsertSelectiveWithBLOBs.addElement(new TextElement("on duplicate key update "));
+        eleUpsertSelectiveWithBLOBs.addElement(XmlElementGeneratorTools.generateSetsSelective(introspectedTable.getAllColumns(), null, false));
+
+        document.getRootElement().addElement(eleUpsertSelectiveWithBLOBs);
+        logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsertSelective实现方法。");
+
+        if (this.allowMultiQueries){
+            // ====================================== 2. upsertByExample ======================================
+            XmlElement eleUpsertByExampleWithBLOBs = new XmlElement("insert");
+            eleUpsertByExampleWithBLOBs.addAttribute(new Attribute("id", METHOD_UPSERT_BY_EXAMPLE_WITH_BLOBS));
+            // 参数类型
+            eleUpsertByExampleWithBLOBs.addAttribute(new Attribute("parameterType", "map"));
+            // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
+            commentGenerator.addComment(eleUpsertByExampleWithBLOBs);
+
+            // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
+            XmlElementGeneratorTools.useGeneratedKeys(eleUpsertByExampleWithBLOBs, introspectedTable, "record.");
+
+            // insert
+            eleUpsertByExampleWithBLOBs.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
+            eleUpsertByExampleWithBLOBs.addElement(XmlElementGeneratorTools.generateKeys(introspectedTable.getAllColumns()));
+            this.generateExistsClause(introspectedTable, eleUpsertByExampleWithBLOBs, false, true);
+
+            // multiQueries
+            eleUpsertByExampleWithBLOBs.addElement(new TextElement(";"));
+
+            // update
+            eleUpsertByExampleWithBLOBs.addElement(new TextElement("update " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
+            eleUpsertByExampleWithBLOBs.addElement(new TextElement("set"));
+            eleUpsertByExampleWithBLOBs.addElement(XmlElementGeneratorTools.generateSets(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()), "record."));
+            // update where
+            eleUpsertByExampleWithBLOBs.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
+
+            document.getRootElement().addElement(eleUpsertByExampleWithBLOBs);
+            logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsertSelective实现方法。");
+
+            // ====================================== 4. upsertByExampleSelective ======================================
+            XmlElement eleUpsertByExampleSelectiveWithBLOBs = new XmlElement("insert");
+            eleUpsertByExampleSelectiveWithBLOBs.addAttribute(new Attribute("id", METHOD_UPSERT_BY_EXAMPLE_SELECTIVE_WITH_BLOBS));
+            // 参数类型
+            eleUpsertByExampleSelectiveWithBLOBs.addAttribute(new Attribute("parameterType", "map"));
+            // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
+            commentGenerator.addComment(eleUpsertByExampleSelectiveWithBLOBs);
+
+            // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
+            XmlElementGeneratorTools.useGeneratedKeys(eleUpsertByExampleSelectiveWithBLOBs, introspectedTable, "record.");
+
+            // insert
+            eleUpsertByExampleSelectiveWithBLOBs.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
+            eleUpsertByExampleSelectiveWithBLOBs.addElement(XmlElementGeneratorTools.generateKeysSelective(introspectedTable.getAllColumns(), "record."));
+            this.generateExistsClause(introspectedTable, eleUpsertByExampleSelectiveWithBLOBs, true, true);
+
+            // multiQueries
+            eleUpsertByExampleSelectiveWithBLOBs.addElement(new TextElement(";"));
+
+            // update
+            eleUpsertByExampleSelectiveWithBLOBs.addElement(new TextElement("update " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
+            eleUpsertByExampleSelectiveWithBLOBs.addElement(new TextElement("set"));
+            eleUpsertByExampleSelectiveWithBLOBs.addElement(XmlElementGeneratorTools.generateSetsSelective(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()), "record."));
+
+            // update where
+            eleUpsertByExampleSelectiveWithBLOBs.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
+
+            document.getRootElement().addElement(eleUpsertByExampleSelectiveWithBLOBs);
+            logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsertSelective实现方法。");
+        }
+    }
+
+    /**
+     * 当Model没有生成WithBLOBs类时的情况
+     *
+     * @param document
+     * @param introspectedTable
+     */
+    private void generateXmlElementWithoutBLOBs(Document document, IntrospectedTable introspectedTable){
         // ====================================== 1. upsert ======================================
         XmlElement eleUpsert = new XmlElement("insert");
         eleUpsert.addAttribute(new Attribute("id", METHOD_UPSERT));
@@ -156,18 +347,18 @@ public class UpsertPlugin extends BasePlugin {
         commentGenerator.addComment(eleUpsert);
 
         // 参数类型
-        eleUpsert.addAttribute(new Attribute("parameterType", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
+        eleUpsert.addAttribute(new Attribute("parameterType", JavaElementGeneratorTools.getModelTypeWithoutBLOBs(introspectedTable).getFullyQualifiedName()));
 
         // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
         XmlElementGeneratorTools.useGeneratedKeys(eleUpsert, introspectedTable);
 
         // insert
         eleUpsert.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-        eleUpsert.addElement(XmlElementGeneratorTools.generateKeys(introspectedTable.getAllColumns()));
+        eleUpsert.addElement(XmlElementGeneratorTools.generateKeys(introspectedTable.getNonBLOBColumns()));
         eleUpsert.addElement(new TextElement("values"));
-        eleUpsert.addElement(XmlElementGeneratorTools.generateValues(introspectedTable.getAllColumns()));
+        eleUpsert.addElement(XmlElementGeneratorTools.generateValues(introspectedTable.getNonBLOBColumns()));
         eleUpsert.addElement(new TextElement("on duplicate key update "));
-        eleUpsert.addElement(XmlElementGeneratorTools.generateSets(introspectedTable.getAllColumns()));
+        eleUpsert.addElement(XmlElementGeneratorTools.generateSets(introspectedTable.getNonBLOBColumns()));
 
         document.getRootElement().addElement(eleUpsert);
         logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsert实现方法。");
@@ -179,18 +370,18 @@ public class UpsertPlugin extends BasePlugin {
         commentGenerator.addComment(eleUpsertSelective);
 
         // 参数类型
-        eleUpsertSelective.addAttribute(new Attribute("parameterType", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
+        eleUpsertSelective.addAttribute(new Attribute("parameterType", JavaElementGeneratorTools.getModelTypeWithoutBLOBs(introspectedTable).getFullyQualifiedName()));
 
         // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
         XmlElementGeneratorTools.useGeneratedKeys(eleUpsertSelective, introspectedTable);
 
         // insert
         eleUpsertSelective.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-        eleUpsertSelective.addElement(XmlElementGeneratorTools.generateKeysSelective(introspectedTable.getAllColumns()));
+        eleUpsertSelective.addElement(XmlElementGeneratorTools.generateKeysSelective(introspectedTable.getNonBLOBColumns()));
         eleUpsertSelective.addElement(new TextElement("values"));
-        eleUpsertSelective.addElement(XmlElementGeneratorTools.generateValuesSelective(introspectedTable.getAllColumns()));
+        eleUpsertSelective.addElement(XmlElementGeneratorTools.generateValuesSelective(introspectedTable.getNonBLOBColumns()));
         eleUpsertSelective.addElement(new TextElement("on duplicate key update "));
-        eleUpsertSelective.addElement(XmlElementGeneratorTools.generateSetsSelective(introspectedTable.getAllColumns(), null, false));
+        eleUpsertSelective.addElement(XmlElementGeneratorTools.generateSetsSelective(introspectedTable.getNonBLOBColumns(), null, false));
 
         document.getRootElement().addElement(eleUpsertSelective);
         logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsertSelective实现方法。");
@@ -209,8 +400,8 @@ public class UpsertPlugin extends BasePlugin {
 
             // insert
             eleUpsertByExample.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-            eleUpsertByExample.addElement(XmlElementGeneratorTools.generateKeys(introspectedTable.getAllColumns()));
-            this.generateExistsClause(introspectedTable, eleUpsertByExample, false);
+            eleUpsertByExample.addElement(XmlElementGeneratorTools.generateKeys(introspectedTable.getNonBLOBColumns()));
+            this.generateExistsClause(introspectedTable, eleUpsertByExample, false, false);
 
             // multiQueries
             eleUpsertByExample.addElement(new TextElement(";"));
@@ -218,7 +409,7 @@ public class UpsertPlugin extends BasePlugin {
             // update
             eleUpsertByExample.addElement(new TextElement("update " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
             eleUpsertByExample.addElement(new TextElement("set"));
-            eleUpsertByExample.addElement(XmlElementGeneratorTools.generateSets(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()), "record."));
+            eleUpsertByExample.addElement(XmlElementGeneratorTools.generateSets(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getNonBLOBColumns()), "record."));
             // update where
             eleUpsertByExample.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
 
@@ -238,8 +429,8 @@ public class UpsertPlugin extends BasePlugin {
 
             // insert
             eleUpsertByExampleSelective.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-            eleUpsertByExampleSelective.addElement(XmlElementGeneratorTools.generateKeysSelective(introspectedTable.getAllColumns(), "record."));
-            this.generateExistsClause(introspectedTable, eleUpsertByExampleSelective, true);
+            eleUpsertByExampleSelective.addElement(XmlElementGeneratorTools.generateKeysSelective(introspectedTable.getNonBLOBColumns(), "record."));
+            this.generateExistsClause(introspectedTable, eleUpsertByExampleSelective, true, false);
 
             // multiQueries
             eleUpsertByExampleSelective.addElement(new TextElement(";"));
@@ -247,7 +438,7 @@ public class UpsertPlugin extends BasePlugin {
             // update
             eleUpsertByExampleSelective.addElement(new TextElement("update " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
             eleUpsertByExampleSelective.addElement(new TextElement("set"));
-            eleUpsertByExampleSelective.addElement(XmlElementGeneratorTools.generateSetsSelective(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()), "record."));
+            eleUpsertByExampleSelective.addElement(XmlElementGeneratorTools.generateSetsSelective(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getNonBLOBColumns()), "record."));
 
             // update where
             eleUpsertByExampleSelective.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
@@ -255,8 +446,6 @@ public class UpsertPlugin extends BasePlugin {
             document.getRootElement().addElement(eleUpsertByExampleSelective);
             logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsertSelective实现方法。");
         }
-
-        return true;
     }
 
     /**
@@ -265,13 +454,17 @@ public class UpsertPlugin extends BasePlugin {
      * @param introspectedTable
      * @param element
      * @param selective
+     * @param withBLOBs
      */
-    private void generateExistsClause(IntrospectedTable introspectedTable, XmlElement element, boolean selective){
+    private void generateExistsClause(IntrospectedTable introspectedTable, XmlElement element, boolean selective, boolean withBLOBs){
+
+        List<IntrospectedColumn> columns = withBLOBs ? introspectedTable.getAllColumns() : introspectedTable.getNonBLOBColumns();
+        logger.warn(withBLOBs + " ::::: " + columns.size());
         element.addElement(new TextElement("select"));
         if (selective){
-            element.addElement(XmlElementGeneratorTools.generateValuesSelective(introspectedTable.getAllColumns(), "record.", false));
+            element.addElement(XmlElementGeneratorTools.generateValuesSelective(columns, "record.", false));
         } else {
-            element.addElement(XmlElementGeneratorTools.generateValues(introspectedTable.getAllColumns(), "record.", false));
+            element.addElement(XmlElementGeneratorTools.generateValues(columns, "record.", false));
         }
         element.addElement(new TextElement("from dual where not exists"));
         element.addElement(new TextElement("("));

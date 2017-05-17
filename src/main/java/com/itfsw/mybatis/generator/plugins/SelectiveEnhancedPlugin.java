@@ -169,14 +169,32 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
                     List<XmlElement> eles = this.findEle(xmlElement, "trim");
                     this.replaceEle(eles.get(0), "record.");
                     // upsertByExampleSelective的第二个trim比较特殊，需另行处理
-                    this.replaceEleForUpsertByExampleSelective(eles.get(1), "record.", introspectedTable);
+                    this.replaceEleForUpsertByExampleSelective(eles.get(1), "record.", introspectedTable, false);
 
                     List<XmlElement> eles1 = this.findEle(xmlElement, "set");
                     for (XmlElement ele : eles1) {
                         this.replaceEle(ele, "record.");
                     }
                 }
+                // ====================================== 6. upsertSelectiveWithBLOBs ======================================
+                if ("upsertSelectiveWithBLOBs".equals(id)) {
+                    List<XmlElement> eles = this.findEle(xmlElement, "trim");
+                    for (XmlElement ele : eles) {
+                        this.replaceEle(ele, "_parameter.");
+                    }
+                }
+                // ====================================== 7. upsertByExampleSelectiveWithBLOBs ======================================
+                if ("upsertByExampleSelectiveWithBLOBs".equals(id)) {
+                    List<XmlElement> eles = this.findEle(xmlElement, "trim");
+                    this.replaceEle(eles.get(0), "record.");
+                    // upsertByExampleSelective的第二个trim比较特殊，需另行处理
+                    this.replaceEleForUpsertByExampleSelective(eles.get(1), "record.", introspectedTable, true);
 
+                    List<XmlElement> eles1 = this.findEle(xmlElement, "set");
+                    for (XmlElement ele : eles1) {
+                        this.replaceEle(ele, "record.");
+                    }
+                }
             }
         }
         return true;
@@ -262,14 +280,15 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
      * @param element
      * @param prefix
      * @param introspectedTable
+     * @param withBLOBs
      */
-    private void replaceEleForUpsertByExampleSelective(XmlElement element, String prefix, IntrospectedTable introspectedTable) {
+    private void replaceEleForUpsertByExampleSelective(XmlElement element, String prefix, IntrospectedTable introspectedTable, boolean withBLOBs) {
         // choose
         XmlElement chooseEle = new XmlElement("choose");
         // when
         XmlElement whenEle = new XmlElement("when");
         whenEle.addAttribute(new Attribute("test", prefix + "isSelective()"));
-        for (IntrospectedColumn introspectedColumn : introspectedTable.getAllColumns()) {
+        for (IntrospectedColumn introspectedColumn : withBLOBs ? introspectedTable.getAllColumns() : introspectedTable.getNonBLOBColumns()) {
             XmlElement eleIf = new XmlElement("if");
             eleIf.addAttribute(new Attribute("test", prefix + "isSelective(\'" + MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + "\')"));
 
