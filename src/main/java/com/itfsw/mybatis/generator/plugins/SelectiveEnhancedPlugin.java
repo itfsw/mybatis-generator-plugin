@@ -169,7 +169,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
                     List<XmlElement> eles = this.findEle(xmlElement, "trim");
                     this.replaceEle(eles.get(0), "record.");
                     // upsertByExampleSelective的第二个trim比较特殊，需另行处理
-                    this.replaceEleForUpsertByExampleSelective(eles.get(1), "record.", introspectedTable, false);
+                    this.replaceEleForUpsertByExampleSelective(eles.get(1), "record.", introspectedTable, !introspectedTable.getRules().generateRecordWithBLOBsClass());
 
                     List<XmlElement> eles1 = this.findEle(xmlElement, "set");
                     for (XmlElement ele : eles1) {
@@ -280,15 +280,15 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
      * @param element
      * @param prefix
      * @param introspectedTable
-     * @param withBLOBs
+     * @param allColumns
      */
-    private void replaceEleForUpsertByExampleSelective(XmlElement element, String prefix, IntrospectedTable introspectedTable, boolean withBLOBs) {
+    private void replaceEleForUpsertByExampleSelective(XmlElement element, String prefix, IntrospectedTable introspectedTable, boolean allColumns) {
         // choose
         XmlElement chooseEle = new XmlElement("choose");
         // when
         XmlElement whenEle = new XmlElement("when");
         whenEle.addAttribute(new Attribute("test", prefix + "isSelective()"));
-        for (IntrospectedColumn introspectedColumn : withBLOBs ? introspectedTable.getAllColumns() : introspectedTable.getNonBLOBColumns()) {
+        for (IntrospectedColumn introspectedColumn : (allColumns ? introspectedTable.getAllColumns() : introspectedTable.getNonBLOBColumns())) {
             XmlElement eleIf = new XmlElement("if");
             eleIf.addAttribute(new Attribute("test", prefix + "isSelective(\'" + MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + "\')"));
 

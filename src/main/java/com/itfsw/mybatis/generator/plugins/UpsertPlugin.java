@@ -340,6 +340,10 @@ public class UpsertPlugin extends BasePlugin {
      * @param introspectedTable
      */
     private void generateXmlElementWithoutBLOBs(Document document, IntrospectedTable introspectedTable){
+        // WithoutBLOBs也会存在只有一个时，不生成WithBLOBs对象的情况
+        boolean flag = !introspectedTable.getRules().generateRecordWithBLOBsClass();
+        List<IntrospectedColumn> columns = flag ? introspectedTable.getAllColumns() : introspectedTable.getNonBLOBColumns();
+
         // ====================================== 1. upsert ======================================
         XmlElement eleUpsert = new XmlElement("insert");
         eleUpsert.addAttribute(new Attribute("id", METHOD_UPSERT));
@@ -354,11 +358,11 @@ public class UpsertPlugin extends BasePlugin {
 
         // insert
         eleUpsert.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-        eleUpsert.addElement(XmlElementGeneratorTools.generateKeys(introspectedTable.getNonBLOBColumns()));
+        eleUpsert.addElement(XmlElementGeneratorTools.generateKeys(columns));
         eleUpsert.addElement(new TextElement("values"));
-        eleUpsert.addElement(XmlElementGeneratorTools.generateValues(introspectedTable.getNonBLOBColumns()));
+        eleUpsert.addElement(XmlElementGeneratorTools.generateValues(columns));
         eleUpsert.addElement(new TextElement("on duplicate key update "));
-        eleUpsert.addElement(XmlElementGeneratorTools.generateSets(introspectedTable.getNonBLOBColumns()));
+        eleUpsert.addElement(XmlElementGeneratorTools.generateSets(columns));
 
         document.getRootElement().addElement(eleUpsert);
         logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsert实现方法。");
@@ -377,11 +381,11 @@ public class UpsertPlugin extends BasePlugin {
 
         // insert
         eleUpsertSelective.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-        eleUpsertSelective.addElement(XmlElementGeneratorTools.generateKeysSelective(introspectedTable.getNonBLOBColumns()));
+        eleUpsertSelective.addElement(XmlElementGeneratorTools.generateKeysSelective(columns));
         eleUpsertSelective.addElement(new TextElement("values"));
-        eleUpsertSelective.addElement(XmlElementGeneratorTools.generateValuesSelective(introspectedTable.getNonBLOBColumns()));
+        eleUpsertSelective.addElement(XmlElementGeneratorTools.generateValuesSelective(columns));
         eleUpsertSelective.addElement(new TextElement("on duplicate key update "));
-        eleUpsertSelective.addElement(XmlElementGeneratorTools.generateSetsSelective(introspectedTable.getNonBLOBColumns(), null, false));
+        eleUpsertSelective.addElement(XmlElementGeneratorTools.generateSetsSelective(columns, null, false));
 
         document.getRootElement().addElement(eleUpsertSelective);
         logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsertSelective实现方法。");
@@ -400,8 +404,8 @@ public class UpsertPlugin extends BasePlugin {
 
             // insert
             eleUpsertByExample.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-            eleUpsertByExample.addElement(XmlElementGeneratorTools.generateKeys(introspectedTable.getNonBLOBColumns()));
-            this.generateExistsClause(introspectedTable, eleUpsertByExample, false, false);
+            eleUpsertByExample.addElement(XmlElementGeneratorTools.generateKeys(columns));
+            this.generateExistsClause(introspectedTable, eleUpsertByExample, false, flag);
 
             // multiQueries
             eleUpsertByExample.addElement(new TextElement(";"));
@@ -409,7 +413,7 @@ public class UpsertPlugin extends BasePlugin {
             // update
             eleUpsertByExample.addElement(new TextElement("update " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
             eleUpsertByExample.addElement(new TextElement("set"));
-            eleUpsertByExample.addElement(XmlElementGeneratorTools.generateSets(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getNonBLOBColumns()), "record."));
+            eleUpsertByExample.addElement(XmlElementGeneratorTools.generateSets(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(columns), "record."));
             // update where
             eleUpsertByExample.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
 
@@ -429,8 +433,8 @@ public class UpsertPlugin extends BasePlugin {
 
             // insert
             eleUpsertByExampleSelective.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-            eleUpsertByExampleSelective.addElement(XmlElementGeneratorTools.generateKeysSelective(introspectedTable.getNonBLOBColumns(), "record."));
-            this.generateExistsClause(introspectedTable, eleUpsertByExampleSelective, true, false);
+            eleUpsertByExampleSelective.addElement(XmlElementGeneratorTools.generateKeysSelective(columns, "record."));
+            this.generateExistsClause(introspectedTable, eleUpsertByExampleSelective, true, flag);
 
             // multiQueries
             eleUpsertByExampleSelective.addElement(new TextElement(";"));
@@ -438,7 +442,7 @@ public class UpsertPlugin extends BasePlugin {
             // update
             eleUpsertByExampleSelective.addElement(new TextElement("update " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
             eleUpsertByExampleSelective.addElement(new TextElement("set"));
-            eleUpsertByExampleSelective.addElement(XmlElementGeneratorTools.generateSetsSelective(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getNonBLOBColumns()), "record."));
+            eleUpsertByExampleSelective.addElement(XmlElementGeneratorTools.generateSetsSelective(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(columns), "record."));
 
             // update where
             eleUpsertByExampleSelective.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
@@ -454,12 +458,11 @@ public class UpsertPlugin extends BasePlugin {
      * @param introspectedTable
      * @param element
      * @param selective
-     * @param withBLOBs
+     * @param allColumns
      */
-    private void generateExistsClause(IntrospectedTable introspectedTable, XmlElement element, boolean selective, boolean withBLOBs){
+    private void generateExistsClause(IntrospectedTable introspectedTable, XmlElement element, boolean selective, boolean allColumns){
+        List<IntrospectedColumn> columns = allColumns ? introspectedTable.getAllColumns() : introspectedTable.getNonBLOBColumns();
 
-        List<IntrospectedColumn> columns = withBLOBs ? introspectedTable.getAllColumns() : introspectedTable.getNonBLOBColumns();
-        logger.warn(withBLOBs + " ::::: " + columns.size());
         element.addElement(new TextElement("select"));
         if (selective){
             element.addElement(XmlElementGeneratorTools.generateValuesSelective(columns, "record.", false));
