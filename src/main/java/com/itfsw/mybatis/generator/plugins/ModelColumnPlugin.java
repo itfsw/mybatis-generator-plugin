@@ -22,8 +22,6 @@ import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.internal.util.JavaBeansUtil;
 
-import java.util.List;
-
 /**
  * ---------------------------------------------------------------------------
  * 数据Model属性对应Column获取插件
@@ -44,8 +42,31 @@ public class ModelColumnPlugin extends BasePlugin {
      */
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        List<Field> fields = topLevelClass.getFields();
+        topLevelClass.addInnerEnum(this.generateColumnEnum(topLevelClass, introspectedTable));
+        return true;
+    }
 
+    /**
+     * Model Methods 生成
+     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     * @param topLevelClass
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public boolean modelRecordWithBLOBsClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        topLevelClass.addInnerEnum(this.generateColumnEnum(topLevelClass, introspectedTable));
+        return true;
+    }
+
+    /**
+     * 生成Column字段枚举
+     *
+     * @param topLevelClass
+     * @param introspectedTable
+     * @return
+     */
+    private InnerEnum generateColumnEnum(TopLevelClass topLevelClass, IntrospectedTable introspectedTable){
         // 生成内部枚举
         InnerEnum innerEnum = new InnerEnum(new FullyQualifiedJavaType(ENUM_NAME));
         innerEnum.setVisibility(JavaVisibility.PUBLIC);
@@ -112,7 +133,6 @@ public class ModelColumnPlugin extends BasePlugin {
         innerEnum.addMethod(asc);
         logger.debug("itfsw(数据Model属性对应Column获取插件):" + topLevelClass.getType().getShortName() + ".Column增加asc()和desc()方法。");
 
-        topLevelClass.addInnerEnum(innerEnum);
-        return true;
+        return innerEnum;
     }
 }
