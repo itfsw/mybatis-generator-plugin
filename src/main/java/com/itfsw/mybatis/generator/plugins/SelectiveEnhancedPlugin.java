@@ -256,6 +256,10 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
             }
 
             XmlElement ifEle = new XmlElement("if");
+
+            // bug fixed: 修正使用autoDelimitKeywords过滤关键词造成的field前后加了特殊字符的问题
+            field = field.replaceAll("`", "").replaceAll("\"", "").replaceAll("'", "");
+
             ifEle.addAttribute(new Attribute("test", prefix + "isSelective(\'" + field + "\')"));
             ifEle.addElement(textElement);
             whenEle.addElement(ifEle);
@@ -290,7 +294,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
         whenEle.addAttribute(new Attribute("test", prefix + "isSelective()"));
         for (IntrospectedColumn introspectedColumn : (allColumns ? introspectedTable.getAllColumns() : introspectedTable.getNonBLOBColumns())) {
             XmlElement eleIf = new XmlElement("if");
-            eleIf.addAttribute(new Attribute("test", prefix + "isSelective(\'" + MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + "\')"));
+            eleIf.addAttribute(new Attribute("test", prefix + "isSelective(\'" + introspectedColumn.getActualColumnName() + "\')"));
 
             eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
             whenEle.addElement(eleIf);
