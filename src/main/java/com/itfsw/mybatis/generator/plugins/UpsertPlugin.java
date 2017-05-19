@@ -141,7 +141,8 @@ public class UpsertPlugin extends BasePlugin {
             logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertByExampleSelective方法。");
         }
 
-        if (introspectedTable.getRules().generateRecordWithBLOBsClass()){
+        // !!! 注意这里的行为不以有没有生成Model 的 WithBLOBs类为基准
+        if (introspectedTable.hasBLOBColumns()){
             // ====================================== 1. upsertWithBLOBs ======================================
             Method mUpsertWithBLOBs = JavaElementGeneratorTools.generateMethod(
                     METHOD_UPSERT_WITH_BLOBS,
@@ -211,7 +212,8 @@ public class UpsertPlugin extends BasePlugin {
 
         this.generateXmlElementWithoutBLOBs(document, introspectedTable);
 
-        if (introspectedTable.getRules().generateRecordWithBLOBsClass()){
+        // !!! 注意这里的行为不以有没有生成Model 的 WithBLOBs类为基准
+        if (introspectedTable.hasBLOBColumns()){
             this.generateXmlElementWithBLOBs(document, introspectedTable);
         }
 

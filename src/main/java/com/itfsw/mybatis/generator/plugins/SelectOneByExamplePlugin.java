@@ -64,8 +64,8 @@ public class SelectOneByExamplePlugin extends BasePlugin {
         interfaze.addMethod(method);
         logger.debug("itfsw(查询单条数据插件):"+interfaze.getType().getShortName()+"增加selectOneByExample方法。");
 
-        // 方法生成 selectOneByExampleWithBLOBs
-        if (introspectedTable.getRules().generateRecordWithBLOBsClass()){
+        // 方法生成 selectOneByExampleWithBLOBs !!! 注意这里的行为不以有没有生成Model 的 WithBLOBs类为基准
+        if (introspectedTable.hasBLOBColumns()){
             // 方法生成 selectOneByExample
             Method method1 = JavaElementGeneratorTools.generateMethod(
                     METHOD_SELECT_ONE_BY_EXAMPLE_WITH_BLOBS,
@@ -134,7 +134,8 @@ public class SelectOneByExamplePlugin extends BasePlugin {
         logger.debug("itfsw(查询单条数据插件):"+introspectedTable.getMyBatis3XmlMapperFileName()+"增加selectOneByExample方法。");
 
         // ------------------------------------ selectOneByExampleWithBLOBs ----------------------------------
-        if (introspectedTable.getRules().generateRecordWithBLOBsClass()){
+        // !!! 注意这里的行为不以有没有生成Model 的 WithBLOBs类为基准
+        if (introspectedTable.hasBLOBColumns()){
             // 生成查询语句
             XmlElement selectOneWithBLOBsElement = new XmlElement("select");
             // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
