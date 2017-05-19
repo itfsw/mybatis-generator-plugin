@@ -3,7 +3,7 @@
 
     <groupId>com.itfsw</groupId>
     <artifactId>mybatis-generator-plugin</artifactId>
-    <version>1.0.9</version>
+    <version>1.0.10-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -175,7 +175,7 @@
         <connection>scm:git:https://github.com/itfsw/mybatis-generator-plugin.git</connection>
         <developerConnection>scm:git:https://github.com/itfsw/mybatis-generator-plugin.git</developerConnection>
         <url>https://github.com/itfsw/mybatis-generator-plugin</url>
-      <tag>V1.0.9</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++distribution++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
