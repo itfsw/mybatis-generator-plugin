@@ -14,7 +14,8 @@
 * [数据Model属性对应Column获取插件（ModelColumnPlugin）](#8-数据model属性对应column获取插件)
 * [存在即更新插件（UpsertPlugin）](#9-存在即更新插件)
 * [Selective选择插入更新增强插件（SelectiveEnhancedPlugin）](#10-selective选择插入更新增强插件)
-* [Table增加前缀插件（TableSuffixPlugin）](#11-table增加前缀插件)
+* [Table增加前缀插件（TablePrefixPlugin）](#11-table增加前缀插件)
+* [Table重命名插件（TableRenamePlugin）](#12-table重命名插件)
   
 ---------------------------------------
 Maven引用：  
@@ -22,7 +23,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.0.9</version>
+  <version>1.0.10</version>
 </dependency>
 ```
 ---------------------------------------
@@ -554,14 +555,15 @@ public class Test {
 ### 11. Table增加前缀插件
 项目中有时会遇到配置多数据源对应多业务的情况，这种情况下可能会出现不同数据源出现重复表名，造成异常冲突。
 该插件允许为表增加前缀，改变最终生成的Model、Mapper、Example类名以及xml名。  
+warning: 请原谅我蹩脚的英文水平，一直没发现插件名称错了，1.0.9版本错误命名为TableSuffixPlugin，属性为suffix请新版本用户对应修正！  
 
 插件：
 ```xml
 <!-- Table增加前缀插件 -->
 <xml>
-    <plugin type="com.itfsw.mybatis.generator.plugins.TableSuffixPlugin">
+    <plugin type="com.itfsw.mybatis.generator.plugins.TablePrefixPlugin">
         <!-- 这里配置的是全局表前缀，当然在table中配置的值会覆盖该全局配置 -->
-        <property name="suffix" value="Cm"/>
+        <property name="prefix" value="Cm"/>
     </plugin>
     
     <table tableName="tb">
@@ -579,6 +581,54 @@ public class Test {
         // Mapper类名: TbMapper -> Db1TbMapper
         // Example类名: TbExample -> Db1TbExample
         // xml文件名: TbMapper.xml -> Db1TbMapper.xml
+    }
+}
+```
+### 12. Table重命名插件
+插件由来：  
+记得才开始工作时某个隔壁项目组的坑爹项目，由于某些特定的原因数据库设计表名为t1~tn,字段名为f1~fn。
+这种情况下如何利用Mybatis Generator生成可读的代码呢，字段可以用columnOverride来替换，Model、Mapper等则需要使用domainObjectName+mapperName来实现方便辨识的代码。  
+>该插件解决：domainObjectName+mapperName?好吧我想简化一下，所以直接使用tableOverride（仿照columnOverride）来实现便于配置的理解。 
+
+某些DBA喜欢在数据库设计时使用t_、f_这种类似的设计（[[issues#4]](https://github.com/itfsw/mybatis-generator-plugin/issues/4)），
+这种情况下我们就希望能有类似[columnRenamingRule](http://www.mybatis.org/generator/configreference/columnRenamingRule.html)这种重命名插件来修正最终生成的Model、Mapper等命名。
+>该插件解决：使用正则替换table生成的Model、Example、Mapper等命名。
+ 
+warning：和插件[Table增加前缀插件](#11-table增加前缀插件)联合使用时，位置应该放在前面。
+
+插件：
+```xml
+<!-- Table重命名插件 -->
+<xml>
+    <plugin type="com.itfsw.mybatis.generator.plugins.TablePrefixPlugin">
+        <!-- 可根据具体需求确定是否配置 -->
+        <property name="searchString" value="^T"/>
+        <property name="replaceString" value=""/>
+    </plugin>
+    
+    <table tableName="tb">
+        <!-- 这个优先级最高，会忽略searchString、replaceString的配置 -->
+        <property name="tableOverride" value="TestDb"/>
+    </table>
+</xml>
+```
+使用：  
+```java
+public class Test {
+    public static void main(String[] args) {
+        // 1. 使用searchString和replaceString时，和Mybatis Generator一样使用的是java.util.regex.Matcher.replaceAll去进行正则替换
+        // 表： T_USER
+        // Model类名: TUser -> User
+        // Mapper类名: TUserMapper -> UserMapper
+        // Example类名: TUserExample -> UserExample
+        // xml文件名: TUserMapper.xml -> UserMapper.xml
+        
+        // 2. 使用表tableOverride时，该配置优先级最高
+        // 表： T_BOOK
+        // Model类名: TBook -> TestDb
+        // Mapper类名: TBookMapper -> TestDbMapper
+        // Example类名: TBookExample -> TestDbExample
+        // xml文件名: TBookMapper.xml -> TestDbMapper.xml
     }
 }
 ```
