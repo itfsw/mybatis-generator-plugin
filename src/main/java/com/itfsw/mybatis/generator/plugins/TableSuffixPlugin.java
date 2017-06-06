@@ -17,7 +17,6 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
-import org.mybatis.generator.api.IntrospectedTable;
 
 import java.util.List;
 
@@ -32,74 +31,13 @@ import java.util.List;
 @Deprecated
 public class TableSuffixPlugin extends BasePlugin {
 
-    public static final String PRE_SUFFIX = "suffix";  // 前缀 property
-    private String suffix;  // 前缀
-
     /**
      * {@inheritDoc}
      */
     @Override
     public boolean validate(List<String> warnings) {
-        logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件已经过期，请使用TablePrefixPlugin插件替换(请原谅我蹩脚的英文水平)！");
+        logger.error("itfsw:插件" + this.getClass().getTypeName() + "插件已经过期，请使用TablePrefixPlugin插件替换(请原谅我蹩脚的英文水平)！");
 
-        return super.validate(warnings);
-    }
-
-    /**
-     * 初始化阶段
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param introspectedTable
-     * @return
-     */
-    @Override
-    public void initialized(IntrospectedTable introspectedTable) {
-        // 1. 首先获取全局配置
-        this.suffix = getProperties().getProperty(PRE_SUFFIX);
-        // 2. 获取每个table 具体的
-        if (introspectedTable.getTableConfigurationProperty(PRE_SUFFIX) != null) {
-            this.suffix = introspectedTable.getTableConfigurationProperty(PRE_SUFFIX);
-        }
-        // 3. 判断是否配置了前缀
-        if (this.suffix != null) {
-            // 3.1. 为Model增加前缀
-            if (introspectedTable.getBaseRecordType() != null) {
-                introspectedTable.setBaseRecordType(this.renameJavaType(introspectedTable.getBaseRecordType()));
-            }
-
-            // 3.2. 为ModelKey添加前缀
-            if (introspectedTable.getPrimaryKeyType() != null) {
-                introspectedTable.setPrimaryKeyType(this.renameJavaType(introspectedTable.getPrimaryKeyType()));
-            }
-
-            // 3.3. WithBLOBs Model 添加前缀
-            if (introspectedTable.getRecordWithBLOBsType() != null) {
-                introspectedTable.setRecordWithBLOBsType(this.renameJavaType(introspectedTable.getRecordWithBLOBsType()));
-            }
-
-            // 3.4. mapper 添加前缀
-            if (introspectedTable.getMyBatis3JavaMapperType() != null) {
-                introspectedTable.setMyBatis3JavaMapperType(this.renameJavaType(introspectedTable.getMyBatis3JavaMapperType()));
-            }
-
-            // 3.5. example 添加前缀
-            if (introspectedTable.getExampleType() != null) {
-                introspectedTable.setExampleType(this.renameJavaType(introspectedTable.getExampleType()));
-            }
-
-            // 3.6. 修正xml文件前缀
-            if (introspectedTable.getMyBatis3XmlMapperFileName() != null) {
-                introspectedTable.setMyBatis3XmlMapperFileName(this.suffix + introspectedTable.getMyBatis3XmlMapperFileName());
-            }
-        }
-    }
-
-    /**
-     * 为类型添加前缀
-     * @param type
-     * @return
-     */
-    private String renameJavaType(String type) {
-        int lastDot = type.lastIndexOf(".") + 1;
-        return type.substring(0, lastDot) + this.suffix + type.substring(lastDot);
+        return false;
     }
 }
