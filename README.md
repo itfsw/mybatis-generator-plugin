@@ -594,7 +594,7 @@ public class Test {
 这种情况下我们就希望能有类似[columnRenamingRule](http://www.mybatis.org/generator/configreference/columnRenamingRule.html)这种重命名插件来修正最终生成的Model、Mapper等命名。
 >该插件解决：使用正则替换table生成的Model、Example、Mapper等命名。
  
-warning：和插件[Table增加前缀插件](#11-table增加前缀插件)联合使用时，位置应该放在前面。
+warning：和插件[Table增加前缀插件](#11-table增加前缀插件)联合使用时，需注意顺序问题。
 
 插件：
 ```xml
