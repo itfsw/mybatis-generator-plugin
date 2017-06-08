@@ -176,12 +176,8 @@ public class TableRenamePlugin extends BasePlugin {
         int lastDot = type.lastIndexOf(".");
         String shortName = type.substring(lastDot + 1, type.length() - 1);
 
-
         Pattern pattern = Pattern.compile(searchString);
         Matcher matcher = pattern.matcher(shortName);
-        logger.warn("===============================================================");
-        logger.warn(shortName);
-        logger.warn(type.substring(0, lastDot) + "." + matcher.replaceAll(replaceString) + suffix);
 
         return type.substring(0, lastDot) + "." + matcher.replaceAll(replaceString) + suffix;
     }
