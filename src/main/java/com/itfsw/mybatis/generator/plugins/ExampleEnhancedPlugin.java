@@ -106,7 +106,6 @@ public class ExampleEnhancedPlugin extends BasePlugin {
         // 添加接口CriteriaAdd
         InnerInterface criteriaAddInterface = new InnerInterface("ICriteriaAdd");
         criteriaAddInterface.setVisibility(JavaVisibility.PUBLIC);
-        commentGenerator.addInterfaceComment(criteriaAddInterface, introspectedTable);
         logger.debug("itfsw(Example增强插件):" + topLevelClass.getType().getShortName() + "." + innerClass.getType().getShortName() + "增加接口ICriteriaAdd");
 
         // ICriteriaAdd增加接口add
@@ -121,6 +120,8 @@ public class ExampleEnhancedPlugin extends BasePlugin {
         logger.debug("itfsw(Example增强插件):" + topLevelClass.getType().getShortName() + "." + innerClass.getType().getShortName() + "." + criteriaAddInterface.getType().getShortName() + "增加方法add");
 
         InnerClass innerClassWrapper = new InnerInterfaceWrapperToInnerClass(criteriaAddInterface);
+        // 添加注释
+        commentGenerator.addClassComment(innerClassWrapper, introspectedTable);
         innerClass.addInnerClass(innerClassWrapper);
 
         // 添加andIf方法

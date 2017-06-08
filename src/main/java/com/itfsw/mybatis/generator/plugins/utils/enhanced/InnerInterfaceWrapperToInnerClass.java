@@ -56,4 +56,22 @@ public class InnerInterfaceWrapperToInnerClass extends InnerClass{
     public String getFormattedContent(int indentLevel, CompilationUnit compilationUnit) {
         return this.innerInterface.getFormattedContent(indentLevel, compilationUnit);
     }
+
+    /**
+     * Getter method for property <tt>innerInterface</tt>.
+     * @return property value of innerInterface
+     * @author hewei
+     */
+    public InnerInterface getInnerInterface() {
+        return innerInterface;
+    }
+
+    /**
+     * Setter method for property <tt>innerInterface</tt>.
+     * @param innerInterface value to be assigned to property innerInterface
+     * @author hewei
+     */
+    public void setInnerInterface(InnerInterface innerInterface) {
+        this.innerInterface = innerInterface;
+    }
 }

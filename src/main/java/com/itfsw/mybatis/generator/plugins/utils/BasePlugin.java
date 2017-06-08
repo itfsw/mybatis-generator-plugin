@@ -16,8 +16,10 @@
 
 package com.itfsw.mybatis.generator.plugins.utils;
 
-import com.itfsw.mybatis.generator.plugins.utils.enhanced.IWCommentGenerator;
+import com.itfsw.mybatis.generator.plugins.utils.enhanced.DefaultCommentGenerator;
+import org.mybatis.generator.api.CommentGenerator;
 import org.mybatis.generator.api.PluginAdapter;
+import org.mybatis.generator.config.Context;
 import org.mybatis.generator.internal.util.StringUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +36,27 @@ import java.util.List;
  */
 public class BasePlugin extends PluginAdapter {
     protected static final Logger logger = LoggerFactory.getLogger(BasePlugin.class); // 日志
-    protected IWCommentGenerator commentGenerator = new IWCommentGenerator();  // 注释工具
+    protected CommentGenerator commentGenerator;  // 注释工具
+
+    /**
+     * Set the context under which this plugin is running.
+     *
+     * @param context
+     *            the new context
+     */
+    @Override
+    public void setContext(Context context) {
+        super.setContext(context);
+
+        // 配置插件使用的模板引擎
+        if (context.getCommentGenerator() instanceof org.mybatis.generator.internal.DefaultCommentGenerator){
+            // 使用默认模板引擎
+            commentGenerator = new DefaultCommentGenerator();
+        } else {
+            // 用户自定义
+            commentGenerator = context.getCommentGenerator();
+        }
+    }
 
     /**
      * {@inheritDoc}
