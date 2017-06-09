@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,16 +55,25 @@ public class TemplateCommentGenerator implements CommentGenerator {
     /**
      * 构造函数
      * @param templatePath 模板路径
+     * @param useForDefault 未使用Comment插件，用作默认注释生成器
      */
-    public TemplateCommentGenerator(String templatePath) {
-
+    public TemplateCommentGenerator(String templatePath, boolean useForDefault) {
         try {
-            File file = new File(templatePath);
-            if (file.exists()) {
-                // Xml 解析
-                Document doc = new SAXReader().read(file);
+            Document doc = null;
+            if (useForDefault){
+                InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(templatePath);
+                doc = new SAXReader().read(inputStream);
+            } else {
+                File file = new File(templatePath);
+                if (file.exists()) {
+                    doc = new SAXReader().read(file);
+                } else {
+                    logger.error("没有找到对应注释模板:" + templatePath);
+                }
+            }
 
-                // 遍历comment 节点
+            // 遍历comment 节点
+            if (doc != null){
                 for (EnumNode node : EnumNode.values()){
                     Element element = doc.getRootElement().elementByID(node.value());
                     if (element != null){
@@ -73,8 +83,6 @@ public class TemplateCommentGenerator implements CommentGenerator {
                         templates.put(node, template);
                     }
                 }
-            } else {
-                logger.error("没有找到对应注释模板:" + templatePath);
             }
         } catch (Exception e) {
             logger.error("注释模板XML解析失败！", e);

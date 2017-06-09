@@ -17,12 +17,12 @@
 package com.itfsw.mybatis.generator.plugins.utils;
 
 import com.itfsw.mybatis.generator.plugins.CommentPlugin;
-import com.itfsw.mybatis.generator.plugins.utils.enhanced.DefaultCommentGenerator;
 import com.itfsw.mybatis.generator.plugins.utils.enhanced.TemplateCommentGenerator;
 import org.mybatis.generator.api.CommentGenerator;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.config.Context;
 import org.mybatis.generator.config.PluginConfiguration;
+import org.mybatis.generator.internal.DefaultCommentGenerator;
 import org.mybatis.generator.internal.util.StringUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,15 +56,15 @@ public class BasePlugin extends PluginAdapter {
         PluginConfiguration cfg = PluginTools.getPluginConfiguration(CommentPlugin.class, context);
 
         if (cfg == null || cfg.getProperty(CommentPlugin.PRE_TEMPLATE) == null){
-            if (context.getCommentGeneratorConfiguration().getConfigurationType().equals("DEFAULT")){
+            if (context.getCommentGenerator() instanceof DefaultCommentGenerator){
                 // 使用默认模板引擎
-                commentGenerator = new DefaultCommentGenerator();
+                commentGenerator = new TemplateCommentGenerator("mybatis-generator-comment.ftl", true);
             } else {
                 // 用户自定义
                 commentGenerator = context.getCommentGenerator();
             }
         } else {
-            TemplateCommentGenerator templateCommentGenerator = new TemplateCommentGenerator(cfg.getProperty(CommentPlugin.PRE_TEMPLATE));
+            TemplateCommentGenerator templateCommentGenerator = new TemplateCommentGenerator(cfg.getProperty(CommentPlugin.PRE_TEMPLATE), false);
 
             // ITFSW 插件使用的注释生成器
             commentGenerator = templateCommentGenerator;
