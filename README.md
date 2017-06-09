@@ -16,6 +16,7 @@
 * [Selective选择插入更新增强插件（SelectiveEnhancedPlugin）](#10-selective选择插入更新增强插件)
 * [Table增加前缀插件（TablePrefixPlugin）](#11-table增加前缀插件)
 * [Table重命名插件（TableRenamePlugin）](#12-table重命名插件)
+* [自定义注释插件（CommentPlugin）](#13-自定义注释插件)
   
 ---------------------------------------
 Maven引用：  
@@ -23,7 +24,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.0.10</version>
+  <version>1.0.11</version>
 </dependency>
 ```
 ---------------------------------------
@@ -504,7 +505,7 @@ public class Test {
 ```
 ### 10. Selective选择插入更新增强插件
 项目中往往需要指定某些字段进行插入或者更新，或者把某些字段进行设置null处理，这种情况下原生xxxSelective方法往往不能达到需求，因为它的判断条件是对象字段是否为null，这种情况下可使用该插件对xxxSelective方法进行增强。  
-WAREN:配置插件时请把插件配置在所有插件末尾最后执行，这样才能把上面提供的某些插件的Selective方法也同时增强！
+>warning:配置插件时请把插件配置在所有插件末尾最后执行，这样才能把上面提供的某些插件的Selective方法也同时增强！
 
 插件：
 ```xml
@@ -555,12 +556,12 @@ public class Test {
 ### 11. Table增加前缀插件
 项目中有时会遇到配置多数据源对应多业务的情况，这种情况下可能会出现不同数据源出现重复表名，造成异常冲突。
 该插件允许为表增加前缀，改变最终生成的Model、Mapper、Example类名以及xml名。  
-warning: 请原谅我蹩脚的英文水平，一直没发现插件名称错了，1.0.9版本错误命名为TableSuffixPlugin，属性为suffix请新版本用户对应修正！  
+>warning: 请原谅我蹩脚的英文水平，一直没发现插件名称错了，1.0.9版本错误命名为TableSuffixPlugin，属性为suffix请新版本用户对应修正！  
 
 插件：
 ```xml
-<!-- Table增加前缀插件 -->
 <xml>
+    <!-- Table增加前缀插件 -->
     <plugin type="com.itfsw.mybatis.generator.plugins.TablePrefixPlugin">
         <!-- 这里配置的是全局表前缀，当然在table中配置的值会覆盖该全局配置 -->
         <property name="prefix" value="Cm"/>
@@ -594,12 +595,12 @@ public class Test {
 这种情况下我们就希望能有类似[columnRenamingRule](http://www.mybatis.org/generator/configreference/columnRenamingRule.html)这种重命名插件来修正最终生成的Model、Mapper等命名。
 >该插件解决：使用正则替换table生成的Model、Example、Mapper等命名。
  
-warning：和插件[Table增加前缀插件](#11-table增加前缀插件)联合使用时，需注意顺序问题。
+>warning：和插件[Table增加前缀插件](#11-table增加前缀插件)联合使用时，需注意顺序问题。
 
 插件：
 ```xml
-<!-- Table重命名插件 -->
 <xml>
+    <!-- Table重命名插件 -->
     <plugin type="com.itfsw.mybatis.generator.plugins.TablePrefixPlugin">
         <!-- 可根据具体需求确定是否配置 -->
         <property name="searchString" value="^T"/>
@@ -631,4 +632,322 @@ public class Test {
         // xml文件名: TBookMapper.xml -> TestDbMapper.xml
     }
 }
+```
+### 12. 自定义注释插件
+Mybatis Generator是原生支持自定义注释的（commentGenerator配置type属性），但使用比较麻烦需要自己实现CommentGenerator接口并打包配置赖等等。  
+该插件借助freemarker极佳的灵活性实现了自定义注释的快速配置。  
+>warning: 下方提供了一个参考模板，需要注意${mgb}的输出，因为Mybatis Generator就是通过该字符串判断是否为自身生成代码进行覆盖重写。  
+
+>warning: 请注意拷贝参考模板注释前方空格，idea等工具拷贝进去后自动格式化会造成格式错乱。 
+
+>warning: 模板引擎采用的是freemarker所以一些freemarker指令参数（如：<#if xx></#if>、${.now?string("yyyy-MM-dd HH:mm:ss")}）都是可以使用的，请自己尝试。  
+
+| 注释ID | 传入参数 | 备注 |
+| ----- | ----- | ---- |
+| addJavaFileComment | mgb<br>compilationUnit | Java文件注释   |
+| addComment | mgb<br>xmlElement | Xml节点注释  |
+| addRootComment | mgb<br>rootElement | Xml根节点注释  |
+| addFieldComment | mgb<br>field<br>introspectedTable<br>introspectedColumn | Java 字段注释(非生成Model对应表字段时，introspectedColumn可能不存在)  |
+| addModelClassComment | mgb<br>topLevelClass<br>introspectedTable | 表Model类注释  |
+| addClassComment | mgb<br>innerClass<br>introspectedTable | 类注释  |
+| addEnumComment | mgb<br>innerEnum<br>introspectedTable | 枚举注释  |
+| addInterfaceComment | mgb<br>innerInterface<br>introspectedTable | 接口注释(itfsw插件新增类型)  |
+| addGetterComment | mgb<br>method<br>introspectedTable<br>introspectedColumn | getter方法注释(introspectedColumn可能不存在)  |
+| addSetterComment | mgb<br>method<br>introspectedTable<br>introspectedColumn | getter方法注释(introspectedColumn可能不存在)  |
+| addGeneralMethodComment | mgb<br>method<br>introspectedTable | 方法注释  |
+
+插件：
+```xml
+<xml>
+    <!-- 自定义注释插件 -->
+    <plugin type="com.itfsw.mybatis.generator.plugins.CommentPlugin">
+        <!-- 自定义模板路径 -->
+        <property name="template" value="src/main/resources/mybatis-generator-comment.ftl" />
+    </plugin>
+</xml>
+```
+使用（参考模板）：  
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<template>
+    <!-- #############################################################################################################
+    /**
+     * This method is called to add a file level comment to a generated java file. This method could be used to add a
+     * general file comment (such as a copyright notice). However, note that the Java file merge function in Eclipse
+     * does not deal with this comment. If you run the generator repeatedly, you will only retain the comment from the
+     * initial run.
+     * <p>
+     *
+     * The default implementation does nothing.
+     *
+     * @param compilationUnit
+     *            the compilation unit
+     */
+    -->
+    <comment ID="addJavaFileComment"></comment>
+
+    <!-- #############################################################################################################
+    /**
+     * This method should add a suitable comment as a child element of the specified xmlElement to warn users that the
+     * element was generated and is subject to regeneration.
+     *
+     * @param xmlElement
+     *            the xml element
+     */
+    -->
+    <comment ID="addComment"><![CDATA[
+<!--
+  WARNING - ${mgb}
+  This element is automatically generated by MyBatis Generator, do not modify.
+  @project https://github.com/itfsw/mybatis-generator-plugin
+-->
+        ]]></comment>
+
+    <!-- #############################################################################################################
+    /**
+     * This method is called to add a comment as the first child of the root element. This method could be used to add a
+     * general file comment (such as a copyright notice). However, note that the XML file merge function does not deal
+     * with this comment. If you run the generator repeatedly, you will only retain the comment from the initial run.
+     * <p>
+     *
+     * The default implementation does nothing.
+     *
+     * @param rootElement
+     *            the root element
+     */
+    -->
+    <comment ID="addRootComment"></comment>
+
+    <!-- #############################################################################################################
+    /**
+     * This method should add a Javadoc comment to the specified field. The field is related to the specified table and
+     * is used to hold the value of the specified column.
+     * <p>
+     *
+     * <b>Important:</b> This method should add a the nonstandard JavaDoc tag "@mbg.generated" to the comment. Without
+     * this tag, the Eclipse based Java merge feature will fail.
+     *
+     * @param field
+     *            the field
+     * @param introspectedTable
+     *            the introspected table
+     * @param introspectedColumn
+     *            the introspected column
+     */
+    -->
+    <comment ID="addFieldComment"><![CDATA[
+<#if introspectedColumn??>
+/**
+    <#if introspectedColumn.remarks?? && introspectedColumn.remarks != ''>
+ * Database Column Remarks:
+        <#list introspectedColumn.remarks?split("\n") as remark>
+ *   ${remark}
+        </#list>
+    </#if>
+ *
+ * This field was generated by MyBatis Generator.
+ * This field corresponds to the database column ${introspectedTable.fullyQualifiedTable}.${introspectedColumn.actualColumnName}
+ *
+ * ${mgb}
+ * @project https://github.com/itfsw/mybatis-generator-plugin
+ */
+<#else>
+/**
+ * This field was generated by MyBatis Generator.
+ * This field corresponds to the database table ${introspectedTable.fullyQualifiedTable}
+ *
+ * ${mgb}
+ * @project https://github.com/itfsw/mybatis-generator-plugin
+ */
+</#if>
+    ]]></comment>
+
+    <!-- #############################################################################################################
+    /**
+     * Adds a comment for a model class.  The Java code merger should
+     * be notified not to delete the entire class in case any manual
+     * changes have been made.  So this method will always use the
+     * "do not delete" annotation.
+     *
+     * Because of difficulties with the Java file merger, the default implementation
+     * of this method should NOT add comments.  Comments should only be added if
+     * specifically requested by the user (for example, by enabling table remark comments).
+     *
+     * @param topLevelClass
+     *            the top level class
+     * @param introspectedTable
+     *            the introspected table
+     */
+    -->
+    <comment ID="addModelClassComment"><![CDATA[
+/**
+<#if introspectedTable.remarks?? && introspectedTable.remarks != ''>
+ * Database Table Remarks:
+<#list introspectedTable.remarks?split("\n") as remark>
+ *   ${remark}
+</#list>
+</#if>
+ *
+ * This class was generated by MyBatis Generator.
+ * This class corresponds to the database table ${introspectedTable.fullyQualifiedTable}
+ *
+ * ${mgb} do_not_delete_during_merge
+ * @project https://github.com/itfsw/mybatis-generator-plugin
+ */
+        ]]></comment>
+
+    <!-- #############################################################################################################
+    /**
+     * Adds the inner class comment.
+     *
+     * @param innerClass
+     *            the inner class
+     * @param introspectedTable
+     *            the introspected table
+     * @param markAsDoNotDelete
+     *            the mark as do not delete
+     */
+    -->
+    <comment ID="addClassComment"><![CDATA[
+/**
+ * This class was generated by MyBatis Generator.
+ * This class corresponds to the database table ${introspectedTable.fullyQualifiedTable}
+ *
+ * ${mgb}<#if markAsDoNotDelete?? && markAsDoNotDelete> do_not_delete_during_merge</#if>
+ * @project https://github.com/itfsw/mybatis-generator-plugin
+ */
+        ]]></comment>
+
+    <!-- #############################################################################################################
+    /**
+     * Adds the enum comment.
+     *
+     * @param innerEnum
+     *            the inner enum
+     * @param introspectedTable
+     *            the introspected table
+     */
+    -->
+    <comment ID="addEnumComment"><![CDATA[
+/**
+ * This enum was generated by MyBatis Generator.
+ * This enum corresponds to the database table ${introspectedTable.fullyQualifiedTable}
+ *
+ * ${mgb}
+ * @project https://github.com/itfsw/mybatis-generator-plugin
+ */
+        ]]></comment>
+
+    <!-- #############################################################################################################
+    /**
+     * Adds the interface comment.
+     *
+     * @param innerInterface
+     *            the inner interface
+     * @param introspectedTable
+     *            the introspected table
+     */
+    -->
+    <comment ID="addInterfaceComment"><![CDATA[
+/**
+ * This interface was generated by MyBatis Generator.
+ * This interface corresponds to the database table ${introspectedTable.fullyQualifiedTable}
+ *
+ * ${mgb}
+ * @project https://github.com/itfsw/mybatis-generator-plugin
+ */
+        ]]></comment>
+
+    <!-- #############################################################################################################
+    /**
+     * Adds the getter comment.
+     *
+     * @param method
+     *            the method
+     * @param introspectedTable
+     *            the introspected table
+     * @param introspectedColumn
+     *            the introspected column
+     */
+    -->
+    <comment ID="addGetterComment"><![CDATA[
+<#if introspectedColumn??>
+/**
+ * This method was generated by MyBatis Generator.
+ * This method returns the value of the database column ${introspectedTable.fullyQualifiedTable}.${introspectedColumn.actualColumnName}
+ *
+ * @return the value of ${introspectedTable.fullyQualifiedTable}.${introspectedColumn.actualColumnName}
+ *
+ * ${mgb}
+ * @project https://github.com/itfsw/mybatis-generator-plugin
+ */
+<#else>
+/**
+ * This method was generated by MyBatis Generator.
+ * This method returns the value of the field ${method.name?replace("get","")?replace("is", "")?uncap_first}
+ *
+ * @return the value of field ${method.name?replace("get","")?replace("is", "")?uncap_first}
+ *
+ * ${mgb}
+ * @project https://github.com/itfsw/mybatis-generator-plugin
+ */
+</#if>
+        ]]></comment>
+
+    <!-- #############################################################################################################
+    /**
+     * Adds the setter comment.
+     *
+     * @param method
+     *            the method
+     * @param introspectedTable
+     *            the introspected table
+     * @param introspectedColumn
+     *            the introspected column
+     */
+    -->
+    <comment ID="addSetterComment"><![CDATA[
+<#if introspectedColumn??>
+/**
+ * This method was generated by MyBatis Generator.
+ * This method sets the value of the database column ${introspectedTable.fullyQualifiedTable}.${introspectedColumn.actualColumnName}
+ *
+ * @param ${method.parameters[0].name} the value for ${introspectedTable.fullyQualifiedTable}.${introspectedColumn.actualColumnName}
+ *
+ * ${mgb}
+ * @project https://github.com/itfsw/mybatis-generator-plugin
+ */
+<#else>
+/**
+ * This method was generated by MyBatis Generator.
+ * This method sets the value of the field ${method.name?replace("set","")?uncap_first}
+ *
+ * @param ${method.parameters[0].name} the value for field ${method.name?replace("set","")?uncap_first}
+ *
+ * ${mgb}
+ * @project https://github.com/itfsw/mybatis-generator-plugin
+ */
+</#if>
+        ]]></comment>
+
+    <!-- #############################################################################################################
+    /**
+     * Adds the general method comment.
+     *
+     * @param method
+     *            the method
+     * @param introspectedTable
+     *            the introspected table
+     */
+    -->
+    <comment ID="addGeneralMethodComment"><![CDATA[
+/**
+ * This method was generated by MyBatis Generator.
+ * This method corresponds to the database table ${introspectedTable.fullyQualifiedTable}
+ *
+ * ${mgb}
+ * @project https://github.com/itfsw/mybatis-generator-plugin
+ */
+        ]]></comment>
+</template>
 ```
