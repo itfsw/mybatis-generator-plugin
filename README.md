@@ -633,7 +633,7 @@ public class Test {
     }
 }
 ```
-### 12. 自定义注释插件
+### 13. 自定义注释插件
 Mybatis Generator是原生支持自定义注释的（commentGenerator配置type属性），但使用比较麻烦需要自己实现CommentGenerator接口并打包配置赖等等。  
 该插件借助freemarker极佳的灵活性实现了自定义注释的快速配置。  
 >warning: 下方提供了一个参考模板，需要注意${mgb}的输出，因为Mybatis Generator就是通过该字符串判断是否为自身生成代码进行覆盖重写。  
