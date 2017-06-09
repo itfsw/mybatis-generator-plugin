@@ -16,14 +16,18 @@
 
 package com.itfsw.mybatis.generator.plugins.utils;
 
+import com.itfsw.mybatis.generator.plugins.CommentPlugin;
 import com.itfsw.mybatis.generator.plugins.utils.enhanced.DefaultCommentGenerator;
+import com.itfsw.mybatis.generator.plugins.utils.enhanced.TemplateCommentGenerator;
 import org.mybatis.generator.api.CommentGenerator;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.config.Context;
+import org.mybatis.generator.config.PluginConfiguration;
 import org.mybatis.generator.internal.util.StringUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Field;
 import java.util.List;
 
 /**
@@ -49,12 +53,33 @@ public class BasePlugin extends PluginAdapter {
         super.setContext(context);
 
         // 配置插件使用的模板引擎
-        if (context.getCommentGenerator() instanceof org.mybatis.generator.internal.DefaultCommentGenerator){
-            // 使用默认模板引擎
-            commentGenerator = new DefaultCommentGenerator();
+        PluginConfiguration cfg = PluginTools.getPluginConfiguration(CommentPlugin.class, context);
+
+        if (cfg == null || cfg.getProperty(CommentPlugin.PRE_TEMPLATE) == null){
+            if (context.getCommentGeneratorConfiguration().getConfigurationType().equals("DEFAULT")){
+                // 使用默认模板引擎
+                commentGenerator = new DefaultCommentGenerator();
+            } else {
+                // 用户自定义
+                commentGenerator = context.getCommentGenerator();
+            }
         } else {
-            // 用户自定义
-            commentGenerator = context.getCommentGenerator();
+            TemplateCommentGenerator templateCommentGenerator = new TemplateCommentGenerator(cfg.getProperty(CommentPlugin.PRE_TEMPLATE));
+
+            // ITFSW 插件使用的注释生成器
+            commentGenerator = templateCommentGenerator;
+
+            // 修正系统插件
+            try {
+                // 先执行一次生成CommentGenerator操作，然后再替换
+                context.getCommentGenerator();
+
+                Field field = Context.class.getDeclaredField("commentGenerator");
+                field.setAccessible(true);
+                field.set(context, templateCommentGenerator);
+            } catch (Exception e) {
+                logger.error("反射异常",e);
+            }
         }
     }
 

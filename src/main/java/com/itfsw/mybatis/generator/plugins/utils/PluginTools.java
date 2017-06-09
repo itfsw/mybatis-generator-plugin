@@ -81,4 +81,19 @@ public class PluginTools {
         }
         return new ArrayList<>();
     }
+
+    /**
+     * 获取插件配置
+     *
+     * @param plugin 插件
+     * @param ctx 上下文
+     * @return
+     */
+    public static PluginConfiguration getPluginConfiguration(Class plugin, Context ctx){
+        int index = getPluginIndex(plugin, ctx);
+        if (index > -1){
+            return getConfigPlugins(ctx).get(index);
+        }
+        return null;
+    }
 }
