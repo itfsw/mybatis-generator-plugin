@@ -58,7 +58,7 @@ public class BasePlugin extends PluginAdapter {
         if (cfg == null || cfg.getProperty(CommentPlugin.PRE_TEMPLATE) == null){
             if (context.getCommentGenerator() instanceof DefaultCommentGenerator){
                 // 使用默认模板引擎
-                commentGenerator = new TemplateCommentGenerator("mybatis-generator-comment.ftl", true);
+                commentGenerator = new TemplateCommentGenerator("default-comment.ftl", true);
             } else {
                 // 用户自定义
                 commentGenerator = context.getCommentGenerator();
