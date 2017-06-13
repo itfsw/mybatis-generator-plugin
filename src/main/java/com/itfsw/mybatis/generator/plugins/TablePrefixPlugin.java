@@ -17,7 +17,11 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
+import com.itfsw.mybatis.generator.plugins.utils.IntrospectedTableTools;
 import org.mybatis.generator.api.IntrospectedTable;
+import org.mybatis.generator.config.TableConfiguration;
+
+import java.util.List;
 
 /**
  * ---------------------------------------------------------------------------
@@ -33,9 +37,25 @@ public class TablePrefixPlugin extends BasePlugin {
     private String prefix;  // 前缀
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean validate(List<String> warnings) {
+        // 如果table配置了domainObjectName或者mapperName就不要再启动该插件了
+        for (TableConfiguration tableConfiguration : context.getTableConfigurations()) {
+            if (tableConfiguration.getDomainObjectName() != null || tableConfiguration.getMapperName() != null) {
+                logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件请不要配合table的domainObjectName或者mapperName一起使用！");
+                return false;
+            }
+        }
+
+        return super.validate(warnings);
+    }
+
+
+    /**
      * 初始化阶段
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     *
      * @param introspectedTable
      * @return
      */
@@ -44,61 +64,19 @@ public class TablePrefixPlugin extends BasePlugin {
         // 1. 首先获取全局配置
         this.prefix = getProperties().getProperty(PRE_PREFIX);
         // 2. 获取每个table 具体的
-        if (introspectedTable.getTableConfigurationProperty(PRE_PREFIX) != null){
+        if (introspectedTable.getTableConfigurationProperty(PRE_PREFIX) != null) {
             this.prefix = introspectedTable.getTableConfigurationProperty(PRE_PREFIX);
         }
         // 3. 判断是否配置了前缀
-        if (this.prefix != null){
-            // 3.1. 为Model增加前缀
-            if (introspectedTable.getBaseRecordType() != null){
-                introspectedTable.setBaseRecordType(this.renameJavaType(introspectedTable.getBaseRecordType()));
-            }
-
-            // 3.2. 为ModelKey添加前缀
-            if (introspectedTable.getPrimaryKeyType() != null){
-                introspectedTable.setPrimaryKeyType(this.renameJavaType(introspectedTable.getPrimaryKeyType()));
-            }
-
-            // 3.3. WithBLOBs Model 添加前缀
-            if (introspectedTable.getRecordWithBLOBsType() != null){
-                introspectedTable.setRecordWithBLOBsType(this.renameJavaType(introspectedTable.getRecordWithBLOBsType()));
-            }
-
-            // 3.4. mapper 添加前缀
-            if (introspectedTable.getMyBatis3JavaMapperType() != null){
-                introspectedTable.setMyBatis3JavaMapperType(this.renameJavaType(introspectedTable.getMyBatis3JavaMapperType()));
-            }
-
-            // 3.5. example 添加前缀
-            if (introspectedTable.getExampleType() != null){
-                introspectedTable.setExampleType(this.renameJavaType(introspectedTable.getExampleType()));
-            }
-
-            // 3.6. Dao 添加前缀
-            if (introspectedTable.getDAOInterfaceType() != null){
-                introspectedTable.setDAOInterfaceType(this.renameJavaType(introspectedTable.getDAOInterfaceType()));
-            }
-
-            // 3.7. DAOImpl 添加前缀
-            if (introspectedTable.getDAOImplementationType() != null){
-                introspectedTable.setDAOImplementationType(this.renameJavaType(introspectedTable.getDAOImplementationType()));
-            }
-
-            // 3.8. 修正xml文件前缀
-            if (introspectedTable.getMyBatis3XmlMapperFileName() != null){
-                introspectedTable.setMyBatis3XmlMapperFileName(this.prefix + introspectedTable.getMyBatis3XmlMapperFileName());
+        // !!! TableRenamePlugin 插件的 tableOverride 优先级最高
+        if (this.prefix != null && introspectedTable.getTableConfigurationProperty(TableRenamePlugin.PRE_TABLE_OVERRIDE) == null) {
+            String domainObjectName = introspectedTable.getFullyQualifiedTable().getDomainObjectName();
+            domainObjectName = prefix + domainObjectName;
+            try {
+                IntrospectedTableTools.setDomainObjectName(introspectedTable, getContext(), domainObjectName);
+            } catch (Exception e) {
+                logger.error("itfsw:插件" + this.getClass().getTypeName() + "使用prefix替换时异常！", e);
             }
         }
-    }
-
-    /**
-     * 为类型添加前缀
-     *
-     * @param type
-     * @return
-     */
-    private String renameJavaType(String type){
-        int lastDot = type.lastIndexOf(".") + 1;
-        return type.substring(0, lastDot) + this.prefix + type.substring(lastDot);
     }
 }
