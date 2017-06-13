@@ -232,37 +232,42 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
         XmlElement whenEle = new XmlElement("when");
         whenEle.addAttribute(new Attribute("test", prefix + "isSelective()"));
         for (Element ele : element.getElements()) {
-            // if的text节点
-            XmlElement xmlElement = (XmlElement) ele;
-            TextElement textElement = (TextElement) xmlElement.getElements().get(0);
+            // 对于字符串主键，是没有if判断节点的
+            if (ele instanceof XmlElement){
+                // if的text节点
+                XmlElement xmlElement = (XmlElement) ele;
+                TextElement textElement = (TextElement) xmlElement.getElements().get(0);
 
-            // 找出field 名称
-            String text = textElement.getContent().trim();
-            String field = "";
-            if (text.matches(".*\\s*=\\s*#\\{.*\\},?")) {
-                Pattern pattern = Pattern.compile("(.*?)\\s*=\\s*#\\{.*},?");
-                Matcher matcher = pattern.matcher(text);
-                if (matcher.find()){
-                    field = matcher.group(1);
+                // 找出field 名称
+                String text = textElement.getContent().trim();
+                String field = "";
+                if (text.matches(".*\\s*=\\s*#\\{.*\\},?")) {
+                    Pattern pattern = Pattern.compile("(.*?)\\s*=\\s*#\\{.*},?");
+                    Matcher matcher = pattern.matcher(text);
+                    if (matcher.find()){
+                        field = matcher.group(1);
+                    }
+                } else if (text.matches("#\\{.*\\},?")) {
+                    Pattern pattern = Pattern.compile("#\\{(.*?),.*\\},?");
+                    Matcher matcher = pattern.matcher(text);
+                    if (matcher.find()){
+                        field = matcher.group(1);
+                    }
+                } else {
+                    field = text.replaceAll(",", "");
                 }
-            } else if (text.matches("#\\{.*\\},?")) {
-                Pattern pattern = Pattern.compile("#\\{(.*?),.*\\},?");
-                Matcher matcher = pattern.matcher(text);
-                if (matcher.find()){
-                    field = matcher.group(1);
-                }
+
+                XmlElement ifEle = new XmlElement("if");
+
+                // bug fixed: 修正使用autoDelimitKeywords过滤关键词造成的field前后加了特殊字符的问题
+                field = field.replaceAll("`", "").replaceAll("\"", "").replaceAll("'", "");
+
+                ifEle.addAttribute(new Attribute("test", prefix + "isSelective(\'" + field + "\')"));
+                ifEle.addElement(textElement);
+                whenEle.addElement(ifEle);
             } else {
-                field = text.replaceAll(",", "");
+                whenEle.addElement(ele);
             }
-
-            XmlElement ifEle = new XmlElement("if");
-
-            // bug fixed: 修正使用autoDelimitKeywords过滤关键词造成的field前后加了特殊字符的问题
-            field = field.replaceAll("`", "").replaceAll("\"", "").replaceAll("'", "");
-
-            ifEle.addAttribute(new Attribute("test", prefix + "isSelective(\'" + field + "\')"));
-            ifEle.addElement(textElement);
-            whenEle.addElement(ifEle);
         }
 
         // otherwise
