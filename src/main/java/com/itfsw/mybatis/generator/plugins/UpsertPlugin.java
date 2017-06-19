@@ -62,7 +62,7 @@ public class UpsertPlugin extends BasePlugin {
 
         // 插件使用前提是数据库为MySQL
         if ("com.mysql.jdbc.Driver".equalsIgnoreCase(this.getContext().getJdbcConnectionConfiguration().getDriverClass()) == false){
-            logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件使用前提是数据库为MySQL！");
+            logger.error("itfsw:插件" + this.getClass().getTypeName() + "插件使用前提是数据库为MySQL！");
             return false;
         }
 

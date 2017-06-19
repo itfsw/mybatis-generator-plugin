@@ -47,7 +47,7 @@ public class ExampleTargetPlugin extends BasePlugin {
         Properties properties = getProperties();
         this.targetPackage = properties.getProperty(TARGET_PACKAGE_KEY);
         if (this.targetPackage == null){
-            logger.warn("请配置com.itfsw.mybatis.generator.plugins.ExampleTargetPlugin插件的目标包名(targetPackage)！");
+            logger.error("请配置com.itfsw.mybatis.generator.plugins.ExampleTargetPlugin插件的目标包名(targetPackage)！");
             return false;
         }
         return super.validate(warnings);

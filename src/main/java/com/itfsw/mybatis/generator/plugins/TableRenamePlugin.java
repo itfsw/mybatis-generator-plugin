@@ -48,14 +48,14 @@ public class TableRenamePlugin extends BasePlugin {
         // 如果配置了searchString 或者 replaceString，二者不允许单独存在
         if ((getProperties().getProperty(PRE_SEARCH_STRING) == null && getProperties().getProperty(PRE_REPLACE_STRING) != null)
                 || (getProperties().getProperty(PRE_SEARCH_STRING) != null && getProperties().getProperty(PRE_REPLACE_STRING) == null)) {
-            logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件的searchString、replaceString属性需配合使用，不能单独存在！");
+            logger.error("itfsw:插件" + this.getClass().getTypeName() + "插件的searchString、replaceString属性需配合使用，不能单独存在！");
             return false;
         }
 
         // 如果table配置了domainObjectName或者mapperName就不要再启动该插件了
         for (TableConfiguration tableConfiguration: context.getTableConfigurations()) {
             if (tableConfiguration.getDomainObjectName() != null || tableConfiguration.getMapperName() != null){
-                logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件请不要配合table的domainObjectName或者mapperName一起使用！");
+                logger.error("itfsw:插件" + this.getClass().getTypeName() + "插件请不要配合table的domainObjectName或者mapperName一起使用！");
                 return false;
             }
         }
