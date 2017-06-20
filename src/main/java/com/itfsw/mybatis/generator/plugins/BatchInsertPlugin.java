@@ -60,7 +60,7 @@ public class BatchInsertPlugin extends BasePlugin {
 
 
         // 插件使用前提是使用了ModelColumnPlugin插件
-        if (!PluginTools.checkDependencyPlugin(ModelColumnPlugin.class, getContext())) {
+        if (!PluginTools.checkDependencyPlugin(getContext(), ModelColumnPlugin.class)) {
             logger.error("itfsw:插件" + this.getClass().getTypeName() + "插件需配合com.itfsw.mybatis.generator.plugins.ModelColumnPlugin插件使用！");
             return false;
         }

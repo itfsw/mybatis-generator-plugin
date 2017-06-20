@@ -67,7 +67,7 @@ public class IntrospectedTableTools {
         calculateXmlAttributes.invoke(introspectedTable);
 
         // 注意！！ 如果配置了ExampleTargetPlugin插件，要修正Example 位置
-        PluginConfiguration configuration = PluginTools.getPluginConfiguration(ExampleTargetPlugin.class, context);
+        PluginConfiguration configuration = PluginTools.getPluginConfiguration(context, ExampleTargetPlugin.class);
         if (configuration != null && configuration.getProperty(ExampleTargetPlugin.TARGET_PACKAGE_KEY) != null){
             String exampleType = introspectedTable.getExampleType();
             // 修改包名

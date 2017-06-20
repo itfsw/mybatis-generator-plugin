@@ -38,23 +38,25 @@ public class PluginTools {
 
     /**
      * 检查插件依赖
+     *
+     * @param context    上下文
      * @param plugin 插件
-     * @param ctx    上下文
      * @return
      */
-    public static boolean checkDependencyPlugin(Class plugin, Context ctx) {
-        return getPluginIndex(plugin, ctx) >= 0;
+    public static boolean checkDependencyPlugin(Context context, Class plugin) {
+        return getPluginIndex(context, plugin) >= 0;
     }
 
     /**
      * 获取插件所在位置
      *
+     * @param context 上下文
      * @param plugin 插件
-     * @param ctx 上下文
+     *
      * @return -1:未找到
      */
-    public static int getPluginIndex(Class plugin, Context ctx) {
-        List<PluginConfiguration> list = getConfigPlugins(ctx);
+    public static int getPluginIndex(Context context, Class plugin) {
+        List<PluginConfiguration> list = getConfigPlugins(context);
         // 检查是否配置了ModelColumnPlugin插件
         for (int i = 0; i < list.size(); i++) {
             PluginConfiguration config = list.get(i);
@@ -85,15 +87,38 @@ public class PluginTools {
     /**
      * 获取插件配置
      *
+     * @param context 上下文
      * @param plugin 插件
-     * @param ctx 上下文
      * @return
      */
-    public static PluginConfiguration getPluginConfiguration(Class plugin, Context ctx){
-        int index = getPluginIndex(plugin, ctx);
+    public static PluginConfiguration getPluginConfiguration(Context context, Class plugin){
+        int index = getPluginIndex(context, plugin);
         if (index > -1){
-            return getConfigPlugins(ctx).get(index);
+            return getConfigPlugins(context).get(index);
         }
         return null;
+    }
+
+    /**
+     * 插件位置需要配置在某些插件后面
+     *
+     * @param context
+     * @param plugin
+     * @param plugins
+     * @return
+     */
+    public static boolean shouldAfterPlugins(Context context, Class plugin, Class ... plugins){
+        int index = getPluginIndex(context, plugin);
+        if (plugins != null){
+            for (Class cls : plugins){
+                int index1 = getPluginIndex(context, cls);
+                if (index1 != -1 && index1 >= index){
+                    logger.warn("itfsw:插件" + plugin.getTypeName() + "插件建议配置在插件"+cls.getTypeName()+"后面，否则某些功能可能得不到增强！");
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 }

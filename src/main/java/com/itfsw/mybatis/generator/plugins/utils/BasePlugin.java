@@ -53,7 +53,7 @@ public class BasePlugin extends PluginAdapter {
         super.setContext(context);
 
         // 配置插件使用的模板引擎
-        PluginConfiguration cfg = PluginTools.getPluginConfiguration(CommentPlugin.class, context);
+        PluginConfiguration cfg = PluginTools.getPluginConfiguration(context, CommentPlugin.class);
 
         if (cfg == null || cfg.getProperty(CommentPlugin.PRE_TEMPLATE) == null){
             if (context.getCommentGenerator() instanceof DefaultCommentGenerator){

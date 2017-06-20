@@ -18,10 +18,13 @@ package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
+import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
+import com.itfsw.mybatis.generator.plugins.utils.enhanced.JavaElementEnhanced;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.internal.util.JavaBeansUtil;
+import org.mybatis.generator.internal.util.StringUtility;
 
 import java.util.List;
 
@@ -35,6 +38,18 @@ import java.util.List;
  */
 public class ModelBuilderPlugin extends BasePlugin {
     public static final String BUILDER_CLASS_NAME = "Builder";  // Builder 类名
+    private FullyQualifiedJavaType inc; // 是否支持Increments
+
+    /**
+     * 初始化阶段
+     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public void initialized(IntrospectedTable introspectedTable) {
+        this.inc = null;
+    }
 
     /**
      * Model Methods 生成
@@ -47,7 +62,7 @@ public class ModelBuilderPlugin extends BasePlugin {
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         // 判断是否有生成Model的WithBLOBs类
         List<IntrospectedColumn> columns = introspectedTable.getRules().generateRecordWithBLOBsClass() ? introspectedTable.getNonBLOBColumns() : introspectedTable.getAllColumns();
-        InnerClass innerClass = this.generateModelBuilder(topLevelClass, introspectedTable, columns);
+        InnerClass innerClass = this.generateModelBuilder(topLevelClass, introspectedTable, columns, true);
         topLevelClass.addInnerClass(innerClass);
         return true;
     }
@@ -61,20 +76,20 @@ public class ModelBuilderPlugin extends BasePlugin {
      */
     @Override
     public boolean modelRecordWithBLOBsClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        InnerClass innerClass = this.generateModelBuilder(topLevelClass, introspectedTable, introspectedTable.getAllColumns());
+        InnerClass innerClass = this.generateModelBuilder(topLevelClass, introspectedTable, introspectedTable.getAllColumns(), false);
         topLevelClass.addInnerClass(innerClass);
         return true;
     }
 
     /**
      * 生成ModelBuilder
-     *
      * @param topLevelClass
      * @param introspectedTable
      * @param columns
+     * @param modelBaseRecord
      * @return
      */
-    private InnerClass generateModelBuilder(TopLevelClass topLevelClass, IntrospectedTable introspectedTable, List<IntrospectedColumn> columns){
+    private InnerClass generateModelBuilder(TopLevelClass topLevelClass, IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, boolean modelBaseRecord) {
         // 生成内部Builder类
         InnerClass innerClass = new InnerClass(BUILDER_CLASS_NAME);
         innerClass.setVisibility(JavaVisibility.PUBLIC);
@@ -127,6 +142,71 @@ public class ModelBuilderPlugin extends BasePlugin {
 
         logger.debug("itfsw(数据Model链式构建插件):" + topLevelClass.getType().getShortName() + ".Builder增加build方法。");
 
+
+        // ========================================== IncrementsPlugin =======================================
+        if (PluginTools.getPluginConfiguration(context, IncrementsPlugin.class) != null) {
+            String incrementsColumns = introspectedTable.getTableConfigurationProperty(IncrementsPlugin.PRE_INCREMENTS_COLUMNS);
+            if (StringUtility.stringHasValue(incrementsColumns)) {
+                if (modelBaseRecord) {
+                   this.inc = new FullyQualifiedJavaType(topLevelClass.getType().getShortName() + "." + BUILDER_CLASS_NAME + ".Inc");
+                    // 增加枚举
+                    InnerEnum eIncrements = new InnerEnum(new FullyQualifiedJavaType("Inc"));
+                    eIncrements.setVisibility(JavaVisibility.PUBLIC);
+                    eIncrements.setStatic(true);
+                    eIncrements.addEnumConstant("INC,DEC");
+                    commentGenerator.addEnumComment(eIncrements, introspectedTable);
+                    innerClass.addInnerEnum(eIncrements);
+                    // 增加field
+                    Field fIncrements = JavaElementGeneratorTools.generateField(
+                            "incs",
+                            JavaVisibility.PROTECTED,
+                            new FullyQualifiedJavaType("Map<String, " + this.inc.getFullyQualifiedName() + ">"),
+                            "new HashMap<String, " + this.inc.getFullyQualifiedName() + ">()"
+                    );
+                    commentGenerator.addFieldComment(fIncrements, introspectedTable);
+                    topLevelClass.addField(fIncrements);
+                    topLevelClass.addImportedType("java.util.Map");
+                    topLevelClass.addImportedType("java.util.HashMap");
+                    // getter&setter
+                    Method mGetter = JavaElementGeneratorTools.generateGetterMethod(fIncrements);
+                    commentGenerator.addGetterComment(mGetter, introspectedTable, null);
+                    topLevelClass.addMethod(mGetter);
+                    Method mSetter = JavaElementGeneratorTools.generateSetterMethod(fIncrements);
+                    commentGenerator.addSetterComment(mSetter, introspectedTable, null);
+                    topLevelClass.addMethod(mSetter);
+                }
+
+                // 切分
+                String[] incrementsColumnsStrs = incrementsColumns.split(",");
+                for (String incrementsColumnsStr : incrementsColumnsStrs) {
+                    IntrospectedColumn column = introspectedTable.getColumn(incrementsColumnsStr);
+                    if (column == null) {
+                        logger.warn("itfsw:插件" + IncrementsPlugin.class.getTypeName() + "插件没有找到column为" + incrementsColumnsStr + "的字段！");
+                    } else if (columns.indexOf(column) != -1) {
+                        Field field = JavaBeansUtil.getJavaBeansField(column, context, introspectedTable);
+                        // 增加方法
+                        Method mIncrements = JavaElementGeneratorTools.generateMethod(
+                                field.getName(),
+                                JavaVisibility.PUBLIC,
+                                innerClass.getType(),
+                                new Parameter(field.getType(), field.getName()),
+                                new Parameter(this.inc, "inc")
+                        );
+                        commentGenerator.addSetterComment(mIncrements, introspectedTable, column);
+
+                        Method setterMethod = JavaBeansUtil.getJavaBeansSetter(column, context, introspectedTable);
+                        mIncrements.addBodyLine("obj.incs.put(\"" + column.getActualColumnName() + "\", inc);");
+                        mIncrements.addBodyLine("obj." + setterMethod.getName() + "(" + field.getName() + ");");
+                        mIncrements.addBodyLine("return this;");
+
+                        JavaElementEnhanced.addMethodWithBestPosition(innerClass, mIncrements);
+                    }
+                }
+            }
+        }
+
         return innerClass;
     }
+
+
 }

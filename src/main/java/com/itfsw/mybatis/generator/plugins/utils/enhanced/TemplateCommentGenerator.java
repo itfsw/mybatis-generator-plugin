@@ -77,7 +77,7 @@ public class TemplateCommentGenerator implements CommentGenerator {
                 for (EnumNode node : EnumNode.values()){
                     Element element = doc.getRootElement().elementByID(node.value());
                     if (element != null){
-                        Configuration cfg = new Configuration();
+                        Configuration cfg = new Configuration(Configuration.VERSION_2_3_26);
                         // 字符串清理
                         Template template = new Template(node.value(), element.getText(), cfg);
                         templates.put(node, template);
