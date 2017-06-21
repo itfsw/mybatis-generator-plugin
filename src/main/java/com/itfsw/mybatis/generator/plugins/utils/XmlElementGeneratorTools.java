@@ -18,6 +18,7 @@ package com.itfsw.mybatis.generator.plugins.utils;
 
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
+import org.mybatis.generator.api.dom.OutputUtilities;
 import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.Element;
 import org.mybatis.generator.api.dom.xml.TextElement;
@@ -50,11 +51,11 @@ public class XmlElementGeneratorTools {
         String identityColumnType = introspectedColumn
                 .getFullyQualifiedJavaType().getFullyQualifiedName();
 
-        XmlElement answer = new XmlElement("selectKey"); 
-        answer.addAttribute(new Attribute("resultType", identityColumnType)); 
+        XmlElement answer = new XmlElement("selectKey");
+        answer.addAttribute(new Attribute("resultType", identityColumnType));
         answer.addAttribute(new Attribute(
-                "keyProperty", introspectedColumn.getJavaProperty())); 
-        answer.addAttribute(new Attribute("order", 
+                "keyProperty", introspectedColumn.getJavaProperty()));
+        answer.addAttribute(new Attribute("order",
                 generatedKey.getMyBatis3Order()));
 
         answer.addElement(new TextElement(generatedKey
@@ -64,25 +65,25 @@ public class XmlElementGeneratorTools {
     }
 
     public static Element getBaseColumnListElement(IntrospectedTable introspectedTable) {
-        XmlElement answer = new XmlElement("include"); 
-        answer.addAttribute(new Attribute("refid", 
+        XmlElement answer = new XmlElement("include");
+        answer.addAttribute(new Attribute("refid",
                 introspectedTable.getBaseColumnListId()));
         return answer;
     }
 
     public static Element getBlobColumnListElement(IntrospectedTable introspectedTable) {
-        XmlElement answer = new XmlElement("include"); 
-        answer.addAttribute(new Attribute("refid", 
+        XmlElement answer = new XmlElement("include");
+        answer.addAttribute(new Attribute("refid",
                 introspectedTable.getBlobColumnListId()));
         return answer;
     }
 
     public static Element getExampleIncludeElement(IntrospectedTable introspectedTable) {
-        XmlElement ifElement = new XmlElement("if"); 
-        ifElement.addAttribute(new Attribute("test", "_parameter != null"));  
+        XmlElement ifElement = new XmlElement("if");
+        ifElement.addAttribute(new Attribute("test", "_parameter != null"));
 
-        XmlElement includeElement = new XmlElement("include"); 
-        includeElement.addAttribute(new Attribute("refid", 
+        XmlElement includeElement = new XmlElement("include");
+        includeElement.addAttribute(new Attribute("refid",
                 introspectedTable.getExampleWhereClauseId()));
         ifElement.addElement(includeElement);
 
@@ -90,11 +91,11 @@ public class XmlElementGeneratorTools {
     }
 
     public static Element getUpdateByExampleIncludeElement(IntrospectedTable introspectedTable) {
-        XmlElement ifElement = new XmlElement("if"); 
-        ifElement.addAttribute(new Attribute("test", "_parameter != null"));  
+        XmlElement ifElement = new XmlElement("if");
+        ifElement.addAttribute(new Attribute("test", "_parameter != null"));
 
-        XmlElement includeElement = new XmlElement("include"); 
-        includeElement.addAttribute(new Attribute("refid", 
+        XmlElement includeElement = new XmlElement("include");
+        includeElement.addAttribute(new Attribute("refid",
                 introspectedTable.getMyBatis3UpdateByExampleWhereClauseId()));
         ifElement.addElement(includeElement);
 
@@ -103,22 +104,20 @@ public class XmlElementGeneratorTools {
 
     /**
      * 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-     *
      * @param element
      * @param introspectedTable
      */
-    public static void useGeneratedKeys(XmlElement element, IntrospectedTable introspectedTable){
+    public static void useGeneratedKeys(XmlElement element, IntrospectedTable introspectedTable) {
         useGeneratedKeys(element, introspectedTable, null);
     }
 
     /**
      * 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-     *
      * @param element
      * @param introspectedTable
      * @param prefix
      */
-    public static void useGeneratedKeys(XmlElement element, IntrospectedTable introspectedTable, String prefix){
+    public static void useGeneratedKeys(XmlElement element, IntrospectedTable introspectedTable, String prefix) {
         GeneratedKey gk = introspectedTable.getGeneratedKey();
         if (gk != null) {
             IntrospectedColumn introspectedColumn = introspectedTable.getColumn(gk.getColumn());
@@ -126,9 +125,9 @@ public class XmlElementGeneratorTools {
             // warning has already been reported
             if (introspectedColumn != null) {
                 // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-                element.addAttribute(new Attribute("useGeneratedKeys", "true"));  
-                element.addAttribute(new Attribute("keyProperty", (prefix == null ? "" : prefix) + introspectedColumn.getJavaProperty())); 
-                element.addAttribute(new Attribute("keyColumn", introspectedColumn.getActualColumnName())); 
+                element.addAttribute(new Attribute("useGeneratedKeys", "true"));
+                element.addAttribute(new Attribute("keyProperty", (prefix == null ? "" : prefix) + introspectedColumn.getJavaProperty()));
+                element.addAttribute(new Attribute("keyColumn", introspectedColumn.getActualColumnName()));
             }
         }
     }
@@ -138,7 +137,7 @@ public class XmlElementGeneratorTools {
      * @param columns
      * @return
      */
-    public static Element generateKeys(List<IntrospectedColumn> columns) {
+    public static List<Element> generateKeys(List<IntrospectedColumn> columns) {
         return generateKeys(columns, true);
     }
 
@@ -148,7 +147,7 @@ public class XmlElementGeneratorTools {
      * @param bracket
      * @return
      */
-    public static Element generateKeys(List<IntrospectedColumn> columns, boolean bracket) {
+    public static List<Element> generateKeys(List<IntrospectedColumn> columns, boolean bracket) {
         return generateCommColumns(columns, null, bracket, 1);
     }
 
@@ -187,7 +186,7 @@ public class XmlElementGeneratorTools {
      * @param columns
      * @return
      */
-    public static Element generateValues(List<IntrospectedColumn> columns) {
+    public static List<Element> generateValues(List<IntrospectedColumn> columns) {
         return generateValues(columns, null);
     }
 
@@ -197,7 +196,7 @@ public class XmlElementGeneratorTools {
      * @param prefix
      * @return
      */
-    public static Element generateValues(List<IntrospectedColumn> columns, String prefix) {
+    public static List<Element> generateValues(List<IntrospectedColumn> columns, String prefix) {
         return generateValues(columns, prefix, true);
     }
 
@@ -208,7 +207,7 @@ public class XmlElementGeneratorTools {
      * @param bracket
      * @return
      */
-    public static Element generateValues(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
+    public static List<Element> generateValues(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
         return generateCommColumns(columns, prefix, bracket, 2);
     }
 
@@ -247,7 +246,7 @@ public class XmlElementGeneratorTools {
      * @param columns
      * @return
      */
-    public static Element generateSets(List<IntrospectedColumn> columns) {
+    public static List<Element> generateSets(List<IntrospectedColumn> columns) {
         return generateSets(columns, null, false);
     }
 
@@ -257,7 +256,7 @@ public class XmlElementGeneratorTools {
      * @param prefix
      * @return
      */
-    public static Element generateSets(List<IntrospectedColumn> columns, String prefix) {
+    public static List<Element> generateSets(List<IntrospectedColumn> columns, String prefix) {
         return generateSets(columns, prefix, false);
     }
 
@@ -268,7 +267,7 @@ public class XmlElementGeneratorTools {
      * @param bracket
      * @return
      */
-    public static Element generateSets(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
+    public static List<Element> generateSets(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
         return generateCommColumns(columns, prefix, bracket, 3);
     }
 
@@ -310,8 +309,9 @@ public class XmlElementGeneratorTools {
      * @param type    1:key,2:value,3:set
      * @return
      */
-    private static Element generateCommColumns(List<IntrospectedColumn> columns, String prefix, boolean bracket, int type) {
-        StringBuffer sb = new StringBuffer(bracket ? "(" : "");
+    private static List<Element> generateCommColumns(List<IntrospectedColumn> columns, String prefix, boolean bracket, int type) {
+        List<Element> list = new ArrayList<>();
+        StringBuilder sb = new StringBuilder(bracket ? "(" : "");
         Iterator<IntrospectedColumn> columnIterator = columns.iterator();
         while (columnIterator.hasNext()) {
             IntrospectedColumn introspectedColumn = columnIterator.next();
@@ -333,9 +333,24 @@ public class XmlElementGeneratorTools {
             if (columnIterator.hasNext()) {
                 sb.append(", ");
             }
+
+            // 保持和官方一致 80 进行换行
+            if (type == 1 || type == 2) {
+                if (sb.length() > 80) {
+                    list.add(new TextElement(sb.toString()));
+                    sb.setLength(0);
+                    OutputUtilities.xmlIndent(sb, 1);
+                }
+            } else {
+                list.add(new TextElement(sb.toString()));
+                sb.setLength(0);
+            }
+        }
+        if (sb.length() > 0 || bracket){
+            list.add(new TextElement(sb.append(bracket ? ")" : "").toString()));
         }
 
-        return new TextElement(sb.append(bracket ? ")" : "").toString());
+        return list;
     }
 
     /**
@@ -380,12 +395,11 @@ public class XmlElementGeneratorTools {
 
     /**
      * 查找指定xml节点下指定节点名称的元素
-     *
      * @param xmlElement
      * @param name
      * @return
      */
-    public static List<XmlElement> findXmlElements(XmlElement xmlElement, String name){
+    public static List<XmlElement> findXmlElements(XmlElement xmlElement, String name) {
         List<XmlElement> list = new ArrayList<>();
         List<Element> elements = xmlElement.getElements();
         for (Element ele : elements) {
