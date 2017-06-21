@@ -25,6 +25,7 @@ import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 import org.mybatis.generator.config.GeneratedKey;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -375,6 +376,27 @@ public class XmlElementGeneratorTools {
         }
 
         return eleTrim;
+    }
+
+    /**
+     * 查找指定xml节点下指定节点名称的元素
+     *
+     * @param xmlElement
+     * @param name
+     * @return
+     */
+    public static List<XmlElement> findXmlElements(XmlElement xmlElement, String name){
+        List<XmlElement> list = new ArrayList<>();
+        List<Element> elements = xmlElement.getElements();
+        for (Element ele : elements) {
+            if (ele instanceof XmlElement) {
+                XmlElement xmlElement1 = (XmlElement) ele;
+                if (name.equalsIgnoreCase(xmlElement1.getName())) {
+                    list.add(xmlElement1);
+                }
+            }
+        }
+        return list;
     }
 
 }

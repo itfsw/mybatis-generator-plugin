@@ -228,7 +228,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
                     }
                 } else {
                     String columnName;
-                    if (text.matches(".*\\s*=.*")){
+                    if (text.matches(".*=.*")){
                         columnName = text.split("=")[0];
                     } else {
                         columnName = text.replaceAll(",", "");

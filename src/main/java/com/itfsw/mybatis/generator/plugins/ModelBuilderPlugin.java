@@ -41,17 +41,6 @@ public class ModelBuilderPlugin extends BasePlugin {
     private FullyQualifiedJavaType inc; // 是否支持Increments
 
     /**
-     * 初始化阶段
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param introspectedTable
-     * @return
-     */
-    @Override
-    public void initialized(IntrospectedTable introspectedTable) {
-        this.inc = null;
-    }
-
-    /**
      * Model Methods 生成
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
      * @param topLevelClass
@@ -153,8 +142,28 @@ public class ModelBuilderPlugin extends BasePlugin {
                     InnerEnum eIncrements = new InnerEnum(new FullyQualifiedJavaType("Inc"));
                     eIncrements.setVisibility(JavaVisibility.PUBLIC);
                     eIncrements.setStatic(true);
-                    eIncrements.addEnumConstant("INC,DEC");
+                    eIncrements.addEnumConstant("INC(\"+\")");
+                    eIncrements.addEnumConstant("DEC(\"-\")");
                     commentGenerator.addEnumComment(eIncrements, introspectedTable);
+                    // 生成属性和构造函数
+                    Field fValue = new Field("value", FullyQualifiedJavaType.getStringInstance());
+                    fValue.setVisibility(JavaVisibility.PRIVATE);
+                    fValue.setFinal(true);
+                    commentGenerator.addFieldComment(fValue, introspectedTable);
+                    eIncrements.addField(fValue);
+
+                    Method mInc = new Method("Inc");
+                    mInc.setConstructor(true);
+                    mInc.addBodyLine("this.value = value;");
+                    mInc.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "value"));
+                    commentGenerator.addGeneralMethodComment(mInc, introspectedTable);
+                    eIncrements.addMethod(mInc);
+                    logger.debug("itfsw(数据Model属性对应Column获取插件):" + topLevelClass.getType().getShortName() + ".Column增加构造方法和column属性。");
+
+                    Method mValue = JavaElementGeneratorTools.generateGetterMethod(fValue);
+                    commentGenerator.addGeneralMethodComment(mValue, introspectedTable);
+                    eIncrements.addMethod(mValue);
+
                     innerClass.addInnerEnum(eIncrements);
                     // 增加field
                     Field fIncrements = JavaElementGeneratorTools.generateField(
@@ -207,6 +216,5 @@ public class ModelBuilderPlugin extends BasePlugin {
 
         return innerClass;
     }
-
 
 }
