@@ -18,13 +18,13 @@ package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
+import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.*;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -136,61 +136,61 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
 
                 // ====================================== 1. insertSelective ======================================
                 if ("insertSelective".equals(id)) {
-                    List<XmlElement> eles = this.findEle(xmlElement, "trim");
+                    List<XmlElement> eles = XmlElementGeneratorTools.findXmlElements(xmlElement, "trim");
                     for (XmlElement ele : eles) {
-                        this.replaceEle(ele, "_parameter.");
+                        this.replaceEle(ele, "_parameter.", introspectedTable);
                     }
                 }
                 // ====================================== 2. updateByExampleSelective ======================================
                 if ("updateByExampleSelective".equals(id)) {
-                    List<XmlElement> eles = this.findEle(xmlElement, "set");
+                    List<XmlElement> eles = XmlElementGeneratorTools.findXmlElements(xmlElement, "set");
                     for (XmlElement ele : eles) {
-                        this.replaceEle(ele, "record.");
+                        this.replaceEle(ele, "record.", introspectedTable);
                     }
                 }
                 // ====================================== 3. updateByPrimaryKeySelective ======================================
                 if ("updateByPrimaryKeySelective".equals(id)) {
-                    List<XmlElement> eles = this.findEle(xmlElement, "set");
+                    List<XmlElement> eles = XmlElementGeneratorTools.findXmlElements(xmlElement, "set");
                     for (XmlElement ele : eles) {
-                        this.replaceEle(ele, "_parameter.");
+                        this.replaceEle(ele, "_parameter.", introspectedTable);
                     }
                 }
                 // ====================================== 4. upsertSelective ======================================
                 if ("upsertSelective".equals(id)) {
-                    List<XmlElement> eles = this.findEle(xmlElement, "trim");
+                    List<XmlElement> eles = XmlElementGeneratorTools.findXmlElements(xmlElement, "trim");
                     for (XmlElement ele : eles) {
-                        this.replaceEle(ele, "_parameter.");
+                        this.replaceEle(ele, "_parameter.", introspectedTable);
                     }
                 }
                 // ====================================== 5. upsertByExampleSelective ======================================
                 if ("upsertByExampleSelective".equals(id)) {
-                    List<XmlElement> eles = this.findEle(xmlElement, "trim");
-                    this.replaceEle(eles.get(0), "record.");
+                    List<XmlElement> eles = XmlElementGeneratorTools.findXmlElements(xmlElement, "trim");
+                    this.replaceEle(eles.get(0), "record.", introspectedTable);
                     // upsertByExampleSelective的第二个trim比较特殊，需另行处理
                     this.replaceEleForUpsertByExampleSelective(eles.get(1), "record.", introspectedTable, !introspectedTable.getRules().generateRecordWithBLOBsClass());
 
-                    List<XmlElement> eles1 = this.findEle(xmlElement, "set");
+                    List<XmlElement> eles1 = XmlElementGeneratorTools.findXmlElements(xmlElement, "set");
                     for (XmlElement ele : eles1) {
-                        this.replaceEle(ele, "record.");
+                        this.replaceEle(ele, "record.", introspectedTable);
                     }
                 }
                 // ====================================== 6. upsertSelectiveWithBLOBs ======================================
                 if ("upsertSelectiveWithBLOBs".equals(id)) {
-                    List<XmlElement> eles = this.findEle(xmlElement, "trim");
+                    List<XmlElement> eles = XmlElementGeneratorTools.findXmlElements(xmlElement, "trim");
                     for (XmlElement ele : eles) {
-                        this.replaceEle(ele, "_parameter.");
+                        this.replaceEle(ele, "_parameter.", introspectedTable);
                     }
                 }
                 // ====================================== 7. upsertByExampleSelectiveWithBLOBs ======================================
                 if ("upsertByExampleSelectiveWithBLOBs".equals(id)) {
-                    List<XmlElement> eles = this.findEle(xmlElement, "trim");
-                    this.replaceEle(eles.get(0), "record.");
+                    List<XmlElement> eles = XmlElementGeneratorTools.findXmlElements(xmlElement, "trim");
+                    this.replaceEle(eles.get(0), "record.", introspectedTable);
                     // upsertByExampleSelective的第二个trim比较特殊，需另行处理
                     this.replaceEleForUpsertByExampleSelective(eles.get(1), "record.", introspectedTable, true);
 
-                    List<XmlElement> eles1 = this.findEle(xmlElement, "set");
+                    List<XmlElement> eles1 = XmlElementGeneratorTools.findXmlElements(xmlElement, "set");
                     for (XmlElement ele : eles1) {
-                        this.replaceEle(ele, "record.");
+                        this.replaceEle(ele, "record.", introspectedTable);
                     }
                 }
             }
@@ -199,31 +199,12 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
     }
 
     /**
-     * 查找当前节点下的指定节点
-     * @param element
-     * @param eleName
-     * @return
-     */
-    private List<XmlElement> findEle(XmlElement element, String eleName) {
-        List<XmlElement> list = new ArrayList<>();
-        List<Element> elements = element.getElements();
-        for (Element ele : elements) {
-            if (ele instanceof XmlElement) {
-                XmlElement xmlElement = (XmlElement) ele;
-                if (eleName.equalsIgnoreCase(xmlElement.getName())) {
-                    list.add(xmlElement);
-                }
-            }
-        }
-        return list;
-    }
-
-    /**
      * 替换节点if信息
      * @param element
      * @param prefix
+     * @param introspectedTable
      */
-    private void replaceEle(XmlElement element, String prefix) {
+    private void replaceEle(XmlElement element, String prefix, IntrospectedTable introspectedTable) {
         // choose
         XmlElement chooseEle = new XmlElement("choose");
         // when
@@ -234,34 +215,36 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
             if (ele instanceof XmlElement){
                 // if的text节点
                 XmlElement xmlElement = (XmlElement) ele;
-                TextElement textElement = (TextElement) xmlElement.getElements().get(0);
 
                 // 找出field 名称
-                String text = textElement.getContent().trim();
+                String text = ((TextElement) xmlElement.getElements().get(0)).getContent();
+
                 String field = "";
-                if (text.matches(".*\\s*=\\s*#\\{.*\\},?")) {
-                    Pattern pattern = Pattern.compile("(.*?)\\s*=\\s*#\\{.*},?");
-                    Matcher matcher = pattern.matcher(text);
-                    if (matcher.find()){
-                        field = matcher.group(1);
-                    }
-                } else if (text.matches("#\\{.*\\},?")) {
+                if (text.matches("#\\{.*\\},?")) {
                     Pattern pattern = Pattern.compile("#\\{(.*?),.*\\},?");
                     Matcher matcher = pattern.matcher(text);
                     if (matcher.find()){
                         field = matcher.group(1);
                     }
                 } else {
-                    field = text.replaceAll(",", "");
+                    String columnName;
+                    if (text.matches(".*\\s*=.*")){
+                        columnName = text.split("=")[0];
+                    } else {
+                        columnName = text.replaceAll(",", "");
+                    }
+                    // bug fixed: 修正使用autoDelimitKeywords过滤关键词造成的field前后加了特殊字符的问题
+                    columnName = columnName.trim().replaceAll("`", "").replaceAll("\"", "").replaceAll("'", "");
+                    IntrospectedColumn column = introspectedTable.getColumn(columnName);
+                    field = MyBatis3FormattingUtilities.getEscapedColumnName(column);
                 }
 
                 XmlElement ifEle = new XmlElement("if");
 
-                // bug fixed: 修正使用autoDelimitKeywords过滤关键词造成的field前后加了特殊字符的问题
-                field = field.replaceAll("`", "").replaceAll("\"", "").replaceAll("'", "");
-
                 ifEle.addAttribute(new Attribute("test", prefix + "isSelective(\'" + field + "\')"));
-                ifEle.addElement(textElement);
+                for (Element ifChild : xmlElement.getElements()){
+                    ifEle.addElement(ifChild);
+                }
                 whenEle.addElement(ifEle);
             } else {
                 whenEle.addElement(ele);
