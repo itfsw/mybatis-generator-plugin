@@ -211,6 +211,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
         XmlElement whenEle = new XmlElement("when");
         whenEle.addAttribute(new Attribute("test", prefix + "isSelective()"));
         for (Element ele : element.getElements()) {
+            logger.warn(ele.getFormattedContent(0));
             // 对于字符串主键，是没有if判断节点的
             if (ele instanceof XmlElement){
                 // if的text节点
