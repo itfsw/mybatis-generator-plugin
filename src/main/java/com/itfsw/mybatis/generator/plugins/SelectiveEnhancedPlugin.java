@@ -219,15 +219,20 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
                 // 找出field 名称
                 String text = ((TextElement) xmlElement.getElements().get(0)).getContent();
 
-                String field = "";
+                String columnName = "";
                 if (text.matches("#\\{.*\\},?")) {
                     Pattern pattern = Pattern.compile("#\\{(.*?),.*\\},?");
                     Matcher matcher = pattern.matcher(text);
                     if (matcher.find()){
-                        field = matcher.group(1);
+                        String field = matcher.group(1);
+                        // 查找对应column
+                        for (IntrospectedColumn column : introspectedTable.getAllColumns()) {
+                            if (column.getJavaProperty().equals(field)) {
+                                columnName = column.getActualColumnName();
+                            }
+                        }
                     }
                 } else {
-                    String columnName;
                     if (text.matches(".*=.*")){
                         columnName = text.split("=")[0];
                     } else {
@@ -235,13 +240,11 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
                     }
                     // bug fixed: 修正使用autoDelimitKeywords过滤关键词造成的field前后加了特殊字符的问题
                     columnName = columnName.trim().replaceAll("`", "").replaceAll("\"", "").replaceAll("'", "");
-                    IntrospectedColumn column = introspectedTable.getColumn(columnName);
-                    field = MyBatis3FormattingUtilities.getEscapedColumnName(column);
                 }
 
                 XmlElement ifEle = new XmlElement("if");
 
-                ifEle.addAttribute(new Attribute("test", prefix + "isSelective(\'" + field + "\')"));
+                ifEle.addAttribute(new Attribute("test", prefix + "isSelective(\'" + MyBatis3FormattingUtilities.getEscapedColumnName(introspectedTable.getColumn(columnName)) + "\')"));
                 for (Element ifChild : xmlElement.getElements()){
                     ifEle.addElement(ifChild);
                 }
