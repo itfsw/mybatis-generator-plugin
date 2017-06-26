@@ -17,15 +17,17 @@
 
 <!DOCTYPE configuration PUBLIC "-//mybatis.org//DTDSQL Map Config 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
+    <properties resource="db.properties" />
+
     <!-- 配置环境，制定数据库连接信息 -->
     <environments default="test">
         <environment id="test">
             <transactionManager type="JDBC" />
             <dataSource type="POOLED">
-                <property name="driver" value="com.mysql.jdbc.Driver"/>
-                <property name="url" value="jdbc:mysql://localhost:3306/mybatis-generator-plugin?characterEncoding=UTF-8&amp;allowMultiQueries=true"/>
-                <property name="username" value="root"/>
-                <property name="password" value="root"/>
+                <property name="driver" value="${db.driver}"/>
+                <property name="url" value="${db.url}"/>
+                <property name="username" value="${db.username}"/>
+                <property name="password" value="${db.password}"/>
             </dataSource>
         </environment>
     </environments>

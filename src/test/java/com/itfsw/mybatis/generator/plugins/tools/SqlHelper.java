@@ -41,7 +41,7 @@ import java.util.Map;
 
 /**
  * ---------------------------------------------------------------------------
- *
+ * From http://git.oschina.net/free/Mybatis_Utils/blob/master/SqlHelper/SqlHelper.java
  * ---------------------------------------------------------------------------
  * @author: hewei
  * @time:2017/6/26 15:42
