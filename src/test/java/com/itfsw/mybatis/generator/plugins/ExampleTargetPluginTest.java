@@ -92,6 +92,6 @@ public class ExampleTargetPluginTest {
 
     @After
     public void clean(){
-        helper.reset();
+        DBHelper.reset();
     }
 }

@@ -16,6 +16,7 @@
 
 package com.itfsw.mybatis.generator.plugins.tools;
 
+import org.junit.Assert;
 import org.mybatis.generator.api.ShellCallback;
 import org.mybatis.generator.exception.ShellException;
 
@@ -62,8 +63,7 @@ public abstract class AbstractShellCallback implements ShellCallback {
      */
     @Override
     public void refreshProject(String project) {
-        String daoDir = project + "/com/itfsw/mybatis/generator/plugins/dao";
-        List<File> files = getJavaFiles(new File(daoDir));
+        List<File> files = getJavaFiles(new File(project + "/com/itfsw/mybatis/generator/plugins/dao"));
         if (!files.isEmpty()) {
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
@@ -80,9 +80,10 @@ public abstract class AbstractShellCallback implements ShellCallback {
             task.call();
 
             try {
-                reloadProject(new URLClassLoader(new URL[]{new URL(daoDir)}));
+                reloadProject(new URLClassLoader(new URL[]{new File(project).toURI().toURL()}));
             } catch (MalformedURLException e) {
                 e.printStackTrace();
+                Assert.assertTrue(false);
             }
         } else {
             reloadProject(this.getClass().getClassLoader());

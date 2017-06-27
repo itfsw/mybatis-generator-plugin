@@ -16,9 +16,11 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
+import com.itfsw.mybatis.generator.plugins.tools.AbstractShellCallback;
 import com.itfsw.mybatis.generator.plugins.tools.DBHelper;
+import com.itfsw.mybatis.generator.plugins.tools.Util;
 import org.apache.ibatis.io.Resources;
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,6 +32,7 @@ import org.mybatis.generator.exception.XMLParserException;
 import org.mybatis.generator.internal.DefaultShellCallback;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -83,8 +86,58 @@ public class BatchInsertPluginTest {
         Assert.assertEquals(warnings.get(1), "itfsw:插件com.itfsw.mybatis.generator.plugins.BatchInsertPlugin插件使用前提是数据库为MySQL或者SQLserver，因为返回主键使用了JDBC的getGenereatedKeys方法获取主键！");
     }
 
-    @After
-    public void clean(){
-        helper.reset();
+    @Test
+    public void testMethods() throws IOException, XMLParserException, InvalidConfigurationException, SQLException, InterruptedException, ClassNotFoundException, NoSuchMethodException {
+        List<String> warnings = new ArrayList<String>();
+        ConfigurationParser cp = new ConfigurationParser(warnings);
+        Configuration config = cp.parseConfiguration(Resources.getResourceAsStream("scripts/BatchInsertPlugin/mybatis-generator.xml"));
+
+        MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, new AbstractShellCallback(true) {
+            @Override
+            public void reloadProject(ClassLoader loader) {
+                try {
+                    // 1. 普通Mapper参数中List泛型为普通Model
+                    Class clsTbMapper = loader.loadClass("com.itfsw.mybatis.generator.plugins.dao.TbMapper");
+                    int count = 0;
+                    for (Method method : clsTbMapper.getDeclaredMethods()){
+                        if (method.getName().equals("batchInsert")){
+                            Assert.assertEquals(Util.getListActualType(method.getGenericParameterTypes()[0]), "com.itfsw.mybatis.generator.plugins.dao.model.Tb");
+                            count++;
+                        }
+                        if (method.getName().equals("batchInsertSelective")){
+                            Assert.assertEquals(Util.getListActualType(method.getGenericParameterTypes()[0]), "com.itfsw.mybatis.generator.plugins.dao.model.Tb");
+                            Assert.assertEquals(method.getGenericParameterTypes()[1].getTypeName(), "com.itfsw.mybatis.generator.plugins.dao.model.Tb$Column[]");
+                            count++;
+                        }
+                    }
+                    Assert.assertEquals(count, 2);
+
+                    // 2. 带有WithBlobs
+                    Class clsTbBlobsMapper = loader.loadClass("com.itfsw.mybatis.generator.plugins.dao.TbBlobsMapper");
+                    count = 0;
+                    for (Method method : clsTbBlobsMapper.getDeclaredMethods()){
+                        if (method.getName().equals("batchInsert")){
+                            Assert.assertEquals(Util.getListActualType(method.getGenericParameterTypes()[0]), "com.itfsw.mybatis.generator.plugins.dao.model.TbBlobsWithBLOBs");
+                            count++;
+                        }
+                        if (method.getName().equals("batchInsertSelective")){
+                            Assert.assertEquals(Util.getListActualType(method.getGenericParameterTypes()[0]), "com.itfsw.mybatis.generator.plugins.dao.model.TbBlobsWithBLOBs");
+                            Assert.assertEquals(method.getGenericParameterTypes()[1].getTypeName(), "com.itfsw.mybatis.generator.plugins.dao.model.TbBlobsWithBLOBs$Column[]");
+                            count++;
+                        }
+                    }
+                    Assert.assertEquals(count, 2);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Assert.assertTrue(false);
+                }
+            }
+        }, warnings);
+        myBatisGenerator.generate(null, null, null, true);
+    }
+
+    @AfterClass
+    public static void clean(){
+        DBHelper.reset();
     }
 }

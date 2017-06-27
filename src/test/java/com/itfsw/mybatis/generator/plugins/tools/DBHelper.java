@@ -21,10 +21,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -58,6 +55,7 @@ public class DBHelper {
             helper = new DBHelper();
             helper.initDB(initSql);
         }
+        cleanDao();
         return helper;
     }
 
@@ -110,7 +108,35 @@ public class DBHelper {
     /**
      * 重置
      */
-    public void reset(){
+    public static void reset(){
         helper = null;
+        cleanDao();
+    }
+
+    /**
+     * 清理Dao空间
+     */
+    public static void cleanDao(){
+        delDir(new File("src/test/java/com/itfsw/mybatis/generator/plugins/dao"));
+    }
+
+    /**
+     * 清理工作区间
+     *
+     * @param file
+     */
+    private static void delDir(File file) {
+        if (file.exists()){
+            if (file.isFile()){
+                file.delete();
+            } else if (file.isDirectory()){
+                File[] files = file.listFiles();
+                for (File file1: files) {
+                    delDir(file1);
+                }
+
+                file.delete();
+            }
+        }
     }
 }
