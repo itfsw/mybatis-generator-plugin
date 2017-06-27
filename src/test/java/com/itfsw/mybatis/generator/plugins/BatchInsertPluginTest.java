@@ -88,7 +88,7 @@ public class BatchInsertPluginTest {
 
     @Test
     public void testMethods() throws IOException, XMLParserException, InvalidConfigurationException, SQLException, InterruptedException, ClassNotFoundException, NoSuchMethodException {
-        List<String> warnings = new ArrayList<String>();
+        List<String> warnings = new ArrayList<>();
         ConfigurationParser cp = new ConfigurationParser(warnings);
         Configuration config = cp.parseConfiguration(Resources.getResourceAsStream("scripts/BatchInsertPlugin/mybatis-generator.xml"));
 

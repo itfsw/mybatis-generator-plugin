@@ -16,7 +16,6 @@
 
 package com.itfsw.mybatis.generator.plugins.tools;
 
-import org.junit.Assert;
 import org.mybatis.generator.api.ShellCallback;
 import org.mybatis.generator.exception.ShellException;
 
@@ -25,9 +24,6 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -74,20 +70,16 @@ public abstract class AbstractShellCallback implements ShellCallback {
             //设置编译参数
             ArrayList<String> ops = new ArrayList<>();
             ops.add("-Xlint:unchecked");
+            // 设置输出目录
+            ops.add("-d");
+            ops.add(this.getClass().getClassLoader().getResource("").getPath());
             //获取编译任务
             JavaCompiler.CompilationTask task = compiler.getTask(null, manager, null, ops, null, it);
             //执行编译任务
             task.call();
 
-            try {
-                reloadProject(new URLClassLoader(new URL[]{new File(project).toURI().toURL()}));
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-                Assert.assertTrue(false);
-            }
-        } else {
-            reloadProject(this.getClass().getClassLoader());
         }
+        reloadProject(this.getClass().getClassLoader());
     }
 
     public abstract void reloadProject(ClassLoader loader);

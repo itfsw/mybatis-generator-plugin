@@ -22,6 +22,7 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 
 import java.io.*;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -118,6 +119,12 @@ public class DBHelper {
      */
     public static void cleanDao(){
         delDir(new File("src/test/java/com/itfsw/mybatis/generator/plugins/dao"));
+
+        // 清理Dao class目录
+        URL daoClass = DBHelper.class.getClassLoader().getResource("com/itfsw/mybatis/generator/plugins/dao");
+        if (daoClass != null){
+            delDir(new File(daoClass.getPath()));
+        }
     }
 
     /**
