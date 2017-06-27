@@ -105,18 +105,18 @@ public class LogicalDeletePlugin extends BasePlugin {
                         || JDBCType.VARCHAR == type){
                     this.logicalDeleteColumn = column;
                 } else {
-                    logger.warn("itfsw(逻辑删除插件):"+introspectedTable.getFullyQualifiedTable()+"逻辑删除列("+introspectedTable.getTableConfigurationProperty(LOGICAL_DELETE_COLUMN_KEY)+")的类型不在支持范围（请使用数字列，字符串列，布尔列）！");
+                    warnings.add("itfsw(逻辑删除插件):"+introspectedTable.getFullyQualifiedTable()+"逻辑删除列("+introspectedTable.getTableConfigurationProperty(LOGICAL_DELETE_COLUMN_KEY)+")的类型不在支持范围（请使用数字列，字符串列，布尔列）！");
                 }
             }
         }
 
         if (introspectedTable.getTableConfigurationProperty(LOGICAL_DELETE_COLUMN_KEY) != null && this.logicalDeleteColumn == null){
-            logger.warn("itfsw(逻辑删除插件):"+introspectedTable.getFullyQualifiedTable()+"没有找到您配置的逻辑删除列("+introspectedTable.getTableConfigurationProperty(LOGICAL_DELETE_COLUMN_KEY)+")！");
+            warnings.add("itfsw(逻辑删除插件):"+introspectedTable.getFullyQualifiedTable()+"没有找到您配置的逻辑删除列("+introspectedTable.getTableConfigurationProperty(LOGICAL_DELETE_COLUMN_KEY)+")！");
         }
 
         // 4. 判断逻辑删除值是否配置了
         if (this.logicalDeleteColumn != null && (this.logicalDeleteValue == null || this.logicalUnDeleteValue == null)){
-            logger.warn("itfsw(逻辑删除插件):"+introspectedTable.getFullyQualifiedTable()+"没有找到您配置的逻辑删除值，请全局或者局部配置logicalDeleteValue和logicalUnDeleteValue值！");
+            warnings.add("itfsw(逻辑删除插件):"+introspectedTable.getFullyQualifiedTable()+"没有找到您配置的逻辑删除值，请全局或者局部配置logicalDeleteValue和logicalUnDeleteValue值！");
         }
     }
 

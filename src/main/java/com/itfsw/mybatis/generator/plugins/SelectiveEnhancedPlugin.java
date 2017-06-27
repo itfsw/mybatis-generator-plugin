@@ -47,12 +47,12 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
 
         // 插件使用前提是使用了ModelColumnPlugin插件
         if (!PluginTools.checkDependencyPlugin(getContext(), ModelColumnPlugin.class)) {
-            logger.error("itfsw:插件" + this.getClass().getTypeName() + "插件需配合com.itfsw.mybatis.generator.plugins.ModelColumnPlugin插件使用！");
+            warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件需配合com.itfsw.mybatis.generator.plugins.ModelColumnPlugin插件使用！");
             return false;
         }
 
         // 插件位置
-        PluginTools.shouldAfterPlugins(getContext(), this.getClass(), UpsertPlugin.class);
+        PluginTools.shouldAfterPlugins(getContext(), this.getClass(), warnings, UpsertPlugin.class);
 
         return super.validate(warnings);
     }

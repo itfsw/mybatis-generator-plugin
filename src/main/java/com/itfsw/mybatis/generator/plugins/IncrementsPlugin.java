@@ -52,7 +52,7 @@ public class IncrementsPlugin extends BasePlugin {
 
         // 插件使用前提是使用了ModelBuilderPlugin插件
         if (!PluginTools.checkDependencyPlugin(getContext(), ModelBuilderPlugin.class)) {
-            logger.error("itfsw:插件" + this.getClass().getTypeName() + "插件需配合com.itfsw.mybatis.generator.plugins.ModelBuilderPlugin插件使用！");
+            warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件需配合com.itfsw.mybatis.generator.plugins.ModelBuilderPlugin插件使用！");
             return false;
         }
 
@@ -65,7 +65,7 @@ public class IncrementsPlugin extends BasePlugin {
      */
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
-        this.incTools = IncrementsPluginTools.getTools(context, introspectedTable);
+        this.incTools = IncrementsPluginTools.getTools(context, introspectedTable, warnings);
     }
 
     /**

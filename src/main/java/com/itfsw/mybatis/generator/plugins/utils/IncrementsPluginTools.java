@@ -62,9 +62,10 @@ public class IncrementsPluginTools {
      * 获取工具
      * @param context
      * @param introspectedTable
+     * @param warnings
      * @return
      */
-    public static IncrementsPluginTools getTools(Context context, IntrospectedTable introspectedTable) {
+    public static IncrementsPluginTools getTools(Context context, IntrospectedTable introspectedTable, List<String> warnings) {
         IncrementsPluginTools tools = new IncrementsPluginTools(context, introspectedTable);
         // 判断是否启用了插件
         if (PluginTools.getPluginConfiguration(context, IncrementsPlugin.class) != null) {
@@ -75,7 +76,7 @@ public class IncrementsPluginTools {
                 for (String incrementsColumnsStr : incrementsColumnsStrs) {
                     IntrospectedColumn column = introspectedTable.getColumn(incrementsColumnsStr.trim());
                     if (column == null) {
-                        logger.warn("itfsw:插件" + IncrementsPlugin.class.getTypeName() + "插件没有找到column为" + incrementsColumnsStr.trim() + "的字段！");
+                        warnings.add("itfsw:插件" + IncrementsPlugin.class.getTypeName() + "插件没有找到column为" + incrementsColumnsStr.trim() + "的字段！");
                     } else {
                         tools.columns.add(column);
                     }

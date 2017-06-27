@@ -61,7 +61,7 @@ public class UpsertPlugin extends BasePlugin {
 
         // 插件使用前提是数据库为MySQL
         if ("com.mysql.jdbc.Driver".equalsIgnoreCase(this.getContext().getJdbcConnectionConfiguration().getDriverClass()) == false) {
-            logger.error("itfsw:插件" + this.getClass().getTypeName() + "插件使用前提是数据库为MySQL！");
+            warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件使用前提是数据库为MySQL！");
             return false;
         }
 
@@ -71,7 +71,7 @@ public class UpsertPlugin extends BasePlugin {
         this.allowMultiQueries = allowMultiQueries == null ? false : StringUtility.isTrue(allowMultiQueries);
         if (this.allowMultiQueries) {
             // 提示用户注意信息
-            logger.warn("itfsw:插件" + this.getClass().getTypeName() + "插件您开启了allowMultiQueries支持，注意在jdbc url 配置中增加“allowMultiQueries=true”支持（不怎么建议使用该功能，开启多sql提交会增加sql注入的风险，请确保你所有sql都使用MyBatis书写，请不要使用statement进行sql提交）！");
+            warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件您开启了allowMultiQueries支持，注意在jdbc url 配置中增加“allowMultiQueries=true”支持（不怎么建议使用该功能，开启多sql提交会增加sql注入的风险，请确保你所有sql都使用MyBatis书写，请不要使用statement进行sql提交）！");
         }
 
         return super.validate(warnings);
@@ -509,7 +509,7 @@ public class UpsertPlugin extends BasePlugin {
      * @param hasPrefix
      */
     private void incrementsSelectiveSupport(XmlElement xmlElement, XmlElement trimXmlElement, IntrospectedTable introspectedTable, boolean hasPrefix) {
-        IncrementsPluginTools incTools = IncrementsPluginTools.getTools(context, introspectedTable);
+        IncrementsPluginTools incTools = IncrementsPluginTools.getTools(context, introspectedTable, warnings);
         if (incTools.support()) {
             List<Element> ifs = new ArrayList<>();
             // 获取if节点
@@ -537,7 +537,7 @@ public class UpsertPlugin extends BasePlugin {
      * @param hasPrefix
      */
     private void incrementsSupport(XmlElement xmlElement, List<TextElement> elements, IntrospectedTable introspectedTable, boolean hasPrefix) {
-        IncrementsPluginTools incTools = IncrementsPluginTools.getTools(context, introspectedTable);
+        IncrementsPluginTools incTools = IncrementsPluginTools.getTools(context, introspectedTable, warnings);
         for (TextElement element : elements) {
             if (incTools.support()) {
                 // 获取column

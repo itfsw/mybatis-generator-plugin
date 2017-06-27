@@ -44,7 +44,7 @@ public class TablePrefixPlugin extends BasePlugin {
         // 如果table配置了domainObjectName或者mapperName就不要再启动该插件了
         for (TableConfiguration tableConfiguration : context.getTableConfigurations()) {
             if (tableConfiguration.getDomainObjectName() != null || tableConfiguration.getMapperName() != null) {
-                logger.error("itfsw:插件" + this.getClass().getTypeName() + "插件请不要配合table的domainObjectName或者mapperName一起使用！");
+                warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件请不要配合table的domainObjectName或者mapperName一起使用！");
                 return false;
             }
         }

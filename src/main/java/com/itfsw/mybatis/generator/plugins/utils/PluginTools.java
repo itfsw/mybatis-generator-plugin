@@ -104,16 +104,17 @@ public class PluginTools {
      *
      * @param context
      * @param plugin
+     * @param warnings
      * @param plugins
      * @return
      */
-    public static boolean shouldAfterPlugins(Context context, Class plugin, Class ... plugins){
+    public static boolean shouldAfterPlugins(Context context, Class plugin, List<String> warnings, Class ... plugins){
         int index = getPluginIndex(context, plugin);
         if (plugins != null){
             for (Class cls : plugins){
                 int index1 = getPluginIndex(context, cls);
                 if (index1 != -1 && index1 >= index){
-                    logger.warn("itfsw:插件" + plugin.getTypeName() + "插件建议配置在插件"+cls.getTypeName()+"后面，否则某些功能可能得不到增强！");
+                    warnings.add("itfsw:插件" + plugin.getTypeName() + "插件建议配置在插件"+cls.getTypeName()+"后面，否则某些功能可能得不到增强！");
                     return false;
                 }
             }

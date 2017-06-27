@@ -131,7 +131,7 @@ public class ModelBuilderPlugin extends BasePlugin {
 
 
         // ========================================== IncrementsPlugin =======================================
-        IncrementsPluginTools incTools = IncrementsPluginTools.getTools(context, introspectedTable);
+        IncrementsPluginTools incTools = IncrementsPluginTools.getTools(context, introspectedTable, warnings);
         if (incTools.support()) {
             if (modelBaseRecord) {
                 // 增加枚举

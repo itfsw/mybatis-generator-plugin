@@ -42,7 +42,7 @@ public class LimitPlugin extends BasePlugin {
     public boolean validate(List<String> warnings) {
         // 该插件只支持MYSQL
         if ("com.mysql.jdbc.Driver".equalsIgnoreCase(this.getContext().getJdbcConnectionConfiguration().getDriverClass()) == false){
-            logger.error("itfsw:插件"+this.getClass().getTypeName()+"只支持MySQL数据库！");
+            warnings.add("itfsw:插件"+this.getClass().getTypeName()+"只支持MySQL数据库！");
             return false;
         }
         return super.validate(warnings);
