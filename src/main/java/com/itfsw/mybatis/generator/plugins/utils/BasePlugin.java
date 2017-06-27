@@ -41,6 +41,7 @@ import java.util.List;
 public class BasePlugin extends PluginAdapter {
     protected static final Logger logger = LoggerFactory.getLogger(BasePlugin.class); // 日志
     protected CommentGenerator commentGenerator;  // 注释工具
+    protected List<String> warnings;    // 提示
 
     /**
      * Set the context under which this plugin is running.
@@ -88,9 +89,10 @@ public class BasePlugin extends PluginAdapter {
      */
     @Override
     public boolean validate(List<String> warnings) {
+        this.warnings = warnings;
         // 插件使用前提是targetRuntime为MyBatis3
         if (StringUtility.stringHasValue(getContext().getTargetRuntime()) && "MyBatis3".equalsIgnoreCase(getContext().getTargetRuntime()) == false) {
-            logger.warn("itfsw:插件" + this.getClass().getTypeName() + "要求运行targetRuntime必须为MyBatis3！");
+            warnings.add("itfsw:插件" + this.getClass().getTypeName() + "要求运行targetRuntime必须为MyBatis3！");
             return false;
         }
 
