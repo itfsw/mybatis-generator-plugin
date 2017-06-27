@@ -59,5 +59,6 @@ public class DBHelperTest {
         statement.close();
         connection.close();
         sqlSession.close();
+        helper.reset();
     }
 }

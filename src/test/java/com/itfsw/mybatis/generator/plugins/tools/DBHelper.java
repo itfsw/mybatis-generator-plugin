@@ -95,7 +95,6 @@ public class DBHelper {
         while ((line = bufferedReader.readLine()) != null){
             sb.append(line).append("\n");
             if (line.matches(".*;$")){
-                System.out.println(sb.toString());
                 statement.execute(sb.toString());
                 sb.setLength(0);
             }
@@ -106,5 +105,12 @@ public class DBHelper {
         statement.close();
         connection.close();
         sqlSession.close();
+    }
+
+    /**
+     * 重置
+     */
+    public void reset(){
+        helper = null;
     }
 }

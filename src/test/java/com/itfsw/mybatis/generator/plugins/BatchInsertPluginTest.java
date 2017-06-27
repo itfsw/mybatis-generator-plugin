@@ -22,7 +22,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mybatis.generator.api.GeneratedJavaFile;
 import org.mybatis.generator.api.MyBatisGenerator;
 import org.mybatis.generator.config.Configuration;
 import org.mybatis.generator.config.xml.ConfigurationParser;
@@ -40,10 +39,10 @@ import java.util.List;
  *
  * ---------------------------------------------------------------------------
  * @author: hewei
- * @time:2017/6/26 17:46
+ * @time:2017/6/26 18:23
  * ---------------------------------------------------------------------------
  */
-public class ExampleTargetPluginTest {
+public class BatchInsertPluginTest {
     private DBHelper helper;
 
     /**
@@ -53,41 +52,35 @@ public class ExampleTargetPluginTest {
      */
     @Before
     public void init() throws IOException, SQLException {
-        helper = DBHelper.getHelper("scripts/ExampleTargetPlugin/init.sql");
+        helper = DBHelper.getHelper("scripts/BatchInsertPlugin/init.sql");
     }
 
     @Test
-    public void testNormalPath() throws IOException, XMLParserException, InvalidConfigurationException, SQLException, InterruptedException {
+    public void testWarnings1() throws IOException, XMLParserException, InvalidConfigurationException, SQLException, InterruptedException {
         List<String> warnings = new ArrayList<String>();
         ConfigurationParser cp = new ConfigurationParser(warnings);
-        Configuration config = cp.parseConfiguration(Resources.getResourceAsStream("scripts/ExampleTargetPlugin/mybatis-generator-without-plugin.xml"));
+        Configuration config = cp.parseConfiguration(Resources.getResourceAsStream("scripts/BatchInsertPlugin/mybatis-generator-without-model-column-plugin.xml"));
 
         DefaultShellCallback shellCallback = new DefaultShellCallback(true);
         MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, shellCallback, warnings);
         myBatisGenerator.generate(null, null, null, false);
-        List<GeneratedJavaFile> list = myBatisGenerator.getGeneratedJavaFiles();
-        for (GeneratedJavaFile file : list){
-            if (file.getFileName().equals("TbExample.java")){
-                Assert.assertEquals(file.getTargetPackage(), "com.itfsw.mybatis.generator.plugins.dao.model");
-            }
-        }
+
+        Assert.assertTrue(warnings.size() == 2);
+        Assert.assertEquals(warnings.get(0), "itfsw:插件com.itfsw.mybatis.generator.plugins.BatchInsertPlugin插件需配合com.itfsw.mybatis.generator.plugins.ModelColumnPlugin插件使用！");
     }
 
     @Test
-    public void testConfigPath() throws IOException, XMLParserException, InvalidConfigurationException, SQLException, InterruptedException {
+    public void testWarnings2() throws IOException, XMLParserException, InvalidConfigurationException, SQLException, InterruptedException {
         List<String> warnings = new ArrayList<String>();
         ConfigurationParser cp = new ConfigurationParser(warnings);
-        Configuration config = cp.parseConfiguration(Resources.getResourceAsStream("scripts/ExampleTargetPlugin/mybatis-generator.xml"));
+        Configuration config = cp.parseConfiguration(Resources.getResourceAsStream("scripts/BatchInsertPlugin/mybatis-generator-with-error-driver.xml"));
 
         DefaultShellCallback shellCallback = new DefaultShellCallback(true);
         MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, shellCallback, warnings);
         myBatisGenerator.generate(null, null, null, false);
-        List<GeneratedJavaFile> list = myBatisGenerator.getGeneratedJavaFiles();
-        for (GeneratedJavaFile file : list){
-            if (file.getFileName().equals("TbExample.java")){
-                Assert.assertEquals(file.getTargetPackage(), "com.itfsw.mybatis.generator.plugins.dao.example");
-            }
-        }
+
+        Assert.assertTrue(warnings.size() == 3);
+        Assert.assertEquals(warnings.get(1), "itfsw:插件com.itfsw.mybatis.generator.plugins.BatchInsertPlugin插件使用前提是数据库为MySQL或者SQLserver，因为返回主键使用了JDBC的getGenereatedKeys方法获取主键！");
     }
 
     @After
