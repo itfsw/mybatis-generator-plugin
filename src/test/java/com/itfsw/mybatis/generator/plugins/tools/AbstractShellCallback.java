@@ -16,6 +16,7 @@
 
 package com.itfsw.mybatis.generator.plugins.tools;
 
+import org.junit.Assert;
 import org.mybatis.generator.api.ShellCallback;
 import org.mybatis.generator.exception.ShellException;
 
@@ -24,6 +25,8 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -59,27 +62,75 @@ public abstract class AbstractShellCallback implements ShellCallback {
      */
     @Override
     public void refreshProject(String project) {
-        List<File> files = getJavaFiles(new File(project + "/com/itfsw/mybatis/generator/plugins/dao"));
+        File daoDir = new File(project + "/com/itfsw/mybatis/generator/plugins/dao");
+        List<File> files = getJavaFiles(daoDir);
         if (!files.isEmpty()) {
-            JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-
-            //获取java文件管理类
-            StandardJavaFileManager manager = compiler.getStandardFileManager(null, null, null);
-            //获取java文件对象迭代器
-            Iterable<? extends JavaFileObject> it = manager.getJavaFileObjectsFromFiles(files);
-            //设置编译参数
-            ArrayList<String> ops = new ArrayList<>();
-            ops.add("-Xlint:unchecked");
-            // 设置输出目录
-            ops.add("-d");
-            ops.add(this.getClass().getClassLoader().getResource("").getPath());
-            //获取编译任务
-            JavaCompiler.CompilationTask task = compiler.getTask(null, manager, null, ops, null, it);
-            //执行编译任务
-            task.call();
-
+            compileJavaFiles(files);
+            copyMappings(daoDir, project);
         }
         reloadProject(this.getClass().getClassLoader());
+    }
+
+    /**
+     * 拷贝xml
+     * @param file
+     * @param project
+     */
+    private void copyMappings(File file, String project) {
+        if (file.exists()) {
+            File[] files = file.listFiles();
+            for (File childFile : files) {
+                if (childFile.isDirectory()) {
+                    copyMappings(childFile, project);
+                } else if (childFile.getName().endsWith(".xml")) {
+                    try {
+                        FileReader fileReader = new FileReader(childFile);
+                        // 目标路径
+                        String path = childFile.getPath();
+                        path = path.replaceAll("\\\\", "/");
+                        String target = this.getClass().getClassLoader().getResource("").getPath() + path.replace(project, "");
+                        File targetFile = new File(target);
+                        if (!targetFile.getParentFile().exists()){
+                            targetFile.getParentFile().mkdirs();
+                        }
+                        targetFile.createNewFile();
+                        FileWriter fileWriter = new FileWriter(targetFile);
+                        int ch = 0;
+                        while ((ch = fileReader.read()) != -1) {
+                            fileWriter.write(ch);
+                        }
+                        fileReader.close();
+                        fileWriter.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Assert.assertTrue(false);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 动态编译java文件
+     * @param files
+     */
+    private void compileJavaFiles(List<File> files) {
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+
+        //获取java文件管理类
+        StandardJavaFileManager manager = compiler.getStandardFileManager(null, null, null);
+        //获取java文件对象迭代器
+        Iterable<? extends JavaFileObject> it = manager.getJavaFileObjectsFromFiles(files);
+        //设置编译参数
+        ArrayList<String> ops = new ArrayList<>();
+        ops.add("-Xlint:unchecked");
+        // 设置输出目录
+        ops.add("-d");
+        ops.add(this.getClass().getClassLoader().getResource("").getPath());
+        //获取编译任务
+        JavaCompiler.CompilationTask task = compiler.getTask(null, manager, null, ops, null, it);
+        //执行编译任务
+        task.call();
     }
 
     public abstract void reloadProject(ClassLoader loader);

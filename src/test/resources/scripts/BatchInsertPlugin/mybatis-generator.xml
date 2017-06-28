@@ -40,7 +40,7 @@
             <!--<property name="rootClass" value="com.itfsw.base"/>-->
         </javaModelGenerator>
         <!--Mapper映射文件生成所在的目录 为每一个数据库的表生成对应的SqlMap文件 -->
-        <sqlMapGenerator targetPackage="com.itfsw.mybatis.generator.plugins.dao.mapping" targetProject="src/test/java" />
+        <sqlMapGenerator targetPackage="com.itfsw.mybatis.generator.plugins.dao" targetProject="src/test/java" />
         <!-- 客户端代码，生成易于使用的针对Model对象和XML配置文件 的代码
             type="ANNOTATEDMAPPER",生成Java Model 和基于注解的Mapper对象
             type="MIXEDMAPPER",生成基于注解的Java Model 和相应的Mapper对象

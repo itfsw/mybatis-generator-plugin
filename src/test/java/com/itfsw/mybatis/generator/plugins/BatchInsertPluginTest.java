@@ -18,8 +18,10 @@ package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.tools.AbstractShellCallback;
 import com.itfsw.mybatis.generator.plugins.tools.DBHelper;
+import com.itfsw.mybatis.generator.plugins.tools.SqlHelper;
 import com.itfsw.mybatis.generator.plugins.tools.Util;
 import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.session.SqlSession;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -58,9 +60,17 @@ public class BatchInsertPluginTest {
         helper = DBHelper.getHelper("scripts/BatchInsertPlugin/init.sql");
     }
 
+    /**
+     * 测试插件依赖
+     * @throws IOException
+     * @throws XMLParserException
+     * @throws InvalidConfigurationException
+     * @throws SQLException
+     * @throws InterruptedException
+     */
     @Test
     public void testWarnings1() throws IOException, XMLParserException, InvalidConfigurationException, SQLException, InterruptedException {
-        List<String> warnings = new ArrayList<String>();
+        List<String> warnings = new ArrayList<>();
         ConfigurationParser cp = new ConfigurationParser(warnings);
         Configuration config = cp.parseConfiguration(Resources.getResourceAsStream("scripts/BatchInsertPlugin/mybatis-generator-without-model-column-plugin.xml"));
 
@@ -72,9 +82,17 @@ public class BatchInsertPluginTest {
         Assert.assertEquals(warnings.get(0), "itfsw:插件com.itfsw.mybatis.generator.plugins.BatchInsertPlugin插件需配合com.itfsw.mybatis.generator.plugins.ModelColumnPlugin插件使用！");
     }
 
+    /**
+     * 测试错误的支持driver
+     * @throws IOException
+     * @throws XMLParserException
+     * @throws InvalidConfigurationException
+     * @throws SQLException
+     * @throws InterruptedException
+     */
     @Test
     public void testWarnings2() throws IOException, XMLParserException, InvalidConfigurationException, SQLException, InterruptedException {
-        List<String> warnings = new ArrayList<String>();
+        List<String> warnings = new ArrayList<>();
         ConfigurationParser cp = new ConfigurationParser(warnings);
         Configuration config = cp.parseConfiguration(Resources.getResourceAsStream("scripts/BatchInsertPlugin/mybatis-generator-with-error-driver.xml"));
 
@@ -86,6 +104,16 @@ public class BatchInsertPluginTest {
         Assert.assertEquals(warnings.get(1), "itfsw:插件com.itfsw.mybatis.generator.plugins.BatchInsertPlugin插件使用前提是数据库为MySQL或者SQLserver，因为返回主键使用了JDBC的getGenereatedKeys方法获取主键！");
     }
 
+    /**
+     * 测试生成的方法
+     * @throws IOException
+     * @throws XMLParserException
+     * @throws InvalidConfigurationException
+     * @throws SQLException
+     * @throws InterruptedException
+     * @throws ClassNotFoundException
+     * @throws NoSuchMethodException
+     */
     @Test
     public void testMethods() throws IOException, XMLParserException, InvalidConfigurationException, SQLException, InterruptedException, ClassNotFoundException, NoSuchMethodException {
         List<String> warnings = new ArrayList<>();
@@ -99,12 +127,12 @@ public class BatchInsertPluginTest {
                     // 1. 普通Mapper参数中List泛型为普通Model
                     Class clsTbMapper = loader.loadClass("com.itfsw.mybatis.generator.plugins.dao.TbMapper");
                     int count = 0;
-                    for (Method method : clsTbMapper.getDeclaredMethods()){
-                        if (method.getName().equals("batchInsert")){
+                    for (Method method : clsTbMapper.getDeclaredMethods()) {
+                        if (method.getName().equals("batchInsert")) {
                             Assert.assertEquals(Util.getListActualType(method.getGenericParameterTypes()[0]), "com.itfsw.mybatis.generator.plugins.dao.model.Tb");
                             count++;
                         }
-                        if (method.getName().equals("batchInsertSelective")){
+                        if (method.getName().equals("batchInsertSelective")) {
                             Assert.assertEquals(Util.getListActualType(method.getGenericParameterTypes()[0]), "com.itfsw.mybatis.generator.plugins.dao.model.Tb");
                             Assert.assertEquals(method.getGenericParameterTypes()[1].getTypeName(), "com.itfsw.mybatis.generator.plugins.dao.model.Tb$Column[]");
                             count++;
@@ -115,12 +143,12 @@ public class BatchInsertPluginTest {
                     // 2. 带有WithBlobs
                     Class clsTbBlobsMapper = loader.loadClass("com.itfsw.mybatis.generator.plugins.dao.TbBlobsMapper");
                     count = 0;
-                    for (Method method : clsTbBlobsMapper.getDeclaredMethods()){
-                        if (method.getName().equals("batchInsert")){
+                    for (Method method : clsTbBlobsMapper.getDeclaredMethods()) {
+                        if (method.getName().equals("batchInsert")) {
                             Assert.assertEquals(Util.getListActualType(method.getGenericParameterTypes()[0]), "com.itfsw.mybatis.generator.plugins.dao.model.TbBlobsWithBLOBs");
                             count++;
                         }
-                        if (method.getName().equals("batchInsertSelective")){
+                        if (method.getName().equals("batchInsertSelective")) {
                             Assert.assertEquals(Util.getListActualType(method.getGenericParameterTypes()[0]), "com.itfsw.mybatis.generator.plugins.dao.model.TbBlobsWithBLOBs");
                             Assert.assertEquals(method.getGenericParameterTypes()[1].getTypeName(), "com.itfsw.mybatis.generator.plugins.dao.model.TbBlobsWithBLOBs$Column[]");
                             count++;
@@ -136,8 +164,44 @@ public class BatchInsertPluginTest {
         myBatisGenerator.generate(null, null, null, true);
     }
 
+    /**
+     * 测试生成的sql
+     */
+    @Test
+    public void testSql() throws Exception {
+        DBHelper.cleanDao();
+        List<String> warnings = new ArrayList<>();
+        ConfigurationParser cp = new ConfigurationParser(warnings);
+        Configuration config = cp.parseConfiguration(Resources.getResourceAsStream("scripts/BatchInsertPlugin/mybatis-generator.xml"));
+
+        MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, new AbstractShellCallback(true) {
+            @Override
+            public void reloadProject(ClassLoader loader) {
+                try {
+                    SqlSession sqlSession = helper.getSqlSession();
+                    Object obj = sqlSession.getMapper(loader.loadClass("com.itfsw.mybatis.generator.plugins.dao.TbMapper"));
+                    List<Object> params = new ArrayList<>();
+                    String sql = SqlHelper.getMapperSql(
+                            sqlSession,
+                            loader.loadClass("com.itfsw.mybatis.generator.plugins.dao.TbMapper"),
+                            "batchInsert",
+                            params
+                    );
+
+                    System.out.println(sql);
+
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Assert.assertTrue(false);
+                }
+            }
+        }, warnings);
+        myBatisGenerator.generate(null, null, null, true);
+    }
+
     @AfterClass
-    public static void clean(){
-        DBHelper.reset();
+    public static void clean() {
+//        DBHelper.reset();
     }
 }
