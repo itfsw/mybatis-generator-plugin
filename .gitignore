@@ -13,4 +13,4 @@ hs_err_pid*
 .idea/
 mybatis-generator-plugin.iml
 target/
-src/main/java/com/itfsw/mybatis/generator/plugins/dao/
+src/test/java/com/itfsw/mybatis/generator/plugins/dao/
