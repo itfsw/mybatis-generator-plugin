@@ -16,10 +16,7 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.tools.AbstractShellCallback;
-import com.itfsw.mybatis.generator.plugins.tools.DBHelper;
-import com.itfsw.mybatis.generator.plugins.tools.SqlHelper;
-import com.itfsw.mybatis.generator.plugins.tools.Util;
+import com.itfsw.mybatis.generator.plugins.tools.*;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.AfterClass;
@@ -34,6 +31,7 @@ import org.mybatis.generator.exception.XMLParserException;
 import org.mybatis.generator.internal.DefaultShellCallback;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -168,7 +166,7 @@ public class BatchInsertPluginTest {
      * 测试生成的sql
      */
     @Test
-    public void testSql() throws Exception {
+    public void testBatchInsert() throws Exception {
         DBHelper.cleanDao();
         List<String> warnings = new ArrayList<>();
         ConfigurationParser cp = new ConfigurationParser(warnings);
@@ -177,23 +175,84 @@ public class BatchInsertPluginTest {
         MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, new AbstractShellCallback(true) {
             @Override
             public void reloadProject(ClassLoader loader) {
+                SqlSession sqlSession = null;
                 try {
-                    SqlSession sqlSession = helper.getSqlSession();
-                    Object obj = sqlSession.getMapper(loader.loadClass("com.itfsw.mybatis.generator.plugins.dao.TbMapper"));
+                    // 1. 测试sql
+                    sqlSession = helper.getSqlSession();
+                    ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass("com.itfsw.mybatis.generator.plugins.dao.TbMapper")));
                     List<Object> params = new ArrayList<>();
-                    String sql = SqlHelper.getMapperSql(
-                            sqlSession,
-                            loader.loadClass("com.itfsw.mybatis.generator.plugins.dao.TbMapper"),
-                            "batchInsert",
-                            params
+                    params.add(
+                            new ObjectUtil(loader, "com.itfsw.mybatis.generator.plugins.dao.model.Tb")
+                                    .set("field1", "test")
+                                    .getObject()
                     );
-
-                    System.out.println(sql);
-
-
+                    params.add(
+                            new ObjectUtil(loader, "com.itfsw.mybatis.generator.plugins.dao.model.Tb")
+                                    .set("field1", "test")
+                                    .set("field2", 1)
+                                    .getObject()
+                    );
+                    String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "batchInsert", params);
+                    Assert.assertEquals(sql, "insert into tb (field1, field2) values ('test', null) ,  ('test', 1)");
+                    // 2. 执行sql
+                    Object count = tbMapper.invoke("batchInsert", params);
+                    Assert.assertEquals(count, 2);
                 } catch (Exception e) {
                     e.printStackTrace();
                     Assert.assertTrue(false);
+                } finally {
+                    sqlSession.close();
+                }
+            }
+        }, warnings);
+        myBatisGenerator.generate(null, null, null, true);
+    }
+
+    /**
+     * 测试生成的sql
+     */
+    @Test
+    public void testBatchInsertSelective() throws Exception {
+        DBHelper.cleanDao();
+        List<String> warnings = new ArrayList<>();
+        ConfigurationParser cp = new ConfigurationParser(warnings);
+        Configuration config = cp.parseConfiguration(Resources.getResourceAsStream("scripts/BatchInsertPlugin/mybatis-generator.xml"));
+
+        MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, new AbstractShellCallback(true) {
+            @Override
+            public void reloadProject(ClassLoader loader) {
+                SqlSession sqlSession = null;
+                try {
+                    // 1. 测试sql
+                    sqlSession = helper.getSqlSession();
+                    ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass("com.itfsw.mybatis.generator.plugins.dao.TbBlobsMapper")));
+                    List<Object> params = new ArrayList<>();
+                    params.add(
+                            new ObjectUtil(loader, "com.itfsw.mybatis.generator.plugins.dao.model.TbBlobsWithBLOBs")
+                                    .set("field1", "test")
+                                    .getObject()
+                    );
+                    params.add(
+                            new ObjectUtil(loader, "com.itfsw.mybatis.generator.plugins.dao.model.TbBlobsWithBLOBs")
+                                    .set("field1", "test")
+                                    .set("field2", "test123")
+                                    .getObject()
+                    );
+                    ObjectUtil columnField2 = new ObjectUtil(loader, "com.itfsw.mybatis.generator.plugins.dao.model.TbBlobsWithBLOBs$Column#field2");
+                    // java 动态参数不能有两个会冲突，最后一个封装成Array!!!必须使用反射创建指定类型数组，不然调用invoke对了可变参数会检查类型！
+                    Object columns = Array.newInstance(columnField2.getCls(), 1);
+                    Array.set(columns, 0, columnField2.getObject());
+
+                    String sql = SqlHelper.getFormatMapperSql(tbBlobsMapper.getObject(), "batchInsertSelective", params, columns);
+                    Assert.assertEquals(sql, "insert into tb_blobs ( field2 ) values ( 'null' ) ,  ( 'test123' )");
+                    // 2. 执行sql
+                    Object count = tbBlobsMapper.invokeVarArgs("batchInsertSelective", params, columns);
+                    Assert.assertEquals(count, 2);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Assert.assertTrue(false);
+                } finally {
+                    sqlSession.close();
                 }
             }
         }, warnings);
@@ -202,6 +261,6 @@ public class BatchInsertPluginTest {
 
     @AfterClass
     public static void clean() {
-//        DBHelper.reset();
+        DBHelper.reset();
     }
 }

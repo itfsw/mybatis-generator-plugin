@@ -52,6 +52,18 @@ public class SqlHelper {
     private static final ObjectWrapperFactory DEFAULT_OBJECT_WRAPPER_FACTORY = new DefaultObjectWrapperFactory();
 
     /**
+     * 通过Mapper接口和方法名(过滤掉回车多余空格信息，便于比对)
+     * @param mapper
+     * @param methodName
+     * @param args
+     * @return
+     */
+    public static String getFormatMapperSql(Object mapper, String methodName, Object... args) {
+        String sql = getMapperSql(mapper, methodName, args);
+        return sql == null ? null : sql.replaceAll("\n\\s*", " ");
+    }
+
+    /**
      * 通过接口获取sql
      * @param mapper
      * @param methodName

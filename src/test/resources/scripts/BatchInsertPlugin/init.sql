@@ -22,7 +22,7 @@ DROP TABLE IF EXISTS `tb`;
 CREATE TABLE `tb` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '注释1',
   `field1` varchar(255) DEFAULT NULL COMMENT '注释2',
-  `field2` float DEFAULT NULL,
+  `field2` int DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -54,7 +54,7 @@ CREATE TABLE `tb_keys` (
   `key1` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '注释1',
   `key2` varchar(255) NOT NULL,
   `field1` varchar(255) DEFAULT NULL COMMENT '注释2',
-  `field2` float DEFAULT NULL,
+  `field2` int DEFAULT NULL,
   PRIMARY KEY (`key1`,`key2`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -69,7 +69,7 @@ DROP TABLE IF EXISTS `tb_single_blob`;
 CREATE TABLE `tb_single_blob` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '注释1',
   `field1` longtext COMMENT '注释2',
-  `field2` float DEFAULT NULL,
+  `field2` int DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
