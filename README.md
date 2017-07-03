@@ -17,7 +17,9 @@
 * [Table增加前缀插件（TablePrefixPlugin）](#11-table增加前缀插件)
 * [Table重命名插件（TableRenamePlugin）](#12-table重命名插件)
 * [自定义注释插件（CommentPlugin）](#13-自定义注释插件)
-  
+* [增量插件（IncrementsPlugin）](#14-增量插件)
+* [查询结果选择性返回插件（SelectSelectivePlugin）](#15-查询结果选择性返回插件)
+
 ---------------------------------------
 Maven引用：  
 ```xml
@@ -980,4 +982,65 @@ Mybatis Generator是原生支持自定义注释的（commentGenerator配置type�
  */
         ]]></comment>
 </template>
+```
+### 13. 增量插件
+为更新操作生成set filedxxx = filedxxx +/- inc 操作，方便某些统计字段的更新操作，常用于某些需要计数的场景；  
+
+插件：
+```xml
+<xml>
+    <!-- 增量插件 -->
+    <plugin type="com.itfsw.mybatis.generator.plugins.IncrementsPlugin" />
+    
+    <table tableName="tb">
+        <!-- 配置需要进行增量操作的列名称（英文半角逗号分隔） -->
+        <property name="incrementsColumns" value="field1,field2"/>
+    </table>
+</xml>
+```
+使用：  
+```java
+public class Test {
+    public static void main(String[] args) {
+        // 在构建更新对象时，配置了增量支持的字段会增加传入增量枚举的方法
+        Tb tb = new Tb.Builder()
+                .id(102)
+                .field1(1, Tb.Builder.Inc.INC)  // 字段1 统计增加1
+                .field2(2, Tb.Builder.Inc.DEC)  // 字段2 统计减去2
+                .field4(new Date())
+                .build();
+        // 更新操作，可以是 updateByExample, updateByExampleSelective, updateByPrimaryKey
+        // , updateByPrimaryKeySelective, upsert, upsertSelective等所有涉及更新的操作
+        this.tbMapper.updateByPrimaryKey(tb);
+    }
+}
+```
+### 13. 查询结果选择性返回插件
+一般我们在做查询优化的时候会要求查询返回时不要返回自己不需要的字段数据，因为Sending data所花费的时间和加大内存的占用
+，所以我们看到官方对于大数据的字段会拆分成xxxWithBLOBs的操作，但是这种拆分还是不能精确到具体列返回。  
+所以该插件的作用就是精确指定查询操作所需要返回的字段信息，实现查询的精确返回。  
+
+插件：
+```xml
+<xml>
+    <!-- 查询结果选择性返回插件 -->
+    <plugin type="com.itfsw.mybatis.generator.plugins.SelectSelectivePlugin" />
+</xml>
+```
+使用：  
+```java
+public class Test {
+    public static void main(String[] args) {
+        // 查询操作精确返回需要的列
+        this.tbMapper.selectByExampleSelective(
+            new TbExample()
+            .createCriteria()
+            .andField1GreaterThan(1)
+            .example(),
+            Tb.Column.field1,
+            Tb.Column.field2
+        );
+        // 同理还有 selectByPrimaryKeySelective，selectOneByExampleSelective（SelectOneByExamplePlugin插件配合使用）方法
+    }
+}
 ```
