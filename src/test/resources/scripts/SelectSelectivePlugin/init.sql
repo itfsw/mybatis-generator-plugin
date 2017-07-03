@@ -10,7 +10,7 @@ Target Server Type    : MYSQL
 Target Server Version : 50617
 File Encoding         : 65001
 
-Date: 2017-06-30 11:15:22
+Date: 2017-07-03 17:34:11
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -59,11 +59,14 @@ CREATE TABLE `tb_keys` (
   `field1` varchar(255) DEFAULT NULL COMMENT '注释2',
   `field2` int(11) DEFAULT NULL,
   PRIMARY KEY (`key1`,`key2`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Records of tb_keys
 -- ----------------------------
+INSERT INTO `tb_keys` VALUES ('1', '2', 'fd1', null);
+INSERT INTO `tb_keys` VALUES ('2', '3', null, '2');
+INSERT INTO `tb_keys` VALUES ('3', '4', 'fd2', '3');
 
 -- ----------------------------
 -- Table structure for tb_single_blob

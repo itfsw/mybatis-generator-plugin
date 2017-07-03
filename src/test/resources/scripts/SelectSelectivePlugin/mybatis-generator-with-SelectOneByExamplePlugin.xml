@@ -27,6 +27,8 @@
         <plugin type="com.itfsw.mybatis.generator.plugins.SelectSelectivePlugin"/>
         <!-- 数据Model属性对应Column获取插件 -->
         <plugin type="com.itfsw.mybatis.generator.plugins.ModelColumnPlugin"/>
+        <!-- 查询单条数据插件 -->
+        <plugin type="com.itfsw.mybatis.generator.plugins.SelectOneByExamplePlugin"/>
 
         <!--jdbc的数据库连接 -->
         <jdbcConnection driverClass="${db.driver}" connectionURL="${db.url}" userId="${db.username}" password="${db.password}" />
