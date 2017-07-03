@@ -17,6 +17,7 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
+import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedColumn;
@@ -132,7 +133,7 @@ public class SelectOneByExamplePlugin extends BasePlugin {
         commentGenerator.addGeneralMethodComment(method, introspectedTable);
 
         // interface 增加方法
-        interfaze.addMethod(method);
+        FormatTools.addMethodWithBestPosition(interfaze, method);
         logger.debug("itfsw(查询单条数据插件):" + interfaze.getType().getShortName() + "增加selectOneByExample方法。");
 
         // 方法生成 selectOneByExampleWithBLOBs !!! 注意这里的行为不以有没有生成Model 的 WithBLOBs类为基准
@@ -147,7 +148,7 @@ public class SelectOneByExamplePlugin extends BasePlugin {
             commentGenerator.addGeneralMethodComment(method1, introspectedTable);
 
             // interface 增加方法
-            interfaze.addMethod(method1);
+            FormatTools.addMethodWithBestPosition(interfaze, method1);
             logger.debug("itfsw(查询单条数据插件):" + interfaze.getType().getShortName() + "增加selectOneByExampleWithBLOBs方法。");
         }
 
@@ -200,7 +201,7 @@ public class SelectOneByExamplePlugin extends BasePlugin {
         // 只查询一条
         selectOneElement.addElement(new TextElement("limit 1"));
         // 添加到根节点
-        document.getRootElement().addElement(selectOneElement);
+        FormatTools.addElementWithBestPosition(document.getRootElement(), selectOneElement);
         logger.debug("itfsw(查询单条数据插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加selectOneByExample方法。");
 
         // ------------------------------------ selectOneByExampleWithBLOBs ----------------------------------
@@ -247,7 +248,7 @@ public class SelectOneByExamplePlugin extends BasePlugin {
             selectOneWithBLOBsElement.addElement(new TextElement("limit 1"));
 
             // 添加到根节点
-            document.getRootElement().addElement(selectOneWithBLOBsElement);
+            FormatTools.addElementWithBestPosition(document.getRootElement(), selectOneWithBLOBsElement);
             logger.debug("itfsw(查询单条数据插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加selectOneByExampleWithBLOBs方法。");
         }
 

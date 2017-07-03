@@ -17,9 +17,9 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
+import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
 import com.itfsw.mybatis.generator.plugins.utils.IncrementsPluginTools;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
-import com.itfsw.mybatis.generator.plugins.utils.enhanced.JavaElementEnhanced;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
@@ -200,7 +200,7 @@ public class ModelBuilderPlugin extends BasePlugin {
                     mIncrements.addBodyLine("obj." + setterMethod.getName() + "(" + field.getName() + ");");
                     mIncrements.addBodyLine("return this;");
 
-                    JavaElementEnhanced.addMethodWithBestPosition(innerClass, mIncrements);
+                    FormatTools.addMethodWithBestPosition(innerClass, mIncrements);
                 }
             }
         }

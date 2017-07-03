@@ -169,6 +169,31 @@ public class LimitPlugin extends BasePlugin {
      */
     @Override
     public boolean sqlMapSelectByExampleWithoutBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+        this.generateLimitElement(element, introspectedTable);
+        return true;
+    }
+
+    /**
+     * SQL Map Methods 生成
+     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     *
+     * @param element
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public boolean sqlMapSelectByExampleWithBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+        this.generateLimitElement(element, introspectedTable);
+        return true;
+    }
+
+    /**
+     * 生成limit节点
+     *
+     * @param element
+     * @param introspectedTable
+     */
+    public void generateLimitElement(XmlElement element, IntrospectedTable introspectedTable){
         XmlElement ifLimitNotNullElement = new XmlElement("if");
         ifLimitNotNullElement.addAttribute(new Attribute("test", "rows != null"));
 
@@ -185,20 +210,5 @@ public class LimitPlugin extends BasePlugin {
         element.addElement(ifLimitNotNullElement);
 
         logger.debug("itfsw(MySQL分页插件):"+introspectedTable.getMyBatis3XmlMapperFileName()+"selectByExample方法增加分页条件。");
-
-        return true;
-    }
-
-    /**
-     * SQL Map Methods 生成
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     *
-     * @param element
-     * @param introspectedTable
-     * @return
-     */
-    @Override
-    public boolean sqlMapSelectByExampleWithBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
-        return this.sqlMapSelectByExampleWithoutBLOBsElementGenerated(element, introspectedTable);
     }
 }
