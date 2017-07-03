@@ -19,6 +19,10 @@
 <configuration>
     <properties resource="db.properties" />
 
+    <settings>
+        <setting name="callSettersOnNulls" value="true"/>
+    </settings>
+
     <!-- 配置环境，制定数据库连接信息 -->
     <environments default="test">
         <environment id="test">

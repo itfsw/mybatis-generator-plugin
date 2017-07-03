@@ -19,7 +19,6 @@ package com.itfsw.mybatis.generator.plugins.tools;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 
 /**
  * ---------------------------------------------------------------------------
@@ -122,7 +121,6 @@ public class ObjectUtil {
             if (method.getName().equals(methodName) && method.getParameterTypes().length == args.length) {
                 boolean flag = true;
                 Class[] parameterTypes = method.getParameterTypes();
-                Parameter[] pps = method.getParameters();
                 for (int i = 0; i < args.length; i++) {
                     if (!(parameterTypes[i].isAssignableFrom(args[i].getClass()))) {
                         flag = false;
