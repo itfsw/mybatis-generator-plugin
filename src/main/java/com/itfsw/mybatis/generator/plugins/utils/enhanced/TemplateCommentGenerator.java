@@ -63,6 +63,7 @@ public class TemplateCommentGenerator implements CommentGenerator {
             if (useForDefault){
                 InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(templatePath);
                 doc = new SAXReader().read(inputStream);
+                inputStream.close();
             } else {
                 File file = new File(templatePath);
                 if (file.exists()) {

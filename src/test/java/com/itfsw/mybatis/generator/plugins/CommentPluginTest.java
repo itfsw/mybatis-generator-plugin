@@ -16,6 +16,27 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
+import com.itfsw.mybatis.generator.plugins.tools.DBHelper;
+import com.itfsw.mybatis.generator.plugins.tools.MyBatisGeneratorTool;
+import com.itfsw.mybatis.generator.plugins.tools.ObjectUtil;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.mybatis.generator.api.GeneratedJavaFile;
+import org.mybatis.generator.api.MyBatisGenerator;
+import org.mybatis.generator.api.dom.java.Field;
+import org.mybatis.generator.api.dom.java.Method;
+import org.mybatis.generator.api.dom.java.TopLevelClass;
+import org.mybatis.generator.api.dom.xml.Document;
+import org.mybatis.generator.api.dom.xml.Element;
+import org.mybatis.generator.api.dom.xml.TextElement;
+import org.mybatis.generator.api.dom.xml.XmlElement;
+import org.mybatis.generator.config.MergeConstants;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
 /**
  * ---------------------------------------------------------------------------
  *
@@ -25,4 +46,63 @@ package com.itfsw.mybatis.generator.plugins;
  * ---------------------------------------------------------------------------
  */
 public class CommentPluginTest {
+    /**
+     * 初始化
+     */
+    @BeforeClass
+    public static void init() throws Exception {
+        DBHelper.createDB("scripts/ComentPlugin/init.sql");
+    }
+
+    /**
+     * 测试没有配置模板的情况
+     */
+    @Test
+    public void testGenerateWithoutTemplate() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ComentPlugin/mybatis-generator-without-template.xml");
+        MyBatisGenerator myBatisGenerator = tool.generate();
+        // 是否在使用系统默认模板
+        int count = 0;
+        for (GeneratedJavaFile file : myBatisGenerator.getGeneratedJavaFiles()) {
+            if (file.getFormattedContent().indexOf("@project https://github.com/itfsw/mybatis-generator-plugin") != -1) {
+                count++;
+            }
+        }
+        Assert.assertTrue(count > 0);
+    }
+
+    /**
+     * 测试配置了模板参数转换
+     */
+    @Test
+    public void testGenerateWithTemplate() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ComentPlugin/mybatis-generator.xml");
+        MyBatisGenerator myBatisGenerator = tool.generate();
+
+        // java中的注释
+        for (GeneratedJavaFile file : myBatisGenerator.getGeneratedJavaFiles()) {
+            if (file.getFileName().equals("Tb.java")) {
+                TopLevelClass topLevelClass = (TopLevelClass) file.getCompilationUnit();
+                // addJavaFileComment
+                Assert.assertEquals(topLevelClass.getFileCommentLines().get(0), "TestAddJavaFileComment:Tb:" + new SimpleDateFormat("yyyy-MM").format(new Date()));
+                // addFieldComment 同时测试 if 判断和 mbg
+                Field id = topLevelClass.getFields().get(0);
+                Assert.assertEquals(id.getJavaDocLines().get(0), "注释1");
+                Assert.assertEquals(id.getJavaDocLines().get(1), MergeConstants.NEW_ELEMENT_TAG);
+                // addGeneralMethodComment
+                Method cons = topLevelClass.getMethods().get(0);
+                Assert.assertEquals(cons.getJavaDocLines().get(0), "addGeneralMethodComment:Tb:tb");
+                // addSetterComment
+                Method setter = topLevelClass.getMethods().get(5);
+                Assert.assertEquals(setter.getJavaDocLines().get(0), "addSetterComment:field1:field1");
+            }
+        }
+
+        // xml注释
+        ObjectUtil xml = new ObjectUtil(myBatisGenerator.getGeneratedXmlFiles().get(0));
+        Document doc = (Document) xml.get("document");
+        List<Element> els = ((XmlElement) (doc.getRootElement().getElements().get(0))).getElements();
+        String comment = ((TextElement) els.get(0)).getContent();
+        Assert.assertEquals(comment, "addComment:BaseResultMap");
+    }
 }
