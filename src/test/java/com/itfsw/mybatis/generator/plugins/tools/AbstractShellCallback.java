@@ -16,19 +16,12 @@
 
 package com.itfsw.mybatis.generator.plugins.tools;
 
+import org.apache.ibatis.session.SqlSession;
 import org.junit.Assert;
 import org.mybatis.generator.api.ShellCallback;
 import org.mybatis.generator.exception.ShellException;
 
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.StringTokenizer;
 
 import static org.mybatis.generator.internal.util.messages.Messages.getString;
@@ -42,18 +35,15 @@ import static org.mybatis.generator.internal.util.messages.Messages.getString;
  * ---------------------------------------------------------------------------
  */
 public abstract class AbstractShellCallback implements ShellCallback {
-    /**
-     * The overwrite.
-     */
-    private boolean overwrite;
+    private MyBatisGeneratorTool tool;  // MyBatisGenerator 工具
 
     /**
-     * Instantiates a new default shell callback.
-     * @param overwrite the overwrite
+     * Setter method for property <tt>tool</tt>.
+     * @param tool value to be assigned to property tool
+     * @author hewei
      */
-    public AbstractShellCallback(boolean overwrite) {
-        super();
-        this.overwrite = overwrite;
+    public void setTool(MyBatisGeneratorTool tool) {
+        this.tool = tool;
     }
 
     /**
@@ -62,104 +52,32 @@ public abstract class AbstractShellCallback implements ShellCallback {
      */
     @Override
     public void refreshProject(String project) {
-        File daoDir = new File(project + "/com/itfsw/mybatis/generator/plugins/dao");
-        List<File> files = getJavaFiles(daoDir);
-        if (!files.isEmpty()) {
-            compileJavaFiles(files);
-            copyMappings(daoDir, project);
-        }
-        reloadProject(this.getClass().getClassLoader());
-    }
-
-    /**
-     * 拷贝xml
-     * @param file
-     * @param project
-     */
-    private void copyMappings(File file, String project) {
-        if (file.exists()) {
-            File[] files = file.listFiles();
-            for (File childFile : files) {
-                if (childFile.isDirectory()) {
-                    copyMappings(childFile, project);
-                } else if (childFile.getName().endsWith(".xml")) {
-                    try {
-                        FileReader fileReader = new FileReader(childFile);
-                        // 目标路径
-                        String path = childFile.getPath();
-                        path = path.replaceAll("\\\\", "/");
-                        String target = this.getClass().getClassLoader().getResource("").getPath() + path.replace(project, "");
-                        File targetFile = new File(target);
-                        if (!targetFile.getParentFile().exists()){
-                            targetFile.getParentFile().mkdirs();
-                        }
-                        targetFile.createNewFile();
-                        FileWriter fileWriter = new FileWriter(targetFile);
-                        int ch = 0;
-                        while ((ch = fileReader.read()) != -1) {
-                            fileWriter.write(ch);
-                        }
-                        fileReader.close();
-                        fileWriter.close();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        Assert.assertTrue(false);
-                    }
-                }
-            }
+        SqlSession sqlSession = null;
+        try {
+            // 编译项目
+            sqlSession = tool.compile();
+            reloadProject(sqlSession, tool.getTargetClassLoader(), tool.getTargetPackage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            Assert.assertTrue(false);
+        } finally {
+            sqlSession.close();
         }
     }
 
     /**
-     * 动态编译java文件
-     * @param files
+     * 重载项目
+     *
+     * @param sqlSession
+     * @param loader
+     * @param packagz
      */
-    private void compileJavaFiles(List<File> files) {
-        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-
-        //获取java文件管理类
-        StandardJavaFileManager manager = compiler.getStandardFileManager(null, null, null);
-        //获取java文件对象迭代器
-        Iterable<? extends JavaFileObject> it = manager.getJavaFileObjectsFromFiles(files);
-        //设置编译参数
-        ArrayList<String> ops = new ArrayList<>();
-        ops.add("-Xlint:unchecked");
-        // 设置输出目录
-        ops.add("-d");
-        ops.add(this.getClass().getClassLoader().getResource("").getPath());
-        //获取编译任务
-        JavaCompiler.CompilationTask task = compiler.getTask(null, manager, null, ops, null, it);
-        //执行编译任务
-        task.call();
-    }
-
-    public abstract void reloadProject(ClassLoader loader);
-
-    /**
-     * 获取JAVA 文件
-     * @param file
-     * @return
-     */
-    private List<File> getJavaFiles(File file) {
-        List<File> list = new ArrayList<>();
-        if (file.exists()) {
-            File[] files = file.listFiles();
-            for (File childFile : files) {
-                if (childFile.isDirectory()) {
-                    list.addAll(getJavaFiles(childFile));
-                } else if (childFile.getName().endsWith(".java")) {
-                    list.add(childFile);
-                }
-            }
-        }
-        return list;
-    }
+    public abstract void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz);
 
     /* (non-Javadoc)
          * @see org.mybatis.generator.api.ShellCallback#getDirectory(java.lang.String, java.lang.String)
          */
-    public File getDirectory(String targetProject, String targetPackage)
-            throws ShellException {
+    public File getDirectory(String targetProject, String targetPackage) throws ShellException {
         // targetProject is interpreted as a directory that must exist
         //
         // targetPackage is interpreted as a sub directory, but in package
@@ -169,12 +87,11 @@ public abstract class AbstractShellCallback implements ShellCallback {
 
         File project = new File(targetProject);
         if (!project.isDirectory()) {
-            throw new ShellException(getString("Warning.9", //$NON-NLS-1$
-                    targetProject));
+            throw new ShellException(getString("Warning.9", targetProject));
         }
 
         StringBuilder sb = new StringBuilder();
-        StringTokenizer st = new StringTokenizer(targetPackage, "."); //$NON-NLS-1$
+        StringTokenizer st = new StringTokenizer(targetPackage, "."); 
         while (st.hasMoreTokens()) {
             sb.append(st.nextToken());
             sb.append(File.separatorChar);
@@ -184,8 +101,7 @@ public abstract class AbstractShellCallback implements ShellCallback {
         if (!directory.isDirectory()) {
             boolean rc = directory.mkdirs();
             if (!rc) {
-                throw new ShellException(getString("Warning.10", //$NON-NLS-1$
-                        directory.getAbsolutePath()));
+                throw new ShellException(getString("Warning.10", directory.getAbsolutePath()));
             }
         }
 
@@ -203,7 +119,7 @@ public abstract class AbstractShellCallback implements ShellCallback {
      * @see org.mybatis.generator.api.ShellCallback#isOverwriteEnabled()
      */
     public boolean isOverwriteEnabled() {
-        return overwrite;
+        return true;
     }
 
     /* (non-Javadoc)

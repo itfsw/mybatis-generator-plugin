@@ -17,22 +17,15 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.tools.DBHelper;
-import org.apache.ibatis.io.Resources;
-import org.junit.After;
+import com.itfsw.mybatis.generator.plugins.tools.MyBatisGeneratorTool;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mybatis.generator.api.GeneratedJavaFile;
 import org.mybatis.generator.api.MyBatisGenerator;
-import org.mybatis.generator.config.Configuration;
-import org.mybatis.generator.config.xml.ConfigurationParser;
-import org.mybatis.generator.exception.InvalidConfigurationException;
-import org.mybatis.generator.exception.XMLParserException;
-import org.mybatis.generator.internal.DefaultShellCallback;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -44,44 +37,35 @@ import java.util.List;
  * ---------------------------------------------------------------------------
  */
 public class ExampleTargetPluginTest {
-    private DBHelper helper;
 
     /**
      * 初始化
      * @throws IOException
      * @throws SQLException
      */
-    @Before
-    public void init() throws IOException, SQLException {
-        helper = DBHelper.getHelper("scripts/ExampleTargetPlugin/init.sql");
+    @BeforeClass
+    public static void init() throws Exception {
+        DBHelper.createDB("scripts/ExampleTargetPlugin/init.sql");
     }
 
     @Test
-    public void testNormalPath() throws IOException, XMLParserException, InvalidConfigurationException, SQLException, InterruptedException {
-        List<String> warnings = new ArrayList<String>();
-        ConfigurationParser cp = new ConfigurationParser(warnings);
-        Configuration config = cp.parseConfiguration(Resources.getResourceAsStream("scripts/ExampleTargetPlugin/mybatis-generator-without-plugin.xml"));
+    public void testNormalPath() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ExampleTargetPlugin/mybatis-generator-without-plugin.xml");
+        MyBatisGenerator myBatisGenerator = tool.generate();
 
-        DefaultShellCallback shellCallback = new DefaultShellCallback(true);
-        MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, shellCallback, warnings);
-        myBatisGenerator.generate(null, null, null, false);
         List<GeneratedJavaFile> list = myBatisGenerator.getGeneratedJavaFiles();
         for (GeneratedJavaFile file : list){
             if (file.getFileName().equals("TbExample.java")){
-                Assert.assertEquals(file.getTargetPackage(), "com.itfsw.mybatis.generator.plugins.dao.model");
+                Assert.assertEquals(file.getTargetPackage(), tool.getTargetPackage());
             }
         }
     }
 
     @Test
-    public void testConfigPath() throws IOException, XMLParserException, InvalidConfigurationException, SQLException, InterruptedException {
-        List<String> warnings = new ArrayList<String>();
-        ConfigurationParser cp = new ConfigurationParser(warnings);
-        Configuration config = cp.parseConfiguration(Resources.getResourceAsStream("scripts/ExampleTargetPlugin/mybatis-generator.xml"));
+    public void testConfigPath() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ExampleTargetPlugin/mybatis-generator.xml");
+        MyBatisGenerator myBatisGenerator = tool.generate();
 
-        DefaultShellCallback shellCallback = new DefaultShellCallback(true);
-        MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, shellCallback, warnings);
-        myBatisGenerator.generate(null, null, null, false);
         List<GeneratedJavaFile> list = myBatisGenerator.getGeneratedJavaFiles();
         for (GeneratedJavaFile file : list){
             if (file.getFileName().equals("TbExample.java")){
@@ -90,8 +74,4 @@ public class ExampleTargetPluginTest {
         }
     }
 
-    @After
-    public void clean(){
-        DBHelper.reset();
-    }
 }

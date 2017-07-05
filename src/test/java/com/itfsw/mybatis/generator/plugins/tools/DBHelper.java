@@ -17,15 +17,15 @@
 package com.itfsw.mybatis.generator.plugins.tools;
 
 import org.apache.ibatis.io.Resources;
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 
-import java.io.*;
-import java.net.URL;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.sql.Connection;
-import java.sql.SQLException;
+import java.sql.DriverManager;
 import java.sql.Statement;
+import java.util.Properties;
 
 /**
  * ---------------------------------------------------------------------------
@@ -36,64 +36,47 @@ import java.sql.Statement;
  * ---------------------------------------------------------------------------
  */
 public class DBHelper {
-    private static final String MYBATIS_CONFIG = "mybatis-config.xml";    // 配置文件
-    private static DBHelper helper; // helper
+    private static final String DB_CONFIG = "db.properties";
+    public static Properties properties; // 数据库信息
 
-    /**
-     * 构造函数
-     */
-    private DBHelper() {
-    }
-
-    /**
-     * 获取数据库操作工具
-     *
-     * @param initSql
-     * @return
-     */
-    public static DBHelper getHelper(String initSql) throws IOException, SQLException {
-        if (helper == null){
-            helper = new DBHelper();
-            helper.initDB(initSql);
+    static {
+        try {
+            // 获取数据库配置信息
+            properties = new Properties();
+            InputStream inputStream = Resources.getResourceAsStream(DB_CONFIG);
+            properties.load(inputStream);
+            inputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        cleanDao();
-        return helper;
     }
 
     /**
-     * 获取SqlSession
+     * 创建数据库
      *
-     * @return
-     * @throws IOException
+     * @param resource
+     * @throws Exception
      */
-    public SqlSession getSqlSession() throws IOException {
-        InputStream inputStream = Resources.getResourceAsStream(MYBATIS_CONFIG);
-        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
-        inputStream.close();
-        return sqlSessionFactory.openSession(true);
-    }
+    public static void createDB(String resource) throws Exception {
+        String driver = properties.getProperty("driver");
+        String url = properties.getProperty("url");
+        String username = properties.getProperty("username");
+        String password = properties.getProperty("password");
+        // 获取connection
+        Class.forName(driver);
+        Connection connection = DriverManager.getConnection(url, username, password);
 
-    /**
-     * 初始化数据库
-     *
-     * @param initSql
-     * @throws IOException
-     * @throws SQLException
-     */
-    private void initDB(String initSql) throws IOException, SQLException {
-        SqlSession sqlSession = this.getSqlSession();
-        Connection connection = sqlSession.getConnection();
         Statement statement = connection.createStatement();
         // 获取建表和初始化sql
-        InputStream inputStream = Resources.getResourceAsStream(initSql);
+        InputStream inputStream = Resources.getResourceAsStream(resource);
         InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
         BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
         // 读取sql语句执行
         StringBuffer sb = new StringBuffer();
         String line;
-        while ((line = bufferedReader.readLine()) != null){
+        while ((line = bufferedReader.readLine()) != null) {
             sb.append(line).append("\n");
-            if (line.matches(".*;$")){
+            if (line.matches(".*;$")) {
                 statement.execute(sb.toString());
                 sb.setLength(0);
             }
@@ -103,47 +86,6 @@ public class DBHelper {
         inputStream.close();
         statement.close();
         connection.close();
-        sqlSession.close();
     }
 
-    /**
-     * 重置
-     */
-    public static void reset(){
-        helper = null;
-        cleanDao();
-    }
-
-    /**
-     * 清理Dao空间
-     */
-    public static void cleanDao(){
-        delDir(new File("src/test/java/com/itfsw/mybatis/generator/plugins/dao"));
-
-        // 清理Dao class目录
-        URL daoClass = DBHelper.class.getClassLoader().getResource("com/itfsw/mybatis/generator/plugins/dao");
-        if (daoClass != null){
-            delDir(new File(daoClass.getPath()));
-        }
-    }
-
-    /**
-     * 清理工作区间
-     *
-     * @param file
-     */
-    private static void delDir(File file) {
-        if (file.exists()){
-            if (file.isFile()){
-                file.delete();
-            } else if (file.isDirectory()){
-                File[] files = file.listFiles();
-                for (File file1: files) {
-                    delDir(file1);
-                }
-
-                file.delete();
-            }
-        }
-    }
 }

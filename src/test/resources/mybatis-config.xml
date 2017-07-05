@@ -38,6 +38,6 @@
 
     <mappers>
         <!-- Mapper扫描包，必须同目录同名称下-->
-        <package name="com.itfsw.mybatis.generator.plugins.dao"/>
+        <mapper resource="E:\work_java\mybatis-generator-plugin\target\test-tmp\123456\com\itfsw\mybatis\generator\plugins\dao\TbMapper.xml"/>
     </mappers>
 </configuration>

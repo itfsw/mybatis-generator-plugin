@@ -16,26 +16,15 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.tools.AbstractShellCallback;
-import com.itfsw.mybatis.generator.plugins.tools.DBHelper;
-import com.itfsw.mybatis.generator.plugins.tools.ObjectUtil;
-import com.itfsw.mybatis.generator.plugins.tools.SqlHelper;
-import org.apache.ibatis.io.Resources;
+import com.itfsw.mybatis.generator.plugins.tools.*;
 import org.apache.ibatis.session.SqlSession;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mybatis.generator.api.GeneratedJavaFile;
 import org.mybatis.generator.api.MyBatisGenerator;
-import org.mybatis.generator.config.Configuration;
-import org.mybatis.generator.config.xml.ConfigurationParser;
-import org.mybatis.generator.internal.DefaultShellCallback;
 
-import java.io.IOException;
 import java.lang.reflect.Array;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -47,16 +36,10 @@ import java.util.List;
  * ---------------------------------------------------------------------------
  */
 public class SelectSelectivePluginTest {
-    private DBHelper helper;
 
-    /**
-     * 初始化
-     * @throws IOException
-     * @throws SQLException
-     */
-    @Before
-    public void init() throws IOException, SQLException {
-        helper = DBHelper.getHelper("scripts/SelectSelectivePlugin/init.sql");
+    @BeforeClass
+    public static void init() throws Exception {
+        DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql");
     }
 
     /**
@@ -65,26 +48,20 @@ public class SelectSelectivePluginTest {
      */
     @Test
     public void testSelectByExampleSelective() throws Exception {
-        DBHelper.cleanDao();
-        List<String> warnings = new ArrayList<>();
-        ConfigurationParser cp = new ConfigurationParser(warnings);
-        Configuration config = cp.parseConfiguration(Resources.getResourceAsStream("scripts/SelectSelectivePlugin/mybatis-generator.xml"));
-
-        MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, new AbstractShellCallback(true) {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/SelectSelectivePlugin/mybatis-generator.xml");
+        tool.generate(new AbstractShellCallback() {
             @Override
-            public void reloadProject(ClassLoader loader) {
-                SqlSession sqlSession = null;
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) {
                 try {
                     // 1. 测试sql
-                    sqlSession = helper.getSqlSession();
-                    ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass("com.itfsw.mybatis.generator.plugins.dao.TbMapper")));
+                    ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
 
-                    ObjectUtil tbExample = new ObjectUtil(loader, "com.itfsw.mybatis.generator.plugins.dao.model.TbExample");
+                    ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
                     ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
                     criteria.invoke("andIdLessThan", 100l);
                     tbExample.set("orderByClause", "field2 asc");
 
-                    ObjectUtil columnField1 = new ObjectUtil(loader, "com.itfsw.mybatis.generator.plugins.dao.model.Tb$Column#field1");
+                    ObjectUtil columnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
                     // java 动态参数不能有两个会冲突，最后一个封装成Array!!!必须使用反射创建指定类型数组，不然调用invoke对了可变参数会检查类型！
                     Object columns1 = Array.newInstance(columnField1.getCls(), 1);
                     Array.set(columns1, 0, columnField1.getObject());
@@ -92,7 +69,7 @@ public class SelectSelectivePluginTest {
                     String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns1);
                     Assert.assertEquals(sql, "select field1 from tb WHERE (  id < '100' )  order by field2 asc");
 
-                    ObjectUtil columnField2 = new ObjectUtil(loader, "com.itfsw.mybatis.generator.plugins.dao.model.Tb$Column#field2");
+                    ObjectUtil columnField2 = new ObjectUtil(loader, packagz + ".Tb$Column#field2");
                     Object columns2 = Array.newInstance(columnField1.getCls(), 2);
                     Array.set(columns2, 0, columnField1.getObject());
                     Array.set(columns2, 1, columnField2.getObject());
@@ -124,12 +101,9 @@ public class SelectSelectivePluginTest {
                 } catch (Exception e) {
                     e.printStackTrace();
                     Assert.assertTrue(false);
-                } finally {
-                    sqlSession.close();
                 }
             }
-        }, warnings);
-        myBatisGenerator.generate(null, null, null, true);
+        });
     }
 
     /**
@@ -138,21 +112,15 @@ public class SelectSelectivePluginTest {
      */
     @Test
     public void testSelectByPrimaryKeySelective() throws Exception {
-        DBHelper.cleanDao();
-        List<String> warnings = new ArrayList<>();
-        ConfigurationParser cp = new ConfigurationParser(warnings);
-        Configuration config = cp.parseConfiguration(Resources.getResourceAsStream("scripts/SelectSelectivePlugin/mybatis-generator.xml"));
-
-        MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, new AbstractShellCallback(true) {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/SelectSelectivePlugin/mybatis-generator.xml");
+        tool.generate(new AbstractShellCallback() {
             @Override
-            public void reloadProject(ClassLoader loader) {
-                SqlSession sqlSession = null;
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) {
                 try {
                     // 1. 测试sql
-                    sqlSession = helper.getSqlSession();
-                    ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass("com.itfsw.mybatis.generator.plugins.dao.TbMapper")));
+                    ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
 
-                    ObjectUtil columnField1 = new ObjectUtil(loader, "com.itfsw.mybatis.generator.plugins.dao.model.TbKeys$Column#field1");
+                    ObjectUtil columnField1 = new ObjectUtil(loader, packagz + ".TbKeys$Column#field1");
                     // java 动态参数不能有两个会冲突，最后一个封装成Array!!!必须使用反射创建指定类型数组，不然调用invoke对了可变参数会检查类型！
                     Object columns1 = Array.newInstance(columnField1.getCls(), 1);
                     Array.set(columns1, 0, columnField1.getObject());
@@ -161,12 +129,12 @@ public class SelectSelectivePluginTest {
                     Assert.assertEquals(sql, "select field1 from tb where id = 1");
 
                     // 2. 测试xxxKey
-                    ObjectUtil tbKeysMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass("com.itfsw.mybatis.generator.plugins.dao.TbKeysMapper")));
-                    ObjectUtil tbKeysKey = new ObjectUtil(loader, "com.itfsw.mybatis.generator.plugins.dao.model.TbKeysKey");
+                    ObjectUtil tbKeysMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbKeysMapper")));
+                    ObjectUtil tbKeysKey = new ObjectUtil(loader, packagz + ".TbKeysKey");
                     tbKeysKey.set("key1", 1l);
                     tbKeysKey.set("key2", "2");
 
-                    ObjectUtil columnField2 = new ObjectUtil(loader, "com.itfsw.mybatis.generator.plugins.dao.model.TbKeys$Column#field2");
+                    ObjectUtil columnField2 = new ObjectUtil(loader, packagz + ".TbKeys$Column#field2");
                     // java 动态参数不能有两个会冲突，最后一个封装成Array!!!必须使用反射创建指定类型数组，不然调用invoke对了可变参数会检查类型！
                     Object columns2 = Array.newInstance(columnField2.getCls(), 1);
                     Array.set(columns2, 0, columnField2.getObject());
@@ -185,8 +153,7 @@ public class SelectSelectivePluginTest {
                     sqlSession.close();
                 }
             }
-        }, warnings);
-        myBatisGenerator.generate(null, null, null, true);
+        });
     }
 
     /**
@@ -196,13 +163,8 @@ public class SelectSelectivePluginTest {
     @Test
     public void testSelectOneByExampleSelective() throws Exception {
         // 没有配置SelectOneByExamplePlugin插件时不生成对应方法
-        DBHelper.cleanDao();
-        List<String> warnings = new ArrayList<>();
-        ConfigurationParser cp = new ConfigurationParser(warnings);
-        Configuration config = cp.parseConfiguration(Resources.getResourceAsStream("scripts/SelectSelectivePlugin/mybatis-generator.xml"));
-        DefaultShellCallback shellCallback = new DefaultShellCallback(true);
-        MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, shellCallback, warnings);
-        myBatisGenerator.generate(null, null, null, false);
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/SelectSelectivePlugin/mybatis-generator.xml");
+        MyBatisGenerator myBatisGenerator = tool.generate();
         List<GeneratedJavaFile> list = myBatisGenerator.getGeneratedJavaFiles();
         for (GeneratedJavaFile file : list) {
             if (file.getFileName().equals("TbMapper.java")) {
@@ -211,24 +173,20 @@ public class SelectSelectivePluginTest {
         }
 
         // 配置了SelectOneByExamplePlugin
-        DBHelper.cleanDao();
-        config = cp.parseConfiguration(Resources.getResourceAsStream("scripts/SelectSelectivePlugin/mybatis-generator-with-SelectOneByExamplePlugin.xml"));
-
-        myBatisGenerator = new MyBatisGenerator(config, new AbstractShellCallback(true) {
+        tool = MyBatisGeneratorTool.create("scripts/SelectSelectivePlugin/mybatis-generator-with-SelectOneByExamplePlugin.xml");
+        tool.generate(new AbstractShellCallback() {
             @Override
-            public void reloadProject(ClassLoader loader) {
-                SqlSession sqlSession = null;
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) {
                 try {
                     // 1. 测试sql
-                    sqlSession = helper.getSqlSession();
-                    ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass("com.itfsw.mybatis.generator.plugins.dao.TbMapper")));
+                    ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
 
-                    ObjectUtil tbExample = new ObjectUtil(loader, "com.itfsw.mybatis.generator.plugins.dao.model.TbExample");
+                    ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
                     ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
                     criteria.invoke("andIdEqualTo", 3l);
                     tbExample.set("orderByClause", "field2 asc");
 
-                    ObjectUtil columnField1 = new ObjectUtil(loader, "com.itfsw.mybatis.generator.plugins.dao.model.Tb$Column#field1");
+                    ObjectUtil columnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
                     // java 动态参数不能有两个会冲突，最后一个封装成Array!!!必须使用反射创建指定类型数组，不然调用invoke对了可变参数会检查类型！
                     Object columns1 = Array.newInstance(columnField1.getCls(), 1);
                     Array.set(columns1, 0, columnField1.getObject());
@@ -245,16 +203,8 @@ public class SelectSelectivePluginTest {
                 } catch (Exception e) {
                     e.printStackTrace();
                     Assert.assertTrue(false);
-                } finally {
-                    sqlSession.close();
                 }
             }
-        }, warnings);
-        myBatisGenerator.generate(null, null, null, true);
-    }
-
-    @AfterClass
-    public static void clean() {
-        DBHelper.reset();
+        });
     }
 }

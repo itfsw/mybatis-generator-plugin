@@ -17,15 +17,11 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.tools.DBHelper;
-import org.apache.ibatis.session.SqlSession;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 /**
  * ---------------------------------------------------------------------------
@@ -43,10 +39,17 @@ public class DBHelperTest {
      * @throws SQLException
      */
     @Test
-    public void testGetSqlSession() throws IOException, SQLException {
-        DBHelper helper = DBHelper.getHelper("scripts/test_init.sql");
-        SqlSession sqlSession = helper.getSqlSession();
-        Connection connection = sqlSession.getConnection();
+    public void testGetSqlSession() throws Exception {
+        DBHelper.createDB("scripts/test_init.sql");
+
+        String driver = DBHelper.properties.getProperty("driver");
+        String url = DBHelper.properties.getProperty("url");
+        String username = DBHelper.properties.getProperty("username");
+        String password = DBHelper.properties.getProperty("password");
+        // 获取connection
+        Class.forName(driver);
+        Connection connection = DriverManager.getConnection(url, username, password);
+
         Statement statement = connection.createStatement();
 
         // 执行查询
@@ -58,7 +61,5 @@ public class DBHelperTest {
 
         statement.close();
         connection.close();
-        sqlSession.close();
-        DBHelper.reset();
     }
 }

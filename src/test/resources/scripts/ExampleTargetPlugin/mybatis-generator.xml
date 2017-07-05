@@ -30,23 +30,23 @@
         </plugin>
 
         <!--jdbc的数据库连接 -->
-        <jdbcConnection driverClass="${db.driver}" connectionURL="${db.url}" userId="${db.username}" password="${db.password}" />
+        <jdbcConnection driverClass="${driver}" connectionURL="${url}" userId="${username}" password="${password}" />
         <!-- Model模型生成器,用来生成含有主键key的类，记录类 以及查询Example类
             targetPackage     指定生成的model生成所在的包名
             targetProject     指定在该项目下所在的路径  -->
-        <javaModelGenerator targetPackage="com.itfsw.mybatis.generator.plugins.dao.model" targetProject="src/test/java">
+        <javaModelGenerator targetPackage="" targetProject="">
             <!-- 是否对model添加 构造函数 -->
             <property name="constructorBased" value="true"/>
             <!-- 给Model添加一个父类 -->
             <!--<property name="rootClass" value="com.itfsw.base"/>-->
         </javaModelGenerator>
         <!--Mapper映射文件生成所在的目录 为每一个数据库的表生成对应的SqlMap文件 -->
-        <sqlMapGenerator targetPackage="com.itfsw.mybatis.generator.plugins.dao" targetProject="src/test/java" />
+        <sqlMapGenerator targetPackage="" targetProject="" />
         <!-- 客户端代码，生成易于使用的针对Model对象和XML配置文件 的代码
             type="ANNOTATEDMAPPER",生成Java Model 和基于注解的Mapper对象
             type="MIXEDMAPPER",生成基于注解的Java Model 和相应的Mapper对象
             type="XMLMAPPER",生成SQLMap XML文件和独立的Mapper接口 -->
-        <javaClientGenerator targetPackage="com.itfsw.mybatis.generator.plugins.dao" targetProject="src/test/java" type="XMLMAPPER"/>
+        <javaClientGenerator targetPackage="" targetProject="" type="XMLMAPPER"/>
 
         <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 要自动生成的表 +++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
         <table tableName="tb">
