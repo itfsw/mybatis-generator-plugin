@@ -16,9 +16,12 @@
 
 package com.itfsw.mybatis.generator.plugins.tools;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ---------------------------------------------------------------------------
@@ -107,7 +110,7 @@ public class ObjectUtil {
     }
 
     /**
-     * 执行方法
+     * 执行方法(mapper动态代理后VarArgs检查有问题)
      * @param methodName
      * @param args
      * @return
@@ -116,12 +119,15 @@ public class ObjectUtil {
      * @throws IllegalAccessException
      */
     public Object invoke(String methodName, Object... args) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        Method[] methods = this.cls.getDeclaredMethods();
+        List<Method> methods = getMethods(methodName);
         for (Method method : methods) {
-            if (method.getName().equals(methodName) && method.getParameterTypes().length == args.length) {
+            if (method.getParameterTypes().length == args.length) {
                 boolean flag = true;
                 Class[] parameterTypes = method.getParameterTypes();
-                for (int i = 0; i < args.length; i++) {
+                // !! mapper动态代理后VarArgs检查有问题
+                // 暂时只检查前几位相同就假设为可变参数
+                int check = args.length > 0 ? (args[args.length - 1] instanceof Array ? args.length - 1 : args.length) : 0;
+                for (int i = 0; i < check; i++) {
                     if (!(parameterTypes[i].isAssignableFrom(args[i].getClass()))) {
                         flag = false;
                     }
@@ -132,26 +138,26 @@ public class ObjectUtil {
                 }
             }
         }
-        return null;
+        throw new NoSuchMethodError("没有找到方法：" + methodName);
     }
 
     /**
-     * 执行方法(mapper动态代理后VarArgs检查有问题)
-     * @param methodName
-     * @param args
+     * 获取指定名称的方法
+     *
+     * @param name
      * @return
-     * @throws NoSuchMethodException
-     * @throws InvocationTargetException
-     * @throws IllegalAccessException
      */
-    public Object invokeVarArgs(String methodName, Object... args) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        Method[] methods = this.cls.getDeclaredMethods();
-        for (Method method : methods) {
-            if (method.getName().equals(methodName)) {
-                return method.invoke(this.object, args);
+    public List<Method> getMethods(String name){
+        List<Method> list = new ArrayList<>();
+        Class clazz = this.cls;
+        for (; clazz != Object.class; clazz = clazz.getSuperclass()){
+            for (Method method : clazz.getDeclaredMethods()){
+                if (method.getName().equals(name)){
+                    list.add(method);
+                }
             }
         }
-        return null;
+        return list;
     }
 
     /**

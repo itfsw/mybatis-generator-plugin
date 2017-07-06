@@ -79,7 +79,7 @@ public class SelectSelectivePluginTest {
 
 
                     // 2. 执行sql
-                    List list = (List) tbMapper.invokeVarArgs("selectByExampleSelective", tbExample.getObject(), columns1);
+                    List list = (List) tbMapper.invoke("selectByExampleSelective", tbExample.getObject(), columns1);
                     Assert.assertEquals(list.size(), 3);
                     int index = 0;
                     for (Object obj : list) {
@@ -143,7 +143,7 @@ public class SelectSelectivePluginTest {
                     Assert.assertEquals(sql, "select field2 from tb_keys where key1 = 1 and key2 = '2'");
 
                     // 3. 执行sql
-                    Object tbKeys = tbKeysMapper.invokeVarArgs("selectByPrimaryKeySelective", tbKeysKey.getObject(), columns1);
+                    Object tbKeys = tbKeysMapper.invoke("selectByPrimaryKeySelective", tbKeysKey.getObject(), columns1);
                     Assert.assertEquals(new ObjectUtil(tbKeys).get("field1"), "fd1");
 
                 } catch (Exception e) {
@@ -195,7 +195,7 @@ public class SelectSelectivePluginTest {
                     Assert.assertEquals(sql, "select field1 from tb WHERE (  id = '3' )  order by field2 asc limit 1");
 
                     // 2. 执行sql
-                    Object result = tbMapper.invokeVarArgs("selectOneByExampleSelective", tbExample.getObject(), columns1);
+                    Object result = tbMapper.invoke("selectOneByExampleSelective", tbExample.getObject(), columns1);
                     ObjectUtil tb = new ObjectUtil(result);
                     Assert.assertEquals(tb.get("field1"), "fd3");
                     Assert.assertNull(tb.get("field2"));

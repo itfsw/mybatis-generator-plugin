@@ -154,7 +154,6 @@ public class ModelBuilderPlugin extends BasePlugin {
                 mInc.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "value"));
                 commentGenerator.addGeneralMethodComment(mInc, introspectedTable);
                 eIncrements.addMethod(mInc);
-                logger.debug("itfsw(数据Model属性对应Column获取插件):" + topLevelClass.getType().getShortName() + ".Column增加构造方法和column属性。");
 
                 Method mValue = JavaElementGeneratorTools.generateGetterMethod(fValue);
                 commentGenerator.addGeneralMethodComment(mValue, introspectedTable);
@@ -163,7 +162,7 @@ public class ModelBuilderPlugin extends BasePlugin {
                 innerClass.addInnerEnum(eIncrements);
                 // 增加field
                 Field fIncrements = JavaElementGeneratorTools.generateField(
-                        "incs",
+                        IncrementsPlugin.FIELD_INC_MAP,
                         JavaVisibility.PROTECTED,
                         new FullyQualifiedJavaType("Map<String, " + incTools.getIncEnum().getFullyQualifiedName() + ">"),
                         "new HashMap<String, " + incTools.getIncEnum().getFullyQualifiedName() + ">()"
@@ -179,6 +178,16 @@ public class ModelBuilderPlugin extends BasePlugin {
                 Method mSetter = JavaElementGeneratorTools.generateSetterMethod(fIncrements);
                 commentGenerator.addSetterComment(mSetter, introspectedTable, null);
                 topLevelClass.addMethod(mSetter);
+                // 增加判断方法
+                Method mHasIncsForColumn = JavaElementGeneratorTools.generateMethod(
+                        IncrementsPlugin.METHOD_INC_CHECK,
+                        JavaVisibility.PUBLIC,
+                        FullyQualifiedJavaType.getBooleanPrimitiveInstance(),
+                        new Parameter(FullyQualifiedJavaType.getStringInstance(), "column")
+                );
+                commentGenerator.addGeneralMethodComment(mHasIncsForColumn, introspectedTable);
+                mHasIncsForColumn.addBodyLine("return " + IncrementsPlugin.FIELD_INC_MAP + ".get(column) != null;");
+                FormatTools.addMethodWithBestPosition(topLevelClass, mHasIncsForColumn);
             }
 
             // Builder 中 添加字段支持
@@ -196,7 +205,7 @@ public class ModelBuilderPlugin extends BasePlugin {
                     commentGenerator.addSetterComment(mIncrements, introspectedTable, column);
 
                     Method setterMethod = JavaBeansUtil.getJavaBeansSetter(column, context, introspectedTable);
-                    mIncrements.addBodyLine("obj.incs.put(\"" + column.getActualColumnName() + "\", inc);");
+                    mIncrements.addBodyLine("obj." + IncrementsPlugin.FIELD_INC_MAP + ".put(\"" + column.getActualColumnName() + "\", inc);");
                     mIncrements.addBodyLine("obj." + setterMethod.getName() + "(" + field.getName() + ");");
                     mIncrements.addBodyLine("return this;");
 

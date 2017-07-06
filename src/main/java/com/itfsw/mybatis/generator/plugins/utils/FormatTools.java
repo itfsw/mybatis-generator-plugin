@@ -19,6 +19,7 @@ package com.itfsw.mybatis.generator.plugins.utils;
 import org.mybatis.generator.api.dom.java.InnerClass;
 import org.mybatis.generator.api.dom.java.Interface;
 import org.mybatis.generator.api.dom.java.Method;
+import org.mybatis.generator.api.dom.java.TopLevelClass;
 import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.Element;
 import org.mybatis.generator.api.dom.xml.XmlElement;
@@ -41,30 +42,7 @@ public class FormatTools {
      * @param method
      */
     public static void addMethodWithBestPosition(InnerClass innerClass, Method method){
-        List<Method> methods = innerClass.getMethods();
-        int index = -1;
-        for (int i = 0; i < methods.size(); i++){
-            Method m = methods.get(i);
-            if (m.getName().equals(method.getName())){
-                if (m.getParameters().size() <= method.getParameters().size()){
-                    index = i + 1;
-                } else {
-                    index = i;
-                }
-            } else if (m.getName().startsWith(method.getName())){
-                if (index == - 1){
-                    index = i;
-                }
-            } else if (method.getName().startsWith(m.getName())){
-                index = i + 1;
-            }
-        }
-
-        if (index == -1 || index >= methods.size()){
-            innerClass.addMethod(method);
-        } else {
-            methods.add(index, method);
-        }
+        addMethodWithBestPosition(method, innerClass.getMethods());
     }
 
     /**
@@ -74,30 +52,17 @@ public class FormatTools {
      * @param method
      */
     public static void addMethodWithBestPosition(Interface interfacz, Method method){
-        List<Method> methods = interfacz.getMethods();
-        int index = -1;
-        for (int i = 0; i < methods.size(); i++){
-            Method m = methods.get(i);
-            if (m.getName().equals(method.getName())){
-                if (m.getParameters().size() <= method.getParameters().size()){
-                    index = i + 1;
-                } else {
-                    index = i;
-                }
-            } else if (m.getName().startsWith(method.getName())){
-                if (index == - 1){
-                    index = i;
-                }
-            } else if (method.getName().startsWith(m.getName())){
-                index = i + 1;
-            }
-        }
+        addMethodWithBestPosition(method, interfacz.getMethods());
+    }
 
-        if (index == -1 || index >= methods.size()){
-            interfacz.addMethod(method);
-        } else {
-            methods.add(index, method);
-        }
+    /**
+     * 在最佳位置添加方法
+     *
+     * @param topLevelClass
+     * @param method
+     */
+    public static void addMethodWithBestPosition(TopLevelClass topLevelClass, Method method){
+        addMethodWithBestPosition(method, topLevelClass.getMethods());
     }
 
     /**
@@ -150,5 +115,37 @@ public class FormatTools {
             }
         }
         return null;
+    }
+
+    /**
+     * 获取最佳添加位置
+     *
+     * @param method
+     * @param methods
+     * @return
+     */
+    private static void addMethodWithBestPosition(Method method, List<Method> methods){
+        int index = -1;
+        for (int i = 0; i < methods.size(); i++){
+            Method m = methods.get(i);
+            if (m.getName().equals(method.getName())){
+                if (m.getParameters().size() <= method.getParameters().size()){
+                    index = i + 1;
+                } else {
+                    index = i;
+                }
+            } else if (m.getName().startsWith(method.getName())){
+                if (index == - 1){
+                    index = i;
+                }
+            } else if (method.getName().startsWith(m.getName())){
+                index = i + 1;
+            }
+        }
+        if (index == -1 || index >= methods.size()){
+            methods.add(methods.size(), method);
+        } else {
+            methods.add(index, method);
+        }
     }
 }

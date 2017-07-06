@@ -127,12 +127,10 @@ public class SqlHelper {
             }
         }
         if (args != null && args.length == 1) {
-            Object _params = wrapCollection(args[0]);
-            if (_params instanceof Map) {
-                params.putAll((Map) _params);
-            }
+            return getNamespaceSql(session, fullMapperMethodName, args[0]);
+        } else {
+            return getNamespaceSql(session, fullMapperMethodName, params);
         }
-        return getNamespaceSql(session, fullMapperMethodName, params);
     }
 
 

@@ -96,10 +96,9 @@ public class IncrementsPluginTools {
 
     /**
      * 是否启用了
-     *
      * @return
      */
-    public boolean support(){
+    public boolean support() {
         return this.columns.size() > 0;
     }
 
@@ -114,13 +113,12 @@ public class IncrementsPluginTools {
 
     /**
      * 判断是否为需要进行增量操作的column
-     *
      * @param searchColumn
      * @return
      */
-    public boolean supportColumn(IntrospectedColumn searchColumn){
-        for (IntrospectedColumn column: this.columns){
-            if (column.getActualColumnName().equals(searchColumn.getActualColumnName())){
+    public boolean supportColumn(IntrospectedColumn searchColumn) {
+        for (IntrospectedColumn column : this.columns) {
+            if (column.getActualColumnName().equals(searchColumn.getActualColumnName())) {
                 return true;
             }
         }
@@ -129,7 +127,6 @@ public class IncrementsPluginTools {
 
     /**
      * 生成增量操作节点
-     *
      * @param introspectedColumn
      * @param hasPrefix
      * @param hasComma
@@ -146,18 +143,23 @@ public class IncrementsPluginTools {
 
         // 没有启用增量操作
         XmlElement when = new XmlElement("when");
-        when.addAttribute(new Attribute("test", (hasPrefix ? "record" : "_parameter") + ".incs.isEmpty()"));
-        TextElement normal = new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, hasPrefix ? "record." : null));
-        when.addElement(normal);
+        when.addAttribute(new Attribute(
+                "test",
+                (hasPrefix ? "record." : "_parameter.") + IncrementsPlugin.METHOD_INC_CHECK
+                        + "('" + MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + "')"
+        ));
+        TextElement spec = new TextElement(
+                MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn)
+                        + " ${" + (hasPrefix ? "record." : "")
+                        + IncrementsPlugin.FIELD_INC_MAP + "." + MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + ".value} "
+                        + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, hasPrefix ? "record." : null));
+        when.addElement(spec);
         choose.addElement(when);
 
         // 启用了增量操作
         XmlElement otherwise = new XmlElement("otherwise");
-        TextElement spec = new TextElement(
-                MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn)
-                        + " ${" + (hasPrefix ? "record" : "_parameter") + ".incs." + MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + ".value} "
-                        + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, hasPrefix ? "record." : null));
-        otherwise.addElement(spec);
+        TextElement normal = new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, hasPrefix ? "record." : null));
+        otherwise.addElement(normal);
         choose.addElement(otherwise);
 
         list.add(choose);

@@ -210,7 +210,7 @@ public class BatchInsertPluginTest {
                     String sql = SqlHelper.getFormatMapperSql(tbBlobsMapper.getObject(), "batchInsertSelective", params, columns);
                     Assert.assertEquals(sql, "insert into tb_blobs ( field2 ) values ( 'null' ) ,  ( 'test123' )");
                     // 2. 执行sql
-                    Object count = tbBlobsMapper.invokeVarArgs("batchInsertSelective", params, columns);
+                    Object count = tbBlobsMapper.invoke("batchInsertSelective", params, columns);
                     Assert.assertEquals(count, 2);
                 } catch (Exception e) {
                     e.printStackTrace();
