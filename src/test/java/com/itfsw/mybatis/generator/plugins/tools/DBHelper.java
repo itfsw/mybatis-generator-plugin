@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
@@ -53,11 +54,12 @@ public class DBHelper {
 
     /**
      * 创建数据库
-     *
      * @param resource
-     * @throws Exception
+     * @throws ClassNotFoundException
+     * @throws SQLException
+     * @throws IOException
      */
-    public static void createDB(String resource) throws Exception {
+    public static void createDB(String resource) throws ClassNotFoundException, SQLException, IOException {
         String driver = properties.getProperty("driver");
         String url = properties.getProperty("url");
         String username = properties.getProperty("username");

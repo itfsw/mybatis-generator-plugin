@@ -27,6 +27,8 @@ import org.mybatis.generator.api.MyBatisGenerator;
 import org.mybatis.generator.config.Configuration;
 import org.mybatis.generator.config.Context;
 import org.mybatis.generator.config.xml.ConfigurationParser;
+import org.mybatis.generator.exception.InvalidConfigurationException;
+import org.mybatis.generator.exception.XMLParserException;
 import org.mybatis.generator.internal.DefaultShellCallback;
 
 import javax.sql.DataSource;
@@ -62,11 +64,10 @@ public class MyBatisGeneratorTool {
 
     /**
      * 创建
-     *
      * @param resource
      * @return
      */
-    public static MyBatisGeneratorTool create(String resource) throws Exception {
+    public static MyBatisGeneratorTool create(String resource) throws IOException, XMLParserException {
         MyBatisGeneratorTool tool = new MyBatisGeneratorTool();
         tool.warnings = new ArrayList<>();
 
@@ -80,14 +81,13 @@ public class MyBatisGeneratorTool {
 
     /**
      * 执行MyBatisGenerator
-     *
      * @param callback
      * @return
      * @throws SQLException
      * @throws IOException
      * @throws InterruptedException
      */
-    public MyBatisGenerator generate(AbstractShellCallback callback) throws Exception {
+    public MyBatisGenerator generate(AbstractShellCallback callback) throws InvalidConfigurationException, InterruptedException, SQLException, IOException {
         callback.setTool(this);
         MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, callback, warnings);
         myBatisGenerator.generate(null, null, null, true);
@@ -96,13 +96,12 @@ public class MyBatisGeneratorTool {
 
     /**
      * 执行MyBatisGenerator(不生成文件)
-     *
      * @return
      * @throws SQLException
      * @throws IOException
      * @throws InterruptedException
      */
-    public MyBatisGenerator generate() throws Exception {
+    public MyBatisGenerator generate() throws InvalidConfigurationException, InterruptedException, SQLException, IOException {
         MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, new DefaultShellCallback(true), warnings);
         myBatisGenerator.generate(null, null, null, false);
         return myBatisGenerator;
@@ -110,7 +109,6 @@ public class MyBatisGeneratorTool {
 
     /**
      * 编译项目并返回 SqlSession
-     *
      * @return
      */
     public SqlSession compile() throws IOException, ClassNotFoundException {
@@ -176,7 +174,6 @@ public class MyBatisGeneratorTool {
 
     /**
      * 获取指定后缀的文件
-     *
      * @param file
      * @return
      */
@@ -198,10 +195,10 @@ public class MyBatisGeneratorTool {
     /**
      * 修正配置到指定target
      */
-    private void fixConfigToTarget(){
+    private void fixConfigToTarget() {
         this.targetProject = this.getClass().getClassLoader().getResource("").getPath();
         this.targetPackage = DAO_PACKAGE + ".s" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
-        for (Context context : config.getContexts()){
+        for (Context context : config.getContexts()) {
             context.getJavaModelGeneratorConfiguration().setTargetProject(targetProject);
             context.getJavaModelGeneratorConfiguration().setTargetPackage(targetPackage);
             context.getSqlMapGeneratorConfiguration().setTargetProject(targetProject);

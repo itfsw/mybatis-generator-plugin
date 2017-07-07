@@ -23,6 +23,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mybatis.generator.api.GeneratedJavaFile;
 import org.mybatis.generator.api.MyBatisGenerator;
+import org.mybatis.generator.exception.InvalidConfigurationException;
+import org.mybatis.generator.exception.XMLParserException;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -46,6 +48,16 @@ public class ExampleTargetPluginTest {
     @BeforeClass
     public static void init() throws Exception {
         DBHelper.createDB("scripts/ExampleTargetPlugin/init.sql");
+    }
+
+    /**
+     * 测试异常配置
+     */
+    @Test
+    public void testWarnings() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ExampleTargetPlugin/mybatis-generator-without-target.xml");
+        tool.generate();
+        Assert.assertEquals(tool.getWarnings().get(0), "请配置com.itfsw.mybatis.generator.plugins.ExampleTargetPlugin插件的目标包名(targetPackage)！");
     }
 
     @Test
