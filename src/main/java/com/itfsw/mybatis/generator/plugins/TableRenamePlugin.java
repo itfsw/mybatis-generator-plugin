@@ -20,7 +20,6 @@ import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.IntrospectedTableTools;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.config.TableConfiguration;
-import org.mybatis.generator.internal.util.JavaBeansUtil;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -53,8 +52,8 @@ public class TableRenamePlugin extends BasePlugin {
         }
 
         // 如果table配置了domainObjectName或者mapperName就不要再启动该插件了
-        for (TableConfiguration tableConfiguration: context.getTableConfigurations()) {
-            if (tableConfiguration.getDomainObjectName() != null || tableConfiguration.getMapperName() != null){
+        for (TableConfiguration tableConfiguration : context.getTableConfigurations()) {
+            if (tableConfiguration.getDomainObjectName() != null || tableConfiguration.getMapperName() != null) {
                 warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件请不要配合table的domainObjectName或者mapperName一起使用！");
                 return false;
             }
@@ -79,7 +78,7 @@ public class TableRenamePlugin extends BasePlugin {
             } catch (Exception e) {
                 logger.error("itfsw:插件" + this.getClass().getTypeName() + "使用tableOverride替换时异常！", e);
             }
-        } else if (getProperties().getProperty(PRE_SEARCH_STRING) != null){
+        } else if (getProperties().getProperty(PRE_SEARCH_STRING) != null) {
             String searchString = getProperties().getProperty(PRE_SEARCH_STRING);
             String replaceString = getProperties().getProperty(PRE_REPLACE_STRING);
 
@@ -87,13 +86,22 @@ public class TableRenamePlugin extends BasePlugin {
             Pattern pattern = Pattern.compile(searchString);
             Matcher matcher = pattern.matcher(domainObjectName);
             domainObjectName = matcher.replaceAll(replaceString);
-            // 命名规范化
-            domainObjectName = JavaBeansUtil.getCamelCaseString(domainObjectName, true);
+            // 命名规范化 首字母大写
+            domainObjectName = upFirstWord(domainObjectName);
             try {
                 IntrospectedTableTools.setDomainObjectName(introspectedTable, getContext(), domainObjectName);
             } catch (Exception e) {
                 logger.error("itfsw:插件" + this.getClass().getTypeName() + "使用searchString、replaceString替换时异常！", e);
             }
         }
+    }
+
+    /**
+     * 字符串首字母大写
+     * @param str
+     * @return
+     */
+    private String upFirstWord(String str) {
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 }
