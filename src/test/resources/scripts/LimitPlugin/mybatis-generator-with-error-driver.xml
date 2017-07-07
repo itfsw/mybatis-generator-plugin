@@ -20,20 +20,13 @@
         "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
 <generatorConfiguration>
     <properties resource="db.properties"/>
-
     <!--导入属性配置 -->
     <context id="default" targetRuntime="MyBatis3">
         <!-- 插件 -->
-        <!-- 注释插件 -->
-        <plugin type="com.itfsw.mybatis.generator.plugins.CommentPlugin">
-            <property name="template" value="src/test/resources/scripts/ComentPlugin/test-comment.ftl"/>
-        </plugin>
+        <plugin type="com.itfsw.mybatis.generator.plugins.LimitPlugin"/>
 
-        <commentGenerator>
-            <property name="addRemarkComments" value="true"/>
-        </commentGenerator>
         <!--jdbc的数据库连接 -->
-        <jdbcConnection driverClass="${driver}" connectionURL="${url}" userId="${username}" password="${password}" />
+        <jdbcConnection driverClass="org.hsqldb.jdbcDriver" connectionURL="jdbc:hsqldb:mem:aname" userId="sa" />
         <!-- Model模型生成器,用来生成含有主键key的类，记录类 以及查询Example类
             targetPackage     指定生成的model生成所在的包名
             targetProject     指定在该项目下所在的路径  -->
