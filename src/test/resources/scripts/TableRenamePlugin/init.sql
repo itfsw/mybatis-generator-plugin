@@ -16,15 +16,19 @@ Date: 2017-06-26 17:30:13
 SET FOREIGN_KEY_CHECKS=0;
 
 -- ----------------------------
--- Table structure for tb
+-- Table structure for tb1
 -- ----------------------------
-DROP TABLE IF EXISTS `tb`;
-CREATE TABLE `tb` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '注释1',
-  `field1` varchar(255) DEFAULT NULL COMMENT '注释2',
+DROP TABLE IF EXISTS `tb1`;
+CREATE TABLE `tb1` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id`)
 );
 
 -- ----------------------------
--- Records of tb
+-- Table structure for tb2
 -- ----------------------------
+DROP TABLE IF EXISTS `tb2`;
+CREATE TABLE `tb2` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`)
+);
