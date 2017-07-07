@@ -588,7 +588,7 @@ public class Test {
 ### 11. Table增加前缀插件
 项目中有时会遇到配置多数据源对应多业务的情况，这种情况下可能会出现不同数据源出现重复表名，造成异常冲突。
 该插件允许为表增加前缀，改变最终生成的Model、Mapper、Example类名以及xml名。  
->warning: 请原谅我蹩脚的英文水平，一直没发现插件名称错了，1.0.9版本错误命名为TableSuffixPlugin，属性为suffix请新版本用户对应修正！  
+>warning: 使用[Table重命名插件](12-table重命名插件)可以实现相同功能！  
 
 插件：
 ```xml
@@ -627,7 +627,12 @@ public class Test {
 这种情况下我们就希望能有类似[columnRenamingRule](http://www.mybatis.org/generator/configreference/columnRenamingRule.html)这种重命名插件来修正最终生成的Model、Mapper等命名。
 >该插件解决：使用正则替换table生成的Model、Example、Mapper等命名。
  
->warning：和插件[Table增加前缀插件](#11-table增加前缀插件)联合使用时，需注意顺序问题。
+项目中有时会遇到配置多数据源对应多业务的情况，这种情况下可能会出现不同数据源出现重复表名，造成异常冲突。
+该插件可以实现和[Table增加前缀插件](11-table增加前缀插件)相同的功能，仿照如下配置。  
+```xml
+<property name="searchString" value="^"/>
+<property name="replaceString" value="DB1"/>
+```
 
 插件：
 ```xml
