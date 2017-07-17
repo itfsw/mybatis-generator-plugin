@@ -49,9 +49,22 @@ public class LogicalDeletePluginTest {
      */
     @Test
     public void testWarnings() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+        // 1. 不支持的类型
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LogicalDeletePlugin/mybatis-generator-with-unsupport-type.xml");
         tool.generate();
 
         Assert.assertEquals(tool.getWarnings().get(0), "itfsw(逻辑删除插件):tb逻辑删除列(ts_2)的类型不在支持范围（请使用数字列，字符串列，布尔列）！");
+
+        // 2. 没有找到配置的逻辑删除列
+        tool = MyBatisGeneratorTool.create("scripts/LogicalDeletePlugin/mybatis-generator-with-unfind-column.xml");
+        tool.generate();
+
+        Assert.assertEquals(tool.getWarnings().get(0), "itfsw(逻辑删除插件):tb没有找到您配置的逻辑删除列(ts_999)！");
+
+        // 3. 没有配置逻辑删除值
+        tool = MyBatisGeneratorTool.create("scripts/LogicalDeletePlugin/mybatis-generator-with-unconfig-logicalDeleteValue.xml");
+        tool.generate();
+
+        Assert.assertEquals(tool.getWarnings().get(0), "itfsw(逻辑删除插件):tb没有找到您配置的逻辑删除值，请全局或者局部配置logicalDeleteValue和logicalUnDeleteValue值！");
     }
 }
