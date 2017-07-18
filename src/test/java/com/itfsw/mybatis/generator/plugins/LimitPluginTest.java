@@ -65,38 +65,33 @@ public class LimitPluginTest {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LimitPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
-            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) {
-                try {
-                    // 1. 测试limit 方法
-                    ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 测试limit 方法
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
 
-                    ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
-                    tbExample.invoke("limit", 5);
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                tbExample.invoke("limit", 5);
 
-                    // 调用limit(5)方法
-                    String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
-                    Assert.assertEquals(sql, "select id, field1 from tb limit 5");
-                    // 调用limit(1, 5)方法
-                    tbExample.invoke("limit", 1, 5);
-                    sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
-                    Assert.assertEquals(sql, "select id, field1 from tb limit 1, 5");
-                    // 执行一次看结果
-                    List list = (List) tbMapper.invoke("selectByExample", tbExample.getObject());
-                    Assert.assertEquals(list.size(), 5);
-                    Assert.assertEquals(new ObjectUtil(list.get(0)).get("id"), 2l);
+                // 调用limit(5)方法
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
+                Assert.assertEquals(sql, "select id, field1 from tb limit 5");
+                // 调用limit(1, 5)方法
+                tbExample.invoke("limit", 1, 5);
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
+                Assert.assertEquals(sql, "select id, field1 from tb limit 1, 5");
+                // 执行一次看结果
+                List list = (List) tbMapper.invoke("selectByExample", tbExample.getObject());
+                Assert.assertEquals(list.size(), 5);
+                Assert.assertEquals(new ObjectUtil(list.get(0)).get("id"), 2l);
 
-                    // 2. 测试page 方法
-                    tbExample.invoke("page", 2, 3);
-                    sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
-                    Assert.assertEquals(sql, "select id, field1 from tb limit 6, 3");
-                    // 执行
-                    list = (List) tbMapper.invoke("selectByExample", tbExample.getObject());
-                    Assert.assertEquals(list.size(), 3);
-                    Assert.assertEquals(new ObjectUtil(list.get(0)).get("id"), 7l);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Assert.assertTrue(false);
-                }
+                // 2. 测试page 方法
+                tbExample.invoke("page", 2, 3);
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
+                Assert.assertEquals(sql, "select id, field1 from tb limit 6, 3");
+                // 执行
+                list = (List) tbMapper.invoke("selectByExample", tbExample.getObject());
+                Assert.assertEquals(list.size(), 3);
+                Assert.assertEquals(new ObjectUtil(list.get(0)).get("id"), 7l);
             }
         });
     }

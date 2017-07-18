@@ -100,43 +100,38 @@ public class BatchInsertPluginTest {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BatchInsertPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
-            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) {
-                try {
-                    // 1. 普通Mapper参数中List泛型为普通Model
-                    Class clsTbMapper = loader.loadClass(packagz + ".TbMapper");
-                    int count = 0;
-                    for (Method method : clsTbMapper.getDeclaredMethods()) {
-                        if (method.getName().equals("batchInsert")) {
-                            Assert.assertEquals(Util.getListActualType(method.getGenericParameterTypes()[0]), packagz + ".Tb");
-                            count++;
-                        }
-                        if (method.getName().equals("batchInsertSelective")) {
-                            Assert.assertEquals(Util.getListActualType(method.getGenericParameterTypes()[0]), packagz + ".Tb");
-                            Assert.assertEquals(method.getGenericParameterTypes()[1].getTypeName(), packagz + ".Tb$Column[]");
-                            count++;
-                        }
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 普通Mapper参数中List泛型为普通Model
+                Class clsTbMapper = loader.loadClass(packagz + ".TbMapper");
+                int count = 0;
+                for (Method method : clsTbMapper.getDeclaredMethods()) {
+                    if (method.getName().equals("batchInsert")) {
+                        Assert.assertEquals(Util.getListActualType(method.getGenericParameterTypes()[0]), packagz + ".Tb");
+                        count++;
                     }
-                    Assert.assertEquals(count, 2);
-
-                    // 2. 带有WithBlobs
-                    Class clsTbBlobsMapper = loader.loadClass(packagz + ".TbBlobsMapper");
-                    count = 0;
-                    for (Method method : clsTbBlobsMapper.getDeclaredMethods()) {
-                        if (method.getName().equals("batchInsert")) {
-                            Assert.assertEquals(Util.getListActualType(method.getGenericParameterTypes()[0]), packagz + ".TbBlobsWithBLOBs");
-                            count++;
-                        }
-                        if (method.getName().equals("batchInsertSelective")) {
-                            Assert.assertEquals(Util.getListActualType(method.getGenericParameterTypes()[0]), packagz + ".TbBlobsWithBLOBs");
-                            Assert.assertEquals(method.getGenericParameterTypes()[1].getTypeName(), packagz + ".TbBlobsWithBLOBs$Column[]");
-                            count++;
-                        }
+                    if (method.getName().equals("batchInsertSelective")) {
+                        Assert.assertEquals(Util.getListActualType(method.getGenericParameterTypes()[0]), packagz + ".Tb");
+                        Assert.assertEquals(method.getGenericParameterTypes()[1].getTypeName(), packagz + ".Tb$Column[]");
+                        count++;
                     }
-                    Assert.assertEquals(count, 2);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Assert.assertTrue(false);
                 }
+                Assert.assertEquals(count, 2);
+
+                // 2. 带有WithBlobs
+                Class clsTbBlobsMapper = loader.loadClass(packagz + ".TbBlobsMapper");
+                count = 0;
+                for (Method method : clsTbBlobsMapper.getDeclaredMethods()) {
+                    if (method.getName().equals("batchInsert")) {
+                        Assert.assertEquals(Util.getListActualType(method.getGenericParameterTypes()[0]), packagz + ".TbBlobsWithBLOBs");
+                        count++;
+                    }
+                    if (method.getName().equals("batchInsertSelective")) {
+                        Assert.assertEquals(Util.getListActualType(method.getGenericParameterTypes()[0]), packagz + ".TbBlobsWithBLOBs");
+                        Assert.assertEquals(method.getGenericParameterTypes()[1].getTypeName(), packagz + ".TbBlobsWithBLOBs$Column[]");
+                        count++;
+                    }
+                }
+                Assert.assertEquals(count, 2);
             }
         });
     }
@@ -149,31 +144,26 @@ public class BatchInsertPluginTest {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BatchInsertPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
-            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) {
-                try {
-                    // 1. 测试sql
-                    ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
-                    List<Object> params = new ArrayList<>();
-                    params.add(
-                            new ObjectUtil(loader, packagz + ".Tb")
-                                    .set("field1", "test")
-                                    .getObject()
-                    );
-                    params.add(
-                            new ObjectUtil(loader, packagz + ".Tb")
-                                    .set("field1", "test")
-                                    .set("field2", 1)
-                                    .getObject()
-                    );
-                    String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "batchInsert", params);
-                    Assert.assertEquals(sql, "insert into tb (field1, field2) values ('test', null) ,  ('test', 1)");
-                    // 2. 执行sql
-                    Object count = tbMapper.invoke("batchInsert", params);
-                    Assert.assertEquals(count, 2);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Assert.assertTrue(false);
-                }
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 测试sql
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+                List<Object> params = new ArrayList<>();
+                params.add(
+                        new ObjectUtil(loader, packagz + ".Tb")
+                                .set("field1", "test")
+                                .getObject()
+                );
+                params.add(
+                        new ObjectUtil(loader, packagz + ".Tb")
+                                .set("field1", "test")
+                                .set("field2", 1)
+                                .getObject()
+                );
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "batchInsert", params);
+                Assert.assertEquals(sql, "insert into tb (field1, field2) values ('test', null) ,  ('test', 1)");
+                // 2. 执行sql
+                Object count = tbMapper.invoke("batchInsert", params);
+                Assert.assertEquals(count, 2);
             }
         });
     }
@@ -186,38 +176,31 @@ public class BatchInsertPluginTest {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BatchInsertPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
-            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) {
-                try {
-                    // 1. 测试sql
-                    ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
-                    List<Object> params = new ArrayList<>();
-                    params.add(
-                            new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs")
-                                    .set("field1", "test")
-                                    .getObject()
-                    );
-                    params.add(
-                            new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs")
-                                    .set("field1", "test")
-                                    .set("field2", "test123")
-                                    .getObject()
-                    );
-                    ObjectUtil columnField2 = new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs$Column#field2");
-                    // java 动态参数不能有两个会冲突，最后一个封装成Array!!!必须使用反射创建指定类型数组，不然调用invoke对了可变参数会检查类型！
-                    Object columns = Array.newInstance(columnField2.getCls(), 1);
-                    Array.set(columns, 0, columnField2.getObject());
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 测试sql
+                ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
+                List<Object> params = new ArrayList<>();
+                params.add(
+                        new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs")
+                                .set("field1", "test")
+                                .getObject()
+                );
+                params.add(
+                        new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs")
+                                .set("field1", "test")
+                                .set("field2", "test123")
+                                .getObject()
+                );
+                ObjectUtil columnField2 = new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs$Column#field2");
+                // java 动态参数不能有两个会冲突，最后一个封装成Array!!!必须使用反射创建指定类型数组，不然调用invoke对了可变参数会检查类型！
+                Object columns = Array.newInstance(columnField2.getCls(), 1);
+                Array.set(columns, 0, columnField2.getObject());
 
-                    String sql = SqlHelper.getFormatMapperSql(tbBlobsMapper.getObject(), "batchInsertSelective", params, columns);
-                    Assert.assertEquals(sql, "insert into tb_blobs ( field2 ) values ( 'null' ) ,  ( 'test123' )");
-                    // 2. 执行sql
-                    Object count = tbBlobsMapper.invoke("batchInsertSelective", params, columns);
-                    Assert.assertEquals(count, 2);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Assert.assertTrue(false);
-                } finally {
-                    sqlSession.close();
-                }
+                String sql = SqlHelper.getFormatMapperSql(tbBlobsMapper.getObject(), "batchInsertSelective", params, columns);
+                Assert.assertEquals(sql, "insert into tb_blobs ( field2 ) values ( 'null' ) ,  ( 'test123' )");
+                // 2. 执行sql
+                Object count = tbBlobsMapper.invoke("batchInsertSelective", params, columns);
+                Assert.assertEquals(count, 2);
             }
         });
     }

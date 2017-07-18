@@ -16,8 +16,8 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.tools.DBHelper;
-import com.itfsw.mybatis.generator.plugins.tools.MyBatisGeneratorTool;
+import com.itfsw.mybatis.generator.plugins.tools.*;
+import org.apache.ibatis.session.SqlSession;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -66,5 +66,26 @@ public class LogicalDeletePluginTest {
         tool.generate();
 
         Assert.assertEquals(tool.getWarnings().get(0), "itfsw(逻辑删除插件):tb没有找到您配置的逻辑删除值，请全局或者局部配置logicalDeleteValue和logicalUnDeleteValue值！");
+    }
+
+    /**
+     * 测试 logicalDeleteByExample
+     */
+    @Test
+    public void testLogicalDeleteByExample() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LogicalDeletePlugin/mybatis-generator.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception{
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdEqualTo", 1l);
+
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "logicalDeleteByExample", tbExample.getObject());
+                Assert.assertEquals(sql, "select field1 from tb WHERE (  id = '3' )  order by field2 asc limit 1");
+            }
+        });
     }
 }

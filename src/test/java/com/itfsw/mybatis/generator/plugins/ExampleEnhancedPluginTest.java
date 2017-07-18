@@ -56,20 +56,15 @@ public class ExampleEnhancedPluginTest {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ExampleEnhancedPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
-            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) {
-                try {
-                    ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
 
-                    ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
-                    ObjectUtil tbExampleCriteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil tbExampleCriteria = new ObjectUtil(tbExample.invoke("createCriteria"));
 
-                    // 调用example方法能正常返回
-                    String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExampleCriteria.invoke("example"));
-                    Assert.assertEquals(sql, "select id, field1 from tb");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Assert.assertTrue(false);
-                }
+                // 调用example方法能正常返回
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExampleCriteria.invoke("example"));
+                Assert.assertEquals(sql, "select id, field1 from tb");
             }
         });
     }
@@ -82,22 +77,17 @@ public class ExampleEnhancedPluginTest {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ExampleEnhancedPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
-            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) {
-                try {
-                    ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
 
-                    ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
-                    Object order = Array.newInstance(String.class, 2);
-                    Array.set(order, 0, "id desc");
-                    Array.set(order, 1, "field1 asc");
-                    tbExample.invoke("orderBy", order);  // 可变参数方法直接设置order by
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                Object order = Array.newInstance(String.class, 2);
+                Array.set(order, 0, "id desc");
+                Array.set(order, 1, "field1 asc");
+                tbExample.invoke("orderBy", order);  // 可变参数方法直接设置order by
 
-                    String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
-                    Assert.assertEquals(sql, "select id, field1 from tb order by id desc , field1 asc");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Assert.assertTrue(false);
-                }
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
+                Assert.assertEquals(sql, "select id, field1 from tb order by id desc , field1 asc");
             }
         });
     }
@@ -151,7 +141,7 @@ public class ExampleEnhancedPluginTest {
     private class TestInvocationHandler implements InvocationHandler {
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            if (method.getName().equals("add")){
+            if (method.getName().equals("add")) {
                 ObjectUtil tbExampleCriteria = new ObjectUtil(args[0]);
                 tbExampleCriteria.invoke("andIdEqualTo", 5l);
                 return tbExampleCriteria.getObject();

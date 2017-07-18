@@ -51,56 +51,51 @@ public class SelectSelectivePluginTest {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/SelectSelectivePlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
-            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) {
-                try {
-                    // 1. 测试sql
-                    ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 测试sql
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
 
-                    ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
-                    ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
-                    criteria.invoke("andIdLessThan", 100l);
-                    tbExample.set("orderByClause", "field2 asc");
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdLessThan", 100l);
+                tbExample.set("orderByClause", "field2 asc");
 
-                    ObjectUtil columnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
-                    // java 动态参数不能有两个会冲突，最后一个封装成Array!!!必须使用反射创建指定类型数组，不然调用invoke对了可变参数会检查类型！
-                    Object columns1 = Array.newInstance(columnField1.getCls(), 1);
-                    Array.set(columns1, 0, columnField1.getObject());
+                ObjectUtil columnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
+                // java 动态参数不能有两个会冲突，最后一个封装成Array!!!必须使用反射创建指定类型数组，不然调用invoke对了可变参数会检查类型！
+                Object columns1 = Array.newInstance(columnField1.getCls(), 1);
+                Array.set(columns1, 0, columnField1.getObject());
 
-                    String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns1);
-                    Assert.assertEquals(sql, "select field1 from tb WHERE (  id < '100' )  order by field2 asc");
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns1);
+                Assert.assertEquals(sql, "select field1 from tb WHERE (  id < '100' )  order by field2 asc");
 
-                    ObjectUtil columnField2 = new ObjectUtil(loader, packagz + ".Tb$Column#field2");
-                    Object columns2 = Array.newInstance(columnField1.getCls(), 2);
-                    Array.set(columns2, 0, columnField1.getObject());
-                    Array.set(columns2, 1, columnField2.getObject());
+                ObjectUtil columnField2 = new ObjectUtil(loader, packagz + ".Tb$Column#field2");
+                Object columns2 = Array.newInstance(columnField1.getCls(), 2);
+                Array.set(columns2, 0, columnField1.getObject());
+                Array.set(columns2, 1, columnField2.getObject());
 
-                    sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns2);
-                    Assert.assertEquals(sql, "select field1 ,  field2 from tb WHERE (  id < '100' )  order by field2 asc");
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns2);
+                Assert.assertEquals(sql, "select field1 ,  field2 from tb WHERE (  id < '100' )  order by field2 asc");
 
 
-                    // 2. 执行sql
-                    List list = (List) tbMapper.invoke("selectByExampleSelective", tbExample.getObject(), columns1);
-                    Assert.assertEquals(list.size(), 3);
-                    int index = 0;
-                    for (Object obj : list) {
-                        ObjectUtil objectUtil = new ObjectUtil(obj);
-                        // 没有查询这两个字段
-                        if (objectUtil.get("id") != null || objectUtil.get("field2") != null) {
-                            Assert.assertTrue(false);
-                        }
-                        if (index == 0) {
-                            Assert.assertEquals(objectUtil.get("field1"), "fd1");
-                        } else if (index == 1) {
-                            Assert.assertNull(objectUtil.get("field1"));
-                        } else {
-                            Assert.assertEquals(objectUtil.get("field1"), "fd3");
-                        }
-
-                        index++;
+                // 2. 执行sql
+                List list = (List) tbMapper.invoke("selectByExampleSelective", tbExample.getObject(), columns1);
+                Assert.assertEquals(list.size(), 3);
+                int index = 0;
+                for (Object obj : list) {
+                    ObjectUtil objectUtil = new ObjectUtil(obj);
+                    // 没有查询这两个字段
+                    if (objectUtil.get("id") != null || objectUtil.get("field2") != null) {
+                        Assert.assertTrue(false);
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Assert.assertTrue(false);
+                    if (index == 0) {
+                        Assert.assertEquals(objectUtil.get("field1"), "fd1");
+                    } else if (index == 1) {
+                        Assert.assertNull(objectUtil.get("field1"));
+                    } else {
+                        Assert.assertEquals(objectUtil.get("field1"), "fd3");
+                    }
+
+                    index++;
                 }
             }
         });
@@ -115,43 +110,35 @@ public class SelectSelectivePluginTest {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/SelectSelectivePlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
-            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) {
-                try {
-                    // 1. 测试sql
-                    ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 测试sql
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
 
-                    ObjectUtil columnField1 = new ObjectUtil(loader, packagz + ".TbKeys$Column#field1");
-                    // java 动态参数不能有两个会冲突，最后一个封装成Array!!!必须使用反射创建指定类型数组，不然调用invoke对了可变参数会检查类型！
-                    Object columns1 = Array.newInstance(columnField1.getCls(), 1);
-                    Array.set(columns1, 0, columnField1.getObject());
+                ObjectUtil columnField1 = new ObjectUtil(loader, packagz + ".TbKeys$Column#field1");
+                // java 动态参数不能有两个会冲突，最后一个封装成Array!!!必须使用反射创建指定类型数组，不然调用invoke对了可变参数会检查类型！
+                Object columns1 = Array.newInstance(columnField1.getCls(), 1);
+                Array.set(columns1, 0, columnField1.getObject());
 
-                    String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByPrimaryKeySelective", 1, columns1);
-                    Assert.assertEquals(sql, "select field1 from tb where id = 1");
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByPrimaryKeySelective", 1, columns1);
+                Assert.assertEquals(sql, "select field1 from tb where id = 1");
 
-                    // 2. 测试xxxKey
-                    ObjectUtil tbKeysMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbKeysMapper")));
-                    ObjectUtil tbKeysKey = new ObjectUtil(loader, packagz + ".TbKeysKey");
-                    tbKeysKey.set("key1", 1l);
-                    tbKeysKey.set("key2", "2");
+                // 2. 测试xxxKey
+                ObjectUtil tbKeysMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbKeysMapper")));
+                ObjectUtil tbKeysKey = new ObjectUtil(loader, packagz + ".TbKeysKey");
+                tbKeysKey.set("key1", 1l);
+                tbKeysKey.set("key2", "2");
 
-                    ObjectUtil columnField2 = new ObjectUtil(loader, packagz + ".TbKeys$Column#field2");
-                    // java 动态参数不能有两个会冲突，最后一个封装成Array!!!必须使用反射创建指定类型数组，不然调用invoke对了可变参数会检查类型！
-                    Object columns2 = Array.newInstance(columnField2.getCls(), 1);
-                    Array.set(columns2, 0, columnField2.getObject());
+                ObjectUtil columnField2 = new ObjectUtil(loader, packagz + ".TbKeys$Column#field2");
+                // java 动态参数不能有两个会冲突，最后一个封装成Array!!!必须使用反射创建指定类型数组，不然调用invoke对了可变参数会检查类型！
+                Object columns2 = Array.newInstance(columnField2.getCls(), 1);
+                Array.set(columns2, 0, columnField2.getObject());
 
-                    sql = SqlHelper.getFormatMapperSql(tbKeysMapper.getObject(), "selectByPrimaryKeySelective", tbKeysKey.getObject(), columns2);
-                    Assert.assertEquals(sql, "select field2 from tb_keys where key1 = 1 and key2 = '2'");
+                sql = SqlHelper.getFormatMapperSql(tbKeysMapper.getObject(), "selectByPrimaryKeySelective", tbKeysKey.getObject(), columns2);
+                Assert.assertEquals(sql, "select field2 from tb_keys where key1 = 1 and key2 = '2'");
 
-                    // 3. 执行sql
-                    Object tbKeys = tbKeysMapper.invoke("selectByPrimaryKeySelective", tbKeysKey.getObject(), columns1);
-                    Assert.assertEquals(new ObjectUtil(tbKeys).get("field1"), "fd1");
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Assert.assertTrue(false);
-                } finally {
-                    sqlSession.close();
-                }
+                // 3. 执行sql
+                Object tbKeys = tbKeysMapper.invoke("selectByPrimaryKeySelective", tbKeysKey.getObject(), columns1);
+                Assert.assertEquals(new ObjectUtil(tbKeys).get("field1"), "fd1");
             }
         });
     }
@@ -176,34 +163,28 @@ public class SelectSelectivePluginTest {
         tool = MyBatisGeneratorTool.create("scripts/SelectSelectivePlugin/mybatis-generator-with-SelectOneByExamplePlugin.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
-            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) {
-                try {
-                    // 1. 测试sql
-                    ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 测试sql
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
 
-                    ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
-                    ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
-                    criteria.invoke("andIdEqualTo", 3l);
-                    tbExample.set("orderByClause", "field2 asc");
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdEqualTo", 3l);
+                tbExample.set("orderByClause", "field2 asc");
 
-                    ObjectUtil columnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
-                    // java 动态参数不能有两个会冲突，最后一个封装成Array!!!必须使用反射创建指定类型数组，不然调用invoke对了可变参数会检查类型！
-                    Object columns1 = Array.newInstance(columnField1.getCls(), 1);
-                    Array.set(columns1, 0, columnField1.getObject());
+                ObjectUtil columnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
+                // java 动态参数不能有两个会冲突，最后一个封装成Array!!!必须使用反射创建指定类型数组，不然调用invoke对了可变参数会检查类型！
+                Object columns1 = Array.newInstance(columnField1.getCls(), 1);
+                Array.set(columns1, 0, columnField1.getObject());
 
-                    String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectOneByExampleSelective", tbExample.getObject(), columns1);
-                    Assert.assertEquals(sql, "select field1 from tb WHERE (  id = '3' )  order by field2 asc limit 1");
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectOneByExampleSelective", tbExample.getObject(), columns1);
+                Assert.assertEquals(sql, "select field1 from tb WHERE (  id = '3' )  order by field2 asc limit 1");
 
-                    // 2. 执行sql
-                    Object result = tbMapper.invoke("selectOneByExampleSelective", tbExample.getObject(), columns1);
-                    ObjectUtil tb = new ObjectUtil(result);
-                    Assert.assertEquals(tb.get("field1"), "fd3");
-                    Assert.assertNull(tb.get("field2"));
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Assert.assertTrue(false);
-                }
+                // 2. 执行sql
+                Object result = tbMapper.invoke("selectOneByExampleSelective", tbExample.getObject(), columns1);
+                ObjectUtil tb = new ObjectUtil(result);
+                Assert.assertEquals(tb.get("field1"), "fd3");
+                Assert.assertNull(tb.get("field2"));
             }
         });
     }

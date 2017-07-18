@@ -71,8 +71,9 @@ public abstract class AbstractShellCallback implements ShellCallback {
      * @param sqlSession
      * @param loader
      * @param packagz
+     * @throws Exception
      */
-    public abstract void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz);
+    public abstract void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception;
 
     /* (non-Javadoc)
          * @see org.mybatis.generator.api.ShellCallback#getDirectory(java.lang.String, java.lang.String)
