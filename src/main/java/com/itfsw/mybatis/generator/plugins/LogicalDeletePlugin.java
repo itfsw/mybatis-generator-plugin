@@ -328,14 +328,6 @@ public class LogicalDeletePlugin extends BasePlugin {
 
             ArrayList<Field> fields = (ArrayList<Field>) topLevelClass.getFields();
 
-            // TODO 过期的
-            Field field2 = JavaElementGeneratorTools.generateStaticFinalField("DEL_FLAG", this.logicalDeleteColumn.getFullyQualifiedJavaType(), DEL_FLAG_NAME);
-            commentGenerator.addFieldComment(field2, introspectedTable);
-            field2.addAnnotation("@Deprecated");
-            // 常量插入到第一位
-            fields.add(0, field2);
-            logger.debug("itfsw(逻辑删除插件):"+topLevelClass.getType().getShortName()+"增加方法DEL_FLAG的常量。");
-
             // 添加删除标志位常量 DEL_FLAG_OFF
             String delFlagOnValue;
             if (this.logicalDeleteValue == null || "NULL".equalsIgnoreCase(this.logicalDeleteValue)){
