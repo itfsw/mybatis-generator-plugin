@@ -43,7 +43,7 @@ public class ModelColumnPlugin extends BasePlugin {
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         topLevelClass.addInnerEnum(this.generateColumnEnum(topLevelClass, introspectedTable));
-        return true;
+        return super.modelBaseRecordClassGenerated(topLevelClass, introspectedTable);
     }
 
     /**
@@ -56,7 +56,19 @@ public class ModelColumnPlugin extends BasePlugin {
     @Override
     public boolean modelRecordWithBLOBsClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         topLevelClass.addInnerEnum(this.generateColumnEnum(topLevelClass, introspectedTable));
-        return true;
+        return super.modelRecordWithBLOBsClassGenerated(topLevelClass, introspectedTable);
+    }
+
+    /**
+     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     * @param topLevelClass
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public boolean modelPrimaryKeyClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        topLevelClass.addInnerEnum(this.generateColumnEnum(topLevelClass, introspectedTable));
+        return super.modelPrimaryKeyClassGenerated(topLevelClass, introspectedTable);
     }
 
     /**
