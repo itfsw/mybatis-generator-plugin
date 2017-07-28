@@ -126,11 +126,10 @@ public class SqlHelper {
                 params.put(paramName, i >= args.length ? null : args[i]);
             }
         }
-        if (args != null && args.length == 1) {
+        if (useParameter(method, args)) {
             return getNamespaceSql(session, fullMapperMethodName, args[0]);
-        } else {
-            return getNamespaceSql(session, fullMapperMethodName, params);
         }
+        return getNamespaceSql(session, fullMapperMethodName, params);
     }
 
 
@@ -152,7 +151,6 @@ public class SqlHelper {
      * @return
      */
     public static String getNamespaceSql(SqlSession session, String namespace, Object params) {
-        params = wrapCollection(params);
         Configuration configuration = session.getConfiguration();
         MappedStatement mappedStatement = configuration.getMappedStatement(namespace);
         TypeHandlerRegistry typeHandlerRegistry = mappedStatement.getConfiguration().getTypeHandlerRegistry();
@@ -266,21 +264,21 @@ public class SqlHelper {
     }
 
     /**
-     * 简单包装参数
-     * @param object
+     * 只有一个参数且没有使用注解
+     * @param method
+     * @param args
      * @return
      */
-    private static Object wrapCollection(final Object object) {
-        if (object instanceof List) {
-            Map<String, Object> map = new HashMap<String, Object>();
-            map.put("list", object);
-            return map;
-        } else if (object != null && object.getClass().isArray()) {
-            Map<String, Object> map = new HashMap<String, Object>();
-            map.put("array", object);
-            return map;
+    private static boolean useParameter(Method method, Object... args){
+        if (args != null && args.length == 1){
+            final Object[] paramAnnos = method.getParameterAnnotations()[0];
+            for (Object paramAnno : paramAnnos) {
+                if (paramAnno instanceof Param) {
+                    return false;
+                }
+            }
+            return true;
         }
-        return object;
+        return false;
     }
-
 }

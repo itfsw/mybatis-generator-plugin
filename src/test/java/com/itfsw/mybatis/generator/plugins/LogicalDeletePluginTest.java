@@ -25,7 +25,9 @@ import org.mybatis.generator.exception.InvalidConfigurationException;
 import org.mybatis.generator.exception.XMLParserException;
 
 import java.io.IOException;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * ---------------------------------------------------------------------------
@@ -83,8 +85,66 @@ public class LogicalDeletePluginTest {
                 ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
                 criteria.invoke("andIdEqualTo", 1l);
 
+                // 验证sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "logicalDeleteByExample", tbExample.getObject());
-                tbMapper.invoke("logicalDeleteByExample", tbExample.getObject());
+                Assert.assertEquals(sql, "update tb set del_flag = 1 WHERE (  id = '1' )");
+                // 验证执行
+                Object result = tbMapper.invoke("logicalDeleteByExample", tbExample.getObject());
+                Assert.assertEquals(result, 1);
+                ResultSet rs = DBHelper.execute(sqlSession.getConnection(), "select del_flag from tb where id = 1");
+                rs.first();
+                Assert.assertEquals(rs.getInt("del_flag"), 1);
+            }
+        });
+    }
+
+    /**
+     * 测试 logicalDeleteByPrimaryKey
+     */
+    @Test
+    public void testLogicalDeleteByPrimaryKey() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LogicalDeletePlugin/mybatis-generator.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception{
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                // 验证sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "logicalDeleteByPrimaryKey", 2l);
+                Assert.assertEquals(sql, "update tb set del_flag = 1 where id = 2");
+                // 验证执行
+                Object result = tbMapper.invoke("logicalDeleteByPrimaryKey", 2l);
+                Assert.assertEquals(result, 1);
+                ResultSet rs = DBHelper.execute(sqlSession.getConnection(), "select del_flag from tb where id = 2");
+                rs.first();
+                Assert.assertEquals(rs.getInt("del_flag"), 1);
+            }
+        });
+    }
+
+    /**
+     * 测试关联生成的方法和常量
+     */
+    @Test
+    public void testOtherMethods() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LogicalDeletePlugin/mybatis-generator.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception{
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andDeleted", true);
+                criteria.invoke("andIdEqualTo", 3l);
+
+
+                // 验证sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
+                Assert.assertEquals(sql, "select id, del_flag, ts_1, ts_3, ts_4 from tb WHERE (  del_flag = '1' and id = '3' )");
+                // 验证执行
+                Object result = tbMapper.invoke("selectByExample", tbExample.getObject());
+                Assert.assertEquals(((List)result).size(), 1);
             }
         });
     }

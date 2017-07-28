@@ -22,10 +22,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Properties;
 
 /**
@@ -88,6 +85,21 @@ public class DBHelper {
         inputStream.close();
         statement.close();
         connection.close();
+    }
+
+    /**
+     * 执行sql
+     *
+     * @param connection
+     * @param sql
+     * @return
+     * @throws SQLException
+     */
+    public static ResultSet execute(Connection connection, String sql) throws SQLException {
+        Statement statement = connection.createStatement();
+        statement.execute(sql);
+        ResultSet resultSet = statement.getResultSet();
+        return resultSet;
     }
 
 }

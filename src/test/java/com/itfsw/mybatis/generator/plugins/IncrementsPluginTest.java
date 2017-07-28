@@ -23,7 +23,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.List;
 
@@ -118,9 +117,7 @@ public class IncrementsPluginTest {
                 // inc_f1 增加100
                 Object result = tbMapper.invoke("updateByExampleSelective", tbBuilder.invoke("build"), tbExample.getObject());
                 Assert.assertEquals(result, 1);
-                PreparedStatement preparedStatement = sqlSession.getConnection().prepareStatement("select inc_f1 from tb where id = 3");
-                preparedStatement.execute();
-                ResultSet rs = preparedStatement.getResultSet();
+                ResultSet rs = DBHelper.execute(sqlSession.getConnection(), "select inc_f1 from tb where id = 3");
                 rs.first();
                 Assert.assertEquals(rs.getInt("inc_f1"), 103);
 
@@ -130,9 +127,7 @@ public class IncrementsPluginTest {
                 result = tbMapper.invoke("updateByExampleSelective", tbBuilder.invoke("build"), tbExample.getObject());
                 Assert.assertEquals(result, 1);
                 // 验证执行结果
-                preparedStatement = sqlSession.getConnection().prepareStatement("select inc_f1 from tb where id = 3");
-                preparedStatement.execute();
-                rs = preparedStatement.getResultSet();
+                rs = DBHelper.execute(sqlSession.getConnection(), "select inc_f1 from tb where id = 3");
                 rs.first();
                 Assert.assertEquals(rs.getInt("inc_f1"), 53);
 
@@ -157,9 +152,7 @@ public class IncrementsPluginTest {
                 result = tbKeysMapper.invoke("updateByPrimaryKeySelective", tbKeysBuilder.invoke("build"));
                 Assert.assertEquals(result, 1);
                 // 验证执行结果
-                preparedStatement = sqlSession.getConnection().prepareStatement("select inc_f1, inc_f3 from tb_keys where key1 = 1 and key2 = 'k1'");
-                preparedStatement.execute();
-                rs = preparedStatement.getResultSet();
+                rs = DBHelper.execute(sqlSession.getConnection(), "select inc_f1, inc_f3 from tb_keys where key1 = 1 and key2 = 'k1'");
                 rs.first();
                 Assert.assertEquals(rs.getInt("inc_f1"), 11);
                 Assert.assertEquals(rs.getInt("inc_f3"), 33);

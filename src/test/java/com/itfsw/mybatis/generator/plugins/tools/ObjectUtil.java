@@ -41,17 +41,17 @@ public class ObjectUtil {
      * @param cls
      */
     public ObjectUtil(ClassLoader loader, String cls) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-        if (cls.indexOf("#") == -1){
+        if (cls.indexOf("#") == -1) {
             this.cls = loader.loadClass(cls);
             this.object = this.cls.newInstance();
         } else {
             String[] strs = cls.split("#");
             this.cls = loader.loadClass(strs[0]);
-            if (this.cls.isEnum()){
+            if (this.cls.isEnum()) {
                 Object[] constants = this.cls.getEnumConstants();
-                for (Object object : constants){
+                for (Object object : constants) {
                     ObjectUtil eObject = new ObjectUtil(object);
-                    if (strs[1].equals(eObject.get("name"))){
+                    if (strs[1].equals(eObject.get("name"))) {
                         this.object = object;
                         break;
                     }
@@ -89,7 +89,6 @@ public class ObjectUtil {
 
     /**
      * 获取值
-     *
      * @param filedName
      * @return
      * @throws IllegalAccessException
@@ -128,8 +127,19 @@ public class ObjectUtil {
                 // 暂时只检查前几位相同就假设为可变参数
                 int check = args.length > 0 ? (args[args.length - 1] instanceof Array ? args.length - 1 : args.length) : 0;
                 for (int i = 0; i < check; i++) {
-                    if (!(parameterTypes[i].isAssignableFrom(args[i].getClass()))) {
+                    Class parameterType = parameterTypes[i];
+                    if (!(parameterType.isAssignableFrom(args[i].getClass()))) {
                         flag = false;
+                    }
+                    // 基础类型
+                    if (parameterType.isPrimitive()) {
+                        switch (parameterType.getTypeName()) {
+                            case "boolean":
+                                flag = args[i] instanceof Boolean;
+                                break;
+                            default:
+                                flag = false;
+                        }
                     }
                 }
 
@@ -143,16 +153,15 @@ public class ObjectUtil {
 
     /**
      * 获取指定名称的方法
-     *
      * @param name
      * @return
      */
-    public List<Method> getMethods(String name){
+    public List<Method> getMethods(String name) {
         List<Method> list = new ArrayList<>();
         Class clazz = this.cls;
-        for (; clazz != Object.class; clazz = clazz.getSuperclass()){
-            for (Method method : clazz.getDeclaredMethods()){
-                if (method.getName().equals(name)){
+        for (; clazz != Object.class; clazz = clazz.getSuperclass()) {
+            for (Method method : clazz.getDeclaredMethods()) {
+                if (method.getName().equals(name)) {
                     list.add(method);
                 }
             }
@@ -171,16 +180,15 @@ public class ObjectUtil {
 
     /**
      * 递归获取所有属性
-     *
      * @param name
      * @return
      */
     private Field getDeclaredField(String name) {
         Class<?> clazz = this.cls;
-        for(; clazz != Object.class ; clazz = clazz.getSuperclass()) {
+        for (; clazz != Object.class; clazz = clazz.getSuperclass()) {
             try {
                 return clazz.getDeclaredField(name);
-            } catch (NoSuchFieldException e){
+            } catch (NoSuchFieldException e) {
                 // 不能操作，递归父类
             }
         }

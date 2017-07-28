@@ -50,16 +50,12 @@ public class DBHelperTest {
         Class.forName(driver);
         Connection connection = DriverManager.getConnection(url, username, password);
 
-        Statement statement = connection.createStatement();
-
         // 执行查询
-        statement.execute("SELECT COUNT(*) as total FROM tb");
-        ResultSet resultSet = statement.getResultSet();
+        ResultSet resultSet = DBHelper.execute(connection, "SELECT COUNT(*) as total FROM tb");
 
         resultSet.first();
         Assert.assertEquals(resultSet.getInt("total"), 4);
 
-        statement.close();
         connection.close();
     }
 }
