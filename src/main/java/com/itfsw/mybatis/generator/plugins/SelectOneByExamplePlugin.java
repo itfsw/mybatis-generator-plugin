@@ -20,16 +20,12 @@ import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
-import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 
@@ -44,74 +40,6 @@ import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 public class SelectOneByExamplePlugin extends BasePlugin {
     public static final String METHOD_SELECT_ONE_BY_EXAMPLE = "selectOneByExample";  // 方法名
     public static final String METHOD_SELECT_ONE_BY_EXAMPLE_WITH_BLOBS = "selectOneByExampleWithBLOBs";  // 方法名
-
-    @Override
-    public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-
-        // 有种情况下ModelBaseRecordClass不会生成不包含BLOBs的构造方法，造成selectOneByExample返回结果找不到对应的构造方法异常
-        if (introspectedTable.hasBLOBColumns() && !introspectedTable.getRules().generateRecordWithBLOBsClass()) {
-            // 添加没有BLOBs的构造方法
-            Method method = new Method();
-            method.setVisibility(JavaVisibility.PUBLIC);
-            method.setConstructor(true);
-            method.setName(topLevelClass.getType().getShortName());
-            commentGenerator.addGeneralMethodComment(method, introspectedTable);
-
-            // 使用没有blobs的字段
-            List<IntrospectedColumn> constructorColumns = introspectedTable.getNonBLOBColumns();
-
-            for (IntrospectedColumn introspectedColumn : constructorColumns) {
-                method.addParameter(new Parameter(introspectedColumn.getFullyQualifiedJavaType(), introspectedColumn.getJavaProperty()));
-                topLevelClass.addImportedType(introspectedColumn.getFullyQualifiedJavaType());
-            }
-
-            StringBuilder sb = new StringBuilder();
-            if (introspectedTable.getRules().generatePrimaryKeyClass()) {
-                boolean comma = false;
-                sb.append("super(");
-                for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
-                    if (comma) {
-                        sb.append(", ");
-                    } else {
-                        comma = true;
-                    }
-                    sb.append(introspectedColumn.getJavaProperty());
-                }
-                sb.append(");");
-                method.addBodyLine(sb.toString());
-            }
-
-            List<IntrospectedColumn> introspectedColumns;
-            if (!introspectedTable.getRules().generatePrimaryKeyClass() && introspectedTable.hasPrimaryKeyColumns()) {
-                introspectedColumns = introspectedTable.getNonBLOBColumns();
-            } else {
-                introspectedColumns = introspectedTable.getBaseColumns();
-            }
-
-            for (IntrospectedColumn introspectedColumn : introspectedColumns) {
-                sb.setLength(0);
-                sb.append("this.");
-                sb.append(introspectedColumn.getJavaProperty());
-                sb.append(" = ");
-                sb.append(introspectedColumn.getJavaProperty());
-                sb.append(';');
-                method.addBodyLine(sb.toString());
-            }
-
-            // 找到原有构造方法位置，保持构造方法放在一起美观
-            ArrayList<Method> methods = (ArrayList<Method>) topLevelClass.getMethods();
-            int index = 0;
-            for (Method m : methods) {
-                index++;
-                if (m.getName().equals(topLevelClass.getType().getShortName())) {
-                    break;
-                }
-            }
-            methods.add(index, method);
-        }
-
-        return true;
-    }
 
     /**
      * Java Client Methods 生成
