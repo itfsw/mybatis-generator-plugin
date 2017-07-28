@@ -19,6 +19,7 @@
 * [自定义注释插件（CommentPlugin）](#13-自定义注释插件)
 * [增量插件（IncrementsPlugin）](#14-增量插件)
 * [查询结果选择性返回插件（SelectSelectivePlugin）](#15-查询结果选择性返回插件)
+* [官方ConstructorBased配置BUG临时修正插件（ConstructorBasedBugFixPlugin）](#16-官方ConstructorBased配置BUG临时修正插件)
 
 ---------------------------------------
 Maven引用：  
@@ -1048,4 +1049,16 @@ public class Test {
         // 同理还有 selectByPrimaryKeySelective，selectOneByExampleSelective（SelectOneByExamplePlugin插件配合使用）方法
     }
 }
+```
+### 16. 官方ConstructorBased配置BUG临时修正插件
+当javaModelGenerator配置constructorBased=true时，如果表中只有一个column类型为“blob”时java model没有生成BaseResultMap对应的构造函数，
+这个bug已经反馈给官方[issues#267](https://github.com/mybatis/generator/issues/267)。  
+> 官方V1.3.6版本将解决这个bug,老版本的可以使用这个插件临时修正问题。  
+
+插件：
+```xml
+<xml>
+    <!-- 官方ConstructorBased配置BUG临时修正插件 -->
+    <plugin type="com.itfsw.mybatis.generator.plugins.ConstructorBasedBugFixPlugin" />
+</xml>
 ```
