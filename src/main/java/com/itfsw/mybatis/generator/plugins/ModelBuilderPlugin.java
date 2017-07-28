@@ -51,7 +51,7 @@ public class ModelBuilderPlugin extends BasePlugin {
         List<IntrospectedColumn> columns = introspectedTable.getRules().generateRecordWithBLOBsClass() ? introspectedTable.getNonBLOBColumns() : introspectedTable.getAllColumns();
         InnerClass innerClass = this.generateModelBuilder(topLevelClass, introspectedTable, columns, true);
         topLevelClass.addInnerClass(innerClass);
-        return true;
+        return super.modelBaseRecordClassGenerated(topLevelClass, introspectedTable);
     }
 
     /**
@@ -65,7 +65,20 @@ public class ModelBuilderPlugin extends BasePlugin {
     public boolean modelRecordWithBLOBsClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         InnerClass innerClass = this.generateModelBuilder(topLevelClass, introspectedTable, introspectedTable.getAllColumns(), false);
         topLevelClass.addInnerClass(innerClass);
-        return true;
+        return super.modelRecordWithBLOBsClassGenerated(topLevelClass, introspectedTable);
+    }
+
+    /**
+     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     * @param topLevelClass
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public boolean modelPrimaryKeyClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        InnerClass innerClass = this.generateModelBuilder(topLevelClass, introspectedTable, introspectedTable.getPrimaryKeyColumns(), false);
+        topLevelClass.addInnerClass(innerClass);
+        return super.modelPrimaryKeyClassGenerated(topLevelClass, introspectedTable);
     }
 
     /**
