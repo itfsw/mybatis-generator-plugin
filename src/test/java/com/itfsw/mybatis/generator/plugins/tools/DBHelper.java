@@ -17,6 +17,7 @@
 package com.itfsw.mybatis.generator.plugins.tools;
 
 import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.session.SqlSession;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -85,6 +86,18 @@ public class DBHelper {
         inputStream.close();
         statement.close();
         connection.close();
+    }
+
+    /**
+     * 执行sql
+     *
+     * @param sqlSession
+     * @param sql
+     * @return
+     * @throws SQLException
+     */
+    public static ResultSet execute(SqlSession sqlSession, String sql) throws SQLException {
+        return execute(sqlSession.getConnection(), sql);
     }
 
     /**
