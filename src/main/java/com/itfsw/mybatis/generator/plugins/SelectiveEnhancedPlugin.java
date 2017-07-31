@@ -174,25 +174,6 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
                         this.replaceEle(ele, "record.", introspectedTable);
                     }
                 }
-                // ====================================== 6. upsertSelectiveWithBLOBs ======================================
-                if ("upsertSelectiveWithBLOBs".equals(id)) {
-                    List<XmlElement> eles = XmlElementGeneratorTools.findXmlElements(xmlElement, "trim");
-                    for (XmlElement ele : eles) {
-                        this.replaceEle(ele, "_parameter.", introspectedTable);
-                    }
-                }
-                // ====================================== 7. upsertByExampleSelectiveWithBLOBs ======================================
-                if ("upsertByExampleSelectiveWithBLOBs".equals(id)) {
-                    List<XmlElement> eles = XmlElementGeneratorTools.findXmlElements(xmlElement, "trim");
-                    this.replaceEle(eles.get(0), "record.", introspectedTable);
-                    // upsertByExampleSelective的第二个trim比较特殊，需另行处理
-                    this.replaceEleForUpsertByExampleSelective(eles.get(1), "record.", introspectedTable, true);
-
-                    List<XmlElement> eles1 = XmlElementGeneratorTools.findXmlElements(xmlElement, "set");
-                    for (XmlElement ele : eles1) {
-                        this.replaceEle(ele, "record.", introspectedTable);
-                    }
-                }
             }
         }
         return true;
