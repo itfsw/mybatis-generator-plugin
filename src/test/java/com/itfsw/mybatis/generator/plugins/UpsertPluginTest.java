@@ -78,17 +78,71 @@ public class UpsertPluginTest {
                 tb.set("field2", 5);
 
                 // sql
-                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertSelective", tb.getObject());
-                Assert.assertEquals(sql, "insert into tb ( id, field1, field2 )  values ( 10, 'ts1', 5 )  on duplicate key update  id = 10, field1 = 'ts1', field2 = 5");
-                Object result = tbMapper.invoke("upsertSelective", tb.getObject());
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsert", tb.getObject());
+                Assert.assertEquals(sql, "insert into tb (id, field1, field2) values (10, 'ts1', 5) on duplicate key update  id = 10,  field1 = 'ts1',  field2 = 5");
+                Object result = tbMapper.invoke("upsert", tb.getObject());
                 Assert.assertEquals(result, 1);
 
                 tb.set("field2", 20);
-                tbMapper.invoke("upsertSelective", tb.getObject());
+                tbMapper.invoke("upsert", tb.getObject());
 
                 ResultSet rs = DBHelper.execute(sqlSession, "select * from tb where id = 10");
                 rs.first();
                 Assert.assertEquals(rs.getInt("field2"), 20);
+            }
+        });
+    }
+
+    /**
+     * 测试 upsertWithBLOBs
+     */
+    @Test
+    public void testUpsertWithBLOBs() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 多个 blob
+                ObjectUtil TbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
+
+                ObjectUtil TbBlobsWithBLOBs = new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs");
+                TbBlobsWithBLOBs.set("id", 10l);
+                TbBlobsWithBLOBs.set("field1", "ts1");
+                TbBlobsWithBLOBs.set("field2", "ts2");
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(TbBlobsMapper.getObject(), "upsertWithBLOBs", TbBlobsWithBLOBs.getObject());
+                Assert.assertEquals(sql, "insert into tb_blobs (id, field1, field2, field3) values (10, 'ts1', 'ts2',  'null') on duplicate key update  id = 10,  field1 = 'ts1',  field2 = 'ts2',  field3 = 'null'");
+                Object result = TbBlobsMapper.invoke("upsertWithBLOBs", TbBlobsWithBLOBs.getObject());
+                Assert.assertEquals(result, 1);
+
+                TbBlobsWithBLOBs.set("field2", "ts3");
+                TbBlobsMapper.invoke("upsertWithBLOBs", TbBlobsWithBLOBs.getObject());
+
+                ResultSet rs = DBHelper.execute(sqlSession, "select * from tb_blobs where id = 10");
+                rs.first();
+                Assert.assertEquals(rs.getString("field2"), "ts3");
+
+                // 1. 单个blob
+                ObjectUtil TbSingleBlobMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbSingleBlobMapper")));
+
+                ObjectUtil TbSingleBlob = new ObjectUtil(loader, packagz + ".TbSingleBlob");
+                TbSingleBlob.set("id", 10l);
+                TbSingleBlob.set("field1", "ts1");
+                TbSingleBlob.set("field2", 3);
+
+                // sql
+                sql = SqlHelper.getFormatMapperSql(TbSingleBlobMapper.getObject(), "upsertWithBLOBs", TbSingleBlob.getObject());
+                Assert.assertEquals(sql, "insert into tb_single_blob (id, field2, field1) values (10, 3, 'ts1' ) on duplicate key update  id = 10,  field2 = 3,  field1 = 'ts1'");
+                result = TbSingleBlobMapper.invoke("upsertWithBLOBs", TbSingleBlob.getObject());
+                Assert.assertEquals(result, 1);
+
+                TbSingleBlob.set("field1", "ts2");
+                TbSingleBlobMapper.invoke("upsertWithBLOBs", TbSingleBlob.getObject());
+
+                rs = DBHelper.execute(sqlSession, "select * from tb_single_blob where id = 10");
+                rs.first();
+                Assert.assertEquals(rs.getString("field1"), "ts2");
             }
         });
     }
