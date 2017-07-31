@@ -146,4 +146,189 @@ public class UpsertPluginTest {
             }
         });
     }
+
+    /**
+     * 测试 upsertSelective
+     */
+    @Test
+    public void testUpsertSelective() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 普通
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
+                tb.set("id", 20l);
+                tb.set("field1", "ts1");
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertSelective", tb.getObject());
+                Assert.assertEquals(sql, "insert into tb ( id, field1 )  values ( 20, 'ts1' )  on duplicate key update  id = 20, field1 = 'ts1'");
+                Object result = tbMapper.invoke("upsertSelective", tb.getObject());
+                Assert.assertEquals(result, 1);
+
+                // 2. blobs
+                ObjectUtil TbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
+
+                ObjectUtil TbBlobsWithBLOBs = new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs");
+                TbBlobsWithBLOBs.set("id", 500l);
+                TbBlobsWithBLOBs.set("field1", "ts1");
+                TbBlobsWithBLOBs.set("field2", "ts2");
+
+                // sql
+                sql = SqlHelper.getFormatMapperSql(TbBlobsMapper.getObject(), "upsertSelective", TbBlobsWithBLOBs.getObject());
+                Assert.assertEquals(sql, "insert into tb_blobs ( id, field1, field2 )  values ( 500, 'ts1', 'ts2' )  on duplicate key update  id = 500, field1 = 'ts1', field2 = 'ts2'");
+                result = TbBlobsMapper.invoke("upsertSelective", TbBlobsWithBLOBs.getObject());
+                Assert.assertEquals(result, 1);
+            }
+        });
+    }
+
+    /**
+     * 测试 upsertByExample
+     */
+    @Test
+    public void testUpsertByExample() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil TbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(TbExample.invoke("createCriteria"));
+                criteria.invoke("andIdEqualTo", 50l);
+
+                ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
+                tb.set("id", 50l);
+                tb.set("field1", "ts1");
+                tb.set("field2", 5);
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExample", tb.getObject(), TbExample.getObject());
+                Assert.assertEquals(sql, "insert into tb (id, field1, field2) select 50, 'ts1', 5 from dual where not exists ( select 1 from tb WHERE (  id = '50' )  ) ; update tb set field1 = 'ts1',  field2 = 5 WHERE (  id = '50' )");
+                Object result = tbMapper.invoke("upsertByExample", tb.getObject(), TbExample.getObject());
+                Assert.assertEquals(result, 1);
+
+                tb.set("field2", 20);
+                tbMapper.invoke("upsertByExample", tb.getObject(), TbExample.getObject());
+
+                ResultSet rs = DBHelper.execute(sqlSession, "select * from tb where id = 50");
+                rs.first();
+                Assert.assertEquals(rs.getInt("field2"), 20);
+            }
+        });
+    }
+
+    /**
+     * 测试 upsertByExampleWithBLOBs
+     */
+    @Test
+    public void testUpsertByExampleWithBLOBs() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 多个 blob
+                ObjectUtil TbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
+
+                ObjectUtil TbBlobsExample = new ObjectUtil(loader, packagz + ".TbBlobsExample");
+                ObjectUtil criteria = new ObjectUtil(TbBlobsExample.invoke("createCriteria"));
+                criteria.invoke("andIdEqualTo", 60l);
+
+                ObjectUtil TbBlobsWithBLOBs = new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs");
+                TbBlobsWithBLOBs.set("id", 60l);
+                TbBlobsWithBLOBs.set("field1", "ts1");
+                TbBlobsWithBLOBs.set("field2", "ts2");
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(TbBlobsMapper.getObject(), "upsertByExampleWithBLOBs", TbBlobsWithBLOBs.getObject(), TbBlobsExample.getObject());
+                Assert.assertEquals(sql, "insert into tb_blobs (id, field1, field2, field3) select 60, 'ts1', 'ts2',  'null' from dual where not exists ( select 1 from tb_blobs WHERE (  id = '60' )  ) ; update tb_blobs set id = 60,  field1 = 'ts1',  field2 = 'ts2',  field3 = 'null' WHERE (  id = '60' )");
+                Object result = TbBlobsMapper.invoke("upsertByExampleWithBLOBs", TbBlobsWithBLOBs.getObject(), TbBlobsExample.getObject());
+                Assert.assertEquals(result, 1);
+
+                TbBlobsWithBLOBs.set("field2", "ts3");
+                TbBlobsMapper.invoke("upsertByExampleWithBLOBs", TbBlobsWithBLOBs.getObject(), TbBlobsExample.getObject());
+
+                ResultSet rs = DBHelper.execute(sqlSession, "select * from tb_blobs where id = 60");
+                rs.first();
+                Assert.assertEquals(rs.getString("field2"), "ts3");
+
+                // 1. 单个blob
+                ObjectUtil TbSingleBlobMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbSingleBlobMapper")));
+
+                ObjectUtil TbSingleBlobExample = new ObjectUtil(loader, packagz + ".TbSingleBlobExample");
+                ObjectUtil criteria1 = new ObjectUtil(TbSingleBlobExample.invoke("createCriteria"));
+                criteria1.invoke("andIdEqualTo", 70l);
+
+
+                ObjectUtil TbSingleBlob = new ObjectUtil(loader, packagz + ".TbSingleBlob");
+                TbSingleBlob.set("id", 70l);
+                TbSingleBlob.set("field1", "ts1");
+                TbSingleBlob.set("field2", 3);
+
+                // sql
+                sql = SqlHelper.getFormatMapperSql(TbSingleBlobMapper.getObject(), "upsertByExampleWithBLOBs", TbSingleBlob.getObject(), TbSingleBlobExample.getObject());
+                Assert.assertEquals(sql, "insert into tb_single_blob (id, field2, field1) select 70, 3, 'ts1' from dual where not exists ( select 1 from tb_single_blob WHERE (  id = '70' )  ) ; update tb_single_blob set id = 70,  field2 = 3,  field1 = 'ts1' WHERE (  id = '70' )");
+                result = TbSingleBlobMapper.invoke("upsertByExampleWithBLOBs", TbSingleBlob.getObject(), TbSingleBlobExample.getObject());
+                Assert.assertEquals(result, 1);
+
+                TbSingleBlob.set("field1", "ts2");
+                TbSingleBlobMapper.invoke("upsertByExampleWithBLOBs", TbSingleBlob.getObject(), TbSingleBlobExample.getObject());
+
+                rs = DBHelper.execute(sqlSession, "select * from tb_single_blob where id = 70");
+                rs.first();
+                Assert.assertEquals(rs.getString("field1"), "ts2");
+            }
+        });
+    }
+
+    /**
+     * 测试 upsertByExampleSelective
+     */
+    @Test
+    public void testUpsertByExampleSelective() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 普通
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil TbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(TbExample.invoke("createCriteria"));
+                criteria.invoke("andIdEqualTo", 100l);
+
+                ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
+                tb.set("id", 100l);
+                tb.set("field1", "ts1");
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExampleSelective", tb.getObject(), TbExample.getObject());
+                Assert.assertEquals(sql, "insert into tb ( id, field1 )  select 100, 'ts1'  from dual where not exists ( select 1 from tb WHERE (  id = '100' )  ) ; update tb set field1 = 'ts1'  WHERE (  id = '100' )");
+                Object result = tbMapper.invoke("upsertByExampleSelective", tb.getObject(), TbExample.getObject());
+                Assert.assertEquals(result, 1);
+
+                // 2. blobs
+                ObjectUtil TbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
+
+                ObjectUtil TbBlobsExample = new ObjectUtil(loader, packagz + ".TbBlobsExample");
+                ObjectUtil criteria1 = new ObjectUtil(TbBlobsExample.invoke("createCriteria"));
+                criteria1.invoke("andIdEqualTo", 60l);
+
+                ObjectUtil TbBlobsWithBLOBs = new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs");
+                TbBlobsWithBLOBs.set("id", 200l);
+                TbBlobsWithBLOBs.set("field1", "ts1");
+                TbBlobsWithBLOBs.set("field2", "ts2");
+
+                // sql
+                sql = SqlHelper.getFormatMapperSql(TbBlobsMapper.getObject(), "upsertByExampleSelective", TbBlobsWithBLOBs.getObject(), TbBlobsExample.getObject());
+                Assert.assertEquals(sql, "insert into tb_blobs ( id, field1, field2 )  select 200, 'ts1', 'ts2'  from dual where not exists ( select 1 from tb_blobs WHERE (  id = '60' )  ) ; update tb_blobs set field1 = 'ts1', field2 = 'ts2'  WHERE (  id = '60' )");
+                result = TbBlobsMapper.invoke("upsertByExampleSelective", TbBlobsWithBLOBs.getObject(), TbBlobsExample.getObject());
+                Assert.assertEquals(result, 1);
+            }
+        });
+    }
 }
