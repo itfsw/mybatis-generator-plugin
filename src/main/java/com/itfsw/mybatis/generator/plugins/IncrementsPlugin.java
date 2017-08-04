@@ -206,9 +206,9 @@ public class IncrementsPlugin extends BasePlugin {
                 // 找到text节点且格式为 set xx = xx 或者 xx = xx
                 if (ele instanceof TextElement) {
                     String text = ((TextElement) ele).getContent().trim();
-                    if (text.matches("(set\\s)?\\S+\\s?=.*")) {
+                    if (text.matches("(^set\\s)?\\S+\\s?=.*")) {
                         // 清理 set 操作
-                        text = text.replaceFirst("set\\s", "").trim();
+                        text = text.replaceFirst("^set\\s", "").trim();
                         String columnName = text.split("=")[0].trim();
                         IntrospectedColumn introspectedColumn = IntrospectedTableTools.safeGetColumn(introspectedTable, columnName);
                         // 查找判断是否需要进行节点替换

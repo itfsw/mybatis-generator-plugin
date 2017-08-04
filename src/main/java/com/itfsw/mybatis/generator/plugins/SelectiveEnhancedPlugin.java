@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
  * ---------------------------------------------------------------------------
  * Selective 增强插件
  * ---------------------------------------------------------------------------
+ *
  * @author: hewei
  * @time:2017/4/20 15:39
  * ---------------------------------------------------------------------------
@@ -61,6 +62,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
     /**
      * Model Methods 生成
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     *
      * @param topLevelClass
      * @param introspectedTable
      * @return
@@ -116,6 +118,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
     /**
      * SQL Map Methods 生成
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     *
      * @param document
      * @param introspectedTable
      * @return
@@ -182,6 +185,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
 
     /**
      * 替换节点if信息
+     *
      * @param element
      * @param prefix
      * @param introspectedTable
@@ -194,7 +198,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
         whenEle.addAttribute(new Attribute("test", prefix + "isSelective()"));
         for (Element ele : element.getElements()) {
             // 对于字符串主键，是没有if判断节点的
-            if (ele instanceof XmlElement){
+            if (ele instanceof XmlElement) {
                 // if的text节点
                 XmlElement xmlElement = (XmlElement) ele;
 
@@ -205,7 +209,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
                 if (text.matches("#\\{.*\\},?")) {
                     Pattern pattern = Pattern.compile("#\\{(.*?),.*\\},?");
                     Matcher matcher = pattern.matcher(text);
-                    if (matcher.find()){
+                    if (matcher.find()) {
                         String field = matcher.group(1);
                         // 查找对应column
                         for (IntrospectedColumn column : introspectedTable.getAllColumns()) {
@@ -215,7 +219,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
                         }
                     }
                 } else {
-                    if (text.matches(".*=.*")){
+                    if (text.matches(".*=.*")) {
                         columnName = text.split("=")[0];
                     } else {
                         columnName = text.replaceAll(",", "");
@@ -228,8 +232,8 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
 
                 XmlElement ifEle = new XmlElement("if");
 
-                ifEle.addAttribute(new Attribute("test", prefix + "isSelective(\'" + MyBatis3FormattingUtilities.getEscapedColumnName(column) + "\')"));
-                for (Element ifChild : xmlElement.getElements()){
+                ifEle.addAttribute(new Attribute("test", prefix + "isSelective(\'" + column.getActualColumnName() + "\')"));
+                for (Element ifChild : xmlElement.getElements()) {
                     ifEle.addElement(ifChild);
                 }
                 whenEle.addElement(ifEle);
@@ -254,6 +258,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
 
     /**
      * 替换节点upsertByExampleSelective if信息
+     *
      * @param element
      * @param prefix
      * @param introspectedTable
