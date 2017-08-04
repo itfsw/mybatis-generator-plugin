@@ -17,6 +17,7 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
+import com.itfsw.mybatis.generator.plugins.utils.IntrospectedTableTools;
 import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
 import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedColumn;
@@ -220,12 +221,14 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
                         columnName = text.replaceAll(",", "");
                     }
                     // bug fixed: 修正使用autoDelimitKeywords过滤关键词造成的field前后加了特殊字符的问题
-                    columnName = columnName.trim().replaceAll("`", "").replaceAll("\"", "").replaceAll("'", "");
+                    // columnName = columnName.trim().replaceAll("`", "").replaceAll("\"", "").replaceAll("'", "");
                 }
+
+                IntrospectedColumn column = IntrospectedTableTools.safeGetColumn(introspectedTable, columnName);
 
                 XmlElement ifEle = new XmlElement("if");
 
-                ifEle.addAttribute(new Attribute("test", prefix + "isSelective(\'" + MyBatis3FormattingUtilities.getEscapedColumnName(introspectedTable.getColumn(columnName)) + "\')"));
+                ifEle.addAttribute(new Attribute("test", prefix + "isSelective(\'" + MyBatis3FormattingUtilities.getEscapedColumnName(column) + "\')"));
                 for (Element ifChild : xmlElement.getElements()){
                     ifEle.addElement(ifChild);
                 }

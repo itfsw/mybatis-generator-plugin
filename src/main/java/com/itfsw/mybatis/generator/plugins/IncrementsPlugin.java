@@ -16,10 +16,7 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
-import com.itfsw.mybatis.generator.plugins.utils.IncrementsPluginTools;
-import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
-import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
+import com.itfsw.mybatis.generator.plugins.utils.*;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
@@ -184,7 +181,7 @@ public class IncrementsPlugin extends BasePlugin {
                         TextElement textEle = (TextElement) textEles.get(0);
                         String[] strs = textEle.getContent().split("=");
                         String columnName = strs[0].trim();
-                        IntrospectedColumn introspectedColumn = introspectedTable.getColumn(columnName);
+                        IntrospectedColumn introspectedColumn = IntrospectedTableTools.safeGetColumn(introspectedTable, columnName);
                         // 查找是否需要进行增量操作
                         if (incTools.supportColumn(introspectedColumn)) {
                             xmlElement.getElements().clear();
@@ -213,7 +210,7 @@ public class IncrementsPlugin extends BasePlugin {
                         // 清理 set 操作
                         text = text.replaceFirst("set\\s", "").trim();
                         String columnName = text.split("=")[0].trim();
-                        IntrospectedColumn introspectedColumn = introspectedTable.getColumn(columnName);
+                        IntrospectedColumn introspectedColumn = IntrospectedTableTools.safeGetColumn(introspectedTable, columnName);
                         // 查找判断是否需要进行节点替换
                         if (incTools.supportColumn(introspectedColumn)) {
                             newEles.addAll(incTools.generatedIncrementsElement(introspectedColumn, hasPrefix, text.endsWith(",")));

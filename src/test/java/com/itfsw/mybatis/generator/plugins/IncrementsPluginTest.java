@@ -21,9 +21,13 @@ import org.apache.ibatis.session.SqlSession;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mybatis.generator.exception.InvalidConfigurationException;
+import org.mybatis.generator.exception.XMLParserException;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -185,6 +189,38 @@ public class IncrementsPluginTest {
                 Assert.assertEquals(sql, "update tb_blobs set field1 = 'null', inc_f1 =  inc_f1 + 100 , inc_f2 = 50, inc_f3 =  10 , field2 = 'null', field3 = 'blob' where id = 3");
                 result = tbBlobsMapper.invoke("updateByPrimaryKeyWithBLOBs", tbBlobsWithBLOBsBuilder.invoke("build"));
                 Assert.assertEquals(result, 1);
+            }
+        });
+    }
+
+    /**
+     * 测试 autoDelimitKeywords
+     */
+    @Test
+    public void testWithAutoDelimitKeywords() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator-with-autoDelimitKeywords.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 测试updateByExample、updateByExampleSelective
+                ObjectUtil TbKeyWord = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbKeyWordMapper")));
+
+                ObjectUtil TbKeyWordExample = new ObjectUtil(loader, packagz + ".TbKeyWordExample");
+                ObjectUtil criteria = new ObjectUtil(TbKeyWordExample.invoke("createCriteria"));
+                criteria.invoke("andIdEqualTo", 1l);
+
+                ObjectUtil TbKeyWordBuilder = new ObjectUtil(loader, packagz + ".TbKeyWord$Builder");
+                ObjectUtil TbKeyWordBuilderInc = new ObjectUtil(loader, packagz + ".TbKeyWord$Builder$Inc#INC");
+                TbKeyWordBuilder.invoke("update", 100l, TbKeyWordBuilderInc.getObject());
+
+                // 执行
+                // inc_f1 增加100
+                Object result = TbKeyWord.invoke("updateByExampleSelective", TbKeyWordBuilder.invoke("build"), TbKeyWordExample.getObject());
+                Assert.assertEquals(result, 1);
+                // 验证更新
+                ResultSet rs = DBHelper.execute(sqlSession.getConnection(), "select * from tb_key_word where id = 1");
+                rs.first();
+                Assert.assertEquals(rs.getLong("update"), 101);
             }
         });
     }

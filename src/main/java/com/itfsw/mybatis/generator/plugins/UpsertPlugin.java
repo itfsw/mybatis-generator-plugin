@@ -16,10 +16,7 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
-import com.itfsw.mybatis.generator.plugins.utils.IncrementsPluginTools;
-import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
-import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
+import com.itfsw.mybatis.generator.plugins.utils.*;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
@@ -438,8 +435,8 @@ public class UpsertPlugin extends BasePlugin {
             // 获取if节点
             for (Element element : trimXmlElement.getElements()) {
                 String text = ((TextElement) (((XmlElement) element).getElements().get(0))).getContent();
-                String columnName = text.split("=")[0].trim().replaceAll("`", "").replaceAll("\"", "").replaceAll("'", "");
-                IntrospectedColumn introspectedColumn = introspectedTable.getColumn(columnName);
+                String columnName = text.split("=")[0];
+                IntrospectedColumn introspectedColumn = IntrospectedTableTools.safeGetColumn(introspectedTable, columnName);
                 if (incTools.supportColumn(introspectedColumn)) {
                     // if 节点数据替换
                     ((XmlElement) element).getElements().clear();
@@ -465,8 +462,8 @@ public class UpsertPlugin extends BasePlugin {
             if (incTools.support()) {
                 // 获取column
                 String text = element.getContent().trim();
-                String columnName = text.split("=")[0].trim().replaceAll("`", "").replaceAll("\"", "").replaceAll("'", "");
-                IntrospectedColumn introspectedColumn = introspectedTable.getColumn(columnName);
+                String columnName = text.split("=")[0];
+                IntrospectedColumn introspectedColumn = IntrospectedTableTools.safeGetColumn(introspectedTable, columnName);
                 if (incTools.supportColumn(introspectedColumn)) {
                     xmlElement.getElements().addAll(incTools.generatedIncrementsElement(introspectedColumn, hasPrefix, text.endsWith(",")));
                     continue;

@@ -74,7 +74,7 @@ public class IncrementsPluginTools {
                 // 切分
                 String[] incrementsColumnsStrs = incrementsColumns.split(",");
                 for (String incrementsColumnsStr : incrementsColumnsStrs) {
-                    IntrospectedColumn column = introspectedTable.getColumn(incrementsColumnsStr.trim());
+                    IntrospectedColumn column = IntrospectedTableTools.safeGetColumn(introspectedTable, incrementsColumnsStr);
                     if (column == null) {
                         warnings.add("itfsw:插件" + IncrementsPlugin.class.getTypeName() + "插件没有找到column为" + incrementsColumnsStr.trim() + "的字段！");
                     } else {
@@ -146,12 +146,12 @@ public class IncrementsPluginTools {
         when.addAttribute(new Attribute(
                 "test",
                 (hasPrefix ? "record." : "_parameter.") + IncrementsPlugin.METHOD_INC_CHECK
-                        + "('" + MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + "')"
+                        + "('" + MyBatis3FormattingUtilities.escapeStringForMyBatis3(introspectedColumn.getActualColumnName()) + "')"
         ));
         TextElement spec = new TextElement(
                 MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn)
                         + " ${" + (hasPrefix ? "record." : "")
-                        + IncrementsPlugin.FIELD_INC_MAP + "." + MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + ".value} "
+                        + IncrementsPlugin.FIELD_INC_MAP + "." + MyBatis3FormattingUtilities.escapeStringForMyBatis3(introspectedColumn.getActualColumnName()) + ".value} "
                         + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, hasPrefix ? "record." : null));
         when.addElement(spec);
         choose.addElement(when);

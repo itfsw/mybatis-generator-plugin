@@ -120,7 +120,7 @@ public class XmlElementGeneratorTools {
     public static void useGeneratedKeys(XmlElement element, IntrospectedTable introspectedTable, String prefix) {
         GeneratedKey gk = introspectedTable.getGeneratedKey();
         if (gk != null) {
-            IntrospectedColumn introspectedColumn = introspectedTable.getColumn(gk.getColumn());
+            IntrospectedColumn introspectedColumn = IntrospectedTableTools.safeGetColumn(introspectedTable, gk.getColumn());
             // if the column is null, then it's a configuration error. The
             // warning has already been reported
             if (introspectedColumn != null) {

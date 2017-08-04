@@ -101,3 +101,20 @@ CREATE TABLE `tb_single_blob` (
 INSERT INTO `tb_single_blob` VALUES ('1', 'fd1', '0', '1', '2', '3');
 INSERT INTO `tb_single_blob` VALUES ('2', null, null, '3', '2', '1');
 INSERT INTO `tb_single_blob` VALUES ('3', null, null, '1', '1', '1');
+
+-- ----------------------------
+-- Table structure for tb_key_word
+-- ----------------------------
+DROP TABLE IF EXISTS `tb_key_word`;
+CREATE TABLE `tb_key_word` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '注释1',
+  `field2` int(11) DEFAULT NULL,
+  `inc_f1` bigint(20) NOT NULL DEFAULT '0',
+  `update` bigint(20) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Records of tb_key_word
+-- ----------------------------
+INSERT INTO `tb_key_word` VALUES ('1', '0', '0', '1');

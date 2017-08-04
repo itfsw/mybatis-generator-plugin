@@ -18,10 +18,12 @@ package com.itfsw.mybatis.generator.plugins.utils;
 
 import com.itfsw.mybatis.generator.plugins.ExampleTargetPlugin;
 import org.mybatis.generator.api.FullyQualifiedTable;
+import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.config.Context;
 import org.mybatis.generator.config.JavaModelGeneratorConfiguration;
 import org.mybatis.generator.config.PluginConfiguration;
+import org.mybatis.generator.internal.util.StringUtility;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -31,6 +33,7 @@ import java.lang.reflect.Method;
  * ---------------------------------------------------------------------------
  * IntrospectedTable 的一些拓展增强
  * ---------------------------------------------------------------------------
+ *
  * @author: hewei
  * @time:2017/6/13 13:48
  * ---------------------------------------------------------------------------
@@ -68,7 +71,7 @@ public class IntrospectedTableTools {
 
         // 注意！！ 如果配置了ExampleTargetPlugin插件，要修正Example 位置
         PluginConfiguration configuration = PluginTools.getPluginConfiguration(context, ExampleTargetPlugin.class);
-        if (configuration != null && configuration.getProperty(ExampleTargetPlugin.TARGET_PACKAGE_KEY) != null){
+        if (configuration != null && configuration.getProperty(ExampleTargetPlugin.TARGET_PACKAGE_KEY) != null) {
             String exampleType = introspectedTable.getExampleType();
             // 修改包名
             JavaModelGeneratorConfiguration javaModelGeneratorConfiguration = context.getJavaModelGeneratorConfiguration();
@@ -77,5 +80,28 @@ public class IntrospectedTableTools {
 
             introspectedTable.setExampleType(newExampleType);
         }
+    }
+
+    /**
+     * 安全获取column 通过正则获取的name可能包含beginningDelimiter&&endingDelimiter
+     *
+     * @param introspectedTable
+     * @param columnName
+     * @return
+     */
+    public static IntrospectedColumn safeGetColumn(IntrospectedTable introspectedTable, String columnName) {
+        // columnName
+        columnName = columnName.trim();
+        // 过滤
+        String beginningDelimiter = introspectedTable.getContext().getBeginningDelimiter();
+        if (StringUtility.stringHasValue(beginningDelimiter)) {
+            columnName = columnName.replaceFirst("^" + beginningDelimiter, "");
+        }
+        String endingDelimiter = introspectedTable.getContext().getEndingDelimiter();
+        if (StringUtility.stringHasValue(endingDelimiter)) {
+            columnName = columnName.replaceFirst(endingDelimiter + "$", "");
+        }
+
+        return introspectedTable.getColumn(columnName);
     }
 }
