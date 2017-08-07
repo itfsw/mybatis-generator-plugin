@@ -27,7 +27,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.0.15</version>
+  <version>1.0.16</version>
 </dependency>
 ```
 ---------------------------------------
@@ -201,6 +201,13 @@ public class Test {
     public static void main(String[] args) {
         // 直接new表Model的内部Builder类，赋值后调用build()方法返回对象
         Tb table = new Tb.Builder()
+               .field1("xx")
+               .field2("xx")
+               .field3("xx")
+               .field4("xx")
+               .build();
+        // 或者使用builder静态方法创建Builder
+        Tb table = Tb.builder()
                .field1("xx")
                .field2("xx")
                .field3("xx")
