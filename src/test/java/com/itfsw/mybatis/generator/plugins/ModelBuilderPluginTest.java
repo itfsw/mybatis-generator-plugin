@@ -89,6 +89,91 @@ public class ModelBuilderPluginTest {
                 ObjectUtil tbKeys = new ObjectUtil(tbKeysBuilder.invoke("build"));
                 Assert.assertEquals(tbKeys.invoke("getKey1"), 50l);
                 Assert.assertEquals(tbKeys.invoke("getField1"), "ts2");
+
+                // 4. key and blobs
+                ObjectUtil TbKeysBlobsKeyBuilder = new ObjectUtil(loader, packagz + ".TbKeysBlobsKey$Builder");
+                TbKeysBlobsKeyBuilder.invoke("key1", 60l);
+                ObjectUtil TbKeysBlobsKey = new ObjectUtil(TbKeysBlobsKeyBuilder.invoke("build"));
+                Assert.assertEquals(TbKeysBlobsKey.invoke("getKey1"), 60l);
+
+                ObjectUtil TbKeysBlobsWithBLOBsBuilder = new ObjectUtil(loader, packagz + ".TbKeysBlobsWithBLOBs$Builder");
+                TbKeysBlobsWithBLOBsBuilder.invoke("key1", 90l);
+                TbKeysBlobsWithBLOBsBuilder.invoke("incF2", 70l);
+                TbKeysBlobsWithBLOBsBuilder.invoke("field2", "ts3");
+
+                ObjectUtil TbKeysBlobsWithBLOBs = new ObjectUtil(TbKeysBlobsWithBLOBsBuilder.invoke("build"));
+                Assert.assertEquals(TbKeysBlobsWithBLOBs.invoke("getKey1"), 90l);
+                Assert.assertEquals(TbKeysBlobsWithBLOBs.invoke("getIncF2"), 70l);
+                Assert.assertEquals(TbKeysBlobsWithBLOBs.invoke("getField2"), "ts3");
+            }
+        });
+    }
+
+    /**
+     * 测试静态builder方法
+     */
+    @Test
+    public void testBuilderMethod() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ModelBuilderPlugin/mybatis-generator.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 普通model
+                ObjectUtil Tb = new ObjectUtil(loader, packagz + ".Tb");
+                ObjectUtil tbBuilder = new ObjectUtil(Tb.invoke("builder"));
+                tbBuilder.invoke("field1", "ts1");
+                tbBuilder.invoke("incF1", 100l);
+                ObjectUtil tb = new ObjectUtil(tbBuilder.invoke("build"));
+                Assert.assertEquals(tb.invoke("getField1"), "ts1");
+                Assert.assertEquals(tb.invoke("getIncF1"), 100l);
+
+                // 2. withBlobs
+                ObjectUtil TbBlobs = new ObjectUtil(loader, packagz + ".TbBlobs");
+                ObjectUtil tbBlobsBuilder = new ObjectUtil(TbBlobs.invoke("builder"));
+                tbBlobsBuilder.invoke("field1", "ts1");
+                ObjectUtil tbBlobs = new ObjectUtil(tbBlobsBuilder.invoke("build"));
+                Assert.assertEquals(tbBlobs.invoke("getField1"), "ts1");
+
+                ObjectUtil TbBlobsWithBLOBs= new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs");
+                ObjectUtil tbBlobsWithBLOBsBuilder = new ObjectUtil(TbBlobsWithBLOBs.invoke("builder"));
+                tbBlobsWithBLOBsBuilder.invoke("field1", "ts1");
+                tbBlobsWithBLOBsBuilder.invoke("field2", "ts2");
+                ObjectUtil tbBlobsWithBLOBs = new ObjectUtil(tbBlobsWithBLOBsBuilder.invoke("build"));
+                Assert.assertEquals(tbBlobsWithBLOBs.invoke("getField1"), "ts1");
+                Assert.assertEquals(tbBlobsWithBLOBs.invoke("getField2"), "ts2");
+
+                // 3. key
+                ObjectUtil TbKeysKey = new ObjectUtil(loader, packagz + ".TbKeysKey");
+                ObjectUtil tbKeysKeyBuilder = new ObjectUtil(TbKeysKey.invoke("builder"));
+                tbKeysKeyBuilder.invoke("key1", 60l);
+                ObjectUtil tbKeysKey = new ObjectUtil(tbKeysKeyBuilder.invoke("build"));
+                Assert.assertEquals(tbKeysKey.invoke("getKey1"), 60l);
+
+                ObjectUtil TbKeys = new ObjectUtil(loader, packagz + ".TbKeys");
+                ObjectUtil tbKeysBuilder = new ObjectUtil(TbKeys.invoke("builder"));
+                tbKeysBuilder.invoke("key1", 50l);
+                tbKeysBuilder.invoke("field1", "ts2");
+                ObjectUtil tbKeys = new ObjectUtil(tbKeysBuilder.invoke("build"));
+                Assert.assertEquals(tbKeys.invoke("getKey1"), 50l);
+                Assert.assertEquals(tbKeys.invoke("getField1"), "ts2");
+
+                // 4. key and blobs
+                ObjectUtil TbKeysBlobsKey = new ObjectUtil(loader, packagz + ".TbKeysBlobsKey");
+                ObjectUtil TbKeysBlobsKeyBuilder = new ObjectUtil(TbKeysBlobsKey.invoke("builder"));
+                TbKeysBlobsKeyBuilder.invoke("key1", 60l);
+                ObjectUtil tbKeysBlobsKey = new ObjectUtil(TbKeysBlobsKeyBuilder.invoke("build"));
+                Assert.assertEquals(tbKeysBlobsKey.invoke("getKey1"), 60l);
+
+                ObjectUtil TbKeysBlobsWithBLOBs = new ObjectUtil(loader, packagz + ".TbKeysBlobsWithBLOBs");
+                ObjectUtil TbKeysBlobsWithBLOBsBuilder = new ObjectUtil(TbKeysBlobsWithBLOBs.invoke("builder"));
+                TbKeysBlobsWithBLOBsBuilder.invoke("key1", 90l);
+                TbKeysBlobsWithBLOBsBuilder.invoke("incF2", 70l);
+                TbKeysBlobsWithBLOBsBuilder.invoke("field2", "ts3");
+
+                TbKeysBlobsWithBLOBs = new ObjectUtil(TbKeysBlobsWithBLOBsBuilder.invoke("build"));
+                Assert.assertEquals(TbKeysBlobsWithBLOBs.invoke("getKey1"), 90l);
+                Assert.assertEquals(TbKeysBlobsWithBLOBs.invoke("getIncF2"), 70l);
+                Assert.assertEquals(TbKeysBlobsWithBLOBs.invoke("getField2"), "ts3");
             }
         });
     }

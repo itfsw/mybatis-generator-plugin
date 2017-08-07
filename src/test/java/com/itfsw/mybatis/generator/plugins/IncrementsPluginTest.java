@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -70,7 +71,7 @@ public class IncrementsPluginTest {
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试生成的方法
                 ObjectUtil tbBuilder = new ObjectUtil(loader, packagz + ".Tb$Builder");
-                List<Method> methods = tbBuilder.getMethods("incF1");
+                List<Method> methods = getDeclaredMethods(tbBuilder.getCls(), "incF1");
                 Assert.assertEquals(methods.size(), 2);
                 // 自增方法
                 Method incMethod = methods.get(0).getParameterTypes().length == 1 ? methods.get(1) : methods.get(0);
@@ -78,17 +79,34 @@ public class IncrementsPluginTest {
 
                 // 2. 测试有空格
                 ObjectUtil tbKeysBuilder = new ObjectUtil(loader, packagz + ".TbKeys$Builder");
-                Assert.assertEquals(tbKeysBuilder.getMethods("incF1").size(), 2);
-                Assert.assertEquals(tbKeysBuilder.getMethods("incF2").size(), 2);
-                Assert.assertEquals(tbKeysBuilder.getMethods("incF3").size(), 2);
+                Assert.assertEquals(getDeclaredMethods(tbKeysBuilder.getCls(), "incF1").size(), 2);
+                Assert.assertEquals(getDeclaredMethods(tbKeysBuilder.getCls(), "incF2").size(), 2);
+                Assert.assertEquals(getDeclaredMethods(tbKeysBuilder.getCls(), "incF3").size(), 2);
 
                 // 3. 测试在WithBlobs正确生成
                 ObjectUtil tbBlobsWithBLOBs = new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs$Builder");
-                Assert.assertEquals(tbBlobsWithBLOBs.getMethods("incF1").size(), 2);
-                Assert.assertEquals(tbBlobsWithBLOBs.getMethods("incF2").size(), 1);
-                Assert.assertEquals(tbBlobsWithBLOBs.getMethods("incF3").size(), 2);
+                Assert.assertEquals(getDeclaredMethods(tbBlobsWithBLOBs.getCls(), "incF1").size(), 2);
+                Assert.assertEquals(getDeclaredMethods(tbBlobsWithBLOBs.getCls(), "incF2").size(), 1);
+                Assert.assertEquals(getDeclaredMethods(tbBlobsWithBLOBs.getCls(), "incF3").size(), 2);
             }
         });
+    }
+
+    /**
+     * 获取类方法
+     * @param cls
+     * @param name
+     * @return
+     */
+    private List<Method> getDeclaredMethods(Class cls, String name) {
+        List<Method> list = new ArrayList<>();
+        Method[] methods = cls.getDeclaredMethods();
+        for (Method method : methods) {
+            if (method.getName().equals(name) && cls.equals(method.getReturnType())) {
+                list.add(method);
+            }
+        }
+        return list;
     }
 
     /**

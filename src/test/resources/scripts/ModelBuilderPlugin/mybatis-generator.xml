@@ -49,5 +49,6 @@
         <table tableName="tb_blobs">
             <generatedKey column="id" sqlStatement="MySql" identity="true"/>
         </table>
+        <table tableName="tb_keys_blobs"/>
     </context>
 </generatorConfiguration>

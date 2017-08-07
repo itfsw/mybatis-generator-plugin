@@ -70,3 +70,22 @@ CREATE TABLE `tb_keys` (
 -- Records of tb_keys
 -- ----------------------------
 
+-- ----------------------------
+-- Table structure for tb_keys_blobs
+-- ----------------------------
+DROP TABLE IF EXISTS `tb_keys_blobs`;
+CREATE TABLE `tb_keys_blobs` (
+  `key1` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '注释1',
+  `key2` varchar(255) NOT NULL,
+  `field1` varchar(255) DEFAULT NULL COMMENT '注释2',
+  `field2` longtext COMMENT '注释2',
+  `field3` longtext,
+  `inc_f2` bigint(20) NOT NULL DEFAULT '0',
+  `inc_f3` bigint(20) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`key1`,`key2`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Records of tb_keys
+-- ----------------------------
+
