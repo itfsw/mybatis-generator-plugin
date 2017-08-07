@@ -20,12 +20,15 @@ import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
 import com.itfsw.mybatis.generator.plugins.utils.IncrementsPluginTools;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
+import com.itfsw.mybatis.generator.plugins.utils.enhanced.InnerTypeFullyQualifiedJavaType;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.internal.util.JavaBeansUtil;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * ---------------------------------------------------------------------------
@@ -37,6 +40,7 @@ import java.util.List;
  */
 public class ModelBuilderPlugin extends BasePlugin {
     public static final String BUILDER_CLASS_NAME = "Builder";  // Builder 类名
+    private Map<IntrospectedTable, InnerTypeFullyQualifiedJavaType> innerClasses = new HashMap<>();
 
     /**
      * Model Methods 生成
@@ -94,6 +98,27 @@ public class ModelBuilderPlugin extends BasePlugin {
         InnerClass innerClass = new InnerClass(BUILDER_CLASS_NAME);
         innerClass.setVisibility(JavaVisibility.PUBLIC);
         innerClass.setStatic(true);
+
+        // 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+        // 顺序为 key base withBLOBs
+        InnerTypeFullyQualifiedJavaType builderType = new InnerTypeFullyQualifiedJavaType(topLevelClass.getType().getFullyQualifiedName() + "." + BUILDER_CLASS_NAME);
+        if (innerClasses.get(introspectedTable) != null) {
+            innerClass.setSuperClass(innerClasses.get(introspectedTable));
+            innerClasses.remove(introspectedTable);
+        }
+        innerClasses.put(introspectedTable, builderType);
+
+        // 增加静态builder方法实现和lombok一样
+        Method builder = JavaElementGeneratorTools.generateMethod(
+                "builder",
+                JavaVisibility.PUBLIC,
+                builderType
+        );
+        commentGenerator.addGeneralMethodComment(builder, introspectedTable);
+        builder.setStatic(true);
+        builder.addBodyLine("return new " + builderType.getShortName() + "();");
+        topLevelClass.addMethod(builder);
+
         commentGenerator.addClassComment(innerClass, introspectedTable);
         logger.debug("itfsw(数据Model链式构建插件):" + topLevelClass.getType().getShortName() + "增加内部Builder类。");
 
