@@ -137,6 +137,7 @@ public class MyBatisGeneratorTool {
     public SqlSession getSqlSession() throws IOException, ClassNotFoundException {
         org.apache.ibatis.session.Configuration config = new org.apache.ibatis.session.Configuration();
         config.setCallSettersOnNulls(true); // 设计null调用setter方法
+        config.setMapUnderscoreToCamelCase(true);   // 驼峰命名支持
 
         // 设置mapper
         config.addMappers(targetPackage);
