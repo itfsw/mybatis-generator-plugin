@@ -36,7 +36,7 @@ import java.util.List;
  * ---------------------------------------------------------------------------
  */
 public class IncrementsPlugin extends BasePlugin {
-    public static final String PRE_INCREMENTS_COLUMNS = "incrementsColumns";  // incrementsColumns property
+    public static final String PRO_INCREMENTS_COLUMNS = "incrementsColumns";  // incrementsColumns property
     public static final String FIELD_INC_MAP = "incrementsColumnsInfoMap";    // 为了防止和用户数据库字段冲突，特殊命名
     public static final String METHOD_INC_CHECK = "hasIncsForColumn";   // inc 检查方法名称
     private IncrementsPluginTools incTools; // 增量插件工具

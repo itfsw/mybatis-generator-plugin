@@ -46,7 +46,7 @@ public class UpsertPlugin extends BasePlugin {
     public static final String METHOD_UPSERT_BY_EXAMPLE_SELECTIVE = "upsertByExampleSelective";   // 方法名
 
 
-    public static final String PRE_ALLOW_MULTI_QUERIES = "allowMultiQueries";   // property allowMultiQueries
+    public static final String PRO_ALLOW_MULTI_QUERIES = "allowMultiQueries";   // property allowMultiQueries
     private boolean allowMultiQueries = false;  // 是否允许多sql提交
 
     /**
@@ -63,7 +63,7 @@ public class UpsertPlugin extends BasePlugin {
 
         // 插件是否开启了多sql提交
         Properties properties = this.getProperties();
-        String allowMultiQueries = properties.getProperty(PRE_ALLOW_MULTI_QUERIES);
+        String allowMultiQueries = properties.getProperty(PRO_ALLOW_MULTI_QUERIES);
         this.allowMultiQueries = allowMultiQueries == null ? false : StringUtility.isTrue(allowMultiQueries);
         if (this.allowMultiQueries) {
             // 提示用户注意信息

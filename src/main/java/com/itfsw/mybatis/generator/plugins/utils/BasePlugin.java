@@ -56,7 +56,7 @@ public class BasePlugin extends PluginAdapter {
         // 配置插件使用的模板引擎
         PluginConfiguration cfg = PluginTools.getPluginConfiguration(context, CommentPlugin.class);
 
-        if (cfg == null || cfg.getProperty(CommentPlugin.PRE_TEMPLATE) == null){
+        if (cfg == null || cfg.getProperty(CommentPlugin.PRO_TEMPLATE) == null){
             if (context.getCommentGenerator() instanceof DefaultCommentGenerator){
                 // 使用默认模板引擎
                 commentGenerator = new TemplateCommentGenerator("default-comment.ftl", true);
@@ -65,7 +65,7 @@ public class BasePlugin extends PluginAdapter {
                 commentGenerator = context.getCommentGenerator();
             }
         } else {
-            TemplateCommentGenerator templateCommentGenerator = new TemplateCommentGenerator(cfg.getProperty(CommentPlugin.PRE_TEMPLATE), false);
+            TemplateCommentGenerator templateCommentGenerator = new TemplateCommentGenerator(cfg.getProperty(CommentPlugin.PRO_TEMPLATE), false);
 
             // ITFSW 插件使用的注释生成器
             commentGenerator = templateCommentGenerator;

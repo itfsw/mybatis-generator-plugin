@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class TablePrefixPlugin extends BasePlugin {
 
-    public static final String PRE_PREFIX = "prefix";  // 前缀 property
+    public static final String PRO_PREFIX = "prefix";  // 前缀 property
     private String prefix;  // 前缀
 
     /**
@@ -62,14 +62,14 @@ public class TablePrefixPlugin extends BasePlugin {
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
         // 1. 首先获取全局配置
-        this.prefix = getProperties().getProperty(PRE_PREFIX);
+        this.prefix = getProperties().getProperty(PRO_PREFIX);
         // 2. 获取每个table 具体的
-        if (introspectedTable.getTableConfigurationProperty(PRE_PREFIX) != null) {
-            this.prefix = introspectedTable.getTableConfigurationProperty(PRE_PREFIX);
+        if (introspectedTable.getTableConfigurationProperty(PRO_PREFIX) != null) {
+            this.prefix = introspectedTable.getTableConfigurationProperty(PRO_PREFIX);
         }
         // 3. 判断是否配置了前缀
         // !!! TableRenamePlugin 插件的 tableOverride 优先级最高
-        if (this.prefix != null && introspectedTable.getTableConfigurationProperty(TableRenamePlugin.PRE_TABLE_OVERRIDE) == null) {
+        if (this.prefix != null && introspectedTable.getTableConfigurationProperty(TableRenamePlugin.PRO_TABLE_OVERRIDE) == null) {
             String domainObjectName = introspectedTable.getFullyQualifiedTable().getDomainObjectName();
             domainObjectName = prefix + domainObjectName;
             try {

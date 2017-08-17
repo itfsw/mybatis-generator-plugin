@@ -69,7 +69,7 @@ public class IncrementsPluginTools {
         IncrementsPluginTools tools = new IncrementsPluginTools(context, introspectedTable);
         // 判断是否启用了插件
         if (PluginTools.getPluginConfiguration(context, IncrementsPlugin.class) != null) {
-            String incrementsColumns = introspectedTable.getTableConfigurationProperty(IncrementsPlugin.PRE_INCREMENTS_COLUMNS);
+            String incrementsColumns = introspectedTable.getTableConfigurationProperty(IncrementsPlugin.PRO_INCREMENTS_COLUMNS);
             if (StringUtility.stringHasValue(incrementsColumns)) {
                 // 切分
                 String[] incrementsColumnsStrs = incrementsColumns.split(",");

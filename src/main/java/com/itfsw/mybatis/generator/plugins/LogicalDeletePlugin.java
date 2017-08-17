@@ -43,9 +43,9 @@ public class LogicalDeletePlugin extends BasePlugin {
     public static final String METHOD_LOGICAL_DELETE_BY_EXAMPLE = "logicalDeleteByExample";  // 方法名
     public static final String METHOD_LOGICAL_DELETE_BY_PRIMARY_KEY = "logicalDeleteByPrimaryKey";  // 方法名
 
-    public static final String LOGICAL_DELETE_COLUMN_KEY = "logicalDeleteColumn";  // 逻辑删除列-Key
-    public static final String LOGICAL_DELETE_VALUE_KEY = "logicalDeleteValue";  // 逻辑删除值-Key
-    public static final String LOGICAL_UN_DELETE_VALUE_KEY = "logicalUnDeleteValue";  // 逻辑删除未删除值-Key
+    public static final String PRO_LOGICAL_DELETE_COLUMN = "logicalDeleteColumn";  // 逻辑删除列-Key
+    public static final String PRO_LOGICAL_DELETE_VALUE = "logicalDeleteValue";  // 逻辑删除值-Key
+    public static final String PRO_LOGICAL_UN_DELETE_VALUE = "logicalUnDeleteValue";  // 逻辑删除未删除值-Key
 
     public static final String DEL_FLAG_NAME = "DEL_FLAG_OFF";  // 逻辑删除标志位常量名称
     public static final String UN_DEL_FLAG_NAME = "DEL_FLAG_ON";  // 逻辑删除标志位常量名称(未删除)
@@ -67,18 +67,18 @@ public class LogicalDeletePlugin extends BasePlugin {
     public void initialized(IntrospectedTable introspectedTable) {
         // 1. 首先获取全局配置
         Properties properties = getProperties();
-        String logicalDeleteColumn = properties.getProperty(LOGICAL_DELETE_COLUMN_KEY);
-        this.logicalDeleteValue = properties.getProperty(LOGICAL_DELETE_VALUE_KEY);
-        this.logicalUnDeleteValue = properties.getProperty(LOGICAL_UN_DELETE_VALUE_KEY);
+        String logicalDeleteColumn = properties.getProperty(PRO_LOGICAL_DELETE_COLUMN);
+        this.logicalDeleteValue = properties.getProperty(PRO_LOGICAL_DELETE_VALUE);
+        this.logicalUnDeleteValue = properties.getProperty(PRO_LOGICAL_UN_DELETE_VALUE);
         // 2. 获取表单独配置，如果有则覆盖全局配置
-        if (introspectedTable.getTableConfigurationProperty(LOGICAL_DELETE_COLUMN_KEY) != null){
-            logicalDeleteColumn = introspectedTable.getTableConfigurationProperty(LOGICAL_DELETE_COLUMN_KEY);
+        if (introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_COLUMN) != null){
+            logicalDeleteColumn = introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_COLUMN);
         }
-        if (introspectedTable.getTableConfigurationProperty(LOGICAL_DELETE_VALUE_KEY) != null){
-            this.logicalDeleteValue = introspectedTable.getTableConfigurationProperty(LOGICAL_DELETE_VALUE_KEY);
+        if (introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_VALUE) != null){
+            this.logicalDeleteValue = introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_VALUE);
         }
-        if (introspectedTable.getTableConfigurationProperty(LOGICAL_UN_DELETE_VALUE_KEY) != null){
-            this.logicalUnDeleteValue = introspectedTable.getTableConfigurationProperty(LOGICAL_UN_DELETE_VALUE_KEY);
+        if (introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_UN_DELETE_VALUE) != null){
+            this.logicalUnDeleteValue = introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_UN_DELETE_VALUE);
         }
         // 3. 判断该表是否存在逻辑删除列
         this.logicalDeleteColumn = null;
@@ -105,13 +105,13 @@ public class LogicalDeletePlugin extends BasePlugin {
                         || JDBCType.VARCHAR == type){
                     this.logicalDeleteColumn = column;
                 } else {
-                    warnings.add("itfsw(逻辑删除插件):"+introspectedTable.getFullyQualifiedTable()+"逻辑删除列("+introspectedTable.getTableConfigurationProperty(LOGICAL_DELETE_COLUMN_KEY)+")的类型不在支持范围（请使用数字列，字符串列，布尔列）！");
+                    warnings.add("itfsw(逻辑删除插件):"+introspectedTable.getFullyQualifiedTable()+"逻辑删除列("+introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_COLUMN)+")的类型不在支持范围（请使用数字列，字符串列，布尔列）！");
                 }
             }
         }
 
-        if (introspectedTable.getTableConfigurationProperty(LOGICAL_DELETE_COLUMN_KEY) != null && this.logicalDeleteColumn == null){
-            warnings.add("itfsw(逻辑删除插件):"+introspectedTable.getFullyQualifiedTable()+"没有找到您配置的逻辑删除列("+introspectedTable.getTableConfigurationProperty(LOGICAL_DELETE_COLUMN_KEY)+")！");
+        if (introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_COLUMN) != null && this.logicalDeleteColumn == null){
+            warnings.add("itfsw(逻辑删除插件):"+introspectedTable.getFullyQualifiedTable()+"没有找到您配置的逻辑删除列("+introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_COLUMN)+")！");
         }
 
         // 4. 判断逻辑删除值是否配置了

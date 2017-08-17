@@ -71,12 +71,12 @@ public class IntrospectedTableTools {
 
         // 注意！！ 如果配置了ExampleTargetPlugin插件，要修正Example 位置
         PluginConfiguration configuration = PluginTools.getPluginConfiguration(context, ExampleTargetPlugin.class);
-        if (configuration != null && configuration.getProperty(ExampleTargetPlugin.TARGET_PACKAGE_KEY) != null) {
+        if (configuration != null && configuration.getProperty(ExampleTargetPlugin.PRO_TARGET_PACKAGE) != null) {
             String exampleType = introspectedTable.getExampleType();
             // 修改包名
             JavaModelGeneratorConfiguration javaModelGeneratorConfiguration = context.getJavaModelGeneratorConfiguration();
             String targetPackage = javaModelGeneratorConfiguration.getTargetPackage();
-            String newExampleType = exampleType.replace(targetPackage, configuration.getProperty(ExampleTargetPlugin.TARGET_PACKAGE_KEY));
+            String newExampleType = exampleType.replace(targetPackage, configuration.getProperty(ExampleTargetPlugin.PRO_TARGET_PACKAGE));
 
             introspectedTable.setExampleType(newExampleType);
         }

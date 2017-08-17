@@ -34,9 +34,9 @@ import java.util.regex.Pattern;
  * ---------------------------------------------------------------------------
  */
 public class TableRenamePlugin extends BasePlugin {
-    public static final String PRE_SEARCH_STRING = "searchString";  // 查找 property
-    public static final String PRE_REPLACE_STRING = "replaceString";  // 替换 property
-    public static final String PRE_TABLE_OVERRIDE = "tableOverride";   // table 重命名 property
+    public static final String PRO_SEARCH_STRING = "searchString";  // 查找 property
+    public static final String PRO_REPLACE_STRING = "replaceString";  // 替换 property
+    public static final String PRO_TABLE_OVERRIDE = "tableOverride";   // table 重命名 property
 
     /**
      * {@inheritDoc}
@@ -45,8 +45,8 @@ public class TableRenamePlugin extends BasePlugin {
     public boolean validate(List<String> warnings) {
 
         // 如果配置了searchString 或者 replaceString，二者不允许单独存在
-        if ((getProperties().getProperty(PRE_SEARCH_STRING) == null && getProperties().getProperty(PRE_REPLACE_STRING) != null)
-                || (getProperties().getProperty(PRE_SEARCH_STRING) != null && getProperties().getProperty(PRE_REPLACE_STRING) == null)) {
+        if ((getProperties().getProperty(PRO_SEARCH_STRING) == null && getProperties().getProperty(PRO_REPLACE_STRING) != null)
+                || (getProperties().getProperty(PRO_SEARCH_STRING) != null && getProperties().getProperty(PRO_REPLACE_STRING) == null)) {
             warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件的searchString、replaceString属性需配合使用，不能单独存在！");
             return false;
         }
@@ -71,16 +71,16 @@ public class TableRenamePlugin extends BasePlugin {
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
         // 1. 获取表单独配置
-        if (introspectedTable.getTableConfigurationProperty(PRE_TABLE_OVERRIDE) != null) {
-            String override = introspectedTable.getTableConfigurationProperty(PRE_TABLE_OVERRIDE);
+        if (introspectedTable.getTableConfigurationProperty(PRO_TABLE_OVERRIDE) != null) {
+            String override = introspectedTable.getTableConfigurationProperty(PRO_TABLE_OVERRIDE);
             try {
                 IntrospectedTableTools.setDomainObjectName(introspectedTable, getContext(), override);
             } catch (Exception e) {
                 logger.error("itfsw:插件" + this.getClass().getTypeName() + "使用tableOverride替换时异常！", e);
             }
-        } else if (getProperties().getProperty(PRE_SEARCH_STRING) != null) {
-            String searchString = getProperties().getProperty(PRE_SEARCH_STRING);
-            String replaceString = getProperties().getProperty(PRE_REPLACE_STRING);
+        } else if (getProperties().getProperty(PRO_SEARCH_STRING) != null) {
+            String searchString = getProperties().getProperty(PRO_SEARCH_STRING);
+            String replaceString = getProperties().getProperty(PRO_REPLACE_STRING);
 
             String domainObjectName = introspectedTable.getFullyQualifiedTable().getDomainObjectName();
             Pattern pattern = Pattern.compile(searchString);

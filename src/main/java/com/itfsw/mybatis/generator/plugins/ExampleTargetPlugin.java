@@ -35,7 +35,7 @@ import java.util.Properties;
  * ---------------------------------------------------------------------------
  */
 public class ExampleTargetPlugin extends BasePlugin {
-    public static final String TARGET_PACKAGE_KEY = "targetPackage";  // 配置targetPackage名
+    public static final String PRO_TARGET_PACKAGE = "targetPackage";  // 配置targetPackage名
     private static String targetPackage;   // 目标包
 
     /**
@@ -45,7 +45,7 @@ public class ExampleTargetPlugin extends BasePlugin {
     public boolean validate(List<String> warnings) {
         // 获取配置的目标package
         Properties properties = getProperties();
-        this.targetPackage = properties.getProperty(TARGET_PACKAGE_KEY);
+        this.targetPackage = properties.getProperty(PRO_TARGET_PACKAGE);
         if (this.targetPackage == null){
             warnings.add("请配置com.itfsw.mybatis.generator.plugins.ExampleTargetPlugin插件的目标包名(targetPackage)！");
             return false;
