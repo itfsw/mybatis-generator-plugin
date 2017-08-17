@@ -148,4 +148,31 @@ public class LogicalDeletePluginTest {
             }
         });
     }
+
+    /**
+     * 测试自定义常量
+     */
+    @Test
+    public void testCustomConst() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LogicalDeletePlugin/mybatis-generator-with-customConstName.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception{
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+                ObjectUtil Tb = new ObjectUtil(loader, packagz + ".Tb");
+
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andDelFlagEqualTo", Tb.get("UN_DEL"));
+                criteria.invoke("andIdEqualTo", 3l);
+
+                // 验证sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
+                Assert.assertEquals(sql, "select id, del_flag, ts_1, ts_3, ts_4 from tb WHERE (  del_flag = '0' and id = '3' )");
+                // 验证执行
+                Object result = tbMapper.invoke("selectByExample", tbExample.getObject());
+                Assert.assertEquals(((List)result).size(), 0);
+            }
+        });
+    }
 }
