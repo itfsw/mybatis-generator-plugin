@@ -27,7 +27,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.0.16</version>
+  <version>1.0.17</version>
 </dependency>
 ```
 ---------------------------------------
@@ -350,7 +350,7 @@ public class Test {
 因为很多实际项目数据都不允许物理删除，多采用逻辑删除，所以单独为逻辑删除做了一个插件，方便使用。  
 - 增加logicalDeleteByExample和logicalDeleteByPrimaryKey方法；  
 - 查询构造工具中增加逻辑删除条件andDeleted(boolean)； 
-- 增加逻辑删除常量DEL_FLAG_OFF（已删除）、DEL_FLAG_ON（未删除）；
+- 增加逻辑删除常量IS_DELETED（已删除 默认值）、NOT_DELETED（未删除 默认值）（[[issues#11]](https://github.com/itfsw/mybatis-generator-plugin/issues/11)）；
  
 插件：
 ```xml
@@ -364,6 +364,10 @@ public class Test {
         <property name="logicalDeleteValue" value="9"/>
         <!-- 逻辑删除-未删除值 -->
         <property name="logicalUnDeleteValue" value="0"/>
+        <!-- 逻辑删除常量名称，不配置默认为 IS_DELETED -->
+        <property name="logicalDeleteValue" value="DEL"/>
+        <!-- 逻辑删除常量（未删除）名称，不配置默认为 NOT_DELETED -->
+        <property name="logicalUnDeleteValue" value="UN_DEL"/>
     </plugin>
     
     <table tableName="tb">
@@ -397,14 +401,14 @@ public class Test {
                 // 新增了一个andDeleted方法过滤逻辑删除数据
                 .andDeleted(true)
                 // 当然也可直接使用逻辑删除列的查询方法，我们数据Model中定义了一个逻辑删除常量DEL_FLAG
-                .andDelFlagEqualTo(Tb.DEL_FLAG)
+                .andDelFlagEqualTo(Tb.IS_DELETED)
                 .example()
         );
         
         // 4. 逻辑删除和未删除常量
         Tb tb = new Tb.Builder()
-                .delFlag(Tb.DEL_FLAG_OFF)   // 删除
-                .delFlag(Tb.DEL_FLAG_ON)    // 未删除
+                .delFlag(Tb.IS_DELETED)   // 删除
+                .delFlag(Tb.NOT_DELETED)    // 未删除
                 .build();
     }
 }
