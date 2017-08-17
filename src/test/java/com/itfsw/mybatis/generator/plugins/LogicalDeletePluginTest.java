@@ -123,6 +123,27 @@ public class LogicalDeletePluginTest {
     }
 
     /**
+     * 测试 selectNotDeletedByPrimaryKey
+     */
+    @Test
+    public void testSelectNotDeletedByPrimaryKey() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LogicalDeletePlugin/mybatis-generator.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception{
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                // 验证sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectNotDeletedByPrimaryKey", 3L);
+                Assert.assertEquals(sql, "select id, del_flag, ts_1, ts_3, ts_4 from tb where id = 3 and del_flag <> 1");
+                // 验证执行
+                Object result = tbMapper.invoke("selectNotDeletedByPrimaryKey", 3L);
+                Assert.assertEquals(result, null);
+            }
+        });
+    }
+
+    /**
      * 测试关联生成的方法和常量
      */
     @Test

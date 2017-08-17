@@ -19,17 +19,31 @@ package com.itfsw.mybatis.generator.plugins;
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
+
+import java.sql.JDBCType;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
+
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
-import org.mybatis.generator.api.dom.java.*;
+import org.mybatis.generator.api.dom.java.Field;
+import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
+import org.mybatis.generator.api.dom.java.InnerClass;
+import org.mybatis.generator.api.dom.java.Interface;
+import org.mybatis.generator.api.dom.java.JavaVisibility;
+import org.mybatis.generator.api.dom.java.Method;
+import org.mybatis.generator.api.dom.java.Parameter;
+import org.mybatis.generator.api.dom.java.TopLevelClass;
 import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 
-import java.sql.JDBCType;
-import java.util.*;
+import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 
 /**
  * ---------------------------------------------------------------------------
@@ -40,8 +54,11 @@ import java.util.*;
  * ---------------------------------------------------------------------------
  */
 public class LogicalDeletePlugin extends BasePlugin {
+
     public static final String METHOD_LOGICAL_DELETE_BY_EXAMPLE = "logicalDeleteByExample";  // 方法名
     public static final String METHOD_LOGICAL_DELETE_BY_PRIMARY_KEY = "logicalDeleteByPrimaryKey";  // 方法名
+    public static final String METHOD_SELECT_NOT_DELETED_BY_PRIMARY_KEY = "selectNotDeletedByPrimaryKey";  //方法名
+    public static final String METHOD_SELECT_NOT_DELETED_BY_PRIMARY_KEY_WITH_BLOBS = "selectNotDeletedByPrimaryKeyWithBLOBs";  //方法名
 
     public static final String LOGICAL_DELETE_COLUMN_KEY = "logicalDeleteColumn";  // 逻辑删除列-Key
     public static final String LOGICAL_DELETE_VALUE_KEY = "logicalDeleteValue";  // 逻辑删除值-Key
@@ -148,10 +165,14 @@ public class LogicalDeletePlugin extends BasePlugin {
 
             // 2. 判断是否有主键，生成主键删除方法
             if (introspectedTable.hasPrimaryKeyColumns()){
-                // 1. 逻辑删除ByExample
+                // 1. 逻辑删除ByPrimaryKey
                 Method mLogicalDeleteByPrimaryKey = new Method(METHOD_LOGICAL_DELETE_BY_PRIMARY_KEY);
                 // 返回值类型
                 mLogicalDeleteByPrimaryKey.setReturnType(FullyQualifiedJavaType.getIntInstance());
+
+                // 2. 查询非逻辑删数据ByPrimaryKey
+                Method mSelectNotDeletedByPrimaryKey = new Method(METHOD_SELECT_NOT_DELETED_BY_PRIMARY_KEY);
+                mSelectNotDeletedByPrimaryKey.setReturnType(JavaElementGeneratorTools.getModelTypeWithoutBLOBs(introspectedTable));
 
                 // 添加参数
                 Set<FullyQualifiedJavaType> importedTypes = new TreeSet<FullyQualifiedJavaType>();
@@ -159,6 +180,7 @@ public class LogicalDeletePlugin extends BasePlugin {
                     FullyQualifiedJavaType type1 = new FullyQualifiedJavaType(introspectedTable.getPrimaryKeyType());
                     importedTypes.add(type1);
                     mLogicalDeleteByPrimaryKey.addParameter(new Parameter(type1, "key")); //$NON-NLS-1$
+                    mSelectNotDeletedByPrimaryKey.addParameter(new Parameter(type1, "key")); //$NON-NLS-1$
                 } else {
                     // no primary key class - fields are in the base class
                     // if more than one PK field, then we need to annotate the
@@ -182,15 +204,19 @@ public class LogicalDeletePlugin extends BasePlugin {
                             parameter.addAnnotation(sb.toString());
                         }
                         mLogicalDeleteByPrimaryKey.addParameter(parameter);
+                        mSelectNotDeletedByPrimaryKey.addParameter(parameter);
                     }
                 }
 
                 // 添加方法说明
                 commentGenerator.addGeneralMethodComment(mLogicalDeleteByPrimaryKey, introspectedTable);
+                commentGenerator.addGeneralMethodComment(mSelectNotDeletedByPrimaryKey, introspectedTable);
                 // interface 增加方法
                 interfaze.addImportedTypes(importedTypes);
                 interfaze.addMethod(mLogicalDeleteByPrimaryKey);
+                interfaze.addMethod(mSelectNotDeletedByPrimaryKey);
                 logger.debug("itfsw(逻辑删除插件):"+interfaze.getType().getShortName()+"增加方法logicalDeleteByPrimaryKey。");
+                logger.debug("itfsw(逻辑删除插件):"+interfaze.getType().getShortName()+"增加方法selectNotDeletedByPrimaryKey。");
             }
         }
         return true;
@@ -244,76 +270,200 @@ public class LogicalDeletePlugin extends BasePlugin {
             document.getRootElement().addElement(logicalDeleteByExample);
             logger.debug("itfsw(逻辑删除插件):"+introspectedTable.getMyBatis3XmlMapperFileName()+"增加方法logicalDeleteByExample的实现。");
 
-            // 2. 判断是否有主键，生成主键删除方法
+            // 2. 判断是否有主键，生成主键删除方法及按主键查询未删除
             if (introspectedTable.hasPrimaryKeyColumns()){
-                XmlElement logicalDeleteByPrimaryKey = new XmlElement("update"); //$NON-NLS-1$
-                logicalDeleteByPrimaryKey.addAttribute(new Attribute("id", METHOD_LOGICAL_DELETE_BY_PRIMARY_KEY));
-
-                String parameterClass;
-                if (introspectedTable.getRules().generatePrimaryKeyClass()) {
-                    parameterClass = introspectedTable.getPrimaryKeyType();
-                } else {
-                    // PK fields are in the base class. If more than on PK
-                    // field, then they are coming in a map.
-                    if (introspectedTable.getPrimaryKeyColumns().size() > 1) {
-                        parameterClass = "map"; //$NON-NLS-1$
-                    } else {
-                        parameterClass = introspectedTable.getPrimaryKeyColumns().get(0).getFullyQualifiedJavaType().toString();
-                    }
-                }
-                logicalDeleteByPrimaryKey.addAttribute(new Attribute("parameterType", parameterClass));
-                commentGenerator.addComment(logicalDeleteByPrimaryKey);
-
-                StringBuilder sb1 = new StringBuilder();
-                sb1.append("update "); //$NON-NLS-1$
-                sb1.append(introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime());
-                sb1.append(" set ");
-                // 更新逻辑删除字段
-                sb1.append(this.logicalDeleteColumn.getActualColumnName());
-                sb1.append(" = ");
-
-                // 判断字段类型
-                JDBCType type1 = JDBCType.valueOf(this.logicalDeleteColumn.getJdbcType());
-                if (this.logicalDeleteValue == null || "NULL".equalsIgnoreCase(this.logicalDeleteValue)){
-                    sb1.append("NULL");
-                } else if (JDBCType.CHAR == type1
-                        || JDBCType.LONGNVARCHAR == type1
-                        || JDBCType.LONGVARCHAR == type1
-                        || JDBCType.NCHAR == type1
-                        || JDBCType.NVARCHAR == type1
-                        || JDBCType.VARCHAR == type1){
-                    sb1.append("'");
-                    sb1.append(this.logicalDeleteValue);
-                    sb1.append("'");
-                } else {
-                    sb1.append(this.logicalDeleteValue);
-                }
-
-                logicalDeleteByPrimaryKey.addElement(new TextElement(sb1.toString()));
-
-                boolean and = false;
-                for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
-                    sb.setLength(0);
-                    if (and) {
-                        sb.append("  and "); //$NON-NLS-1$
-                    } else {
-                        sb.append("where "); //$NON-NLS-1$
-                        and = true;
-                    }
-
-                    sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
-                    sb.append(" = "); //$NON-NLS-1$
-                    sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
-                    logicalDeleteByPrimaryKey.addElement(new TextElement(sb.toString()));
-                }
-
-                document.getRootElement().addElement(logicalDeleteByPrimaryKey);
-                logger.debug("itfsw(逻辑删除插件):"+introspectedTable.getMyBatis3XmlMapperFileName()+"增加方法logicalDeleteByPrimaryKey的实现。");
+                generateLogicalDeleteByPKSqlMapper(document, introspectedTable, sb);
+                generateSelectNotDeletedByPKSqlMapper(document, introspectedTable);
             }
         }
         return true;
     }
 
+    private void generateSelectNotDeletedByPKSqlMapper(Document document, IntrospectedTable introspectedTable) {
+
+        XmlElement selectNotDeletedByPK = new XmlElement("select");
+        // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
+        commentGenerator.addComment(selectNotDeletedByPK);
+
+        // 添加ID
+        selectNotDeletedByPK.addAttribute(new Attribute("id", METHOD_SELECT_NOT_DELETED_BY_PRIMARY_KEY));
+        // 添加返回类型
+        selectNotDeletedByPK.addAttribute(new Attribute("resultMap", introspectedTable.getBaseResultMapId()));
+        // 添加参数类型
+        selectNotDeletedByPK.addAttribute(new Attribute("parameterType", "map"));
+        selectNotDeletedByPK.addElement(new TextElement("select"));
+
+        StringBuilder sb = new StringBuilder();
+        if (stringHasValue(introspectedTable.getSelectByPrimaryKeyQueryId())) {
+            sb.append('\'');
+            sb.append(introspectedTable.getSelectByPrimaryKeyQueryId());
+            sb.append("' as QUERYID,");
+            selectNotDeletedByPK.addElement(new TextElement(sb.toString()));
+        }
+        selectNotDeletedByPK.addElement(XmlElementGeneratorTools.getBaseColumnListElement(introspectedTable));
+        sb.append("from ");
+        sb.append(introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime());
+        selectNotDeletedByPK.addElement(new TextElement(sb.toString()));
+
+        boolean and = false;
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
+            sb.setLength(0);
+            if (and) {
+                sb.append("  and "); //$NON-NLS-1$
+            } else {
+                sb.append("where "); //$NON-NLS-1$
+                and = true;
+            }
+
+            sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
+            sb.append(" = "); //$NON-NLS-1$
+            sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
+            selectNotDeletedByPK.addElement(new TextElement(sb.toString()));
+        }
+        sb.setLength(0);
+        sb.append(" and ").append(this.logicalDeleteColumn.getActualColumnName()).append(" &lt;&gt; ").append(getLogicalDeleteValue());
+        selectNotDeletedByPK.addElement(new TextElement(sb.toString()));
+        document.getRootElement().addElement(selectNotDeletedByPK);
+
+        logger.debug("itfsw(查询单条数据插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加selectNotDeletedByPrimaryKey方法。");
+
+        // ------------------------------------ selectNotDeletedByPrimaryKeyWithBLOBs ----------------------------------
+        if (introspectedTable.hasBLOBColumns()) {
+            // 生成查询语句
+            XmlElement selectOneWithBLOBsElement = new XmlElement("select");
+            commentGenerator.addComment(selectOneWithBLOBsElement);
+
+            // 添加ID
+            selectOneWithBLOBsElement.addAttribute(new Attribute("id", METHOD_SELECT_NOT_DELETED_BY_PRIMARY_KEY_WITH_BLOBS));
+            // 添加返回类型
+            selectOneWithBLOBsElement.addAttribute(new Attribute("resultMap", introspectedTable.getResultMapWithBLOBsId()));
+            // 添加参数类型
+            selectOneWithBLOBsElement.addAttribute(new Attribute("parameterType", introspectedTable.getExampleType()));
+            // 添加查询SQL
+            selectOneWithBLOBsElement.addElement(new TextElement("select"));
+
+            sb.setLength(0);
+            if (stringHasValue(introspectedTable.getSelectByExampleQueryId())) {
+                sb.append('\'');
+                sb.append(introspectedTable.getSelectByExampleQueryId());
+                sb.append("' as QUERYID,");
+                selectOneWithBLOBsElement.addElement(new TextElement(sb.toString()));
+            }
+
+            selectOneWithBLOBsElement.addElement(XmlElementGeneratorTools.getBaseColumnListElement(introspectedTable));
+            selectOneWithBLOBsElement.addElement(new TextElement(","));
+            selectOneWithBLOBsElement.addElement(XmlElementGeneratorTools.getBlobColumnListElement(introspectedTable));
+
+            sb.append("from ");
+            sb.append(introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime());
+            selectOneWithBLOBsElement.addElement(new TextElement(sb.toString()));
+
+            and = false;
+            for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
+                sb.setLength(0);
+                if (and) {
+                    sb.append("  and "); //$NON-NLS-1$
+                } else {
+                    sb.append("where "); //$NON-NLS-1$
+                    and = true;
+                }
+
+                sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
+                sb.append(" = "); //$NON-NLS-1$
+                sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
+                selectOneWithBLOBsElement.addElement(new TextElement(sb.toString()));
+            }
+            sb.setLength(0);
+            sb.append(" and ").append(this.logicalDeleteColumn.getActualColumnName()).append(" &lt;&gt; ").append(getLogicalDeleteValue());
+            selectOneWithBLOBsElement.addElement(new TextElement(sb.toString()));
+            document.getRootElement().addElement(selectOneWithBLOBsElement);
+
+            logger.debug("itfsw(查询单条数据插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加selectOneByExampleWithBLOBs方法。");
+        }
+    }
+
+    private void generateLogicalDeleteByPKSqlMapper(Document document, IntrospectedTable introspectedTable, StringBuilder sb) {
+        XmlElement logicalDeleteByPrimaryKey = new XmlElement("update"); //$NON-NLS-1$
+        logicalDeleteByPrimaryKey.addAttribute(new Attribute("id", METHOD_LOGICAL_DELETE_BY_PRIMARY_KEY));
+
+        String parameterClass;
+        if (introspectedTable.getRules().generatePrimaryKeyClass()) {
+            parameterClass = introspectedTable.getPrimaryKeyType();
+        } else {
+            // PK fields are in the base class. If more than on PK
+            // field, then they are coming in a map.
+            if (introspectedTable.getPrimaryKeyColumns().size() > 1) {
+                parameterClass = "map"; //$NON-NLS-1$
+            } else {
+                parameterClass = introspectedTable.getPrimaryKeyColumns().get(0).getFullyQualifiedJavaType().toString();
+            }
+        }
+        logicalDeleteByPrimaryKey.addAttribute(new Attribute("parameterType", parameterClass));
+        commentGenerator.addComment(logicalDeleteByPrimaryKey);
+
+        StringBuilder sb1 = new StringBuilder();
+        sb1.append("update "); //$NON-NLS-1$
+        sb1.append(introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime());
+        sb1.append(" set ");
+        // 更新逻辑删除字段
+        sb1.append(this.logicalDeleteColumn.getActualColumnName());
+        sb1.append(" = ");
+
+        // 判断字段类型
+        JDBCType type1 = JDBCType.valueOf(this.logicalDeleteColumn.getJdbcType());
+        if (this.logicalDeleteValue == null || "NULL".equalsIgnoreCase(this.logicalDeleteValue)){
+            sb1.append("NULL");
+        } else if (JDBCType.CHAR == type1
+                || JDBCType.LONGNVARCHAR == type1
+                || JDBCType.LONGVARCHAR == type1
+                || JDBCType.NCHAR == type1
+                || JDBCType.NVARCHAR == type1
+                || JDBCType.VARCHAR == type1){
+            sb1.append("'");
+            sb1.append(this.logicalDeleteValue);
+            sb1.append("'");
+        } else {
+            sb1.append(this.logicalDeleteValue);
+        }
+
+        logicalDeleteByPrimaryKey.addElement(new TextElement(sb1.toString()));
+
+        boolean and = false;
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
+            sb.setLength(0);
+            if (and) {
+                sb.append("  and "); //$NON-NLS-1$
+            } else {
+                sb.append("where "); //$NON-NLS-1$
+                and = true;
+            }
+
+            sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
+            sb.append(" = "); //$NON-NLS-1$
+            sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
+            logicalDeleteByPrimaryKey.addElement(new TextElement(sb.toString()));
+        }
+
+        document.getRootElement().addElement(logicalDeleteByPrimaryKey);
+        logger.debug("itfsw(逻辑删除插件):"+introspectedTable.getMyBatis3XmlMapperFileName()+"增加方法logicalDeleteByPrimaryKey的实现。");
+    }
+
+    private String getLogicalDeleteValue() {
+        // 判断字段类型
+        JDBCType type1 = JDBCType.valueOf(this.logicalDeleteColumn.getJdbcType());
+        if (this.logicalDeleteValue == null || "NULL".equalsIgnoreCase(this.logicalDeleteValue)){
+            return "NULL";
+        } else if (JDBCType.CHAR == type1
+                || JDBCType.LONGNVARCHAR == type1
+                || JDBCType.LONGVARCHAR == type1
+                || JDBCType.NCHAR == type1
+                || JDBCType.NVARCHAR == type1
+                || JDBCType.VARCHAR == type1){
+            return "'" + this.logicalDeleteValue + "'";
+        } else {
+            return this.logicalDeleteValue;
+        }
+    }
     /**
      * Model 生成
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
