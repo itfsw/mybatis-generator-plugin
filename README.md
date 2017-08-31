@@ -27,7 +27,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.0.17</version>
+  <version>1.0.18</version>
 </dependency>
 ```
 ---------------------------------------
@@ -348,8 +348,10 @@ public class Test {
 ```
 ### 7. 逻辑删除插件
 因为很多实际项目数据都不允许物理删除，多采用逻辑删除，所以单独为逻辑删除做了一个插件，方便使用。  
-- 增加logicalDeleteByExample和logicalDeleteByPrimaryKey方法；  
-- 查询构造工具中增加逻辑删除条件andDeleted(boolean)； 
+- 增加logicalDeleteByExample和logicalDeleteByPrimaryKey方法；
+- 增加selectByPrimaryKeyWithLogicalDelete方法（[[pull#12]](https://github.com/itfsw/mybatis-generator-plugin/pull/12)）；
+- 查询构造工具中增加逻辑删除条件andLogicalDeleted(boolean)；
+- 数据Model增加逻辑删除条件andLogicalDeleted(boolean)；
 - 增加逻辑删除常量IS_DELETED（已删除 默认值）、NOT_DELETED（未删除 默认值）（[[issues#11]](https://github.com/itfsw/mybatis-generator-plugin/issues/11)）；
  
 插件：
@@ -399,7 +401,7 @@ public class Test {
                 .createCriteria()
                 .andField1EqualTo(1)
                 // 新增了一个andDeleted方法过滤逻辑删除数据
-                .andDeleted(true)
+                .andLogicalDeleted(true)
                 // 当然也可直接使用逻辑删除列的查询方法，我们数据Model中定义了一个逻辑删除常量DEL_FLAG
                 .andDelFlagEqualTo(Tb.IS_DELETED)
                 .example()
@@ -409,7 +411,12 @@ public class Test {
         Tb tb = new Tb.Builder()
                 .delFlag(Tb.IS_DELETED)   // 删除
                 .delFlag(Tb.NOT_DELETED)    // 未删除
-                .build();
+                .build()
+                .andLogicalDeleted(true);   // 也可以在这里使用true|false设置逻辑删除
+
+        // 5. selectByPrimaryKeyWithLogicalDelete V1.0.18 版本增加
+        // 因为之前觉得既然拿到了主键这种查询没有必要，但是实际使用中可能存在根据主键判断是否逻辑删除的情况，这种场景还是有用的
+        this.tbMapper.selectByPrimaryKeyWithLogicalDelete(1, true);
     }
 }
 ```
@@ -689,7 +696,7 @@ Mybatis Generator是原生支持自定义注释的（commentGenerator配置type�
 
 >warning: 请注意拷贝参考模板注释前方空格，idea等工具拷贝进去后自动格式化会造成格式错乱。 
 
->warning: 模板引擎采用的是freemarker所以一些freemarker指令参数（如：<#if xx></#if>、${.now?string("yyyy-MM-dd HH:mm:ss")}）都是可以使用的，请自己尝试。  
+>warning: 模板引擎采用的是freemarker所以一些freemarker指令参数（如：<#if xx></#if>、${.now?string("yyyy-MM-dd HH:mm:ss")}）都是可以使用的，请自己尝试。
 
 | 注释ID | 传入参数 | 备注 |
 | ----- | ----- | ---- |
