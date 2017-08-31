@@ -17,6 +17,7 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
+import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedColumn;
@@ -27,9 +28,12 @@ import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
+import org.mybatis.generator.internal.util.JavaBeansUtil;
 
 import java.sql.JDBCType;
 import java.util.*;
+
+import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 
 /**
  * ---------------------------------------------------------------------------
@@ -52,7 +56,10 @@ public class LogicalDeletePlugin extends BasePlugin {
     public static final String DEFAULT_LOGICAL_DELETE_CONST_NAME = "IS_DELETED";  // 逻辑删除标志位常量名称
     public static final String DEFAULT_LOGICAL_UN_DELETE_CONST_NAME = "NOT_DELETED";  // 逻辑删除标志位常量名称(未删除)
 
-    public static final String METHOD_LOGICAL_DELETE = "andDeleted"; // 逻辑删除查询方法
+    public static final String METHOD_LOGICAL_DELETED = "andLogicalDeleted"; // 逻辑删除查询方法
+    public static final String PARAMETER_LOGICAL_DELETED = METHOD_LOGICAL_DELETED;  // 增强selectByPrimaryKey是参数名称
+
+    public static final String METHOD_SELECT_BY_PRIMARY_KEY_WITH_LOGICAL_DELETE = "selectByPrimaryKeyWithLogicalDelete";  // selectByPrimaryKey 的逻辑删除增强
 
     private IntrospectedColumn logicalDeleteColumn; // 逻辑删除列
     private String logicalDeleteValue;  // 逻辑删除值
@@ -125,6 +132,15 @@ public class LogicalDeletePlugin extends BasePlugin {
         // 5. 获取逻辑删除常量值
         this.logicalDeleteConstName = properties.getProperty(PRO_LOGICAL_DELETE_CONST_NAME) != null ? properties.getProperty(PRO_LOGICAL_DELETE_CONST_NAME).toUpperCase() : DEFAULT_LOGICAL_DELETE_CONST_NAME;
         this.logicalUnDeleteConstName = properties.getProperty(PRO_LOGICAL_UN_DELETE_CONST_NAME) != null ? properties.getProperty(PRO_LOGICAL_UN_DELETE_CONST_NAME).toUpperCase() : DEFAULT_LOGICAL_UN_DELETE_CONST_NAME;
+
+        // 6. 防止增强的selectByPrimaryKey中逻辑删除键冲突
+        if (this.logicalDeleteColumn != null) {
+            Field logicalDeleteField = JavaBeansUtil.getJavaBeansField(this.logicalDeleteColumn, context, introspectedTable);
+            if (logicalDeleteField.getName().equals(PARAMETER_LOGICAL_DELETED)) {
+                this.logicalDeleteColumn = null;
+                warnings.add("itfsw(逻辑删除插件):" + introspectedTable.getFullyQualifiedTable() + "配置的逻辑删除列和插件保留关键字(" + PARAMETER_LOGICAL_DELETED + ")冲突！");
+            }
+        }
     }
 
     /**
@@ -154,17 +170,30 @@ public class LogicalDeletePlugin extends BasePlugin {
 
             // 2. 判断是否有主键，生成主键删除方法
             if (introspectedTable.hasPrimaryKeyColumns()) {
-                // 1. 逻辑删除ByExample
-                Method mLogicalDeleteByPrimaryKey = new Method(METHOD_LOGICAL_DELETE_BY_PRIMARY_KEY);
-                // 返回值类型
-                mLogicalDeleteByPrimaryKey.setReturnType(FullyQualifiedJavaType.getIntInstance());
+                // 2.1. 逻辑删除ByExample
+                Method mLogicalDeleteByPrimaryKey = JavaElementGeneratorTools.generateMethod(
+                        METHOD_LOGICAL_DELETE_BY_PRIMARY_KEY,
+                        JavaVisibility.DEFAULT,
+                        FullyQualifiedJavaType.getIntInstance()
+                );
+                commentGenerator.addGeneralMethodComment(mLogicalDeleteByPrimaryKey, introspectedTable);
+
+                // 2.2 增强selectByPrimaryKey
+                Method mSelectByPrimaryKey = JavaElementGeneratorTools.generateMethod(
+                        METHOD_SELECT_BY_PRIMARY_KEY_WITH_LOGICAL_DELETE,
+                        JavaVisibility.DEFAULT,
+                        introspectedTable.getRules().calculateAllFieldsClass()
+                );
 
                 // 添加参数
-                Set<FullyQualifiedJavaType> importedTypes = new TreeSet<FullyQualifiedJavaType>();
+                Set<FullyQualifiedJavaType> importedTypes = new TreeSet<>();
+                importedTypes.add(new FullyQualifiedJavaType("org.apache.ibatis.annotations.Param"));
+
                 if (introspectedTable.getRules().generatePrimaryKeyClass()) {
                     FullyQualifiedJavaType type1 = new FullyQualifiedJavaType(introspectedTable.getPrimaryKeyType());
                     importedTypes.add(type1);
-                    mLogicalDeleteByPrimaryKey.addParameter(new Parameter(type1, "key")); //$NON-NLS-1$
+                    mLogicalDeleteByPrimaryKey.addParameter(new Parameter(type1, "key")); 
+                    mSelectByPrimaryKey.addParameter(new Parameter(type1, "key", "@Param(\"key\")"));
                 } else {
                     // no primary key class - fields are in the base class
                     // if more than one PK field, then we need to annotate the
@@ -172,9 +201,6 @@ public class LogicalDeletePlugin extends BasePlugin {
                     // for MyBatis
                     List<IntrospectedColumn> introspectedColumns = introspectedTable.getPrimaryKeyColumns();
                     boolean annotate = introspectedColumns.size() > 1;
-                    if (annotate) {
-                        importedTypes.add(new FullyQualifiedJavaType("org.apache.ibatis.annotations.Param")); //$NON-NLS-1$
-                    }
                     StringBuilder sb = new StringBuilder();
                     for (IntrospectedColumn introspectedColumn : introspectedColumns) {
                         FullyQualifiedJavaType type1 = introspectedColumn.getFullyQualifiedJavaType();
@@ -182,21 +208,38 @@ public class LogicalDeletePlugin extends BasePlugin {
                         Parameter parameter = new Parameter(type1, introspectedColumn.getJavaProperty());
                         if (annotate) {
                             sb.setLength(0);
-                            sb.append("@Param(\""); //$NON-NLS-1$
+                            sb.append("@Param(\"");
                             sb.append(introspectedColumn.getJavaProperty());
-                            sb.append("\")"); //$NON-NLS-1$
+                            sb.append("\")");
                             parameter.addAnnotation(sb.toString());
                         }
                         mLogicalDeleteByPrimaryKey.addParameter(parameter);
+
+
+                        Parameter parameter1 = new Parameter(type1, introspectedColumn.getJavaProperty());
+                        sb.setLength(0);
+                        sb.append("@Param(\"");
+                        sb.append(introspectedColumn.getJavaProperty());
+                        sb.append("\")");
+                        parameter1.addAnnotation(sb.toString());
+
+                        mSelectByPrimaryKey.addParameter(parameter1);
                     }
                 }
 
-                // 添加方法说明
-                commentGenerator.addGeneralMethodComment(mLogicalDeleteByPrimaryKey, introspectedTable);
                 // interface 增加方法
                 interfaze.addImportedTypes(importedTypes);
                 interfaze.addMethod(mLogicalDeleteByPrimaryKey);
                 logger.debug("itfsw(逻辑删除插件):" + interfaze.getType().getShortName() + "增加方法logicalDeleteByPrimaryKey。");
+
+                // 增强selectByPrimaryKey
+                mSelectByPrimaryKey.addParameter(new Parameter(
+                        FullyQualifiedJavaType.getBooleanPrimitiveInstance(),
+                        PARAMETER_LOGICAL_DELETED,
+                        "@Param(\"" + PARAMETER_LOGICAL_DELETED + "\")"
+                ));
+                commentGenerator.addGeneralMethodComment(mSelectByPrimaryKey, introspectedTable);
+                FormatTools.addMethodWithBestPosition(interfaze, mSelectByPrimaryKey);
             }
         }
         return true;
@@ -213,13 +256,13 @@ public class LogicalDeletePlugin extends BasePlugin {
     public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
         if (this.logicalDeleteColumn != null) {
             // 1. 逻辑删除ByExample
-            XmlElement logicalDeleteByExample = new XmlElement("update"); //$NON-NLS-1$
+            XmlElement logicalDeleteByExample = new XmlElement("update"); 
             logicalDeleteByExample.addAttribute(new Attribute("id", METHOD_LOGICAL_DELETE_BY_EXAMPLE));
-            logicalDeleteByExample.addAttribute(new Attribute("parameterType", "map")); //$NON-NLS-1$ //$NON-NLS-2$
+            logicalDeleteByExample.addAttribute(new Attribute("parameterType", "map"));  //$NON-NLS-2$
             commentGenerator.addComment(logicalDeleteByExample);
 
             StringBuilder sb = new StringBuilder();
-            sb.append("update "); //$NON-NLS-1$
+            sb.append("update "); 
             sb.append(introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime());
             sb.append(" set ");
             // 更新逻辑删除字段
@@ -251,7 +294,7 @@ public class LogicalDeletePlugin extends BasePlugin {
 
             // 2. 判断是否有主键，生成主键删除方法
             if (introspectedTable.hasPrimaryKeyColumns()) {
-                XmlElement logicalDeleteByPrimaryKey = new XmlElement("update"); //$NON-NLS-1$
+                XmlElement logicalDeleteByPrimaryKey = new XmlElement("update"); 
                 logicalDeleteByPrimaryKey.addAttribute(new Attribute("id", METHOD_LOGICAL_DELETE_BY_PRIMARY_KEY));
 
                 String parameterClass;
@@ -261,7 +304,7 @@ public class LogicalDeletePlugin extends BasePlugin {
                     // PK fields are in the base class. If more than on PK
                     // field, then they are coming in a map.
                     if (introspectedTable.getPrimaryKeyColumns().size() > 1) {
-                        parameterClass = "map"; //$NON-NLS-1$
+                        parameterClass = "map"; 
                     } else {
                         parameterClass = introspectedTable.getPrimaryKeyColumns().get(0).getFullyQualifiedJavaType().toString();
                     }
@@ -270,7 +313,7 @@ public class LogicalDeletePlugin extends BasePlugin {
                 commentGenerator.addComment(logicalDeleteByPrimaryKey);
 
                 StringBuilder sb1 = new StringBuilder();
-                sb1.append("update "); //$NON-NLS-1$
+                sb1.append("update "); 
                 sb1.append(introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime());
                 sb1.append(" set ");
                 // 更新逻辑删除字段
@@ -300,23 +343,106 @@ public class LogicalDeletePlugin extends BasePlugin {
                 for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
                     sb.setLength(0);
                     if (and) {
-                        sb.append("  and "); //$NON-NLS-1$
+                        sb.append("  and ");
                     } else {
-                        sb.append("where "); //$NON-NLS-1$
+                        sb.append("where ");
                         and = true;
                     }
 
                     sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
-                    sb.append(" = "); //$NON-NLS-1$
+                    sb.append(" = "); 
                     sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
                     logicalDeleteByPrimaryKey.addElement(new TextElement(sb.toString()));
                 }
 
                 document.getRootElement().addElement(logicalDeleteByPrimaryKey);
                 logger.debug("itfsw(逻辑删除插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加方法logicalDeleteByPrimaryKey的实现。");
+
+
+                // 3. 增强selectByPrimaryKey
+                XmlElement selectByPrimaryKey = new XmlElement("select"); 
+                commentGenerator.addComment(selectByPrimaryKey);
+
+                selectByPrimaryKey.addAttribute(new Attribute("id", METHOD_SELECT_BY_PRIMARY_KEY_WITH_LOGICAL_DELETE));
+                if (introspectedTable.getRules().generateResultMapWithBLOBs()) {
+                    selectByPrimaryKey.addAttribute(new Attribute("resultMap", introspectedTable.getResultMapWithBLOBsId()));
+                } else {
+                    selectByPrimaryKey.addAttribute(new Attribute("resultMap", introspectedTable.getBaseResultMapId()));
+                }
+
+                selectByPrimaryKey.addAttribute(new Attribute("parameterType", "map"));
+
+                context.getCommentGenerator().addComment(selectByPrimaryKey);
+
+                sb = new StringBuilder();
+                sb.append("select "); 
+
+                if (stringHasValue(introspectedTable.getSelectByPrimaryKeyQueryId())) {
+                    sb.append('\'');
+                    sb.append(introspectedTable.getSelectByPrimaryKeyQueryId());
+                    sb.append("' as QUERYID,"); 
+                }
+                selectByPrimaryKey.addElement(new TextElement(sb.toString()));
+                selectByPrimaryKey.addElement(XmlElementGeneratorTools.getBaseColumnListElement(introspectedTable));
+                if (introspectedTable.hasBLOBColumns()) {
+                    selectByPrimaryKey.addElement(new TextElement(",")); 
+                    selectByPrimaryKey.addElement(XmlElementGeneratorTools.getBlobColumnListElement(introspectedTable));
+                }
+
+                sb.setLength(0);
+                sb.append("from "); 
+                sb.append(introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime());
+                selectByPrimaryKey.addElement(new TextElement(sb.toString()));
+
+                and = false;
+                for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
+                    sb.setLength(0);
+                    if (and) {
+                        sb.append("  and "); 
+                    } else {
+                        sb.append("where "); 
+                        and = true;
+                    }
+
+                    sb.append(MyBatis3FormattingUtilities.getAliasedEscapedColumnName(introspectedColumn));
+                    sb.append(" = ");
+                    sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
+                    selectByPrimaryKey.addElement(new TextElement(sb.toString()));
+                }
+
+                // 逻辑删除的判断
+                sb.setLength(0);
+                sb.append("  and ");
+                sb.append(MyBatis3FormattingUtilities.getAliasedEscapedColumnName(this.logicalDeleteColumn));
+                sb.append(" = ");
+                selectByPrimaryKey.addElement(new TextElement(sb.toString()));
+
+                XmlElement chooseEle = new XmlElement("choose");
+                XmlElement whenEle = new XmlElement("when");
+                whenEle.addAttribute(new Attribute("test", PARAMETER_LOGICAL_DELETED));
+                whenEle.addElement(new TextElement("'" + this.logicalDeleteValue + "'"));
+                chooseEle.addElement(whenEle);
+                XmlElement otherwiseEle = new XmlElement("otherwise");
+                otherwiseEle.addElement(new TextElement("'" + this.logicalUnDeleteValue + "'"));
+                chooseEle.addElement(otherwiseEle);
+                selectByPrimaryKey.addElement(chooseEle);
+
+                FormatTools.addElementWithBestPosition(document.getRootElement(), selectByPrimaryKey);
             }
         }
         return true;
+    }
+
+    /**
+     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     * @param topLevelClass
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public boolean modelPrimaryKeyClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        this.generateModelMethodsAndFields(topLevelClass, introspectedTable);
+        return super.modelPrimaryKeyClassGenerated(topLevelClass, introspectedTable);
     }
 
     /**
@@ -328,57 +454,89 @@ public class LogicalDeletePlugin extends BasePlugin {
      */
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        this.generateModelMethodsAndFields(topLevelClass, introspectedTable);
+        return super.modelBaseRecordClassGenerated(topLevelClass, introspectedTable);
+    }
+
+    /**
+     * 生成Model 逻辑删除相关方法和常量
+     * !!! bugfix：逻辑删除列作为复合主键的一部分的情况
+     * @param topLevelClass
+     * @param introspectedTable
+     */
+    private void generateModelMethodsAndFields(TopLevelClass topLevelClass, IntrospectedTable introspectedTable){
         if (this.logicalDeleteColumn != null) {
-
-            ArrayList<Field> fields = (ArrayList<Field>) topLevelClass.getFields();
-
-            // 添加删除标志位常量
-            String logicalDeleteValue;
-            if (this.logicalDeleteValue == null || "NULL".equalsIgnoreCase(this.logicalDeleteValue)) {
-                logicalDeleteValue = "null";
-            } else if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getShortNameWithoutTypeArguments().equalsIgnoreCase("String")) {
-                logicalDeleteValue = "\"" + this.logicalDeleteValue + "\"";
-            } else if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getShortNameWithoutTypeArguments().equalsIgnoreCase("Boolean")) {
-                logicalDeleteValue = (this.logicalDeleteValue.equals("1") || this.logicalDeleteValue.equalsIgnoreCase("true")) ? "true" : "false";
-            } else {
-                logicalDeleteValue = this.logicalDeleteValue;
-            }
-            // TODO 过期
-            Field field = JavaElementGeneratorTools.generateStaticFinalField("DEL_FLAG_OFF", this.logicalDeleteColumn.getFullyQualifiedJavaType(), logicalDeleteValue);
-            field.addAnnotation("@Deprecated");
-            commentGenerator.addFieldComment(field, introspectedTable);
-            // 常量插入到第一位
-            fields.add(0, field);
-
-            Field logicalDeleteConstField = JavaElementGeneratorTools.generateStaticFinalField(this.logicalDeleteConstName, this.logicalDeleteColumn.getFullyQualifiedJavaType(), logicalDeleteValue);
-            commentGenerator.addFieldComment(logicalDeleteConstField, introspectedTable);
-            fields.add(0, logicalDeleteConstField);
-
-
-            // 添加删除标志位常量 DEL_FLAG_ON
-            String logicalUnDeleteValue;
-            if (this.logicalUnDeleteValue == null || "NULL".equalsIgnoreCase(this.logicalUnDeleteValue)) {
-                logicalUnDeleteValue = "null";
-            } else if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getShortNameWithoutTypeArguments().equalsIgnoreCase("String")) {
-                logicalUnDeleteValue = "\"" + this.logicalUnDeleteValue + "\"";
-            } else if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getShortNameWithoutTypeArguments().equalsIgnoreCase("Boolean")) {
-                logicalUnDeleteValue = (this.logicalUnDeleteValue.equals("1") || this.logicalUnDeleteValue.equalsIgnoreCase("true")) ? "true" : "false";
-            } else {
-                logicalUnDeleteValue = this.logicalUnDeleteValue;
+            // 常量和逻辑删除方法跟随 逻辑删除列走
+            boolean flag = false;
+            for (Field field : topLevelClass.getFields()){
+                if (this.logicalDeleteColumn.getJavaProperty().equals(field.getName())){
+                    flag = true;
+                    break;
+                }
             }
 
-            // TODO 过期
-            Field field1 = JavaElementGeneratorTools.generateStaticFinalField("DEL_FLAG_ON", this.logicalDeleteColumn.getFullyQualifiedJavaType(), logicalUnDeleteValue);
-            field1.addAnnotation("@Deprecated");
-            commentGenerator.addFieldComment(field1, introspectedTable);
-            // 常量插入到第一位
-            fields.add(0, field1);
+            if (flag){
+                ArrayList<Field> fields = (ArrayList<Field>) topLevelClass.getFields();
 
-            Field logicalUnDeleteConstField = JavaElementGeneratorTools.generateStaticFinalField(this.logicalUnDeleteConstName, this.logicalDeleteColumn.getFullyQualifiedJavaType(), logicalUnDeleteValue);
-            commentGenerator.addFieldComment(logicalUnDeleteConstField, introspectedTable);
-            fields.add(0, logicalUnDeleteConstField);
+                // 添加删除标志位常量
+                String logicalDeleteValue;
+                if (this.logicalDeleteValue == null || "NULL".equalsIgnoreCase(this.logicalDeleteValue)) {
+                    logicalDeleteValue = "null";
+                } else if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getShortNameWithoutTypeArguments().equalsIgnoreCase("String")) {
+                    logicalDeleteValue = "\"" + this.logicalDeleteValue + "\"";
+                } else if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getShortNameWithoutTypeArguments().equalsIgnoreCase("Boolean")) {
+                    logicalDeleteValue = (this.logicalDeleteValue.equals("1") || this.logicalDeleteValue.equalsIgnoreCase("true")) ? "true" : "false";
+                } else {
+                    logicalDeleteValue = this.logicalDeleteValue;
+                }
+                // TODO 过期
+                Field field = JavaElementGeneratorTools.generateStaticFinalField("DEL_FLAG_OFF", this.logicalDeleteColumn.getFullyQualifiedJavaType(), logicalDeleteValue);
+                field.addAnnotation("@Deprecated");
+                commentGenerator.addFieldComment(field, introspectedTable);
+                // 常量插入到第一位
+                fields.add(0, field);
+
+                Field logicalDeleteConstField = JavaElementGeneratorTools.generateStaticFinalField(this.logicalDeleteConstName, this.logicalDeleteColumn.getFullyQualifiedJavaType(), logicalDeleteValue);
+                commentGenerator.addFieldComment(logicalDeleteConstField, introspectedTable);
+                fields.add(0, logicalDeleteConstField);
+
+
+                // 添加删除标志位常量 DEL_FLAG_ON
+                String logicalUnDeleteValue;
+                if (this.logicalUnDeleteValue == null || "NULL".equalsIgnoreCase(this.logicalUnDeleteValue)) {
+                    logicalUnDeleteValue = "null";
+                } else if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getShortNameWithoutTypeArguments().equalsIgnoreCase("String")) {
+                    logicalUnDeleteValue = "\"" + this.logicalUnDeleteValue + "\"";
+                } else if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getShortNameWithoutTypeArguments().equalsIgnoreCase("Boolean")) {
+                    logicalUnDeleteValue = (this.logicalUnDeleteValue.equals("1") || this.logicalUnDeleteValue.equalsIgnoreCase("true")) ? "true" : "false";
+                } else {
+                    logicalUnDeleteValue = this.logicalUnDeleteValue;
+                }
+
+                // TODO 过期
+                Field field1 = JavaElementGeneratorTools.generateStaticFinalField("DEL_FLAG_ON", this.logicalDeleteColumn.getFullyQualifiedJavaType(), logicalUnDeleteValue);
+                field1.addAnnotation("@Deprecated");
+                commentGenerator.addFieldComment(field1, introspectedTable);
+                // 常量插入到第一位
+                fields.add(0, field1);
+
+                Field logicalUnDeleteConstField = JavaElementGeneratorTools.generateStaticFinalField(this.logicalUnDeleteConstName, this.logicalDeleteColumn.getFullyQualifiedJavaType(), logicalUnDeleteValue);
+                commentGenerator.addFieldComment(logicalUnDeleteConstField, introspectedTable);
+                fields.add(0, logicalUnDeleteConstField);
+
+                // ================================================= andLogicalDeleted =============================================
+                Method mAndLogicalDeleted = JavaElementGeneratorTools.generateMethod(
+                        METHOD_LOGICAL_DELETED,
+                        JavaVisibility.PUBLIC,
+                        null,
+                        new Parameter(FullyQualifiedJavaType.getBooleanPrimitiveInstance(), "deleted")
+                );
+                commentGenerator.addGeneralMethodComment(mAndLogicalDeleted, introspectedTable);
+                Method logicalDeleteSetter = JavaBeansUtil.getJavaBeansSetter(this.logicalDeleteColumn, context, introspectedTable);
+                mAndLogicalDeleted.addBodyLine(logicalDeleteSetter.getName() +"(deleted ? " + this.logicalDeleteConstName + " : " + this.logicalUnDeleteConstName + ");");
+                FormatTools.addMethodWithBestPosition(topLevelClass, mAndLogicalDeleted);
+            }
         }
-        return true;
     }
 
     /**
@@ -399,7 +557,7 @@ public class LogicalDeletePlugin extends BasePlugin {
             for (InnerClass innerClass : innerClasses) {
                 if ("Criteria".equals(innerClass.getType().getShortName())) {
                     // 增加逻辑删除条件
-                    Method method = new Method(METHOD_LOGICAL_DELETE);
+                    Method method = new Method(METHOD_LOGICAL_DELETED);
                     commentGenerator.addGeneralMethodComment(method, introspectedTable);
                     method.setVisibility(JavaVisibility.PUBLIC);
                     method.setReturnType(innerClass.getType());
@@ -414,7 +572,7 @@ public class LogicalDeletePlugin extends BasePlugin {
                     StringBuilder equalToMethodName = new StringBuilder();
                     equalToMethodName.append(this.logicalDeleteColumn.getJavaProperty());
                     equalToMethodName.setCharAt(0, Character.toUpperCase(equalToMethodName.charAt(0)));
-                    equalToMethodName.insert(0, "and"); //$NON-NLS-1$
+                    equalToMethodName.insert(0, "and"); 
                     equalToMethodName.append("EqualTo");
                     sb.append(equalToMethodName);
                     sb.append("(" + modelName + "." + this.logicalDeleteConstName + ")");
@@ -425,7 +583,7 @@ public class LogicalDeletePlugin extends BasePlugin {
                     StringBuilder notEqualToMethodName = new StringBuilder();
                     notEqualToMethodName.append(this.logicalDeleteColumn.getJavaProperty());
                     notEqualToMethodName.setCharAt(0, Character.toUpperCase(notEqualToMethodName.charAt(0)));
-                    notEqualToMethodName.insert(0, "and"); //$NON-NLS-1$
+                    notEqualToMethodName.insert(0, "and"); 
                     notEqualToMethodName.append("NotEqualTo");
                     sb.append(notEqualToMethodName);
                     sb.append("(" + modelName + "." + this.logicalDeleteConstName + ")");
@@ -435,6 +593,12 @@ public class LogicalDeletePlugin extends BasePlugin {
                     method.addBodyLine(sb.toString());
 
                     innerClass.addMethod(method);
+
+                    // TODO 过期方法
+                    Method mAndDeleted = JavaElementGeneratorTools.cloneMethod(method);
+                    mAndDeleted.setName("andDeleted");
+                    mAndDeleted.addAnnotation("@Deprecated");
+                    innerClass.addMethod(mAndDeleted);
                     logger.debug("itfsw(逻辑删除插件):" + topLevelClass.getType().getShortName() + "." + innerClass.getType().getShortName() + "增加andDeleted方法。");
                 }
             }

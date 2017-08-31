@@ -33,18 +33,17 @@ public class JavaElementGeneratorTools {
 
     /**
      * 生成静态常量
-     *
-     * @param fieldName 常量名称
-     * @param javaType 类型
+     * @param fieldName  常量名称
+     * @param javaType   类型
      * @param initString 初始化字段
      * @return
      */
-    public static Field generateStaticFinalField(String fieldName, FullyQualifiedJavaType javaType, String initString){
+    public static Field generateStaticFinalField(String fieldName, FullyQualifiedJavaType javaType, String initString) {
         Field field = new Field(fieldName, javaType);
         field.setVisibility(JavaVisibility.PUBLIC);
         field.setStatic(true);
         field.setFinal(true);
-        if (initString != null){
+        if (initString != null) {
             field.setInitializationString(initString);
         }
         return field;
@@ -52,17 +51,16 @@ public class JavaElementGeneratorTools {
 
     /**
      * 生成属性
-     *
-     * @param fieldName 常量名称
-     * @param  visibility 可见性
-     * @param javaType 类型
+     * @param fieldName  常量名称
+     * @param visibility 可见性
+     * @param javaType   类型
      * @param initString 初始化字段
      * @return
      */
-    public static Field generateField(String fieldName, JavaVisibility visibility, FullyQualifiedJavaType javaType, String initString){
+    public static Field generateField(String fieldName, JavaVisibility visibility, FullyQualifiedJavaType javaType, String initString) {
         Field field = new Field(fieldName, javaType);
         field.setVisibility(visibility);
-        if (initString != null){
+        if (initString != null) {
             field.setInitializationString(initString);
         }
         return field;
@@ -70,19 +68,18 @@ public class JavaElementGeneratorTools {
 
     /**
      * 生成方法
-     *
      * @param methodName 方法名
-     * @param visibility  可见性
+     * @param visibility 可见性
      * @param returnType 返回值类型
      * @param parameters 参数列表
      * @return
      */
-    public static Method generateMethod(String methodName, JavaVisibility visibility, FullyQualifiedJavaType returnType, Parameter ... parameters){
+    public static Method generateMethod(String methodName, JavaVisibility visibility, FullyQualifiedJavaType returnType, Parameter... parameters) {
         Method method = new Method(methodName);
         method.setVisibility(visibility);
         method.setReturnType(returnType);
-        if (parameters != null){
-            for (Parameter parameter: parameters) {
+        if (parameters != null) {
+            for (Parameter parameter : parameters) {
                 method.addParameter(parameter);
             }
         }
@@ -92,14 +89,13 @@ public class JavaElementGeneratorTools {
 
     /**
      * 生成方法实现体
-     *
-     * @param method 方法
+     * @param method    方法
      * @param bodyLines 方法实现行
      * @return
      */
-    public static Method generateMethodBody(Method method, String ... bodyLines){
-        if (bodyLines != null){
-            for (String bodyLine: bodyLines){
+    public static Method generateMethodBody(Method method, String... bodyLines) {
+        if (bodyLines != null) {
+            for (String bodyLine : bodyLines) {
                 method.addBodyLine(bodyLine);
             }
         }
@@ -108,11 +104,10 @@ public class JavaElementGeneratorTools {
 
     /**
      * 生成Filed的Set方法
-     *
      * @param field field
      * @return
      */
-    public static Method generateSetterMethod(Field field){
+    public static Method generateSetterMethod(Field field) {
         Method method = generateMethod(
                 "set" + field.getName().substring(0, 1).toUpperCase() + field.getName().substring(1),
                 JavaVisibility.PUBLIC,
@@ -124,11 +119,10 @@ public class JavaElementGeneratorTools {
 
     /**
      * 生成Filed的Get方法
-     *
      * @param field field
      * @return
      */
-    public static Method generateGetterMethod(Field field){
+    public static Method generateGetterMethod(Field field) {
         Method method = generateMethod(
                 "get" + field.getName().substring(0, 1).toUpperCase() + field.getName().substring(1),
                 JavaVisibility.PUBLIC,
@@ -139,11 +133,10 @@ public class JavaElementGeneratorTools {
 
     /**
      * 获取Model没有BLOBs类时的类型
-     *
      * @param introspectedTable
      * @return
      */
-    public static FullyQualifiedJavaType getModelTypeWithoutBLOBs(IntrospectedTable introspectedTable){
+    public static FullyQualifiedJavaType getModelTypeWithoutBLOBs(IntrospectedTable introspectedTable) {
         FullyQualifiedJavaType type;
         if (introspectedTable.getRules().generateBaseRecordClass()) {
             type = new FullyQualifiedJavaType(introspectedTable.getBaseRecordType());
@@ -157,11 +150,10 @@ public class JavaElementGeneratorTools {
 
     /**
      * 获取Model有BLOBs类时的类型
-     *
      * @param introspectedTable
      * @return
      */
-    public static FullyQualifiedJavaType getModelTypeWithBLOBs(IntrospectedTable introspectedTable){
+    public static FullyQualifiedJavaType getModelTypeWithBLOBs(IntrospectedTable introspectedTable) {
         FullyQualifiedJavaType type;
         if (introspectedTable.getRules().generateRecordWithBLOBsClass()) {
             type = new FullyQualifiedJavaType(introspectedTable.getRecordWithBLOBsType());
@@ -170,5 +162,29 @@ public class JavaElementGeneratorTools {
             type = new FullyQualifiedJavaType(introspectedTable.getBaseRecordType());
         }
         return type;
+    }
+
+    /**
+     * 克隆方法
+     * @param method
+     */
+    public static Method cloneMethod(Method method) {
+        Method result = new Method();
+        result.setConstructor(method.isConstructor());
+        result.setFinal(method.isFinal());
+        result.setName(method.getName());
+        result.setNative(method.isNative());
+        result.setReturnType(method.getReturnType());
+        result.setSynchronized(method.isSynchronized());
+        result.setStatic(method.isStatic());
+        result.setVisibility(method.getVisibility());
+        for (Parameter parameter : method.getParameters()) {
+            result.addParameter(parameter);
+        }
+        for (String docLine : method.getJavaDocLines()){
+            result.addJavaDocLine(docLine);
+        }
+        result.addBodyLines(method.getBodyLines());
+        return result;
     }
 }
