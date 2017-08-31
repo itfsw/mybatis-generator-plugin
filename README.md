@@ -650,7 +650,7 @@ public class Test {
 ```xml
 <xml>
     <!-- Table重命名插件 -->
-    <plugin type="com.itfsw.mybatis.generator.plugins.TablePrefixPlugin">
+    <plugin type="com.itfsw.mybatis.generator.plugins.TableRenamePlugin">
         <!-- 可根据具体需求确定是否配置 -->
         <property name="searchString" value="^T"/>
         <property name="replaceString" value=""/>
