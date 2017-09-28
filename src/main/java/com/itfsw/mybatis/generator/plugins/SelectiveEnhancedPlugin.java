@@ -40,6 +40,7 @@ import java.util.regex.Pattern;
  * ---------------------------------------------------------------------------
  */
 public class SelectiveEnhancedPlugin extends BasePlugin {
+    public static final String METHOD_HAS_SELECTIVE = "hasSelective";  // 方法名
 
     /**
      * {@inheritDoc}
@@ -80,22 +81,22 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
         selectiveColumnsField.setInitializationString("new HashMap<String, Boolean>()");
         topLevelClass.addField(selectiveColumnsField);
 
-        // Method isSelective
-        Method mIsSelective = new Method("isSelective");
-        commentGenerator.addGeneralMethodComment(mIsSelective, introspectedTable);
-        mIsSelective.setVisibility(JavaVisibility.PUBLIC);
-        mIsSelective.setReturnType(FullyQualifiedJavaType.getBooleanPrimitiveInstance());
-        mIsSelective.addBodyLine("return this.selectiveColumns.size() > 0;");
-        topLevelClass.addMethod(mIsSelective);
+        // Method hasSelective
+        Method mHasSelective = new Method(METHOD_HAS_SELECTIVE);
+        commentGenerator.addGeneralMethodComment(mHasSelective, introspectedTable);
+        mHasSelective.setVisibility(JavaVisibility.PUBLIC);
+        mHasSelective.setReturnType(FullyQualifiedJavaType.getBooleanPrimitiveInstance());
+        mHasSelective.addBodyLine("return this.selectiveColumns.size() > 0;");
+        topLevelClass.addMethod(mHasSelective);
 
-        // Method isSelective
-        Method mIsSelective1 = new Method("isSelective");
-        commentGenerator.addGeneralMethodComment(mIsSelective1, introspectedTable);
-        mIsSelective1.setVisibility(JavaVisibility.PUBLIC);
-        mIsSelective1.setReturnType(FullyQualifiedJavaType.getBooleanPrimitiveInstance());
-        mIsSelective1.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "column"));
-        mIsSelective1.addBodyLine("return this.selectiveColumns.get(column) != null;");
-        topLevelClass.addMethod(mIsSelective1);
+        // Method hasSelective
+        Method mHasSelective1 = new Method(METHOD_HAS_SELECTIVE);
+        commentGenerator.addGeneralMethodComment(mHasSelective1, introspectedTable);
+        mHasSelective1.setVisibility(JavaVisibility.PUBLIC);
+        mHasSelective1.setReturnType(FullyQualifiedJavaType.getBooleanPrimitiveInstance());
+        mHasSelective1.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "column"));
+        mHasSelective1.addBodyLine("return this.selectiveColumns.get(column) != null;");
+        topLevelClass.addMethod(mHasSelective1);
 
         // Method selective
         Method mSelective = new Method("selective");
@@ -195,7 +196,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
         XmlElement chooseEle = new XmlElement("choose");
         // when
         XmlElement whenEle = new XmlElement("when");
-        whenEle.addAttribute(new Attribute("test", prefix + "isSelective()"));
+        whenEle.addAttribute(new Attribute("test", prefix + METHOD_HAS_SELECTIVE + "()"));
         for (Element ele : element.getElements()) {
             // 对于字符串主键，是没有if判断节点的
             if (ele instanceof XmlElement) {
@@ -232,7 +233,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
 
                 XmlElement ifEle = new XmlElement("if");
 
-                ifEle.addAttribute(new Attribute("test", prefix + "isSelective(\'" + column.getActualColumnName() + "\')"));
+                ifEle.addAttribute(new Attribute("test", prefix + METHOD_HAS_SELECTIVE + "(\'" + column.getActualColumnName() + "\')"));
                 for (Element ifChild : xmlElement.getElements()) {
                     ifEle.addElement(ifChild);
                 }
@@ -269,10 +270,10 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
         XmlElement chooseEle = new XmlElement("choose");
         // when
         XmlElement whenEle = new XmlElement("when");
-        whenEle.addAttribute(new Attribute("test", prefix + "isSelective()"));
+        whenEle.addAttribute(new Attribute("test", prefix + METHOD_HAS_SELECTIVE + "()"));
         for (IntrospectedColumn introspectedColumn : (allColumns ? introspectedTable.getAllColumns() : introspectedTable.getNonBLOBColumns())) {
             XmlElement eleIf = new XmlElement("if");
-            eleIf.addAttribute(new Attribute("test", prefix + "isSelective(\'" + introspectedColumn.getActualColumnName() + "\')"));
+            eleIf.addAttribute(new Attribute("test", prefix + METHOD_HAS_SELECTIVE + "(\'" + introspectedColumn.getActualColumnName() + "\')"));
 
             eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
             whenEle.addElement(eleIf);

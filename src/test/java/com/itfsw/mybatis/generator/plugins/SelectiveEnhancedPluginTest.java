@@ -79,10 +79,10 @@ public class SelectiveEnhancedPluginTest {
                 Array.set(columns, 1, TbColumnTsIncF2.getObject());
 
                 tb.invoke("selective", columns);
-                Assert.assertTrue((Boolean) tb.invoke("isSelective"));
-                Assert.assertTrue((Boolean) tb.invoke("isSelective", "field_1"));
-                Assert.assertFalse((Boolean) tb.invoke("isSelective", "inc_f1"));
-                Assert.assertTrue((Boolean) tb.invoke("isSelective", "inc_f2"));
+                Assert.assertTrue((Boolean) tb.invoke("hasSelective"));
+                Assert.assertTrue((Boolean) tb.invoke("hasSelective", "field_1"));
+                Assert.assertFalse((Boolean) tb.invoke("hasSelective", "inc_f1"));
+                Assert.assertTrue((Boolean) tb.invoke("hasSelective", "inc_f2"));
             }
         });
     }
