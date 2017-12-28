@@ -67,7 +67,6 @@ public abstract class AbstractShellCallback implements ShellCallback {
 
     /**
      * 重载项目
-     *
      * @param sqlSession
      * @param loader
      * @param packagz
@@ -92,7 +91,7 @@ public abstract class AbstractShellCallback implements ShellCallback {
         }
 
         StringBuilder sb = new StringBuilder();
-        StringTokenizer st = new StringTokenizer(targetPackage, "."); 
+        StringTokenizer st = new StringTokenizer(targetPackage, ".");
         while (st.hasMoreTokens()) {
             sb.append(st.nextToken());
             sb.append(File.separatorChar);
@@ -112,6 +111,7 @@ public abstract class AbstractShellCallback implements ShellCallback {
     /* (non-Javadoc)
      * @see org.mybatis.generator.api.ShellCallback#isMergeSupported()
      */
+    @Override
     public boolean isMergeSupported() {
         return false;
     }
@@ -119,6 +119,7 @@ public abstract class AbstractShellCallback implements ShellCallback {
     /* (non-Javadoc)
      * @see org.mybatis.generator.api.ShellCallback#isOverwriteEnabled()
      */
+    @Override
     public boolean isOverwriteEnabled() {
         return true;
     }
@@ -126,9 +127,9 @@ public abstract class AbstractShellCallback implements ShellCallback {
     /* (non-Javadoc)
      * @see org.mybatis.generator.api.ShellCallback#mergeJavaFile(java.lang.String, java.lang.String, java.lang.String[], java.lang.String)
      */
-    public String mergeJavaFile(String newFileSource,
-                                String existingFileFullPath, String[] javadocTags, String fileEncoding)
-            throws ShellException {
+    @Override
+    public String mergeJavaFile(String newFileSource, File existingFile,
+                                String[] javadocTags, String fileEncoding) throws ShellException {
         throw new UnsupportedOperationException();
     }
 }

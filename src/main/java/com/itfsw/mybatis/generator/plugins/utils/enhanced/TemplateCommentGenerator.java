@@ -24,20 +24,23 @@ import org.dom4j.io.SAXReader;
 import org.mybatis.generator.api.CommentGenerator;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
+import org.mybatis.generator.api.MyBatisGenerator;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.config.MergeConstants;
+import org.mybatis.generator.config.PropertyRegistry;
 import org.mybatis.generator.internal.util.StringUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
+
+import static org.mybatis.generator.internal.util.StringUtility.isTrue;
 
 /**
  * ---------------------------------------------------------------------------
@@ -51,6 +54,10 @@ public class TemplateCommentGenerator implements CommentGenerator {
     protected static final Logger logger = LoggerFactory.getLogger(TemplateCommentGenerator.class); // 日志
 
     private Map<EnumNode, Template> templates = new HashMap<>();  // 模板
+
+    private boolean suppressDate = false;
+
+    private boolean suppressAllComments = false;
 
     /**
      * 构造函数
@@ -196,7 +203,11 @@ public class TemplateCommentGenerator implements CommentGenerator {
      */
     @Override
     public void addConfigurationProperties(Properties properties) {
+        suppressDate = isTrue(properties
+                .getProperty(PropertyRegistry.COMMENT_GENERATOR_SUPPRESS_DATE));
 
+        suppressAllComments = isTrue(properties
+                .getProperty(PropertyRegistry.COMMENT_GENERATOR_SUPPRESS_ALL_COMMENTS));
     }
 
     /**
@@ -464,6 +475,80 @@ public class TemplateCommentGenerator implements CommentGenerator {
 
         // 添加评论
         addXmlElementComment(rootElement, map, EnumNode.ADD_ROOT_COMMENT);
+    }
+
+    @Override
+    public void addGeneralMethodAnnotation(Method method, IntrospectedTable introspectedTable,
+                                           Set<FullyQualifiedJavaType> imports) {
+        imports.add(new FullyQualifiedJavaType("javax.annotation.Generated")); //$NON-NLS-1$
+        String comment = "Source Table: " + introspectedTable.getFullyQualifiedTable().toString(); //$NON-NLS-1$
+        method.addAnnotation(getGeneratedAnnotation(comment));
+    }
+
+    @Override
+    public void addGeneralMethodAnnotation(Method method, IntrospectedTable introspectedTable,
+                                           IntrospectedColumn introspectedColumn, Set<FullyQualifiedJavaType> imports) {
+        imports.add(new FullyQualifiedJavaType("javax.annotation.Generated")); //$NON-NLS-1$
+        String comment = "Source field: " //$NON-NLS-1$
+                + introspectedTable.getFullyQualifiedTable().toString()
+                + "." //$NON-NLS-1$
+                + introspectedColumn.getActualColumnName();
+        method.addAnnotation(getGeneratedAnnotation(comment));
+    }
+
+    @Override
+    public void addFieldAnnotation(Field field, IntrospectedTable introspectedTable,
+                                   Set<FullyQualifiedJavaType> imports) {
+        imports.add(new FullyQualifiedJavaType("javax.annotation.Generated")); //$NON-NLS-1$
+        String comment = "Source Table: " + introspectedTable.getFullyQualifiedTable().toString(); //$NON-NLS-1$
+        field.addAnnotation(getGeneratedAnnotation(comment));
+    }
+
+    @Override
+    public void addFieldAnnotation(Field field, IntrospectedTable introspectedTable,
+                                   IntrospectedColumn introspectedColumn, Set<FullyQualifiedJavaType> imports) {
+        imports.add(new FullyQualifiedJavaType("javax.annotation.Generated")); //$NON-NLS-1$
+        String comment = "Source field: " //$NON-NLS-1$
+                + introspectedTable.getFullyQualifiedTable().toString()
+                + "." //$NON-NLS-1$
+                + introspectedColumn.getActualColumnName();
+        field.addAnnotation(getGeneratedAnnotation(comment));
+    }
+
+    @Override
+    public void addClassAnnotation(InnerClass innerClass, IntrospectedTable introspectedTable,
+                                   Set<FullyQualifiedJavaType> imports) {
+        imports.add(new FullyQualifiedJavaType("javax.annotation.Generated")); //$NON-NLS-1$
+        String comment = "Source Table: " + introspectedTable.getFullyQualifiedTable().toString(); //$NON-NLS-1$
+        innerClass.addAnnotation(getGeneratedAnnotation(comment));
+    }
+
+    private String getGeneratedAnnotation(String comment) {
+        StringBuilder buffer = new StringBuilder();
+        buffer.append("@Generated("); //$NON-NLS-1$
+        if (suppressAllComments) {
+            buffer.append('\"');
+        } else {
+            buffer.append("value=\""); //$NON-NLS-1$
+        }
+
+        buffer.append(MyBatisGenerator.class.getName());
+        buffer.append('\"');
+
+        if (!suppressDate && !suppressAllComments) {
+            buffer.append(", date=\""); //$NON-NLS-1$
+            buffer.append(DatatypeConverter.printDateTime(Calendar.getInstance()));
+            buffer.append('\"');
+        }
+
+        if (!suppressAllComments) {
+            buffer.append(", comments=\""); //$NON-NLS-1$
+            buffer.append(comment);
+            buffer.append('\"');
+        }
+
+        buffer.append(')');
+        return buffer.toString();
     }
 
     /**
