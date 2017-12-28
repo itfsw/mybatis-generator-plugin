@@ -19,7 +19,7 @@
 * [自定义注释插件（CommentPlugin）](#13-自定义注释插件)
 * [增量插件（IncrementsPlugin）](#14-增量插件)
 * [查询结果选择性返回插件（SelectSelectivePlugin）](#15-查询结果选择性返回插件)
-* [官方ConstructorBased配置BUG临时修正插件（ConstructorBasedBugFixPlugin）](#16-官方constructorbased配置bug临时修正插件)
+* [~~官方ConstructorBased配置BUG临时修正插件（ConstructorBasedBugFixPlugin）~~](#16-官方constructorbased配置bug临时修正插件)
 
 ---------------------------------------
 Maven引用：  
@@ -27,7 +27,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.0.19</version>
+  <version>1.0.20</version>
 </dependency>
 ```
 ---------------------------------------
@@ -37,7 +37,7 @@ MyBatis Generator 参考配置（插件依赖应该配置在mybatis-generator-ma
 <plugin>
     <groupId>org.mybatis.generator</groupId>
     <artifactId>mybatis-generator-maven-plugin</artifactId>
-    <version>1.3.5</version>
+    <version>1.3.6</version>
     <configuration>
         <!-- 配置文件 -->
         <configurationFile>src/main/resources/mybatis-generator.xml</configurationFile>
