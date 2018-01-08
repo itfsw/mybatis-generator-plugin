@@ -709,7 +709,7 @@ Mybatis Generator是原生支持自定义注释的（commentGenerator配置type�
 | addEnumComment | mgb<br>[innerEnum](https://github.com/mybatis/generator/blob/master/core/mybatis-generator-core/src/main/java/org/mybatis/generator/api/dom/java/InnerEnum.java)<br>introspectedTable | 枚举注释  |
 | addInterfaceComment | mgb<br>[innerInterface](https://github.com/itfsw/mybatis-generator-plugin/blob/master/src/main/java/com/itfsw/mybatis/generator/plugins/utils/enhanced/InnerInterface.java)<br>introspectedTable | 接口注释(itfsw插件新增类型)  |
 | addGetterComment | mgb<br>[method](https://github.com/mybatis/generator/blob/master/core/mybatis-generator-core/src/main/java/org/mybatis/generator/api/dom/java/Method.java)<br>introspectedTable<br>introspectedColumn | getter方法注释(introspectedColumn可能不存在)  |
-| addSetterComment | mgb<br>method<br>introspectedTable<br>introspectedColumn | getter方法注释(introspectedColumn可能不存在)  |
+| addSetterComment | mgb<br>method<br>introspectedTable<br>introspectedColumn | setter方法注释(introspectedColumn可能不存在)  |
 | addGeneralMethodComment | mgb<br>method<br>introspectedTable | 方法注释  |
 
 插件：
