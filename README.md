@@ -700,15 +700,15 @@ Mybatis Generator是原生支持自定义注释的（commentGenerator配置type�
 
 | 注释ID | 传入参数 | 备注 |
 | ----- | ----- | ---- |
-| addJavaFileComment | mgb<br>compilationUnit | Java文件注释   |
-| addComment | mgb<br>xmlElement | Xml节点注释  |
-| addRootComment | mgb<br>rootElement | Xml根节点注释  |
-| addFieldComment | mgb<br>field<br>introspectedTable<br>introspectedColumn | Java 字段注释(非生成Model对应表字段时，introspectedColumn可能不存在)  |
-| addModelClassComment | mgb<br>topLevelClass<br>introspectedTable | 表Model类注释  |
-| addClassComment | mgb<br>innerClass<br>introspectedTable | 类注释  |
-| addEnumComment | mgb<br>innerEnum<br>introspectedTable | 枚举注释  |
-| addInterfaceComment | mgb<br>innerInterface<br>introspectedTable | 接口注释(itfsw插件新增类型)  |
-| addGetterComment | mgb<br>method<br>introspectedTable<br>introspectedColumn | getter方法注释(introspectedColumn可能不存在)  |
+| addJavaFileComment | mgb<br>[compilationUnit](https://github.com/mybatis/generator/blob/master/core/mybatis-generator-core/src/main/java/org/mybatis/generator/api/dom/java/CompilationUnit.java) | Java文件注释   |
+| addComment | mgb<br>[xmlElement](https://github.com/mybatis/generator/blob/master/core/mybatis-generator-core/src/main/java/org/mybatis/generator/api/dom/xml/XmlElement.java) | Xml节点注释  |
+| addRootComment | mgb<br>[rootElement](https://github.com/mybatis/generator/blob/master/core/mybatis-generator-core/src/main/java/org/mybatis/generator/api/dom/xml/XmlElement.java) | Xml根节点注释  |
+| addFieldComment | mgb<br>[field](https://github.com/mybatis/generator/blob/master/core/mybatis-generator-core/src/main/java/org/mybatis/generator/api/dom/java/Field.java)<br>[introspectedTable](https://github.com/mybatis/generator/blob/master/core/mybatis-generator-core/src/main/java/org/mybatis/generator/api/IntrospectedTable.java)<br>[introspectedColumn](https://github.com/mybatis/generator/blob/master/core/mybatis-generator-core/src/main/java/org/mybatis/generator/api/IntrospectedColumn.java) | Java 字段注释(非生成Model对应表字段时，introspectedColumn可能不存在)  |
+| addModelClassComment | mgb<br>[topLevelClass](https://github.com/mybatis/generator/blob/master/core/mybatis-generator-core/src/main/java/org/mybatis/generator/api/dom/java/TopLevelClass.java)<br>introspectedTable | 表Model类注释  |
+| addClassComment | mgb<br>[innerClass](https://github.com/mybatis/generator/blob/master/core/mybatis-generator-core/src/main/java/org/mybatis/generator/api/dom/java/InnerClass.java)<br>introspectedTable | 类注释  |
+| addEnumComment | mgb<br>[innerEnum](https://github.com/mybatis/generator/blob/master/core/mybatis-generator-core/src/main/java/org/mybatis/generator/api/dom/java/InnerEnum.java)<br>introspectedTable | 枚举注释  |
+| addInterfaceComment | mgb<br>[innerInterface](https://github.com/itfsw/mybatis-generator-plugin/blob/master/src/main/java/com/itfsw/mybatis/generator/plugins/utils/enhanced/InnerInterface.java)<br>introspectedTable | 接口注释(itfsw插件新增类型)  |
+| addGetterComment | mgb<br>[method](https://github.com/mybatis/generator/blob/master/core/mybatis-generator-core/src/main/java/org/mybatis/generator/api/dom/java/Method.java)<br>introspectedTable<br>introspectedColumn | getter方法注释(introspectedColumn可能不存在)  |
 | addSetterComment | mgb<br>method<br>introspectedTable<br>introspectedColumn | getter方法注释(introspectedColumn可能不存在)  |
 | addGeneralMethodComment | mgb<br>method<br>introspectedTable | 方法注释  |
 
