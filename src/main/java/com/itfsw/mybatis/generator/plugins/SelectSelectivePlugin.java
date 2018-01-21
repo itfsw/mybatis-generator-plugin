@@ -153,6 +153,7 @@ public class SelectSelectivePlugin extends BasePlugin {
         selectByExampleSelectiveEle.addAttribute(new Attribute("id", METHOD_SELECT_BY_EXAMPLE_SELECTIVE));
         selectByExampleSelectiveEle.addAttribute(new Attribute("resultType", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
         selectByExampleSelectiveEle.addAttribute(new Attribute("parameterType", "map"));
+        selectByExampleSelectiveEle.addAttribute(new Attribute("resultMap", introspectedTable.getBaseResultMapId()));
 
         selectByExampleSelectiveEle.addElement(new TextElement("select"));
         if (stringHasValue(introspectedTable.getSelectByExampleQueryId())) {
@@ -177,6 +178,7 @@ public class SelectSelectivePlugin extends BasePlugin {
         selectByPrimaryKeySelectiveEle.addAttribute(new Attribute("id", METHOD_SELECT_BY_PRIMARY_KEY_SELECTIVE));
         selectByPrimaryKeySelectiveEle.addAttribute(new Attribute("resultType", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
         selectByPrimaryKeySelectiveEle.addAttribute(new Attribute("parameterType", "map"));
+        selectByPrimaryKeySelectiveEle.addAttribute(new Attribute("resultMap", introspectedTable.getBaseResultMapId()));
 
         selectByPrimaryKeySelectiveEle.addElement(new TextElement("select"));
         if (stringHasValue(introspectedTable.getSelectByExampleQueryId())) {
@@ -212,6 +214,7 @@ public class SelectSelectivePlugin extends BasePlugin {
             selectOneByExampleSelectiveEle.addAttribute(new Attribute("id", METHOD_SELECT_ONE_BY_EXAMPLE_SELECTIVE));
             selectOneByExampleSelectiveEle.addAttribute(new Attribute("resultType", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
             selectOneByExampleSelectiveEle.addAttribute(new Attribute("parameterType", "map"));
+            selectOneByExampleSelectiveEle.addAttribute(new Attribute("resultMap", introspectedTable.getBaseResultMapId()));
 
             selectOneByExampleSelectiveEle.addElement(new TextElement("select"));
             if (stringHasValue(introspectedTable.getSelectByExampleQueryId())) {
