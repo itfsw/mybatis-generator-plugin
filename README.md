@@ -27,7 +27,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
 </dependency>
 ```
 ---------------------------------------
@@ -1043,6 +1043,8 @@ public class Test {
 一般我们在做查询优化的时候会要求查询返回时不要返回自己不需要的字段数据，因为Sending data所花费的时间和加大内存的占用
 ，所以我们看到官方对于大数据的字段会拆分成xxxWithBLOBs的操作，但是这种拆分还是不能精确到具体列返回。  
 所以该插件的作用就是精确指定查询操作所需要返回的字段信息，实现查询的精确返回。  
+>warning: 因为采用的是resultMap进行的属性绑定（即时设置了constructorBased=true也无效，因为参数个数不一致会导致异常，该插件也会另外生成一个基于属性绑定的resultMap），
+所以可能会出现list中存在null元素的问题，这个是mybatis自身机制造成的当查询出来的某行所有列都为null时不会生成对象（PS：其实这个不能算是错误，mybatis这样处理也说的通，但是在使用时还是要注意null的判断，当然如果有什么配置或者其他处理方式欢迎反馈哦）。  
 
 插件：
 ```xml
