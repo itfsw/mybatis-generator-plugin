@@ -82,17 +82,19 @@ public class SelectSelectivePluginTest {
                 Assert.assertEquals(list.size(), 3);
                 int index = 0;
                 for (Object obj : list) {
-                    ObjectUtil objectUtil = new ObjectUtil(obj);
-                    // 没有查询这两个字段
-                    if (objectUtil.get("id") != null || objectUtil.get("field2") != null) {
-                        Assert.assertTrue(false);
-                    }
-                    if (index == 0) {
-                        Assert.assertEquals(objectUtil.get("field1"), "fd1");
-                    } else if (index == 1) {
-                        Assert.assertNull(objectUtil.get("field1"));
+                    if (index == 1) {
+                        Assert.assertNull(obj);
                     } else {
-                        Assert.assertEquals(objectUtil.get("field1"), "fd3");
+                        ObjectUtil objectUtil = new ObjectUtil(obj);
+                        // 没有查询这两个字段
+                        if (objectUtil.get("id") != null || objectUtil.get("field2") != null) {
+                            Assert.assertTrue(false);
+                        }
+                        if (index == 0) {
+                            Assert.assertEquals(objectUtil.get("field1"), "fd1");
+                        } else {
+                            Assert.assertEquals(objectUtil.get("field1"), "fd3");
+                        }
                     }
 
                     index++;
