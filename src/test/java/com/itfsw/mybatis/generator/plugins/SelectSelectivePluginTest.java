@@ -188,4 +188,119 @@ public class SelectSelectivePluginTest {
             }
         });
     }
+
+    /**
+     * 测试生成的方法
+     * @throws Exception
+     */
+    @Test
+    public void testSelectiveWithOrWithoutConstructorBased() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/SelectSelectivePlugin/mybatis-generator-with-constructorBased-false.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 测试sql
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdLessThan", 100l);
+                tbExample.set("orderByClause", "field1 asc");
+
+                ObjectUtil columnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#tsF1");
+                // java 动态参数不能有两个会冲突，最后一个封装成Array!!!必须使用反射创建指定类型数组，不然调用invoke对了可变参数会检查类型！
+                Object columns1 = Array.newInstance(columnField1.getCls(), 1);
+                Array.set(columns1, 0, columnField1.getObject());
+
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns1);
+                Assert.assertEquals(sql, "select field1 from tb WHERE (  id < '100' )  order by field1 asc");
+
+                ObjectUtil columnField2 = new ObjectUtil(loader, packagz + ".Tb$Column#field2");
+                Object columns2 = Array.newInstance(columnField1.getCls(), 2);
+                Array.set(columns2, 0, columnField1.getObject());
+                Array.set(columns2, 1, columnField2.getObject());
+
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns2);
+                Assert.assertEquals(sql, "select field1 ,  field2 from tb WHERE (  id < '100' )  order by field1 asc");
+
+
+                // 2. 执行sql
+                List list = (List) tbMapper.invoke("selectByExampleSelective", tbExample.getObject(), columns1);
+                Assert.assertEquals(list.size(), 3);
+                int index = 0;
+                for (Object obj : list) {
+                    if (index == 0) {
+                        Assert.assertNull(obj);
+                    } else {
+                        ObjectUtil objectUtil = new ObjectUtil(obj);
+                        // 没有查询这两个字段
+                        if (objectUtil.get("id") != null || objectUtil.get("field2") != null) {
+                            Assert.assertTrue(false);
+                        }
+                        if (index == 1) {
+                            Assert.assertEquals(objectUtil.get("tsF1"), "fd1");
+                        } else {
+                            Assert.assertEquals(objectUtil.get("tsF1"), "fd3");
+                        }
+                    }
+
+                    index++;
+                }
+            }
+        });
+
+        tool = MyBatisGeneratorTool.create("scripts/SelectSelectivePlugin/mybatis-generator-with-constructorBased-true.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 测试sql
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdLessThan", 100l);
+                tbExample.set("orderByClause", "field1 asc");
+
+                ObjectUtil columnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#tsF1");
+                // java 动态参数不能有两个会冲突，最后一个封装成Array!!!必须使用反射创建指定类型数组，不然调用invoke对了可变参数会检查类型！
+                Object columns1 = Array.newInstance(columnField1.getCls(), 1);
+                Array.set(columns1, 0, columnField1.getObject());
+
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns1);
+                Assert.assertEquals(sql, "select field1 from tb WHERE (  id < '100' )  order by field1 asc");
+
+                ObjectUtil columnField2 = new ObjectUtil(loader, packagz + ".Tb$Column#field2");
+                Object columns2 = Array.newInstance(columnField1.getCls(), 2);
+                Array.set(columns2, 0, columnField1.getObject());
+                Array.set(columns2, 1, columnField2.getObject());
+
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns2);
+                Assert.assertEquals(sql, "select field1 ,  field2 from tb WHERE (  id < '100' )  order by field1 asc");
+
+
+                // 2. 执行sql
+                List list = (List) tbMapper.invoke("selectByExampleSelective", tbExample.getObject(), columns1);
+                Assert.assertEquals(list.size(), 3);
+                int index = 0;
+                for (Object obj : list) {
+                    if (index == 0) {
+                        Assert.assertNull(obj);
+                    } else {
+                        ObjectUtil objectUtil = new ObjectUtil(obj);
+                        // 没有查询这两个字段
+                        if (objectUtil.get("id") != null || objectUtil.get("field2") != null) {
+                            Assert.assertTrue(false);
+                        }
+                        if (index == 1) {
+                            Assert.assertEquals(objectUtil.get("tsF1"), "fd1");
+                        } else {
+                            Assert.assertEquals(objectUtil.get("tsF1"), "fd3");
+                        }
+                    }
+
+                    index++;
+                }
+            }
+        });
+    }
 }

@@ -25,6 +25,8 @@ import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
+import org.mybatis.generator.codegen.mybatis3.xmlmapper.elements.ResultMapWithBLOBsElementGenerator;
+import org.mybatis.generator.codegen.mybatis3.xmlmapper.elements.ResultMapWithoutBLOBsElementGenerator;
 
 import java.util.List;
 
@@ -42,6 +44,7 @@ public class SelectSelectivePlugin extends BasePlugin {
     public static final String METHOD_SELECT_BY_EXAMPLE_SELECTIVE = "selectByExampleSelective";
     public static final String METHOD_SELECT_BY_PRIMARY_KEY_SELECTIVE = "selectByPrimaryKeySelective";
     public static final String METHOD_SELECT_ONE_BY_EXAMPLE_SELECTIVE = "selectOneByExampleSelective";
+    public static final String ID_FOR_PROPERTY_BASED_RESULT_MAP = "BasePropertyResultMap";
 
     /**
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
@@ -139,6 +142,29 @@ public class SelectSelectivePlugin extends BasePlugin {
      */
     @Override
     public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
+        // issues#16
+        if (introspectedTable.isConstructorBased()) {
+            XmlElement resultMapEle = new XmlElement("resultMap");
+            resultMapEle.addAttribute(new Attribute("id", ID_FOR_PROPERTY_BASED_RESULT_MAP));
+            String returnType;
+            if (introspectedTable.getRules().generateBaseRecordClass()) {
+                returnType = introspectedTable.getBaseRecordType();
+            } else {
+                returnType = introspectedTable.getPrimaryKeyType();
+            }
+
+            resultMapEle.addAttribute(new Attribute("type", returnType));
+            commentGenerator.addComment(resultMapEle);
+
+            if (introspectedTable.getRules().generateResultMapWithBLOBs()) {
+                addResultMapElementsWithBLOBs(resultMapEle, introspectedTable);
+            } else if (introspectedTable.getRules().generateBaseResultMap()) {
+                addResultMapElementsWithoutBLOBs(resultMapEle, introspectedTable);
+            }
+            document.getRootElement().getElements().add(0, resultMapEle);
+        }
+
+
         // 生成返回字段节点
         XmlElement columnsEle = new XmlElement("foreach");
         columnsEle.addAttribute(new Attribute("collection", "selective"));
@@ -151,7 +177,12 @@ public class SelectSelectivePlugin extends BasePlugin {
         commentGenerator.addComment(selectByExampleSelectiveEle);
 
         selectByExampleSelectiveEle.addAttribute(new Attribute("id", METHOD_SELECT_BY_EXAMPLE_SELECTIVE));
-        selectByExampleSelectiveEle.addAttribute(new Attribute("resultType", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
+        // issues#16
+        if (introspectedTable.isConstructorBased()) {
+            selectByExampleSelectiveEle.addAttribute(new Attribute("resultMap", ID_FOR_PROPERTY_BASED_RESULT_MAP));
+        } else {
+            selectByExampleSelectiveEle.addAttribute(new Attribute("resultMap", introspectedTable.getBaseResultMapId()));
+        }
         selectByExampleSelectiveEle.addAttribute(new Attribute("parameterType", "map"));
 
         selectByExampleSelectiveEle.addElement(new TextElement("select"));
@@ -171,11 +202,16 @@ public class SelectSelectivePlugin extends BasePlugin {
         FormatTools.addElementWithBestPosition(document.getRootElement(), selectByExampleSelectiveEle);
 
         // 2. selectByPrimaryKeySelective
-        XmlElement selectByPrimaryKeySelectiveEle = new XmlElement("select"); 
+        XmlElement selectByPrimaryKeySelectiveEle = new XmlElement("select");
         commentGenerator.addComment(selectByPrimaryKeySelectiveEle);
 
         selectByPrimaryKeySelectiveEle.addAttribute(new Attribute("id", METHOD_SELECT_BY_PRIMARY_KEY_SELECTIVE));
-        selectByPrimaryKeySelectiveEle.addAttribute(new Attribute("resultType", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
+        // issues#16
+        if (introspectedTable.isConstructorBased()) {
+            selectByPrimaryKeySelectiveEle.addAttribute(new Attribute("resultMap", ID_FOR_PROPERTY_BASED_RESULT_MAP));
+        } else {
+            selectByPrimaryKeySelectiveEle.addAttribute(new Attribute("resultMap", introspectedTable.getBaseResultMapId()));
+        }
         selectByPrimaryKeySelectiveEle.addAttribute(new Attribute("parameterType", "map"));
 
         selectByPrimaryKeySelectiveEle.addElement(new TextElement("select"));
@@ -190,14 +226,14 @@ public class SelectSelectivePlugin extends BasePlugin {
         for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
             sb.setLength(0);
             if (and) {
-                sb.append("  and "); 
+                sb.append("  and ");
             } else {
-                sb.append("where "); 
+                sb.append("where ");
                 and = true;
             }
 
             sb.append(MyBatis3FormattingUtilities.getAliasedEscapedColumnName(introspectedColumn));
-            sb.append(" = "); 
+            sb.append(" = ");
             sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, introspectedTable.getRules().generatePrimaryKeyClass() ? "record." : null));
             selectByPrimaryKeySelectiveEle.addElement(new TextElement(sb.toString()));
         }
@@ -210,7 +246,12 @@ public class SelectSelectivePlugin extends BasePlugin {
             commentGenerator.addComment(selectOneByExampleSelectiveEle);
 
             selectOneByExampleSelectiveEle.addAttribute(new Attribute("id", METHOD_SELECT_ONE_BY_EXAMPLE_SELECTIVE));
-            selectOneByExampleSelectiveEle.addAttribute(new Attribute("resultType", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
+            // issues#16
+            if (introspectedTable.isConstructorBased()) {
+                selectOneByExampleSelectiveEle.addAttribute(new Attribute("resultMap", ID_FOR_PROPERTY_BASED_RESULT_MAP));
+            } else {
+                selectOneByExampleSelectiveEle.addAttribute(new Attribute("resultMap", introspectedTable.getBaseResultMapId()));
+            }
             selectOneByExampleSelectiveEle.addAttribute(new Attribute("parameterType", "map"));
 
             selectOneByExampleSelectiveEle.addElement(new TextElement("select"));
@@ -235,5 +276,59 @@ public class SelectSelectivePlugin extends BasePlugin {
         }
 
         return true;
+    }
+
+    /**
+     * @param answer
+     * @param introspectedTable
+     * @see ResultMapWithoutBLOBsElementGenerator#addResultMapElements(XmlElement)
+     */
+    private void addResultMapElementsWithoutBLOBs(XmlElement answer, IntrospectedTable introspectedTable) {
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
+            XmlElement resultElement = new XmlElement("id");
+
+            resultElement.addAttribute(new Attribute("column", MyBatis3FormattingUtilities.getRenamedColumnNameForResultMap(introspectedColumn)));
+            resultElement.addAttribute(new Attribute("property", introspectedColumn.getJavaProperty()));
+            resultElement.addAttribute(new Attribute("jdbcType", introspectedColumn.getJdbcTypeName()));
+
+            if (stringHasValue(introspectedColumn.getTypeHandler())) {
+                resultElement.addAttribute(new Attribute("typeHandler", introspectedColumn.getTypeHandler()));
+            }
+
+            answer.addElement(resultElement);
+        }
+
+        List<IntrospectedColumn> columns = introspectedTable.getBaseColumns();
+        for (IntrospectedColumn introspectedColumn : columns) {
+            XmlElement resultElement = new XmlElement("result");
+
+            resultElement.addAttribute(new Attribute("column", MyBatis3FormattingUtilities.getRenamedColumnNameForResultMap(introspectedColumn)));
+            resultElement.addAttribute(new Attribute("property", introspectedColumn.getJavaProperty()));
+            resultElement.addAttribute(new Attribute("jdbcType", introspectedColumn.getJdbcTypeName()));
+
+            if (stringHasValue(introspectedColumn.getTypeHandler())) {
+                resultElement.addAttribute(new Attribute("typeHandler", introspectedColumn.getTypeHandler()));
+            }
+            answer.addElement(resultElement);
+        }
+    }
+
+    /**
+     * @param answer
+     * @param introspectedTable
+     * @see ResultMapWithBLOBsElementGenerator#addResultMapElements(XmlElement)
+     */
+    private void addResultMapElementsWithBLOBs(XmlElement answer, IntrospectedTable introspectedTable) {
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getBLOBColumns()) {
+            XmlElement resultElement = new XmlElement("result");
+            resultElement.addAttribute(new Attribute("column", MyBatis3FormattingUtilities.getRenamedColumnNameForResultMap(introspectedColumn)));
+            resultElement.addAttribute(new Attribute("property", introspectedColumn.getJavaProperty()));
+            resultElement.addAttribute(new Attribute("jdbcType", introspectedColumn.getJdbcTypeName()));
+
+            if (stringHasValue(introspectedColumn.getTypeHandler())) {
+                resultElement.addAttribute(new Attribute("typeHandler", introspectedColumn.getTypeHandler()));
+            }
+            answer.addElement(resultElement);
+        }
     }
 }
