@@ -698,6 +698,8 @@ Mybatis Generator是原生支持自定义注释的（commentGenerator配置type�
 
 >warning: 模板引擎采用的是freemarker所以一些freemarker指令参数（如：<#if xx></#if>、${.now?string("yyyy-MM-dd HH:mm:ss")}）都是可以使用的，请自己尝试。
 
+>warning: [默认模板](https://github.com/itfsw/mybatis-generator-plugin/blob/master/src/main/resources/default-comment.ftl)
+
 | 注释ID | 传入参数 | 备注 |
 | ----- | ----- | ---- |
 | addJavaFileComment | mgb<br>[compilationUnit](https://github.com/mybatis/generator/blob/master/core/mybatis-generator-core/src/main/java/org/mybatis/generator/api/dom/java/CompilationUnit.java) | Java文件注释   |
