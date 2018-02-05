@@ -189,6 +189,13 @@ public class SelectSelectivePlugin extends BasePlugin {
         if (stringHasValue(introspectedTable.getSelectByExampleQueryId())) {
             selectByExampleSelectiveEle.addElement(new TextElement("'" + introspectedTable.getSelectByExampleQueryId() + "' as QUERYID,"));
         }
+
+        // issues#20
+        XmlElement ifDistinctElement = new XmlElement("if");
+        ifDistinctElement.addAttribute(new Attribute("test", "example.distinct"));
+        ifDistinctElement.addElement(new TextElement("distinct"));
+        selectByExampleSelectiveEle.addElement(ifDistinctElement);
+
         selectByExampleSelectiveEle.addElement(columnsEle);
         selectByExampleSelectiveEle.addElement(new TextElement("from " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
 

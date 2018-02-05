@@ -32,6 +32,7 @@ CREATE TABLE `tb` (
 INSERT INTO `tb` VALUES ('1', 'fd1', null);
 INSERT INTO `tb` VALUES ('2', null, '2');
 INSERT INTO `tb` VALUES ('3', 'fd3', '3');
+INSERT INTO `tb` VALUES ('4', 'fd3', '4');
 
 -- ----------------------------
 -- Table structure for tb_blobs

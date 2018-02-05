@@ -79,7 +79,7 @@ public class SelectSelectivePluginTest {
 
                 // 2. 执行sql
                 List list = (List) tbMapper.invoke("selectByExampleSelective", tbExample.getObject(), columns1);
-                Assert.assertEquals(list.size(), 3);
+                Assert.assertEquals(list.size(), 4);
                 int index = 0;
                 for (Object obj : list) {
                     if (index == 1) {
@@ -99,6 +99,13 @@ public class SelectSelectivePluginTest {
 
                     index++;
                 }
+
+                // 3. 测试 distinct
+                tbExample.invoke("setDistinct", true);
+                String sql1 = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns1);
+                Assert.assertEquals(sql1, "select distinct field1 from tb WHERE (  id < '100' )  order by field2 asc");
+                List list1 = (List) tbMapper.invoke("selectByExampleSelective", tbExample.getObject(), columns1);
+                Assert.assertEquals(list1.size(), 3);
             }
         });
     }
@@ -228,7 +235,7 @@ public class SelectSelectivePluginTest {
 
                 // 2. 执行sql
                 List list = (List) tbMapper.invoke("selectByExampleSelective", tbExample.getObject(), columns1);
-                Assert.assertEquals(list.size(), 3);
+                Assert.assertEquals(list.size(), 4);
                 int index = 0;
                 for (Object obj : list) {
                     if (index == 0) {
@@ -282,7 +289,7 @@ public class SelectSelectivePluginTest {
 
                 // 2. 执行sql
                 List list = (List) tbMapper.invoke("selectByExampleSelective", tbExample.getObject(), columns1);
-                Assert.assertEquals(list.size(), 3);
+                Assert.assertEquals(list.size(), 4);
                 int index = 0;
                 for (Object obj : list) {
                     if (index == 0) {
