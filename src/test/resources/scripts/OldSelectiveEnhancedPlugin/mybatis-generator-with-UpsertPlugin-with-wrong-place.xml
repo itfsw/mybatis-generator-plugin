@@ -24,7 +24,7 @@
     <!--导入属性配置 -->
     <context id="default" targetRuntime="MyBatis3">
         <!-- 插件 -->
-        <plugin type="com.itfsw.mybatis.generator.plugins.SelectiveEnhancedPlugin" />
+        <plugin type="com.itfsw.mybatis.generator.plugins.OldSelectiveEnhancedPlugin" />
         <plugin type="com.itfsw.mybatis.generator.plugins.ModelColumnPlugin"/>
         <plugin type="com.itfsw.mybatis.generator.plugins.UpsertPlugin"/>
 
