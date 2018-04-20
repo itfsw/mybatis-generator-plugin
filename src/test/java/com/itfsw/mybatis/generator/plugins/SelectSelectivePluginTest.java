@@ -102,8 +102,9 @@ public class SelectSelectivePluginTest {
 
                 // 3. 测试 distinct
                 tbExample.invoke("setDistinct", true);
+                tbExample.set("orderByClause", "field1 asc");
                 String sql1 = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns1);
-                Assert.assertEquals(sql1, "select distinct field1 from tb WHERE (  id < '100' )  order by field2 asc");
+                Assert.assertEquals(sql1, "select distinct field1 from tb WHERE (  id < '100' )  order by field1 asc");
                 List list1 = (List) tbMapper.invoke("selectByExampleSelective", tbExample.getObject(), columns1);
                 Assert.assertEquals(list1.size(), 3);
             }
