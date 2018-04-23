@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017.
+ * Copyright (c) 2018.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import java.sql.SQLException;
  *
  * ---------------------------------------------------------------------------
  * @author: hewei
- * @time:2017/7/28 15:47
+ * @time:2018/4/20 10:57
  * ---------------------------------------------------------------------------
  */
 public class SelectiveEnhancedPluginTest {
@@ -42,7 +42,7 @@ public class SelectiveEnhancedPluginTest {
      */
     @BeforeClass
     public static void init() throws SQLException, IOException, ClassNotFoundException {
-        DBHelper.createDB("scripts/SelectiveEnhancedPlugin/init.sql");
+        DBHelper.createDB("scripts/OldSelectiveEnhancedPlugin/init.sql");
     }
 
     /**
@@ -55,36 +55,10 @@ public class SelectiveEnhancedPluginTest {
         tool.generate();
         Assert.assertEquals(tool.getWarnings().get(0), "itfsw:插件com.itfsw.mybatis.generator.plugins.SelectiveEnhancedPlugin插件需配合com.itfsw.mybatis.generator.plugins.ModelColumnPlugin插件使用！");
 
-        // 2. 没有配置UpsertPlugin插件位置配置错误
-        tool = MyBatisGeneratorTool.create("scripts/SelectiveEnhancedPlugin/mybatis-generator-with-UpsertPlugin-with-wrong-place.xml");
+        // 2. 同时配置了OldSelectiveEnhancedPlugin插件
+        tool = MyBatisGeneratorTool.create("scripts/SelectiveEnhancedPlugin/mybatis-generator-with-OldSelectiveEnhancedPlugin.xml");
         tool.generate();
-        Assert.assertEquals(tool.getWarnings().get(0), "itfsw:插件com.itfsw.mybatis.generator.plugins.SelectiveEnhancedPlugin插件建议配置在插件com.itfsw.mybatis.generator.plugins.UpsertPlugin后面，否则某些功能可能得不到增强！");
-    }
-
-    /**
-     * 测试Model
-     */
-    @Test
-    public void testModel() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/SelectiveEnhancedPlugin/mybatis-generator.xml");
-        tool.generate(new AbstractShellCallback() {
-            @Override
-            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
-                ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
-                ObjectUtil TbColumnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
-                ObjectUtil TbColumnTsIncF2 = new ObjectUtil(loader, packagz + ".Tb$Column#tsIncF2");
-
-                Object columns = Array.newInstance(TbColumnField1.getCls(), 2);
-                Array.set(columns, 0, TbColumnField1.getObject());
-                Array.set(columns, 1, TbColumnTsIncF2.getObject());
-
-                tb.invoke("selective", columns);
-                Assert.assertTrue((Boolean) tb.invoke("hasSelective"));
-                Assert.assertTrue((Boolean) tb.invoke("hasSelective", "field_1"));
-                Assert.assertFalse((Boolean) tb.invoke("hasSelective", "inc_f1"));
-                Assert.assertTrue((Boolean) tb.invoke("hasSelective", "inc_f2"));
-            }
-        });
+        Assert.assertEquals(tool.getWarnings().get(0), "itfsw:插件com.itfsw.mybatis.generator.plugins.SelectiveEnhancedPlugin不能和com.itfsw.mybatis.generator.plugins.OldSelectiveEnhancedPlugin插件同时使用！");
     }
 
     /**
@@ -107,12 +81,11 @@ public class SelectiveEnhancedPluginTest {
                 Object columns = Array.newInstance(TbColumnField1.getCls(), 2);
                 Array.set(columns, 0, TbColumnField1.getObject());
                 Array.set(columns, 1, TbColumnTsIncF2.getObject());
-                tb.invoke("selective", columns);
 
                 // sql
-                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "insertSelective", tb.getObject());
-                Assert.assertEquals(sql, "insert into tb ( field_1, inc_f2 )  values ( 'null', 5 )");
-                Object result = tbMapper.invoke("insertSelective", tb.getObject());
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "insertSelective", tb.getObject(), columns);
+                Assert.assertEquals(sql, "insert into tb ( field_1 , inc_f2 ) values ( 'null' , 5 )");
+                Object result = tbMapper.invoke("insertSelective", tb.getObject(), columns);
                 Assert.assertEquals(result, 1);
             }
         });
@@ -142,12 +115,11 @@ public class SelectiveEnhancedPluginTest {
                 Object columns = Array.newInstance(TbColumnField1.getCls(), 2);
                 Array.set(columns, 0, TbColumnField1.getObject());
                 Array.set(columns, 1, TbColumnTsIncF2.getObject());
-                tb.invoke("selective", columns);
 
                 // sql
-                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateByExampleSelective", tb.getObject(), TbExample.getObject());
-                Assert.assertEquals(sql, "update tb SET field_1 = 'null', inc_f2 = 5  WHERE (  id = '1' )");
-                Object result = tbMapper.invoke("updateByExampleSelective", tb.getObject(), TbExample.getObject());
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateByExampleSelective", tb.getObject(), TbExample.getObject(), columns);
+                Assert.assertEquals(sql, "update tb SET field_1 = 'null' , inc_f2 = 5 WHERE ( id = '1' )");
+                Object result = tbMapper.invoke("updateByExampleSelective", tb.getObject(), TbExample.getObject(), columns);
                 Assert.assertEquals(result, 1);
             }
         });
@@ -174,12 +146,11 @@ public class SelectiveEnhancedPluginTest {
                 Object columns = Array.newInstance(TbColumnField1.getCls(), 2);
                 Array.set(columns, 0, TbColumnField1.getObject());
                 Array.set(columns, 1, TbColumnTsIncF2.getObject());
-                tb.invoke("selective", columns);
 
                 // sql
-                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateByPrimaryKeySelective", tb.getObject());
-                Assert.assertEquals(sql, "update tb SET field_1 = 'null', inc_f2 = 5  where id = 2");
-                Object result = tbMapper.invoke("updateByPrimaryKeySelective", tb.getObject());
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateByPrimaryKeySelective", tb.getObject(), columns);
+                Assert.assertEquals(sql, "update tb SET field_1 = 'null' , inc_f2 = 5 where id = 2");
+                Object result = tbMapper.invoke("updateByPrimaryKeySelective", tb.getObject(), columns);
                 Assert.assertEquals(result, 1);
             }
         });
@@ -208,12 +179,11 @@ public class SelectiveEnhancedPluginTest {
                 Array.set(columns, 0, TbColumnId.getObject());
                 Array.set(columns, 1, TbColumnField1.getObject());
                 Array.set(columns, 2, TbColumnTsIncF2.getObject());
-                tb.invoke("selective", columns);
 
                 // sql
-                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertSelective", tb.getObject());
-                Assert.assertEquals(sql, "insert into tb ( id, field_1, inc_f2 )  values ( 10, 'null', 5 )  on duplicate key update  id = 10, field_1 = 'null', inc_f2 = 5");
-                Object result = tbMapper.invoke("upsertSelective", tb.getObject());
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertSelective", tb.getObject(), columns);
+                Assert.assertEquals(sql, "insert into tb ( id , field_1 , inc_f2 ) values ( 10 , 'null' , 5 ) on duplicate key update id = 10 , field_1 = 'null' , inc_f2 = 5");
+                Object result = tbMapper.invoke("upsertSelective", tb.getObject(), columns);
                 Assert.assertEquals(result, 1);
             }
         });
@@ -246,14 +216,13 @@ public class SelectiveEnhancedPluginTest {
                 Array.set(columns, 0, TbColumnId.getObject());
                 Array.set(columns, 1, TbColumnField1.getObject());
                 Array.set(columns, 2, TbColumnTsIncF2.getObject());
-                tb.invoke("selective", columns);
 
                 // sql
-                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExampleSelective", tb.getObject(), TbExample.getObject());
-                Assert.assertEquals(sql, "insert into tb ( id, field_1, inc_f2 )  select 99, 'null', 5  from dual where not exists ( select 1 from tb WHERE (  id = '99' )  ) ; update tb set inc_f2 = 5, inc_f3 = 10  WHERE (  id = '99' )");
-                Object result = tbMapper.invoke("upsertByExampleSelective", tb.getObject(), TbExample.getObject());
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExampleSelective", tb.getObject(), TbExample.getObject(), columns);
+                Assert.assertEquals(sql, "insert into tb ( id , field_1 , inc_f2 ) select 99 , 'null' , 5 from dual where not exists ( select 1 from tb WHERE ( id = '99' ) ) ; update tb set id = 99 , field_1 = 'null' , inc_f2 = 5 WHERE ( id = '99' )");
+                Object result = tbMapper.invoke("upsertByExampleSelective", tb.getObject(), TbExample.getObject(), columns);
                 Assert.assertEquals(result, 1);
-                result = tbMapper.invoke("upsertByExampleSelective", tb.getObject(), TbExample.getObject());
+                result = tbMapper.invoke("upsertByExampleSelective", tb.getObject(), TbExample.getObject(), columns);
                 Assert.assertEquals(result, 0);
             }
         });

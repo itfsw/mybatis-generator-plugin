@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017.
+ * Copyright (c) 2018.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,30 +17,31 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
-import com.itfsw.mybatis.generator.plugins.utils.IntrospectedTableTools;
 import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
 import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
-import org.mybatis.generator.api.dom.java.*;
-import org.mybatis.generator.api.dom.xml.*;
-import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
+import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
+import org.mybatis.generator.api.dom.java.Interface;
+import org.mybatis.generator.api.dom.java.Method;
+import org.mybatis.generator.api.dom.java.Parameter;
+import org.mybatis.generator.api.dom.xml.Attribute;
+import org.mybatis.generator.api.dom.xml.TextElement;
+import org.mybatis.generator.api.dom.xml.XmlElement;
+import org.mybatis.generator.codegen.mybatis3.ListUtilities;
+import org.mybatis.generator.config.GeneratedKey;
 
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * ---------------------------------------------------------------------------
  * Selective 增强插件
  * ---------------------------------------------------------------------------
- *
  * @author: hewei
- * @time:2017/4/20 15:39
+ * @time:2018/4/20 15:39
  * ---------------------------------------------------------------------------
  */
 public class SelectiveEnhancedPlugin extends BasePlugin {
-    public static final String METHOD_HAS_SELECTIVE = "hasSelective";  // 方法名
 
     /**
      * {@inheritDoc}
@@ -50,246 +51,315 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
 
         // 插件使用前提是使用了ModelColumnPlugin插件
         if (!PluginTools.checkDependencyPlugin(getContext(), ModelColumnPlugin.class)) {
-            warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件需配合com.itfsw.mybatis.generator.plugins.ModelColumnPlugin插件使用！");
+            warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件需配合" + ModelColumnPlugin.class.getTypeName() + "插件使用！");
             return false;
         }
 
-        // 插件位置
-        PluginTools.shouldAfterPlugins(getContext(), this.getClass(), warnings, UpsertPlugin.class);
+        // 和 OldSelectiveEnhancedPlugin 不能同时使用
+        if (PluginTools.checkDependencyPlugin(getContext(), OldSelectiveEnhancedPlugin.class)) {
+            warnings.add("itfsw:插件" + this.getClass().getTypeName() + "不能和" + OldSelectiveEnhancedPlugin.class.getTypeName() + "插件同时使用！");
+            return false;
+        }
 
         return super.validate(warnings);
     }
 
     /**
-     * Model Methods 生成
+     * insertSelective 方法生成
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     *
-     * @param topLevelClass
+     * @param method
+     * @param interfaze
      * @param introspectedTable
      * @return
      */
     @Override
-    public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        // import
-        topLevelClass.addImportedType(FullyQualifiedJavaType.getNewMapInstance());
-        topLevelClass.addImportedType(FullyQualifiedJavaType.getNewHashMapInstance());
+    public boolean clientInsertSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        method.getParameters().clear();
 
-        // field
-        Field selectiveColumnsField = new Field("selectiveColumns", new FullyQualifiedJavaType("Map<String, Boolean>"));
-        commentGenerator.addFieldComment(selectiveColumnsField, introspectedTable);
-        selectiveColumnsField.setVisibility(JavaVisibility.PRIVATE);
-        selectiveColumnsField.setInitializationString("new HashMap<String, Boolean>()");
-        topLevelClass.addField(selectiveColumnsField);
+        FullyQualifiedJavaType parameterType = introspectedTable.getRules().calculateAllFieldsClass();
+        method.addParameter(new Parameter(parameterType, "record", "@Param(\"record\")"));
 
-        // Method hasSelective
-        Method mHasSelective = new Method(METHOD_HAS_SELECTIVE);
-        commentGenerator.addGeneralMethodComment(mHasSelective, introspectedTable);
-        mHasSelective.setVisibility(JavaVisibility.PUBLIC);
-        mHasSelective.setReturnType(FullyQualifiedJavaType.getBooleanPrimitiveInstance());
-        mHasSelective.addBodyLine("return this.selectiveColumns.size() > 0;");
-        topLevelClass.addMethod(mHasSelective);
+        // 找出全字段对应的Model
+        FullyQualifiedJavaType fullFieldModel = introspectedTable.getRules().calculateAllFieldsClass();
+        // column枚举
+        FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
+        method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
 
-        // Method hasSelective
-        Method mHasSelective1 = new Method(METHOD_HAS_SELECTIVE);
-        commentGenerator.addGeneralMethodComment(mHasSelective1, introspectedTable);
-        mHasSelective1.setVisibility(JavaVisibility.PUBLIC);
-        mHasSelective1.setReturnType(FullyQualifiedJavaType.getBooleanPrimitiveInstance());
-        mHasSelective1.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "column"));
-        mHasSelective1.addBodyLine("return this.selectiveColumns.get(column) != null;");
-        topLevelClass.addMethod(mHasSelective1);
+        method.getJavaDocLines().clear();
+        commentGenerator.addGeneralMethodComment(method, introspectedTable);
 
-        // Method selective
-        Method mSelective = new Method("selective");
-        commentGenerator.addGeneralMethodComment(mSelective, introspectedTable);
-        mSelective.setVisibility(JavaVisibility.PUBLIC);
-        mSelective.setReturnType(topLevelClass.getType());
-        mSelective.addParameter(new Parameter(new FullyQualifiedJavaType(ModelColumnPlugin.ENUM_NAME), "columns", true));
-        mSelective.addBodyLine("this.selectiveColumns.clear();");
-        mSelective.addBodyLine("if (columns != null) {");
-        mSelective.addBodyLine("for (" + ModelColumnPlugin.ENUM_NAME + " column : columns) {");
-        mSelective.addBodyLine("this.selectiveColumns.put(column.value(), true);");
-        mSelective.addBodyLine("}");
-        mSelective.addBodyLine("}");
-        mSelective.addBodyLine("return this;");
-        topLevelClass.addMethod(mSelective);
-
-        return true;
+        return super.clientInsertSelectiveMethodGenerated(method, interfaze, introspectedTable);
     }
 
     /**
-     * SQL Map Methods 生成
+     * updateByExampleSelective
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     *
-     * @param document
+     * @param method
+     * @param interfaze
      * @param introspectedTable
      * @return
      */
     @Override
-    public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
-        List<Element> rootElements = document.getRootElement().getElements();
-        for (Element rootElement : rootElements) {
-            if (rootElement instanceof XmlElement) {
-                XmlElement xmlElement = (XmlElement) rootElement;
-                List<Attribute> attributes = xmlElement.getAttributes();
-                // 查找ID
-                String id = "";
-                for (Attribute attribute : attributes) {
-                    if (attribute.getName().equals("id")) {
-                        id = attribute.getValue();
-                    }
-                }
+    public boolean clientUpdateByExampleSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        method.getParameters().clear();
 
-                // ====================================== 1. insertSelective ======================================
-                if ("insertSelective".equals(id)) {
-                    List<XmlElement> eles = XmlElementGeneratorTools.findXmlElements(xmlElement, "trim");
-                    for (XmlElement ele : eles) {
-                        this.replaceEle(ele, "_parameter.", introspectedTable);
-                    }
-                }
-                // ====================================== 2. updateByExampleSelective ======================================
-                if ("updateByExampleSelective".equals(id)) {
-                    List<XmlElement> eles = XmlElementGeneratorTools.findXmlElements(xmlElement, "set");
-                    for (XmlElement ele : eles) {
-                        this.replaceEle(ele, "record.", introspectedTable);
-                    }
-                }
-                // ====================================== 3. updateByPrimaryKeySelective ======================================
-                if ("updateByPrimaryKeySelective".equals(id)) {
-                    List<XmlElement> eles = XmlElementGeneratorTools.findXmlElements(xmlElement, "set");
-                    for (XmlElement ele : eles) {
-                        this.replaceEle(ele, "_parameter.", introspectedTable);
-                    }
-                }
-                // ====================================== 4. upsertSelective ======================================
-                if ("upsertSelective".equals(id)) {
-                    List<XmlElement> eles = XmlElementGeneratorTools.findXmlElements(xmlElement, "trim");
-                    for (XmlElement ele : eles) {
-                        this.replaceEle(ele, "_parameter.", introspectedTable);
-                    }
-                }
-                // ====================================== 5. upsertByExampleSelective ======================================
-                if ("upsertByExampleSelective".equals(id)) {
-                    List<XmlElement> eles = XmlElementGeneratorTools.findXmlElements(xmlElement, "trim");
-                    this.replaceEle(eles.get(0), "record.", introspectedTable);
-                    // upsertByExampleSelective的第二个trim比较特殊，需另行处理
-                    this.replaceEleForUpsertByExampleSelective(eles.get(1), "record.", introspectedTable, !introspectedTable.getRules().generateRecordWithBLOBsClass());
+        FullyQualifiedJavaType parameterType = introspectedTable.getRules().calculateAllFieldsClass();
+        method.addParameter(new Parameter(parameterType, "record", "@Param(\"record\")"));
 
-                    List<XmlElement> eles1 = XmlElementGeneratorTools.findXmlElements(xmlElement, "set");
-                    for (XmlElement ele : eles1) {
-                        this.replaceEle(ele, "record.", introspectedTable);
-                    }
-                }
-            }
+        FullyQualifiedJavaType exampleType = new FullyQualifiedJavaType(introspectedTable.getExampleType());
+        method.addParameter(new Parameter(exampleType, "example", "@Param(\"example\")"));
+
+        // 找出全字段对应的Model
+        FullyQualifiedJavaType fullFieldModel = introspectedTable.getRules().calculateAllFieldsClass();
+        // column枚举
+        FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
+        method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
+
+        method.getJavaDocLines().clear();
+        commentGenerator.addGeneralMethodComment(method, introspectedTable);
+        return super.clientUpdateByExampleSelectiveMethodGenerated(method, interfaze, introspectedTable);
+    }
+
+    /**
+     * updateByPrimaryKeySelective
+     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     * @param method
+     * @param interfaze
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public boolean clientUpdateByPrimaryKeySelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        method.getParameters().clear();
+
+        FullyQualifiedJavaType parameterType;
+        if (introspectedTable.getRules().generateRecordWithBLOBsClass()) {
+            parameterType = new FullyQualifiedJavaType(introspectedTable.getRecordWithBLOBsType());
+        } else {
+            parameterType = new FullyQualifiedJavaType(introspectedTable.getBaseRecordType());
         }
-        return true;
+
+        method.addParameter(new Parameter(parameterType, "record", "@Param(\"record\")"));
+
+        // 找出全字段对应的Model
+        FullyQualifiedJavaType fullFieldModel = introspectedTable.getRules().calculateAllFieldsClass();
+        // column枚举
+        FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
+        method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
+
+        method.getJavaDocLines().clear();
+        commentGenerator.addGeneralMethodComment(method, introspectedTable);
+
+        return super.clientUpdateByPrimaryKeySelectiveMethodGenerated(method, interfaze, introspectedTable);
     }
 
     /**
-     * 替换节点if信息
-     *
+     * insertSelective
+     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
      * @param element
-     * @param prefix
      * @param introspectedTable
+     * @return
      */
-    private void replaceEle(XmlElement element, String prefix, IntrospectedTable introspectedTable) {
-        // choose
-        XmlElement chooseEle = new XmlElement("choose");
-        // when
-        XmlElement whenEle = new XmlElement("when");
-        whenEle.addAttribute(new Attribute("test", prefix + METHOD_HAS_SELECTIVE + "()"));
-        for (Element ele : element.getElements()) {
-            // 对于字符串主键，是没有if判断节点的
-            if (ele instanceof XmlElement) {
-                // if的text节点
-                XmlElement xmlElement = (XmlElement) ele;
+    @Override
+    public boolean sqlMapInsertSelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+        // 清空
+        XmlElement answer = element;
+        answer.getElements().clear();
+        answer.getAttributes().clear();
 
-                // 找出field 名称
-                String text = ((TextElement) xmlElement.getElements().get(0)).getContent();
+        answer.addAttribute(new Attribute("id", introspectedTable.getInsertSelectiveStatementId()));
 
-                String columnName = "";
-                if (text.matches("#\\{.*\\},?")) {
-                    Pattern pattern = Pattern.compile("#\\{(.*?),.*\\},?");
-                    Matcher matcher = pattern.matcher(text);
-                    if (matcher.find()) {
-                        String field = matcher.group(1);
-                        // 查找对应column
-                        for (IntrospectedColumn column : introspectedTable.getAllColumns()) {
-                            if (column.getJavaProperty().equals(field)) {
-                                columnName = column.getActualColumnName();
-                            }
-                        }
-                    }
+        answer.addAttribute(new Attribute("parameterType", "map"));
+
+        commentGenerator.addComment(answer);
+
+        GeneratedKey gk = introspectedTable.getGeneratedKey();
+        if (gk != null) {
+            IntrospectedColumn introspectedColumn = introspectedTable.getColumn(gk.getColumn());
+            // if the column is null, then it's a configuration error. The
+            // warning has already been reported
+            if (introspectedColumn != null) {
+                if (gk.isJdbcStandard()) {
+                    answer.addAttribute(new Attribute("useGeneratedKeys", "true"));
+                    answer.addAttribute(new Attribute("keyProperty", introspectedColumn.getJavaProperty()));
+                    answer.addAttribute(new Attribute("keyColumn", introspectedColumn.getActualColumnName()));
                 } else {
-                    if (text.matches(".*=.*")) {
-                        columnName = text.split("=")[0];
-                    } else {
-                        columnName = text.replaceAll(",", "");
-                    }
-                    // bug fixed: 修正使用autoDelimitKeywords过滤关键词造成的field前后加了特殊字符的问题
-                    // columnName = columnName.trim().replaceAll("`", "").replaceAll("\"", "").replaceAll("'", "");
+                    answer.addElement(XmlElementGeneratorTools.getSelectKey(introspectedColumn, gk));
                 }
-
-                IntrospectedColumn column = IntrospectedTableTools.safeGetColumn(introspectedTable, columnName);
-
-                XmlElement ifEle = new XmlElement("if");
-
-                ifEle.addAttribute(new Attribute("test", prefix + METHOD_HAS_SELECTIVE + "(\'" + column.getActualColumnName() + "\')"));
-                for (Element ifChild : xmlElement.getElements()) {
-                    ifEle.addElement(ifChild);
-                }
-                whenEle.addElement(ifEle);
-            } else {
-                whenEle.addElement(ele);
             }
         }
 
-        // otherwise
-        XmlElement otherwiseEle = new XmlElement("otherwise");
-        for (Element ele : element.getElements()) {
-            otherwiseEle.addElement(ele);
-        }
+        StringBuilder sb = new StringBuilder();
 
-        chooseEle.addElement(whenEle);
-        chooseEle.addElement(otherwiseEle);
+        sb.append("insert into ");
+        sb.append(introspectedTable.getFullyQualifiedTableNameAtRuntime());
+        answer.addElement(new TextElement(sb.toString()));
 
-        // 清空原始节点，新增choose节点
-        element.getElements().clear();
-        element.addElement(chooseEle);
+        // selective
+        XmlElement insertChooseEle = new XmlElement("choose");
+        answer.addElement(insertChooseEle);
+
+        XmlElement insertWhenEle = new XmlElement("when");
+        insertWhenEle.addAttribute(new Attribute("test", "selective.length > 0"));
+        insertChooseEle.addElement(insertWhenEle);
+
+        XmlElement insertForeachEle = new XmlElement("foreach");
+        insertForeachEle.addAttribute(new Attribute("collection", "selective"));
+        insertForeachEle.addAttribute(new Attribute("item", "column"));
+        insertForeachEle.addAttribute(new Attribute("open", "("));
+        insertForeachEle.addAttribute(new Attribute("separator", ","));
+        insertForeachEle.addAttribute(new Attribute("close", ")"));
+        insertForeachEle.addElement(new TextElement("${column.value}"));
+        insertWhenEle.addElement(insertForeachEle);
+
+        XmlElement insertOtherwiseEle = new XmlElement("otherwise");
+        insertOtherwiseEle.addElement(XmlElementGeneratorTools.generateKeysSelective(
+                ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()),
+                "record."
+        ));
+        insertChooseEle.addElement(insertOtherwiseEle);
+
+        XmlElement insertTrimElement = new XmlElement("trim");
+        insertTrimElement.addAttribute(new Attribute("prefix", "("));
+        insertTrimElement.addAttribute(new Attribute("suffix", ")"));
+        insertTrimElement.addAttribute(new Attribute("suffixOverrides", ","));
+        insertOtherwiseEle.addElement(insertTrimElement);
+
+
+        XmlElement valuesChooseEle = new XmlElement("choose");
+        answer.addElement(valuesChooseEle);
+
+        XmlElement valuesWhenEle = new XmlElement("when");
+        valuesWhenEle.addAttribute(new Attribute("test", "selective.length > 0"));
+        valuesChooseEle.addElement(valuesWhenEle);
+
+        XmlElement valuesForeachEle = new XmlElement("foreach");
+        valuesForeachEle.addAttribute(new Attribute("collection", "selective"));
+        valuesForeachEle.addAttribute(new Attribute("item", "column"));
+        valuesForeachEle.addAttribute(new Attribute("open", "values ("));
+        valuesForeachEle.addAttribute(new Attribute("separator", ","));
+        valuesForeachEle.addAttribute(new Attribute("close", ")"));
+        valuesForeachEle.addElement(new TextElement("#{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+        valuesWhenEle.addElement(valuesForeachEle);
+
+        XmlElement valuesOtherwiseEle = new XmlElement("otherwise");
+        valuesOtherwiseEle.addElement(XmlElementGeneratorTools.generateValuesSelective(
+                ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()),
+                "record."
+        ));
+        valuesChooseEle.addElement(valuesOtherwiseEle);
+
+        XmlElement valuesTrimElement = new XmlElement("trim");
+        valuesTrimElement.addAttribute(new Attribute("prefix", "values ("));
+        valuesTrimElement.addAttribute(new Attribute("suffix", ")"));
+        valuesTrimElement.addAttribute(new Attribute("suffixOverrides", ","));
+        valuesOtherwiseEle.addElement(valuesTrimElement);
+
+        return super.sqlMapInsertSelectiveElementGenerated(element, introspectedTable);
     }
 
     /**
-     * 替换节点upsertByExampleSelective if信息
-     *
+     * updateByExampleSelective
+     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
      * @param element
-     * @param prefix
      * @param introspectedTable
-     * @param allColumns
+     * @return
      */
-    private void replaceEleForUpsertByExampleSelective(XmlElement element, String prefix, IntrospectedTable introspectedTable, boolean allColumns) {
-        // choose
-        XmlElement chooseEle = new XmlElement("choose");
-        // when
-        XmlElement whenEle = new XmlElement("when");
-        whenEle.addAttribute(new Attribute("test", prefix + METHOD_HAS_SELECTIVE + "()"));
-        for (IntrospectedColumn introspectedColumn : (allColumns ? introspectedTable.getAllColumns() : introspectedTable.getNonBLOBColumns())) {
-            XmlElement eleIf = new XmlElement("if");
-            eleIf.addAttribute(new Attribute("test", prefix + METHOD_HAS_SELECTIVE + "(\'" + introspectedColumn.getActualColumnName() + "\')"));
+    @Override
+    public boolean sqlMapUpdateByExampleSelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+        // 清空
+        XmlElement answer = element;
+        answer.getElements().clear();
+        answer.getAttributes().clear();
 
-            eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
-            whenEle.addElement(eleIf);
-        }
+        answer.addAttribute(new Attribute("id", introspectedTable.getUpdateByExampleSelectiveStatementId()));
+        answer.addAttribute(new Attribute("parameterType", "map"));
 
-        // otherwise
-        XmlElement otherwiseEle = new XmlElement("otherwise");
-        for (Element ele : element.getElements()) {
-            otherwiseEle.addElement(ele);
-        }
+        commentGenerator.addComment(answer);
 
-        chooseEle.addElement(whenEle);
-        chooseEle.addElement(otherwiseEle);
+        StringBuilder sb = new StringBuilder();
+        sb.append("update ");
+        sb.append(introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime());
+        answer.addElement(new TextElement(sb.toString()));
 
-        // 清空原始节点，新增choose节点
-        element.getElements().clear();
-        element.addElement(chooseEle);
+        // selective
+        XmlElement setChooseEle = new XmlElement("choose");
+        answer.addElement(setChooseEle);
+
+        XmlElement setWhenEle = new XmlElement("when");
+        setWhenEle.addAttribute(new Attribute("test", "selective.length > 0"));
+        setChooseEle.addElement(setWhenEle);
+
+        XmlElement setForeachEle = new XmlElement("foreach");
+        setForeachEle.addAttribute(new Attribute("collection", "selective"));
+        setForeachEle.addAttribute(new Attribute("item", "column"));
+        setForeachEle.addAttribute(new Attribute("open", "SET"));
+        setForeachEle.addAttribute(new Attribute("separator", ","));
+        setForeachEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+        setWhenEle.addElement(setForeachEle);
+
+        XmlElement setOtherwiseEle = new XmlElement("otherwise");
+        setOtherwiseEle.addElement(XmlElementGeneratorTools.generateSetsSelective(
+                ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getAllColumns()),
+                "record."
+        ));
+        setChooseEle.addElement(setOtherwiseEle);
+
+        answer.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
+
+        return super.sqlMapUpdateByExampleSelectiveElementGenerated(element, introspectedTable);
+    }
+
+    /**
+     * updateByPrimaryKeySelective
+     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     * @param element
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public boolean sqlMapUpdateByPrimaryKeySelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+        // 清空
+        XmlElement answer = element;
+        answer.getElements().clear();
+        answer.getAttributes().clear();
+
+        answer.addAttribute(new Attribute("id", introspectedTable.getUpdateByPrimaryKeySelectiveStatementId()));
+        answer.addAttribute(new Attribute("parameterType", "map"));
+
+        commentGenerator.addComment(answer);
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("update ");
+        sb.append(introspectedTable.getFullyQualifiedTableNameAtRuntime());
+        answer.addElement(new TextElement(sb.toString()));
+
+        // selective
+        XmlElement setChooseEle = new XmlElement("choose");
+        answer.addElement(setChooseEle);
+
+        XmlElement setWhenEle = new XmlElement("when");
+        setWhenEle.addAttribute(new Attribute("test", "selective.length > 0"));
+        setChooseEle.addElement(setWhenEle);
+
+        XmlElement setForeachEle = new XmlElement("foreach");
+        setForeachEle.addAttribute(new Attribute("collection", "selective"));
+        setForeachEle.addAttribute(new Attribute("item", "column"));
+        setForeachEle.addAttribute(new Attribute("open", "SET"));
+        setForeachEle.addAttribute(new Attribute("separator", ","));
+        setForeachEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+        setWhenEle.addElement(setForeachEle);
+
+        XmlElement setOtherwiseEle = new XmlElement("otherwise");
+        setOtherwiseEle.addElement(XmlElementGeneratorTools.generateSetsSelective(
+                ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getNonPrimaryKeyColumns()),
+                "record."
+        ));
+        setChooseEle.addElement(setOtherwiseEle);
+
+        XmlElementGeneratorTools.generateWhereByPrimaryKeyTo(answer, introspectedTable.getPrimaryKeyColumns(), "record.");
+
+        return super.sqlMapUpdateByPrimaryKeySelectiveElementGenerated(element, introspectedTable);
     }
 }

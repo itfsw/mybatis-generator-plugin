@@ -339,21 +339,7 @@ public class LogicalDeletePlugin extends BasePlugin {
 
                 logicalDeleteByPrimaryKey.addElement(new TextElement(sb1.toString()));
 
-                boolean and = false;
-                for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
-                    sb.setLength(0);
-                    if (and) {
-                        sb.append("  and ");
-                    } else {
-                        sb.append("where ");
-                        and = true;
-                    }
-
-                    sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
-                    sb.append(" = "); 
-                    sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
-                    logicalDeleteByPrimaryKey.addElement(new TextElement(sb.toString()));
-                }
+                XmlElementGeneratorTools.generateWhereByPrimaryKeyTo(logicalDeleteByPrimaryKey, introspectedTable.getPrimaryKeyColumns());
 
                 document.getRootElement().addElement(logicalDeleteByPrimaryKey);
                 logger.debug("itfsw(逻辑删除插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加方法logicalDeleteByPrimaryKey的实现。");
@@ -394,21 +380,7 @@ public class LogicalDeletePlugin extends BasePlugin {
                 sb.append(introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime());
                 selectByPrimaryKey.addElement(new TextElement(sb.toString()));
 
-                and = false;
-                for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
-                    sb.setLength(0);
-                    if (and) {
-                        sb.append("  and "); 
-                    } else {
-                        sb.append("where "); 
-                        and = true;
-                    }
-
-                    sb.append(MyBatis3FormattingUtilities.getAliasedEscapedColumnName(introspectedColumn));
-                    sb.append(" = ");
-                    sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
-                    selectByPrimaryKey.addElement(new TextElement(sb.toString()));
-                }
+                XmlElementGeneratorTools.generateWhereByPrimaryKeyTo(selectByPrimaryKey, introspectedTable.getPrimaryKeyColumns());
 
                 // 逻辑删除的判断
                 sb.setLength(0);

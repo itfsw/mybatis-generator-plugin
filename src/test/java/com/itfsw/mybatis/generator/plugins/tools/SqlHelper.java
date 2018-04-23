@@ -60,7 +60,7 @@ public class SqlHelper {
      */
     public static String getFormatMapperSql(Object mapper, String methodName, Object... args) {
         String sql = getMapperSql(mapper, methodName, args);
-        return sql == null ? null : sql.replaceAll("\n\\s*", " ");
+        return sql == null ? null : sql.replaceAll("\n", " ").replaceAll("\\s+", " ");
     }
 
     /**

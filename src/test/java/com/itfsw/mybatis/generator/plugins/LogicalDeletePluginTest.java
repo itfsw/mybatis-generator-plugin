@@ -93,7 +93,7 @@ public class LogicalDeletePluginTest {
 
                 // 验证sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "logicalDeleteByExample", tbExample.getObject());
-                Assert.assertEquals(sql, "update tb set del_flag = 1 WHERE (  id = '1' )");
+                Assert.assertEquals(sql, "update tb set del_flag = 1 WHERE ( id = '1' )");
                 // 验证执行
                 Object result = tbMapper.invoke("logicalDeleteByExample", tbExample.getObject());
                 Assert.assertEquals(result, 1);
@@ -147,7 +147,7 @@ public class LogicalDeletePluginTest {
 
                 // 验证sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
-                Assert.assertEquals(sql, "select id, del_flag, and_logical_deleted, ts_1, ts_3, ts_4 from tb WHERE (  del_flag = '1' and id = '3' )");
+                Assert.assertEquals(sql, "select id, del_flag, and_logical_deleted, ts_1, ts_3, ts_4 from tb WHERE ( del_flag = '1' and id = '3' )");
                 // 验证执行
                 Object result = tbMapper.invoke("selectByExample", tbExample.getObject());
                 Assert.assertEquals(((List)result).size(), 1);
@@ -174,7 +174,7 @@ public class LogicalDeletePluginTest {
 
                 // 验证sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
-                Assert.assertEquals(sql, "select id, del_flag, and_logical_deleted, ts_1, ts_3, ts_4 from tb WHERE (  del_flag = '0' and id = '3' )");
+                Assert.assertEquals(sql, "select id, del_flag, and_logical_deleted, ts_1, ts_3, ts_4 from tb WHERE ( del_flag = '0' and id = '3' )");
                 // 验证执行
                 Object result = tbMapper.invoke("selectByExample", tbExample.getObject());
                 Assert.assertEquals(((List)result).size(), 0);
@@ -215,7 +215,7 @@ public class LogicalDeletePluginTest {
 
                 // 验证sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByPrimaryKeyWithLogicalDelete", 5l, true);
-                Assert.assertEquals(sql, "select  id, del_flag, and_logical_deleted, ts_1, ts_3, ts_4 , ts_2 from tb where id = 5 and del_flag =  '1'");
+                Assert.assertEquals(sql, "select id, del_flag, and_logical_deleted, ts_1, ts_3, ts_4 , ts_2 from tb where id = 5 and del_flag = '1'");
                 // 验证执行
                 Object result = tbMapper.invoke("selectByPrimaryKeyWithLogicalDelete", 5l, true);
                 Assert.assertNull(result);

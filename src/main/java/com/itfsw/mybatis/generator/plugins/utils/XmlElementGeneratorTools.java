@@ -346,7 +346,7 @@ public class XmlElementGeneratorTools {
                 sb.setLength(0);
             }
         }
-        if (sb.length() > 0 || bracket){
+        if (sb.length() > 0 || bracket) {
             list.add(new TextElement(sb.append(bracket ? ")" : "").toString()));
         }
 
@@ -372,22 +372,38 @@ public class XmlElementGeneratorTools {
         }
 
         for (IntrospectedColumn introspectedColumn : columns) {
-            XmlElement eleIf = new XmlElement("if");
-            eleIf.addAttribute(new Attribute("test", introspectedColumn.getJavaProperty(prefix) + " != null"));
+            if (type != 3 && (introspectedColumn.isSequenceColumn() || introspectedColumn.getFullyQualifiedJavaType().isPrimitive())) {
+                // if it is a sequence column, it is not optional
+                // This is required for MyBatis3 because MyBatis3 parses
+                // and calculates the SQL before executing the selectKey
 
-            switch (type) {
-                case 3:
-                    eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = " + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
-                    break;
-                case 2:
-                    eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
-                    break;
-                case 1:
-                    eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + ","));
-                    break;
+                // if it is primitive, we cannot do a null check
+                switch (type) {
+                    case 2:
+                        eleTrim.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
+                        break;
+                    case 1:
+                        eleTrim.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + ","));
+                        break;
+                }
+            } else {
+                XmlElement eleIf = new XmlElement("if");
+                eleIf.addAttribute(new Attribute("test", introspectedColumn.getJavaProperty(prefix) + " != null"));
+
+                switch (type) {
+                    case 3:
+                        eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = " + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
+                        break;
+                    case 2:
+                        eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
+                        break;
+                    case 1:
+                        eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + ","));
+                        break;
+                }
+
+                eleTrim.addElement(eleIf);
             }
-
-            eleTrim.addElement(eleIf);
         }
 
         return eleTrim;
@@ -413,4 +429,39 @@ public class XmlElementGeneratorTools {
         return list;
     }
 
+    /**
+     * 生成 xxxByPrimaryKey 的where 语句
+     * @param element
+     * @param primaryKeyColumns
+     * @return
+     */
+    public static void generateWhereByPrimaryKeyTo(XmlElement element, List<IntrospectedColumn> primaryKeyColumns) {
+        generateWhereByPrimaryKeyTo(element, primaryKeyColumns, null);
+    }
+
+    /**
+     * 生成 xxxByPrimaryKey 的where 语句
+     * @param element
+     * @param primaryKeyColumns
+     * @param prefix
+     * @return
+     */
+    public static void generateWhereByPrimaryKeyTo(XmlElement element, List<IntrospectedColumn> primaryKeyColumns, String prefix) {
+        StringBuilder sb = new StringBuilder();
+        boolean and = false;
+        for (IntrospectedColumn introspectedColumn : primaryKeyColumns) {
+            sb.setLength(0);
+            if (and) {
+                sb.append("  and ");
+            } else {
+                sb.append("where ");
+                and = true;
+            }
+
+            sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
+            sb.append(" = ");
+            sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
+            element.addElement(new TextElement(sb.toString()));
+        }
+    }
 }

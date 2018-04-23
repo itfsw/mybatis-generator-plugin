@@ -160,7 +160,7 @@ public class BatchInsertPluginTest {
                                 .getObject()
                 );
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "batchInsert", params);
-                Assert.assertEquals(sql, "insert into tb (field1, field2) values ('test', null) ,  ('test', 1)");
+                Assert.assertEquals(sql, "insert into tb (field1, field2) values ('test', null) , ('test', 1)");
                 // 2. 执行sql
                 Object count = tbMapper.invoke("batchInsert", params);
                 Assert.assertEquals(count, 2);
@@ -197,7 +197,7 @@ public class BatchInsertPluginTest {
                 Array.set(columns, 0, columnField2.getObject());
 
                 String sql = SqlHelper.getFormatMapperSql(tbBlobsMapper.getObject(), "batchInsertSelective", params, columns);
-                Assert.assertEquals(sql, "insert into tb_blobs ( field2 ) values ( 'null' ) ,  ( 'test123' )");
+                Assert.assertEquals(sql, "insert into tb_blobs ( field2 ) values ( 'null' ) , ( 'test123' )");
                 // 2. 执行sql
                 Object count = tbBlobsMapper.invoke("batchInsertSelective", params, columns);
                 Assert.assertEquals(count, 2);

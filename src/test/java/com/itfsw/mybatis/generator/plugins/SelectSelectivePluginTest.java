@@ -66,7 +66,7 @@ public class SelectSelectivePluginTest {
                 Array.set(columns1, 0, columnField1.getObject());
 
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns1);
-                Assert.assertEquals(sql, "select field1 from tb WHERE (  id < '100' )  order by field2 asc");
+                Assert.assertEquals(sql, "select field1 from tb WHERE ( id < '100' ) order by field2 asc");
 
                 ObjectUtil columnField2 = new ObjectUtil(loader, packagz + ".Tb$Column#field2");
                 Object columns2 = Array.newInstance(columnField1.getCls(), 2);
@@ -74,7 +74,7 @@ public class SelectSelectivePluginTest {
                 Array.set(columns2, 1, columnField2.getObject());
 
                 sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns2);
-                Assert.assertEquals(sql, "select field1 ,  field2 from tb WHERE (  id < '100' )  order by field2 asc");
+                Assert.assertEquals(sql, "select field1 , field2 from tb WHERE ( id < '100' ) order by field2 asc");
 
 
                 // 2. 执行sql
@@ -104,7 +104,7 @@ public class SelectSelectivePluginTest {
                 tbExample.invoke("setDistinct", true);
                 tbExample.set("orderByClause", "field1 asc");
                 String sql1 = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns1);
-                Assert.assertEquals(sql1, "select distinct field1 from tb WHERE (  id < '100' )  order by field1 asc");
+                Assert.assertEquals(sql1, "select distinct field1 from tb WHERE ( id < '100' ) order by field1 asc");
                 List list1 = (List) tbMapper.invoke("selectByExampleSelective", tbExample.getObject(), columns1);
                 Assert.assertEquals(list1.size(), 3);
             }
@@ -188,7 +188,7 @@ public class SelectSelectivePluginTest {
                 Array.set(columns1, 0, columnField1.getObject());
 
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectOneByExampleSelective", tbExample.getObject(), columns1);
-                Assert.assertEquals(sql, "select field1 from tb WHERE (  id = '3' )  order by field2 asc limit 1");
+                Assert.assertEquals(sql, "select field1 from tb WHERE ( id = '3' ) order by field2 asc limit 1");
 
                 // 2. 执行sql
                 Object result = tbMapper.invoke("selectOneByExampleSelective", tbExample.getObject(), columns1);
@@ -223,7 +223,7 @@ public class SelectSelectivePluginTest {
                 Array.set(columns1, 0, columnField1.getObject());
 
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns1);
-                Assert.assertEquals(sql, "select field1 from tb WHERE (  id < '100' )  order by field1 asc");
+                Assert.assertEquals(sql, "select field1 from tb WHERE ( id < '100' ) order by field1 asc");
 
                 ObjectUtil columnField2 = new ObjectUtil(loader, packagz + ".Tb$Column#field2");
                 Object columns2 = Array.newInstance(columnField1.getCls(), 2);
@@ -231,7 +231,7 @@ public class SelectSelectivePluginTest {
                 Array.set(columns2, 1, columnField2.getObject());
 
                 sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns2);
-                Assert.assertEquals(sql, "select field1 ,  field2 from tb WHERE (  id < '100' )  order by field1 asc");
+                Assert.assertEquals(sql, "select field1 , field2 from tb WHERE ( id < '100' ) order by field1 asc");
 
 
                 // 2. 执行sql
@@ -277,7 +277,7 @@ public class SelectSelectivePluginTest {
                 Array.set(columns1, 0, columnField1.getObject());
 
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns1);
-                Assert.assertEquals(sql, "select field1 from tb WHERE (  id < '100' )  order by field1 asc");
+                Assert.assertEquals(sql, "select field1 from tb WHERE ( id < '100' ) order by field1 asc");
 
                 ObjectUtil columnField2 = new ObjectUtil(loader, packagz + ".Tb$Column#field2");
                 Object columns2 = Array.newInstance(columnField1.getCls(), 2);
@@ -285,7 +285,7 @@ public class SelectSelectivePluginTest {
                 Array.set(columns2, 1, columnField2.getObject());
 
                 sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns2);
-                Assert.assertEquals(sql, "select field1 ,  field2 from tb WHERE (  id < '100' )  order by field1 asc");
+                Assert.assertEquals(sql, "select field1 , field2 from tb WHERE ( id < '100' ) order by field1 asc");
 
 
                 // 2. 执行sql

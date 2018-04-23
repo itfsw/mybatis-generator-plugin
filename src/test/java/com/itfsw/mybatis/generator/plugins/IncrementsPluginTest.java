@@ -132,9 +132,9 @@ public class IncrementsPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateByExample", tbBuilder.invoke("build"), tbExample.getObject());
-                Assert.assertEquals(sql, "update tb set id = null, field1 = 'null', inc_f1 =  inc_f1 + 100 , inc_f2 = null, inc_f3 = null WHERE (  id = '3' )");
+                Assert.assertEquals(sql, "update tb set id = null, field1 = 'null', inc_f1 = inc_f1 + 100 , inc_f2 = null, inc_f3 = null WHERE ( id = '3' )");
                 sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateByExampleSelective", tbBuilder.invoke("build"), tbExample.getObject());
-                Assert.assertEquals(sql, "update tb SET inc_f1 =  inc_f1 + 100 WHERE (  id = '3' )");
+                Assert.assertEquals(sql, "update tb SET inc_f1 = inc_f1 + 100 WHERE ( id = '3' )");
                 // 执行
                 // inc_f1 增加100
                 Object result = tbMapper.invoke("updateByExampleSelective", tbBuilder.invoke("build"), tbExample.getObject());
@@ -167,9 +167,9 @@ public class IncrementsPluginTest {
 
                 // sql
                 sql = SqlHelper.getFormatMapperSql(tbKeysMapper.getObject(), "updateByPrimaryKey", tbKeysBuilder.invoke("build"));
-                Assert.assertEquals(sql, "update tb_keys set field1 = 'null', field2 = null, inc_f1 =  inc_f1 + 10 , inc_f2 =  null , inc_f3 =  inc_f3 + 30 where key1 = 1 and key2 = 'k1'");
+                Assert.assertEquals(sql, "update tb_keys set field1 = 'null', field2 = null, inc_f1 = inc_f1 + 10 , inc_f2 = null , inc_f3 = inc_f3 + 30 where key1 = 1 and key2 = 'k1'");
                 sql = SqlHelper.getFormatMapperSql(tbKeysMapper.getObject(), "updateByPrimaryKeySelective", tbKeysBuilder.invoke("build"));
-                Assert.assertEquals(sql, "update tb_keys SET inc_f1 =  inc_f1 + 10 , inc_f3 =  inc_f3 + 30 where key1 = 1 and key2 = 'k1'");
+                Assert.assertEquals(sql, "update tb_keys SET inc_f1 = inc_f1 + 10 , inc_f3 = inc_f3 + 30 where key1 = 1 and key2 = 'k1'");
                 // 执行
                 result = tbKeysMapper.invoke("updateByPrimaryKeySelective", tbKeysBuilder.invoke("build"));
                 Assert.assertEquals(result, 1);
@@ -194,17 +194,17 @@ public class IncrementsPluginTest {
 
                 // sql
                 sql = SqlHelper.getFormatMapperSql(tbBlobsMapper.getObject(), "updateByExampleWithBLOBs", tbBlobsWithBLOBsBuilder.invoke("build"), tbBlobsExample.getObject());
-                Assert.assertEquals(sql, "update tb_blobs set id = null, field1 = 'null', inc_f1 =  inc_f1 + 100 , inc_f2 = 50, inc_f3 =  null , field2 = 'null', field3 = 'blob' WHERE (  id = '3' )");
+                Assert.assertEquals(sql, "update tb_blobs set id = null, field1 = 'null', inc_f1 = inc_f1 + 100 , inc_f2 = 50, inc_f3 = null , field2 = 'null', field3 = 'blob' WHERE ( id = '3' )");
 
                 tbBlobsWithBLOBsBuilder.invoke("id", 3l);
                 sql = SqlHelper.getFormatMapperSql(tbBlobsMapper.getObject(), "updateByPrimaryKeyWithBLOBs", tbBlobsWithBLOBsBuilder.invoke("build"));
-                Assert.assertEquals(sql, "update tb_blobs set field1 = 'null', inc_f1 =  inc_f1 + 100 , inc_f2 = 50, inc_f3 =  null , field2 = 'null', field3 = 'blob' where id = 3");
+                Assert.assertEquals(sql, "update tb_blobs set field1 = 'null', inc_f1 = inc_f1 + 100 , inc_f2 = 50, inc_f3 = null , field2 = 'null', field3 = 'blob' where id = 3");
 
                 // 执行
                 tbBlobsWithBLOBsBuilder.invoke("incF3", 10l);
                 // 测试自增字段没有配置自增参数
                 sql = SqlHelper.getFormatMapperSql(tbBlobsMapper.getObject(), "updateByPrimaryKeyWithBLOBs", tbBlobsWithBLOBsBuilder.invoke("build"));
-                Assert.assertEquals(sql, "update tb_blobs set field1 = 'null', inc_f1 =  inc_f1 + 100 , inc_f2 = 50, inc_f3 =  10 , field2 = 'null', field3 = 'blob' where id = 3");
+                Assert.assertEquals(sql, "update tb_blobs set field1 = 'null', inc_f1 = inc_f1 + 100 , inc_f2 = 50, inc_f3 = 10 , field2 = 'null', field3 = 'blob' where id = 3");
                 result = tbBlobsMapper.invoke("updateByPrimaryKeyWithBLOBs", tbBlobsWithBLOBsBuilder.invoke("build"));
                 Assert.assertEquals(result, 1);
             }

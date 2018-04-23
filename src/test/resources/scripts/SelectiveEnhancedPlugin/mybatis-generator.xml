@@ -24,7 +24,11 @@
     <!--导入属性配置 -->
     <context id="default" targetRuntime="MyBatis3">
         <!-- 插件 -->
-        <plugin type="com.itfsw.mybatis.generator.plugins.SelectiveEnhancedPlugin" />
+        <plugin type="com.itfsw.mybatis.generator.plugins.UpsertPlugin">
+            <property name="allowMultiQueries" value="true"/>
+        </plugin>
+        <plugin type="com.itfsw.mybatis.generator.plugins.SelectiveEnhancedPlugin"/>
+        <plugin type="com.itfsw.mybatis.generator.plugins.ModelColumnPlugin"/>
 
         <!--jdbc的数据库连接 -->
         <jdbcConnection driverClass="${driver}" connectionURL="${url}" userId="${username}" password="${password}" />

@@ -116,7 +116,7 @@ public class ExampleEnhancedPluginTest {
                     method.invoke(tbExampleCriteria.getObject(), true, criteriaAdd);
 
                     String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
-                    Assert.assertEquals(sql, "select id, field1 from tb WHERE (  id = '5' )");
+                    Assert.assertEquals(sql, "select id, field1 from tb WHERE ( id = '5' )");
 
                     // 2. andIf false
                     ObjectUtil tbExample1 = new ObjectUtil(loader, packagz + ".TbExample");

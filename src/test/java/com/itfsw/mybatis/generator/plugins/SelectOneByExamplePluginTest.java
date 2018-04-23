@@ -61,7 +61,7 @@ public class SelectOneByExamplePluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectOneByExample", TbExample.getObject());
-                Assert.assertEquals(sql, "select id, field1, field2 from tb WHERE (  id = '1' )  limit 1");
+                Assert.assertEquals(sql, "select id, field1, field2 from tb WHERE ( id = '1' ) limit 1");
                 Object result = tbMapper.invoke("selectOneByExample", TbExample.getObject());
                 ObjectUtil Tb = new ObjectUtil(result);
                 Assert.assertEquals(Tb.get("id"), 1l);
@@ -88,7 +88,7 @@ public class SelectOneByExamplePluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(TbBlobsMapper.getObject(), "selectOneByExampleWithBLOBs", TbBlobsExample.getObject());
-                Assert.assertEquals(sql, "select id, field1 , field2, field3 from tb_blobs WHERE (  id = '1' )  limit 1");
+                Assert.assertEquals(sql, "select id, field1 , field2, field3 from tb_blobs WHERE ( id = '1' ) limit 1");
                 Object result = TbBlobsMapper.invoke("selectOneByExampleWithBLOBs", TbBlobsExample.getObject());
                 ObjectUtil Tb = new ObjectUtil(result);
                 Assert.assertEquals(Tb.get("id"), 1l);

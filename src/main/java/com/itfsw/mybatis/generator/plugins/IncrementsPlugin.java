@@ -99,7 +99,12 @@ public class IncrementsPlugin extends BasePlugin {
      */
     @Override
     public boolean sqlMapUpdateByExampleSelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
-        generatedWithSelective(element, introspectedTable, true);
+        if (PluginTools.checkDependencyPlugin(context, SelectiveEnhancedPlugin.class)) {
+            // TODO SelectiveEnhancedPlugin.sqlMapUpdateByExampleSelectiveElementGenerated
+        } else {
+            generatedWithSelective(element, introspectedTable, true);
+        }
+
         return true;
     }
 
@@ -135,7 +140,12 @@ public class IncrementsPlugin extends BasePlugin {
      */
     @Override
     public boolean sqlMapUpdateByPrimaryKeySelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
-        generatedWithSelective(element, introspectedTable, false);
+        if (PluginTools.checkDependencyPlugin(context, SelectiveEnhancedPlugin.class)) {
+            // TODO SelectiveEnhancedPlugin.sqlMapUpdateByPrimaryKeySelectiveElementGenerated
+        } else {
+            generatedWithSelective(element, introspectedTable, false);
+        }
+
         return true;
     }
 

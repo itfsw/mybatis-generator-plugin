@@ -17,6 +17,7 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
+import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
@@ -73,12 +74,11 @@ public class ModelColumnPlugin extends BasePlugin {
 
     /**
      * 生成Column字段枚举
-     *
      * @param topLevelClass
      * @param introspectedTable
      * @return
      */
-    private InnerEnum generateColumnEnum(TopLevelClass topLevelClass, IntrospectedTable introspectedTable){
+    private InnerEnum generateColumnEnum(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         // 生成内部枚举
         InnerEnum innerEnum = new InnerEnum(new FullyQualifiedJavaType(ENUM_NAME));
         innerEnum.setVisibility(JavaVisibility.PUBLIC);
@@ -92,6 +92,18 @@ public class ModelColumnPlugin extends BasePlugin {
         columnField.setFinal(true);
         commentGenerator.addFieldComment(columnField, introspectedTable);
         innerEnum.addField(columnField);
+
+        Field javaPropertyField = new Field("javaProperty", FullyQualifiedJavaType.getStringInstance());
+        javaPropertyField.setVisibility(JavaVisibility.PRIVATE);
+        javaPropertyField.setFinal(true);
+        commentGenerator.addFieldComment(javaPropertyField, introspectedTable);
+        innerEnum.addField(javaPropertyField);
+
+        Field jdbcTypeField = new Field("jdbcType", FullyQualifiedJavaType.getStringInstance());
+        jdbcTypeField.setVisibility(JavaVisibility.PRIVATE);
+        jdbcTypeField.setFinal(true);
+        commentGenerator.addFieldComment(jdbcTypeField, introspectedTable);
+        innerEnum.addField(jdbcTypeField);
 
         Method mValue = new Method("value");
         mValue.setVisibility(JavaVisibility.PUBLIC);
@@ -107,10 +119,22 @@ public class ModelColumnPlugin extends BasePlugin {
         commentGenerator.addGeneralMethodComment(mGetValue, introspectedTable);
         innerEnum.addMethod(mGetValue);
 
+        Method mGetJavaProperty = JavaElementGeneratorTools.generateGetterMethod(javaPropertyField);
+        commentGenerator.addGeneralMethodComment(mGetJavaProperty, introspectedTable);
+        innerEnum.addMethod(mGetJavaProperty);
+
+        Method mGetJdbcType = JavaElementGeneratorTools.generateGetterMethod(jdbcTypeField);
+        commentGenerator.addGeneralMethodComment(mGetJdbcType, introspectedTable);
+        innerEnum.addMethod(mGetJdbcType);
+
         Method constructor = new Method(ENUM_NAME);
         constructor.setConstructor(true);
         constructor.addBodyLine("this.column = column;");
+        constructor.addBodyLine("this.javaProperty = javaProperty;");
+        constructor.addBodyLine("this.jdbcType = jdbcType;");
         constructor.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "column"));
+        constructor.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "javaProperty"));
+        constructor.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "jdbcType"));
         commentGenerator.addGeneralMethodComment(constructor, introspectedTable);
         innerEnum.addMethod(constructor);
         logger.debug("itfsw(数据Model属性对应Column获取插件):" + topLevelClass.getType().getShortName() + ".Column增加构造方法和column属性。");
@@ -123,6 +147,10 @@ public class ModelColumnPlugin extends BasePlugin {
             sb.append(field.getName());
             sb.append("(\"");
             sb.append(introspectedColumn.getActualColumnName());
+            sb.append("\", \"");
+            sb.append(introspectedColumn.getJavaProperty());
+            sb.append("\", \"");
+            sb.append(introspectedColumn.getJdbcTypeName());
             sb.append("\")");
 
             innerEnum.addEnumConstant(sb.toString());

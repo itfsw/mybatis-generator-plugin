@@ -79,7 +79,7 @@ public class UpsertPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsert", tb.getObject());
-                Assert.assertEquals(sql, "insert into tb (id, field1, field2) values (10, 'ts1', 5) on duplicate key update  id = 10,  field1 = 'ts1',  field2 = 5");
+                Assert.assertEquals(sql, "insert into tb (id, field1, field2) values (10, 'ts1', 5) on duplicate key update id = 10, field1 = 'ts1', field2 = 5");
                 Object result = tbMapper.invoke("upsert", tb.getObject());
                 Assert.assertEquals(result, 1);
 
@@ -112,7 +112,7 @@ public class UpsertPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(TbBlobsMapper.getObject(), "upsertWithBLOBs", TbBlobsWithBLOBs.getObject());
-                Assert.assertEquals(sql, "insert into tb_blobs (id, field1, field2, field3) values (10, 'ts1', 'ts2',  'null') on duplicate key update  id = 10,  field1 = 'ts1',  field2 = 'ts2',  field3 = 'null'");
+                Assert.assertEquals(sql, "insert into tb_blobs (id, field1, field2, field3) values (10, 'ts1', 'ts2', 'null') on duplicate key update id = 10, field1 = 'ts1', field2 = 'ts2', field3 = 'null'");
                 Object result = TbBlobsMapper.invoke("upsertWithBLOBs", TbBlobsWithBLOBs.getObject());
                 Assert.assertEquals(result, 1);
 
@@ -133,7 +133,7 @@ public class UpsertPluginTest {
 
                 // sql
                 sql = SqlHelper.getFormatMapperSql(TbSingleBlobMapper.getObject(), "upsertWithBLOBs", TbSingleBlob.getObject());
-                Assert.assertEquals(sql, "insert into tb_single_blob (id, field2, field1) values (10, 3, 'ts1' ) on duplicate key update  id = 10,  field2 = 3,  field1 = 'ts1'");
+                Assert.assertEquals(sql, "insert into tb_single_blob (id, field2, field1) values (10, 3, 'ts1' ) on duplicate key update id = 10, field2 = 3, field1 = 'ts1'");
                 result = TbSingleBlobMapper.invoke("upsertWithBLOBs", TbSingleBlob.getObject());
                 Assert.assertEquals(result, 1);
 
@@ -165,7 +165,7 @@ public class UpsertPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertSelective", tb.getObject());
-                Assert.assertEquals(sql, "insert into tb ( id, field1 )  values ( 20, 'ts1' )  on duplicate key update  id = 20, field1 = 'ts1'");
+                Assert.assertEquals(sql, "insert into tb ( id, field1 ) values ( 20, 'ts1' ) on duplicate key update id = 20, field1 = 'ts1'");
                 Object result = tbMapper.invoke("upsertSelective", tb.getObject());
                 Assert.assertEquals(result, 1);
 
@@ -179,7 +179,7 @@ public class UpsertPluginTest {
 
                 // sql
                 sql = SqlHelper.getFormatMapperSql(TbBlobsMapper.getObject(), "upsertSelective", TbBlobsWithBLOBs.getObject());
-                Assert.assertEquals(sql, "insert into tb_blobs ( id, field1, field2 )  values ( 500, 'ts1', 'ts2' )  on duplicate key update  id = 500, field1 = 'ts1', field2 = 'ts2'");
+                Assert.assertEquals(sql, "insert into tb_blobs ( id, field1, field2 ) values ( 500, 'ts1', 'ts2' ) on duplicate key update id = 500, field1 = 'ts1', field2 = 'ts2'");
                 result = TbBlobsMapper.invoke("upsertSelective", TbBlobsWithBLOBs.getObject());
                 Assert.assertEquals(result, 1);
             }
@@ -208,7 +208,7 @@ public class UpsertPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExample", tb.getObject(), TbExample.getObject());
-                Assert.assertEquals(sql, "insert into tb (id, field1, field2) select 50, 'ts1', 5 from dual where not exists ( select 1 from tb WHERE (  id = '50' )  ) ; update tb set field1 = 'ts1',  field2 = 5 WHERE (  id = '50' )");
+                Assert.assertEquals(sql, "insert into tb (id, field1, field2) select 50, 'ts1', 5 from dual where not exists ( select 1 from tb WHERE ( id = '50' ) ) ; update tb set field1 = 'ts1', field2 = 5 WHERE ( id = '50' )");
                 Object result = tbMapper.invoke("upsertByExample", tb.getObject(), TbExample.getObject());
                 Assert.assertEquals(result, 1);
 
@@ -245,7 +245,7 @@ public class UpsertPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(TbBlobsMapper.getObject(), "upsertByExampleWithBLOBs", TbBlobsWithBLOBs.getObject(), TbBlobsExample.getObject());
-                Assert.assertEquals(sql, "insert into tb_blobs (id, field1, field2, field3) select 60, 'ts1', 'ts2',  'null' from dual where not exists ( select 1 from tb_blobs WHERE (  id = '60' )  ) ; update tb_blobs set id = 60,  field1 = 'ts1',  field2 = 'ts2',  field3 = 'null' WHERE (  id = '60' )");
+                Assert.assertEquals(sql, "insert into tb_blobs (id, field1, field2, field3) select 60, 'ts1', 'ts2', 'null' from dual where not exists ( select 1 from tb_blobs WHERE ( id = '60' ) ) ; update tb_blobs set id = 60, field1 = 'ts1', field2 = 'ts2', field3 = 'null' WHERE ( id = '60' )");
                 Object result = TbBlobsMapper.invoke("upsertByExampleWithBLOBs", TbBlobsWithBLOBs.getObject(), TbBlobsExample.getObject());
                 Assert.assertEquals(result, 1);
 
@@ -271,7 +271,7 @@ public class UpsertPluginTest {
 
                 // sql
                 sql = SqlHelper.getFormatMapperSql(TbSingleBlobMapper.getObject(), "upsertByExampleWithBLOBs", TbSingleBlob.getObject(), TbSingleBlobExample.getObject());
-                Assert.assertEquals(sql, "insert into tb_single_blob (id, field2, field1) select 70, 3, 'ts1' from dual where not exists ( select 1 from tb_single_blob WHERE (  id = '70' )  ) ; update tb_single_blob set id = 70,  field2 = 3,  field1 = 'ts1' WHERE (  id = '70' )");
+                Assert.assertEquals(sql, "insert into tb_single_blob (id, field2, field1) select 70, 3, 'ts1' from dual where not exists ( select 1 from tb_single_blob WHERE ( id = '70' ) ) ; update tb_single_blob set id = 70, field2 = 3, field1 = 'ts1' WHERE ( id = '70' )");
                 result = TbSingleBlobMapper.invoke("upsertByExampleWithBLOBs", TbSingleBlob.getObject(), TbSingleBlobExample.getObject());
                 Assert.assertEquals(result, 1);
 
@@ -307,7 +307,7 @@ public class UpsertPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExampleSelective", tb.getObject(), TbExample.getObject());
-                Assert.assertEquals(sql, "insert into tb ( id, field1 )  select 100, 'ts1'  from dual where not exists ( select 1 from tb WHERE (  id = '100' )  ) ; update tb set field1 = 'ts1'  WHERE (  id = '100' )");
+                Assert.assertEquals(sql, "insert into tb ( id, field1 ) select 100, 'ts1' from dual where not exists ( select 1 from tb WHERE ( id = '100' ) ) ; update tb set field1 = 'ts1' WHERE ( id = '100' )");
                 Object result = tbMapper.invoke("upsertByExampleSelective", tb.getObject(), TbExample.getObject());
                 Assert.assertEquals(result, 1);
 
@@ -325,7 +325,7 @@ public class UpsertPluginTest {
 
                 // sql
                 sql = SqlHelper.getFormatMapperSql(TbBlobsMapper.getObject(), "upsertByExampleSelective", TbBlobsWithBLOBs.getObject(), TbBlobsExample.getObject());
-                Assert.assertEquals(sql, "insert into tb_blobs ( id, field1, field2 )  select 200, 'ts1', 'ts2'  from dual where not exists ( select 1 from tb_blobs WHERE (  id = '60' )  ) ; update tb_blobs set field1 = 'ts1', field2 = 'ts2'  WHERE (  id = '60' )");
+                Assert.assertEquals(sql, "insert into tb_blobs ( id, field1, field2 ) select 200, 'ts1', 'ts2' from dual where not exists ( select 1 from tb_blobs WHERE ( id = '60' ) ) ; update tb_blobs set field1 = 'ts1', field2 = 'ts2' WHERE ( id = '60' )");
                 result = TbBlobsMapper.invoke("upsertByExampleSelective", TbBlobsWithBLOBs.getObject(), TbBlobsExample.getObject());
                 Assert.assertEquals(result, 1);
             }

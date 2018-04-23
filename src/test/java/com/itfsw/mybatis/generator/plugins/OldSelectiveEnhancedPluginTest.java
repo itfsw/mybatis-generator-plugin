@@ -111,7 +111,7 @@ public class OldSelectiveEnhancedPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "insertSelective", tb.getObject());
-                Assert.assertEquals(sql, "insert into tb ( field_1, inc_f2 )  values ( 'null', 5 )");
+                Assert.assertEquals(sql, "insert into tb ( field_1, inc_f2 ) values ( 'null', 5 )");
                 Object result = tbMapper.invoke("insertSelective", tb.getObject());
                 Assert.assertEquals(result, 1);
             }
@@ -146,7 +146,7 @@ public class OldSelectiveEnhancedPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateByExampleSelective", tb.getObject(), TbExample.getObject());
-                Assert.assertEquals(sql, "update tb SET field_1 = 'null', inc_f2 = 5  WHERE (  id = '1' )");
+                Assert.assertEquals(sql, "update tb SET field_1 = 'null', inc_f2 = 5 WHERE ( id = '1' )");
                 Object result = tbMapper.invoke("updateByExampleSelective", tb.getObject(), TbExample.getObject());
                 Assert.assertEquals(result, 1);
             }
@@ -178,7 +178,7 @@ public class OldSelectiveEnhancedPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateByPrimaryKeySelective", tb.getObject());
-                Assert.assertEquals(sql, "update tb SET field_1 = 'null', inc_f2 = 5  where id = 2");
+                Assert.assertEquals(sql, "update tb SET field_1 = 'null', inc_f2 = 5 where id = 2");
                 Object result = tbMapper.invoke("updateByPrimaryKeySelective", tb.getObject());
                 Assert.assertEquals(result, 1);
             }
@@ -212,7 +212,7 @@ public class OldSelectiveEnhancedPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertSelective", tb.getObject());
-                Assert.assertEquals(sql, "insert into tb ( id, field_1, inc_f2 )  values ( 10, 'null', 5 )  on duplicate key update  id = 10, field_1 = 'null', inc_f2 = 5");
+                Assert.assertEquals(sql, "insert into tb ( id, field_1, inc_f2 ) values ( 10, 'null', 5 ) on duplicate key update id = 10, field_1 = 'null', inc_f2 = 5");
                 Object result = tbMapper.invoke("upsertSelective", tb.getObject());
                 Assert.assertEquals(result, 1);
             }
@@ -250,7 +250,7 @@ public class OldSelectiveEnhancedPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExampleSelective", tb.getObject(), TbExample.getObject());
-                Assert.assertEquals(sql, "insert into tb ( id, field_1, inc_f2 )  select 99, 'null', 5  from dual where not exists ( select 1 from tb WHERE (  id = '99' )  ) ; update tb set inc_f2 = 5, inc_f3 = 10  WHERE (  id = '99' )");
+                Assert.assertEquals(sql, "insert into tb ( id, field_1, inc_f2 ) select 99, 'null', 5 from dual where not exists ( select 1 from tb WHERE ( id = '99' ) ) ; update tb set inc_f2 = 5, inc_f3 = 10 WHERE ( id = '99' )");
                 Object result = tbMapper.invoke("upsertByExampleSelective", tb.getObject(), TbExample.getObject());
                 Assert.assertEquals(result, 1);
                 result = tbMapper.invoke("upsertByExampleSelective", tb.getObject(), TbExample.getObject());
