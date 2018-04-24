@@ -19,12 +19,13 @@ package com.itfsw.mybatis.generator.plugins;
 import com.itfsw.mybatis.generator.plugins.tools.*;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.Assert;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 import org.mybatis.generator.exception.InvalidConfigurationException;
 import org.mybatis.generator.exception.XMLParserException;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -44,8 +45,8 @@ public class IncrementsPluginTest {
     /**
      * 初始化数据库
      */
-    @BeforeClass
-    public static void init() throws Exception {
+    @Before
+    public void init() throws Exception {
         DBHelper.createDB("scripts/IncrementsPlugin/init.sql");
     }
 
@@ -207,6 +208,99 @@ public class IncrementsPluginTest {
                 Assert.assertEquals(sql, "update tb_blobs set field1 = 'null', inc_f1 = inc_f1 + 100 , inc_f2 = 50, inc_f3 = 10 , field2 = 'null', field3 = 'blob' where id = 3");
                 result = tbBlobsMapper.invoke("updateByPrimaryKeyWithBLOBs", tbBlobsWithBLOBsBuilder.invoke("build"));
                 Assert.assertEquals(result, 1);
+            }
+        });
+    }
+
+    /**
+     * 测试整合 SelectiveEnhancedPlugin 插件
+     */
+    @Test
+    public void testWithSelectiveEnhancedPlugin() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator-with-selective-enhanced-plugin.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 测试updateByExampleSelective
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdEqualTo", 3l);
+
+                ObjectUtil tbBuilder = new ObjectUtil(loader, packagz + ".Tb$Builder");
+                ObjectUtil tbBuilderInc = new ObjectUtil(loader, packagz + ".Tb$Builder$Inc#INC");
+                tbBuilder.invoke("incF1", 100l, tbBuilderInc.getObject());
+                tbBuilder.invoke("incF2", 200l);
+
+
+                // selective
+                ObjectUtil TbColumnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
+                ObjectUtil TbColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Column#incF1");
+                ObjectUtil TbColumnIncF2 = new ObjectUtil(loader, packagz + ".Tb$Column#incF2");
+                Object columns = Array.newInstance(TbColumnField1.getCls(), 3);
+                Array.set(columns, 0, TbColumnField1.getObject());
+                Array.set(columns, 1, TbColumnIncF1.getObject());
+                Array.set(columns, 2, TbColumnIncF2.getObject());
+
+                // sql
+                // 非空判断
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateByExampleSelective", tbBuilder.invoke("build"), tbExample.getObject());
+                Assert.assertEquals(sql, "update tb SET inc_f1 = inc_f1 + 100 , inc_f2 = 200 WHERE ( id = '3' )");
+                // selective 指定
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateByExampleSelective", tbBuilder.invoke("build"), tbExample.getObject(), columns);
+                Assert.assertEquals(sql, "update tb SET field1 = 'null' , inc_f1 = inc_f1 + 100 , inc_f2 = 200 WHERE ( id = '3' )");
+                // 执行
+                // inc_f1 增加100
+                Object result = tbMapper.invoke("updateByExampleSelective", tbBuilder.invoke("build"), tbExample.getObject(), columns);
+                Assert.assertEquals(result, 1);
+                ResultSet rs = DBHelper.execute(sqlSession.getConnection(), "select inc_f1 from tb where id = 3");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 103);
+
+                // inc_f1 再减去50
+                ObjectUtil tbBuilderDec = new ObjectUtil(loader, packagz + ".Tb$Builder$Inc#DEC");
+                tbBuilder.invoke("incF1", 50l, tbBuilderDec.getObject());
+                result = tbMapper.invoke("updateByExampleSelective", tbBuilder.invoke("build"), tbExample.getObject(), Array.newInstance(TbColumnField1.getCls(), 0));
+                Assert.assertEquals(result, 1);
+                // 验证执行结果
+                rs = DBHelper.execute(sqlSession.getConnection(), "select inc_f1 from tb where id = 3");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 53);
+
+
+                // 2. 测试updateByPrimaryKeySelective
+                ObjectUtil tbKeysMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbKeysMapper")));
+
+                ObjectUtil tbKeysBuilderInc = new ObjectUtil(loader, packagz + ".TbKeys$Builder$Inc#INC");
+
+                ObjectUtil tbKeysBuilder = new ObjectUtil(loader, packagz + ".TbKeys$Builder");
+                tbKeysBuilder.invoke("key1", 1l);
+                tbKeysBuilder.invoke("key2", "k1");
+                tbKeysBuilder.invoke("incF1", 10l, tbKeysBuilderInc.getObject());
+                tbKeysBuilder.invoke("incF3", 30l, tbKeysBuilderInc.getObject());
+
+                // selective
+                ObjectUtil TbColumnKey1 = new ObjectUtil(loader, packagz + ".TbKeys$Column#key1");
+                TbColumnIncF1 = new ObjectUtil(loader, packagz + ".TbKeys$Column#incF1");
+                columns = Array.newInstance(TbColumnKey1.getCls(), 2);
+                Array.set(columns, 0, TbColumnKey1.getObject());
+                Array.set(columns, 1, TbColumnIncF1.getObject());
+
+                // sql
+                // 非空判断
+                sql = SqlHelper.getFormatMapperSql(tbKeysMapper.getObject(), "updateByPrimaryKeySelective", tbKeysBuilder.invoke("build"));
+                Assert.assertEquals(sql, "update tb_keys SET inc_f1 = inc_f1 + 10 , inc_f3 = inc_f3 + 30 where key1 = 1 and key2 = 'k1'");
+                // selective 指定
+                sql = SqlHelper.getFormatMapperSql(tbKeysMapper.getObject(), "updateByPrimaryKeySelective", tbKeysBuilder.invoke("build"), columns);
+                Assert.assertEquals(sql, "update tb_keys SET key1 = 1 , inc_f1 = inc_f1 + 10 where key1 = 1 and key2 = 'k1'");
+                // 执行
+                result = tbKeysMapper.invoke("updateByPrimaryKeySelective", tbKeysBuilder.invoke("build"), columns);
+                Assert.assertEquals(result, 1);
+                // 验证执行结果
+                rs = DBHelper.execute(sqlSession.getConnection(), "select inc_f1, inc_f3 from tb_keys where key1 = 1 and key2 = 'k1'");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 11);
             }
         });
     }

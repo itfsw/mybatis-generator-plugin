@@ -212,7 +212,7 @@ public class OldSelectiveEnhancedPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertSelective", tb.getObject());
-                Assert.assertEquals(sql, "insert into tb ( id, field_1, inc_f2 ) values ( 10, 'null', 5 ) on duplicate key update id = 10, field_1 = 'null', inc_f2 = 5");
+                Assert.assertEquals(sql, "insert into tb ( id, field_1, inc_f2 ) values ( 10, 'null', 5 ) on duplicate key update field_1 = 'null', inc_f2 = 5");
                 Object result = tbMapper.invoke("upsertSelective", tb.getObject());
                 Assert.assertEquals(result, 1);
             }

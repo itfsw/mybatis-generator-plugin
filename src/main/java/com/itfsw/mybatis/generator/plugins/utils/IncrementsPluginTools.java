@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -126,12 +127,84 @@ public class IncrementsPluginTools {
     }
 
     /**
+     * 生成sets Selective Ele
+     * @param columns
+     * @param prefix
+     * @param bracket
+     * @return
+     */
+    public XmlElement generateSetsSelective(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
+        XmlElement eleTrim = new XmlElement("trim");
+        if (bracket) {
+            eleTrim.addAttribute(new Attribute("prefix", "("));
+            eleTrim.addAttribute(new Attribute("suffix", ")"));
+            eleTrim.addAttribute(new Attribute("suffixOverrides", ","));
+        } else {
+            eleTrim.addAttribute(new Attribute("suffixOverrides", ","));
+        }
+
+        for (IntrospectedColumn introspectedColumn : columns) {
+            XmlElement eleIf = new XmlElement("if");
+            eleIf.addAttribute(new Attribute("test", introspectedColumn.getJavaProperty(prefix) + " != null"));
+            if (this.supportColumn(introspectedColumn)) {
+                for (Element ele : this.generatedIncrementsElement(introspectedColumn, prefix, true)) {
+                    eleIf.addElement(ele);
+                }
+            } else {
+                eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = " + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
+            }
+            eleTrim.addElement(eleIf);
+        }
+
+        return eleTrim;
+    }
+
+    /**
+     * 生成sets Ele
+     * @param columns
+     * @param prefix
+     * @param bracket
+     * @return
+     */
+    public List<Element> generateSets(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
+        List<Element> list = new ArrayList<>();
+        if (bracket) {
+            list.add(new TextElement("("));
+        }
+        Iterator<IntrospectedColumn> columnIterator = columns.iterator();
+        while (columnIterator.hasNext()) {
+            IntrospectedColumn introspectedColumn = columnIterator.next();
+
+            if (this.supportColumn(introspectedColumn)) {
+                list.add(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = "));
+                for (Element ele : this.generatedIncrementsElement(introspectedColumn, prefix, columnIterator.hasNext())) {
+                    list.add(ele);
+                }
+            } else {
+                StringBuilder sb = new StringBuilder();
+                sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
+                sb.append(" = ");
+                sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
+                if (columnIterator.hasNext()) {
+                    sb.append(", ");
+                }
+                list.add(new TextElement(sb.toString()));
+            }
+        }
+        if (bracket) {
+            list.add(new TextElement(")"));
+        }
+
+        return list;
+    }
+
+    /**
      * 生成增量操作节点
      * @param introspectedColumn
-     * @param hasPrefix
+     * @param prefix
      * @param hasComma
      */
-    public List<Element> generatedIncrementsElement(IntrospectedColumn introspectedColumn, boolean hasPrefix, boolean hasComma) {
+    public List<Element> generatedIncrementsElement(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma) {
         List<Element> list = new ArrayList<>();
 
         // 1. column = 节点
@@ -145,20 +218,20 @@ public class IncrementsPluginTools {
         XmlElement when = new XmlElement("when");
         when.addAttribute(new Attribute(
                 "test",
-                (hasPrefix ? "record." : "_parameter.") + IncrementsPlugin.METHOD_INC_CHECK
+                (prefix != null ? prefix : "_parameter.") + IncrementsPlugin.METHOD_INC_CHECK
                         + "('" + MyBatis3FormattingUtilities.escapeStringForMyBatis3(introspectedColumn.getActualColumnName()) + "')"
         ));
         TextElement spec = new TextElement(
                 MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn)
-                        + " ${" + (hasPrefix ? "record." : "")
+                        + " ${" + (prefix != null ? prefix : "")
                         + IncrementsPlugin.FIELD_INC_MAP + "." + MyBatis3FormattingUtilities.escapeStringForMyBatis3(introspectedColumn.getActualColumnName()) + ".value} "
-                        + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, hasPrefix ? "record." : null));
+                        + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
         when.addElement(spec);
         choose.addElement(when);
 
         // 启用了增量操作
         XmlElement otherwise = new XmlElement("otherwise");
-        TextElement normal = new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, hasPrefix ? "record." : null));
+        TextElement normal = new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
         otherwise.addElement(normal);
         choose.addElement(otherwise);
 
@@ -170,5 +243,37 @@ public class IncrementsPluginTools {
         }
 
         return list;
+    }
+
+    /**
+     * 创建 sets (SelectiveEnhancedPlugin)
+     * @param setForeachEle
+     */
+    public void generateSetsSelectiveWithSelectiveEnhancedPlugin(XmlElement setForeachEle) {
+        XmlElement choose = new XmlElement("choose");
+
+        for (IntrospectedColumn introspectedColumn : columns) {
+            XmlElement when = new XmlElement("when");
+
+            // 需要 inc 的列
+            StringBuilder sb = new StringBuilder();
+            sb.append("'");
+            sb.append(introspectedColumn.getActualColumnName());
+            sb.append("'.toString()");
+            sb.append(" == ");
+            sb.append("column.value");
+
+            when.addAttribute(new Attribute("test", sb.toString()));
+            when.addElement(new TextElement("${column.value} = ${column.value} ${record.incrementsColumnsInfoMap."
+                    + introspectedColumn.getActualColumnName()
+                    + ".value} #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+            choose.addElement(when);
+        }
+
+        XmlElement otherwise = new XmlElement("otherwise");
+        otherwise.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+        choose.addElement(otherwise);
+
+        setForeachEle.addElement(choose);
     }
 }

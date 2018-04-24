@@ -165,7 +165,7 @@ public class UpsertPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertSelective", tb.getObject());
-                Assert.assertEquals(sql, "insert into tb ( id, field1 ) values ( 20, 'ts1' ) on duplicate key update id = 20, field1 = 'ts1'");
+                Assert.assertEquals(sql, "insert into tb ( id, field1 ) values ( 20, 'ts1' ) on duplicate key update field1 = 'ts1'");
                 Object result = tbMapper.invoke("upsertSelective", tb.getObject());
                 Assert.assertEquals(result, 1);
 
@@ -179,7 +179,7 @@ public class UpsertPluginTest {
 
                 // sql
                 sql = SqlHelper.getFormatMapperSql(TbBlobsMapper.getObject(), "upsertSelective", TbBlobsWithBLOBs.getObject());
-                Assert.assertEquals(sql, "insert into tb_blobs ( id, field1, field2 ) values ( 500, 'ts1', 'ts2' ) on duplicate key update id = 500, field1 = 'ts1', field2 = 'ts2'");
+                Assert.assertEquals(sql, "insert into tb_blobs ( id, field1, field2 ) values ( 500, 'ts1', 'ts2' ) on duplicate key update field1 = 'ts1', field2 = 'ts2'");
                 result = TbBlobsMapper.invoke("upsertSelective", TbBlobsWithBLOBs.getObject());
                 Assert.assertEquals(result, 1);
             }

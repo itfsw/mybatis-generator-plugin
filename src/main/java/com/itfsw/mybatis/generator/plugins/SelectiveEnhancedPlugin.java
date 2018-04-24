@@ -17,6 +17,7 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
+import com.itfsw.mybatis.generator.plugins.utils.IncrementsPluginTools;
 import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
 import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedColumn;
@@ -200,7 +201,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
         answer.addElement(insertChooseEle);
 
         XmlElement insertWhenEle = new XmlElement("when");
-        insertWhenEle.addAttribute(new Attribute("test", "selective.length > 0"));
+        insertWhenEle.addAttribute(new Attribute("test", "selective != null and selective.length > 0"));
         insertChooseEle.addElement(insertWhenEle);
 
         XmlElement insertForeachEle = new XmlElement("foreach");
@@ -230,7 +231,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
         answer.addElement(valuesChooseEle);
 
         XmlElement valuesWhenEle = new XmlElement("when");
-        valuesWhenEle.addAttribute(new Attribute("test", "selective.length > 0"));
+        valuesWhenEle.addAttribute(new Attribute("test", "selective != null and selective.length > 0"));
         valuesChooseEle.addElement(valuesWhenEle);
 
         XmlElement valuesForeachEle = new XmlElement("foreach");
@@ -267,6 +268,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
      */
     @Override
     public boolean sqlMapUpdateByExampleSelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+        IncrementsPluginTools incTools = IncrementsPluginTools.getTools(context, introspectedTable, warnings);
         // 清空
         XmlElement answer = element;
         answer.getElements().clear();
@@ -283,26 +285,43 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
         answer.addElement(new TextElement(sb.toString()));
 
         // selective
+        answer.addElement(new TextElement("SET"));
         XmlElement setChooseEle = new XmlElement("choose");
         answer.addElement(setChooseEle);
 
         XmlElement setWhenEle = new XmlElement("when");
-        setWhenEle.addAttribute(new Attribute("test", "selective.length > 0"));
+        setWhenEle.addAttribute(new Attribute("test", "selective != null and selective.length > 0"));
         setChooseEle.addElement(setWhenEle);
 
         XmlElement setForeachEle = new XmlElement("foreach");
         setForeachEle.addAttribute(new Attribute("collection", "selective"));
         setForeachEle.addAttribute(new Attribute("item", "column"));
-        setForeachEle.addAttribute(new Attribute("open", "SET"));
         setForeachEle.addAttribute(new Attribute("separator", ","));
-        setForeachEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+        // 自增插件支持
+        if (incTools.support()) {
+            incTools.generateSetsSelectiveWithSelectiveEnhancedPlugin(setForeachEle);
+        } else {
+            setForeachEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+        }
         setWhenEle.addElement(setForeachEle);
 
         XmlElement setOtherwiseEle = new XmlElement("otherwise");
-        setOtherwiseEle.addElement(XmlElementGeneratorTools.generateSetsSelective(
-                ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getAllColumns()),
-                "record."
-        ));
+
+        // 自增插件支持
+        if (incTools.support()) {
+            setOtherwiseEle.addElement(incTools.generateSetsSelective(
+                    ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getAllColumns()),
+                    "record.",
+                    false
+
+            ));
+        } else {
+            setOtherwiseEle.addElement(XmlElementGeneratorTools.generateSetsSelective(
+                    ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getAllColumns()),
+                    "record."
+            ));
+        }
+
         setChooseEle.addElement(setOtherwiseEle);
 
         answer.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
@@ -319,6 +338,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
      */
     @Override
     public boolean sqlMapUpdateByPrimaryKeySelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+        IncrementsPluginTools incTools = IncrementsPluginTools.getTools(context, introspectedTable, warnings);
         // 清空
         XmlElement answer = element;
         answer.getElements().clear();
@@ -336,27 +356,42 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
         answer.addElement(new TextElement(sb.toString()));
 
         // selective
+        answer.addElement(new TextElement("SET"));
         XmlElement setChooseEle = new XmlElement("choose");
         answer.addElement(setChooseEle);
 
         XmlElement setWhenEle = new XmlElement("when");
-        setWhenEle.addAttribute(new Attribute("test", "selective.length > 0"));
+        setWhenEle.addAttribute(new Attribute("test", "selective != null and selective.length > 0"));
         setChooseEle.addElement(setWhenEle);
 
         XmlElement setForeachEle = new XmlElement("foreach");
         setForeachEle.addAttribute(new Attribute("collection", "selective"));
         setForeachEle.addAttribute(new Attribute("item", "column"));
-        setForeachEle.addAttribute(new Attribute("open", "SET"));
         setForeachEle.addAttribute(new Attribute("separator", ","));
-        setForeachEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+        // 自增插件支持
+        if (incTools.support()) {
+            incTools.generateSetsSelectiveWithSelectiveEnhancedPlugin(setForeachEle);
+        } else {
+            setForeachEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+        }
         setWhenEle.addElement(setForeachEle);
 
         XmlElement setOtherwiseEle = new XmlElement("otherwise");
-        setOtherwiseEle.addElement(XmlElementGeneratorTools.generateSetsSelective(
-                ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getNonPrimaryKeyColumns()),
-                "record."
-        ));
         setChooseEle.addElement(setOtherwiseEle);
+        // 自增插件支持
+        if (incTools.support()) {
+            setOtherwiseEle.addElement(incTools.generateSetsSelective(
+                    ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getNonPrimaryKeyColumns()),
+                    "record.",
+                    false
+
+            ));
+        } else {
+            setOtherwiseEle.addElement(XmlElementGeneratorTools.generateSetsSelective(
+                    ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getNonPrimaryKeyColumns()),
+                    "record."
+            ));
+        }
 
         XmlElementGeneratorTools.generateWhereByPrimaryKeyTo(answer, introspectedTable.getPrimaryKeyColumns(), "record.");
 

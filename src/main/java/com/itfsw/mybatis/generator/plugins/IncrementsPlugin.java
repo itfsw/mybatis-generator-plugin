@@ -195,7 +195,7 @@ public class IncrementsPlugin extends BasePlugin {
                         // 查找是否需要进行增量操作
                         if (incTools.supportColumn(introspectedColumn)) {
                             xmlElement.getElements().clear();
-                            xmlElement.getElements().addAll(incTools.generatedIncrementsElement(introspectedColumn, hasPrefix, true));
+                            xmlElement.getElements().addAll(incTools.generatedIncrementsElement(introspectedColumn, hasPrefix ? "record." : null, true));
                         }
                     }
                 }
@@ -223,7 +223,7 @@ public class IncrementsPlugin extends BasePlugin {
                         IntrospectedColumn introspectedColumn = IntrospectedTableTools.safeGetColumn(introspectedTable, columnName);
                         // 查找判断是否需要进行节点替换
                         if (incTools.supportColumn(introspectedColumn)) {
-                            newEles.addAll(incTools.generatedIncrementsElement(introspectedColumn, hasPrefix, text.endsWith(",")));
+                            newEles.addAll(incTools.generatedIncrementsElement(introspectedColumn, hasPrefix ? "record." : null, text.endsWith(",")));
 
                             continue;
                         }
