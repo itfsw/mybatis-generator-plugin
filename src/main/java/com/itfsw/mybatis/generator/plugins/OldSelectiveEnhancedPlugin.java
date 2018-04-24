@@ -171,9 +171,9 @@ public class OldSelectiveEnhancedPlugin extends BasePlugin {
                 // ====================================== 5. upsertByExampleSelective ======================================
                 if ("upsertByExampleSelective".equals(id)) {
                     List<XmlElement> eles = XmlElementGeneratorTools.findXmlElements(xmlElement, "trim");
-                    this.replaceEle(eles.get(0), "record.", introspectedTable);
+                    this.replaceEle(eles.get(1), "record.", introspectedTable);
                     // upsertByExampleSelective的第二个trim比较特殊，需另行处理
-                    this.replaceEleForUpsertByExampleSelective(eles.get(1), "record.", introspectedTable, !introspectedTable.getRules().generateRecordWithBLOBsClass());
+                    this.replaceEleForUpsertByExampleSelective(eles.get(2), "record.", introspectedTable, !introspectedTable.getRules().generateRecordWithBLOBsClass());
 
                     List<XmlElement> eles1 = XmlElementGeneratorTools.findXmlElements(xmlElement, "set");
                     for (XmlElement ele : eles1) {

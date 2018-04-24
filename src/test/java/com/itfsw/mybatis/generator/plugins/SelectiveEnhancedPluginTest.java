@@ -219,11 +219,11 @@ public class SelectiveEnhancedPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExampleSelective", tb.getObject(), TbExample.getObject(), columns);
-                Assert.assertEquals(sql, "insert into tb ( id , field_1 , inc_f2 ) select 99 , 'null' , 5 from dual where not exists ( select 1 from tb WHERE ( id = '99' ) ) ; update tb set id = 99 , field_1 = 'null' , inc_f2 = 5 WHERE ( id = '99' )");
+                Assert.assertEquals(sql, "update tb set id = 99 , field_1 = 'null' , inc_f2 = 5 WHERE ( id = '99' ) ; insert into tb ( id , field_1 , inc_f2 ) select 99 , 'null' , 5 from dual where not exists ( select 1 from tb WHERE ( id = '99' ) )");
                 Object result = tbMapper.invoke("upsertByExampleSelective", tb.getObject(), TbExample.getObject(), columns);
-                Assert.assertEquals(result, 1);
-                result = tbMapper.invoke("upsertByExampleSelective", tb.getObject(), TbExample.getObject(), columns);
                 Assert.assertEquals(result, 0);
+                result = tbMapper.invoke("upsertByExampleSelective", tb.getObject(), TbExample.getObject(), columns);
+                Assert.assertEquals(result, 1);
             }
         });
     }

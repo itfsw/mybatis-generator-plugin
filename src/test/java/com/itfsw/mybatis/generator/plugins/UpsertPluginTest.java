@@ -208,9 +208,9 @@ public class UpsertPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExample", tb.getObject(), TbExample.getObject());
-                Assert.assertEquals(sql, "insert into tb (id, field1, field2) select 50, 'ts1', 5 from dual where not exists ( select 1 from tb WHERE ( id = '50' ) ) ; update tb set field1 = 'ts1', field2 = 5 WHERE ( id = '50' )");
-                Object result = tbMapper.invoke("upsertByExample", tb.getObject(), TbExample.getObject());
-                Assert.assertEquals(result, 1);
+                Assert.assertEquals(sql, "update tb set field1 = 'ts1', field2 = 5 WHERE ( id = '50' ) ; insert into tb (id, field1, field2) select 50, 'ts1', 5 from dual where not exists ( select 1 from tb WHERE ( id = '50' ) )");
+                tbMapper.invoke("upsertByExample", tb.getObject(), TbExample.getObject());
+
 
                 tb.set("field2", 20);
                 tbMapper.invoke("upsertByExample", tb.getObject(), TbExample.getObject());
@@ -245,9 +245,8 @@ public class UpsertPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(TbBlobsMapper.getObject(), "upsertByExampleWithBLOBs", TbBlobsWithBLOBs.getObject(), TbBlobsExample.getObject());
-                Assert.assertEquals(sql, "insert into tb_blobs (id, field1, field2, field3) select 60, 'ts1', 'ts2', 'null' from dual where not exists ( select 1 from tb_blobs WHERE ( id = '60' ) ) ; update tb_blobs set id = 60, field1 = 'ts1', field2 = 'ts2', field3 = 'null' WHERE ( id = '60' )");
-                Object result = TbBlobsMapper.invoke("upsertByExampleWithBLOBs", TbBlobsWithBLOBs.getObject(), TbBlobsExample.getObject());
-                Assert.assertEquals(result, 1);
+                Assert.assertEquals(sql, "update tb_blobs set id = 60, field1 = 'ts1', field2 = 'ts2', field3 = 'null' WHERE ( id = '60' ) ; insert into tb_blobs (id, field1, field2, field3) select 60, 'ts1', 'ts2', 'null' from dual where not exists ( select 1 from tb_blobs WHERE ( id = '60' ) )");
+                TbBlobsMapper.invoke("upsertByExampleWithBLOBs", TbBlobsWithBLOBs.getObject(), TbBlobsExample.getObject());
 
                 TbBlobsWithBLOBs.set("field2", "ts3");
                 TbBlobsMapper.invoke("upsertByExampleWithBLOBs", TbBlobsWithBLOBs.getObject(), TbBlobsExample.getObject());
@@ -271,9 +270,8 @@ public class UpsertPluginTest {
 
                 // sql
                 sql = SqlHelper.getFormatMapperSql(TbSingleBlobMapper.getObject(), "upsertByExampleWithBLOBs", TbSingleBlob.getObject(), TbSingleBlobExample.getObject());
-                Assert.assertEquals(sql, "insert into tb_single_blob (id, field2, field1) select 70, 3, 'ts1' from dual where not exists ( select 1 from tb_single_blob WHERE ( id = '70' ) ) ; update tb_single_blob set id = 70, field2 = 3, field1 = 'ts1' WHERE ( id = '70' )");
-                result = TbSingleBlobMapper.invoke("upsertByExampleWithBLOBs", TbSingleBlob.getObject(), TbSingleBlobExample.getObject());
-                Assert.assertEquals(result, 1);
+                Assert.assertEquals(sql, "update tb_single_blob set id = 70, field2 = 3, field1 = 'ts1' WHERE ( id = '70' ) ; insert into tb_single_blob (id, field2, field1) select 70, 3, 'ts1' from dual where not exists ( select 1 from tb_single_blob WHERE ( id = '70' ) )");
+                TbSingleBlobMapper.invoke("upsertByExampleWithBLOBs", TbSingleBlob.getObject(), TbSingleBlobExample.getObject());
 
                 TbSingleBlob.set("field1", "ts2");
                 TbSingleBlobMapper.invoke("upsertByExampleWithBLOBs", TbSingleBlob.getObject(), TbSingleBlobExample.getObject());
@@ -307,9 +305,8 @@ public class UpsertPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExampleSelective", tb.getObject(), TbExample.getObject());
-                Assert.assertEquals(sql, "insert into tb ( id, field1 ) select 100, 'ts1' from dual where not exists ( select 1 from tb WHERE ( id = '100' ) ) ; update tb set field1 = 'ts1' WHERE ( id = '100' )");
-                Object result = tbMapper.invoke("upsertByExampleSelective", tb.getObject(), TbExample.getObject());
-                Assert.assertEquals(result, 1);
+                Assert.assertEquals(sql, "update tb set field1 = 'ts1' WHERE ( id = '100' ) ; insert into tb ( id, field1 ) select 100, 'ts1' from dual where not exists ( select 1 from tb WHERE ( id = '100' ) )");
+                tbMapper.invoke("upsertByExampleSelective", tb.getObject(), TbExample.getObject());
 
                 // 2. blobs
                 ObjectUtil TbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
@@ -325,9 +322,8 @@ public class UpsertPluginTest {
 
                 // sql
                 sql = SqlHelper.getFormatMapperSql(TbBlobsMapper.getObject(), "upsertByExampleSelective", TbBlobsWithBLOBs.getObject(), TbBlobsExample.getObject());
-                Assert.assertEquals(sql, "insert into tb_blobs ( id, field1, field2 ) select 200, 'ts1', 'ts2' from dual where not exists ( select 1 from tb_blobs WHERE ( id = '60' ) ) ; update tb_blobs set field1 = 'ts1', field2 = 'ts2' WHERE ( id = '60' )");
-                result = TbBlobsMapper.invoke("upsertByExampleSelective", TbBlobsWithBLOBs.getObject(), TbBlobsExample.getObject());
-                Assert.assertEquals(result, 1);
+                Assert.assertEquals(sql, "update tb_blobs set field1 = 'ts1', field2 = 'ts2' WHERE ( id = '60' ) ; insert into tb_blobs ( id, field1, field2 ) select 200, 'ts1', 'ts2' from dual where not exists ( select 1 from tb_blobs WHERE ( id = '60' ) )");
+                TbBlobsMapper.invoke("upsertByExampleSelective", TbBlobsWithBLOBs.getObject(), TbBlobsExample.getObject());
             }
         });
     }

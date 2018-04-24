@@ -334,44 +334,6 @@ public class UpsertPlugin extends BasePlugin {
                 // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
                 XmlElementGeneratorTools.useGeneratedKeys(eleUpsertByExampleSelective, introspectedTable, "record.");
 
-                // insert
-                eleUpsertByExampleSelective.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-
-                // selective
-                insertChooseEle = new XmlElement("choose");
-                eleUpsertByExampleSelective.addElement(insertChooseEle);
-
-                insertWhenEle = new XmlElement("when");
-                insertWhenEle.addAttribute(new Attribute("test", "selective != null and selective.length > 0"));
-                insertChooseEle.addElement(insertWhenEle);
-
-                insertForeachEle = new XmlElement("foreach");
-                insertForeachEle.addAttribute(new Attribute("collection", "selective"));
-                insertForeachEle.addAttribute(new Attribute("item", "column"));
-                insertForeachEle.addAttribute(new Attribute("open", "("));
-                insertForeachEle.addAttribute(new Attribute("separator", ","));
-                insertForeachEle.addAttribute(new Attribute("close", ")"));
-                insertForeachEle.addElement(new TextElement("${column.value}"));
-                insertWhenEle.addElement(insertForeachEle);
-
-                insertOtherwiseEle = new XmlElement("otherwise");
-                insertOtherwiseEle.addElement(XmlElementGeneratorTools.generateKeysSelective(
-                        ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()),
-                        "record."
-                ));
-                insertChooseEle.addElement(insertOtherwiseEle);
-
-                insertTrimElement = new XmlElement("trim");
-                insertTrimElement.addAttribute(new Attribute("prefix", "("));
-                insertTrimElement.addAttribute(new Attribute("suffix", ")"));
-                insertTrimElement.addAttribute(new Attribute("suffixOverrides", ","));
-                insertOtherwiseEle.addElement(insertTrimElement);
-
-                this.generateExistsClause(introspectedTable, eleUpsertByExampleSelective, true, columns);
-
-                // multiQueries
-                eleUpsertByExampleSelective.addElement(new TextElement(";"));
-
                 // update
                 eleUpsertByExampleSelective.addElement(new TextElement("update " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
                 eleUpsertByExampleSelective.addElement(new TextElement("set"));
@@ -411,6 +373,45 @@ public class UpsertPlugin extends BasePlugin {
 
                 // update where
                 eleUpsertByExampleSelective.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
+
+                // multiQueries
+                eleUpsertByExampleSelective.addElement(new TextElement(";"));
+
+
+                // insert
+                eleUpsertByExampleSelective.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
+
+                // selective
+                insertChooseEle = new XmlElement("choose");
+                eleUpsertByExampleSelective.addElement(insertChooseEle);
+
+                insertWhenEle = new XmlElement("when");
+                insertWhenEle.addAttribute(new Attribute("test", "selective != null and selective.length > 0"));
+                insertChooseEle.addElement(insertWhenEle);
+
+                insertForeachEle = new XmlElement("foreach");
+                insertForeachEle.addAttribute(new Attribute("collection", "selective"));
+                insertForeachEle.addAttribute(new Attribute("item", "column"));
+                insertForeachEle.addAttribute(new Attribute("open", "("));
+                insertForeachEle.addAttribute(new Attribute("separator", ","));
+                insertForeachEle.addAttribute(new Attribute("close", ")"));
+                insertForeachEle.addElement(new TextElement("${column.value}"));
+                insertWhenEle.addElement(insertForeachEle);
+
+                insertOtherwiseEle = new XmlElement("otherwise");
+                insertOtherwiseEle.addElement(XmlElementGeneratorTools.generateKeysSelective(
+                        ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()),
+                        "record."
+                ));
+                insertChooseEle.addElement(insertOtherwiseEle);
+
+                insertTrimElement = new XmlElement("trim");
+                insertTrimElement.addAttribute(new Attribute("prefix", "("));
+                insertTrimElement.addAttribute(new Attribute("suffix", ")"));
+                insertTrimElement.addAttribute(new Attribute("suffixOverrides", ","));
+                insertOtherwiseEle.addElement(insertTrimElement);
+
+                this.generateExistsClause(introspectedTable, eleUpsertByExampleSelective, true, columns);
 
                 document.getRootElement().addElement(eleUpsertByExampleSelective);
                 logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsertSelective实现方法。");
@@ -463,14 +464,6 @@ public class UpsertPlugin extends BasePlugin {
                 // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
                 XmlElementGeneratorTools.useGeneratedKeys(eleUpsertByExampleSelective, introspectedTable, "record.");
 
-                // insert
-                eleUpsertByExampleSelective.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-                eleUpsertByExampleSelective.addElement(XmlElementGeneratorTools.generateKeysSelective(columns, "record."));
-                this.generateExistsClause(introspectedTable, eleUpsertByExampleSelective, true, columns);
-
-                // multiQueries
-                eleUpsertByExampleSelective.addElement(new TextElement(";"));
-
                 // update
                 eleUpsertByExampleSelective.addElement(new TextElement("update " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
                 eleUpsertByExampleSelective.addElement(new TextElement("set"));
@@ -491,6 +484,14 @@ public class UpsertPlugin extends BasePlugin {
 
                 // update where
                 eleUpsertByExampleSelective.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
+
+                // multiQueries
+                eleUpsertByExampleSelective.addElement(new TextElement(";"));
+
+                // insert
+                eleUpsertByExampleSelective.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
+                eleUpsertByExampleSelective.addElement(XmlElementGeneratorTools.generateKeysSelective(columns, "record."));
+                this.generateExistsClause(introspectedTable, eleUpsertByExampleSelective, true, columns);
 
                 document.getRootElement().addElement(eleUpsertByExampleSelective);
                 logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsertSelective实现方法。");
@@ -556,16 +557,6 @@ public class UpsertPlugin extends BasePlugin {
                 // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
                 XmlElementGeneratorTools.useGeneratedKeys(eleUpsertByExampleWithBLOBs, introspectedTable, "record.");
 
-                // insert
-                eleUpsertByExampleWithBLOBs.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-                for (Element element : XmlElementGeneratorTools.generateKeys(columns)) {
-                    eleUpsertByExampleWithBLOBs.addElement(element);
-                }
-                this.generateExistsClause(introspectedTable, eleUpsertByExampleWithBLOBs, false, columns);
-
-                // multiQueries
-                eleUpsertByExampleWithBLOBs.addElement(new TextElement(";"));
-
                 // update
                 eleUpsertByExampleWithBLOBs.addElement(new TextElement("update " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
                 eleUpsertByExampleWithBLOBs.addElement(new TextElement("set"));
@@ -582,6 +573,16 @@ public class UpsertPlugin extends BasePlugin {
 
                 // update where
                 eleUpsertByExampleWithBLOBs.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
+
+                // multiQueries
+                eleUpsertByExampleWithBLOBs.addElement(new TextElement(";"));
+
+                // insert
+                eleUpsertByExampleWithBLOBs.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
+                for (Element element : XmlElementGeneratorTools.generateKeys(columns)) {
+                    eleUpsertByExampleWithBLOBs.addElement(element);
+                }
+                this.generateExistsClause(introspectedTable, eleUpsertByExampleWithBLOBs, false, columns);
 
                 document.getRootElement().addElement(eleUpsertByExampleWithBLOBs);
                 logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsertSelective实现方法。");
@@ -646,16 +647,6 @@ public class UpsertPlugin extends BasePlugin {
             // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
             XmlElementGeneratorTools.useGeneratedKeys(eleUpsertByExample, introspectedTable, "record.");
 
-            // insert
-            eleUpsertByExample.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-            for (Element element : XmlElementGeneratorTools.generateKeys(columns)) {
-                eleUpsertByExample.addElement(element);
-            }
-            this.generateExistsClause(introspectedTable, eleUpsertByExample, false, columns);
-
-            // multiQueries
-            eleUpsertByExample.addElement(new TextElement(";"));
-
             // update
             eleUpsertByExample.addElement(new TextElement("update " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
             eleUpsertByExample.addElement(new TextElement("set"));
@@ -672,6 +663,16 @@ public class UpsertPlugin extends BasePlugin {
 
             // update where
             eleUpsertByExample.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
+
+            // multiQueries
+            eleUpsertByExample.addElement(new TextElement(";"));
+
+            // insert
+            eleUpsertByExample.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
+            for (Element element : XmlElementGeneratorTools.generateKeys(columns)) {
+                eleUpsertByExample.addElement(element);
+            }
+            this.generateExistsClause(introspectedTable, eleUpsertByExample, false, columns);
 
             document.getRootElement().addElement(eleUpsertByExample);
             logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsertSelective实现方法。");

@@ -347,13 +347,48 @@ public class IncrementsPluginTest {
 
                 // sql
                 sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExample", tbBuilder.invoke("build"), tbExample.getObject());
-                Assert.assertEquals(sql, "insert into tb (id, field1, inc_f1, inc_f2, inc_f3) select 20, 'ts2', 10, 1, 1 from dual where not exists ( select 1 from tb WHERE ( field1 = 'ts2' ) ) ; update tb set field1 = 'ts2', inc_f1 = inc_f1 + 10 , inc_f2 = 1, inc_f3 = 1 WHERE ( field1 = 'ts2' )");
-                result = tbMapper.invoke("upsertByExample", tbBuilder.invoke("build"), tbExample.getObject());
-                Assert.assertEquals(result, 1);
+                Assert.assertEquals(sql, "update tb set field1 = 'ts2', inc_f1 = inc_f1 + 10 , inc_f2 = 1, inc_f3 = 1 WHERE ( field1 = 'ts2' ) ; insert into tb (id, field1, inc_f1, inc_f2, inc_f3) select 20, 'ts2', 10, 1, 1 from dual where not exists ( select 1 from tb WHERE ( field1 = 'ts2' ) )");
+                tbMapper.invoke("upsertByExample", tbBuilder.invoke("build"), tbExample.getObject());
+
                 // 再次执行触发update
                 tbBuilder.invoke("incF1", 10L, tbBuilderInc.getObject());
                 tbMapper.invoke("upsertByExample", tbBuilder.invoke("build"), tbExample.getObject());
-                rs = DBHelper.execute(sqlSession, "select * from tb where id = 10");
+                rs = DBHelper.execute(sqlSession, "select * from tb where id = 20");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 20);
+
+                // --------------------------- upsertSelective ---------------------------------
+                tbBuilder.set("obj.incF3", null);
+                tbBuilder.invoke("id", 30L);
+
+                // sql
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertSelective", tbBuilder.invoke("build"));
+                Assert.assertEquals(sql, "insert into tb ( id, field1, inc_f1, inc_f2 ) values ( 30, 'ts2', 10, 1 ) on duplicate key update field1 = 'ts2', inc_f1 = inc_f1 + 10 , inc_f2 = 1");
+                result = tbMapper.invoke("upsert", tbBuilder.invoke("build"));
+                Assert.assertEquals(result, 1);
+                // 再次执行触发update
+                tbBuilder.invoke("incF1", 10L, tbBuilderInc.getObject());
+                tbMapper.invoke("upsertSelective", tbBuilder.invoke("build"));
+                rs = DBHelper.execute(sqlSession, "select * from tb where id = 30");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 20);
+
+                // --------------------------- upsertByExampleSelective ---------------------------------
+                tbBuilder.invoke("field1", "ts3");
+                tbBuilder.invoke("id", 40L);
+                tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andField1EqualTo", "ts3");
+
+                // sql
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExampleSelective", tbBuilder.invoke("build"), tbExample.getObject());
+                Assert.assertEquals(sql, "update tb set field1 = 'ts3', inc_f1 = inc_f1 + 10 , inc_f2 = 1 WHERE ( field1 = 'ts3' ) ; insert into tb ( id, field1, inc_f1, inc_f2 ) select 40, 'ts3', 10, 1 from dual where not exists ( select 1 from tb WHERE ( field1 = 'ts3' ) )");
+                result = tbMapper.invoke("upsert", tbBuilder.invoke("build"));
+                Assert.assertEquals(result, 1);
+                // 再次执行触发update
+                tbBuilder.invoke("incF1", 10L, tbBuilderInc.getObject());
+                tbMapper.invoke("upsertByExampleSelective", tbBuilder.invoke("build"), tbExample.getObject());
+                rs = DBHelper.execute(sqlSession, "select * from tb where id = 40");
                 rs.first();
                 Assert.assertEquals(rs.getInt("inc_f1"), 20);
             }
