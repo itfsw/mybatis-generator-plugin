@@ -176,7 +176,6 @@ public class IncrementsPluginTools {
             IntrospectedColumn introspectedColumn = columnIterator.next();
 
             if (this.supportColumn(introspectedColumn)) {
-                list.add(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = "));
                 for (Element ele : this.generatedIncrementsElement(introspectedColumn, prefix, columnIterator.hasNext())) {
                     list.add(ele);
                 }

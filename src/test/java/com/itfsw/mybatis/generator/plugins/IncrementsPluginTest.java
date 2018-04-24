@@ -306,6 +306,61 @@ public class IncrementsPluginTest {
     }
 
     /**
+     * 测试整合 UpsertPlugin
+     */
+    @Test
+    public void testWithUpsertPlugin() throws InterruptedException, SQLException, InvalidConfigurationException, IOException, XMLParserException {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator-with-upsert-plugin.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tbBuilder = new ObjectUtil(loader, packagz + ".Tb$Builder");
+                ObjectUtil tbBuilderInc = new ObjectUtil(loader, packagz + ".Tb$Builder$Inc#INC");
+                tbBuilder.invoke("id", 10L);
+                tbBuilder.invoke("field1", "ts1");
+                tbBuilder.invoke("incF1", 10L, tbBuilderInc.getObject());
+                tbBuilder.invoke("incF2", 1L);
+                tbBuilder.invoke("incF3", 1L);
+
+                // --------------------------- upsert ---------------------------------
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsert", tbBuilder.invoke("build"));
+                Assert.assertEquals(sql, "insert into tb (id, field1, inc_f1, inc_f2, inc_f3) values (10, 'ts1', 10, 1, 1) on duplicate key update id = 10, field1 = 'ts1', inc_f1 = inc_f1 + 10 , inc_f2 = 1, inc_f3 = 1");
+                Object result = tbMapper.invoke("upsert", tbBuilder.invoke("build"));
+                Assert.assertEquals(result, 1);
+                // 再次执行触发update
+                tbBuilder.invoke("incF1", 10L, tbBuilderInc.getObject());
+                tbMapper.invoke("upsert", tbBuilder.invoke("build"));
+                ResultSet rs = DBHelper.execute(sqlSession, "select * from tb where id = 10");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 20);
+
+                // --------------------------- upsertByExample ---------------------------------
+                tbBuilder.invoke("field1", "ts2");
+                tbBuilder.invoke("id", 20L);
+
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andField1EqualTo", "ts2");
+
+                // sql
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExample", tbBuilder.invoke("build"), tbExample.getObject());
+                Assert.assertEquals(sql, "insert into tb (id, field1, inc_f1, inc_f2, inc_f3) select 20, 'ts2', 10, 1, 1 from dual where not exists ( select 1 from tb WHERE ( field1 = 'ts2' ) ) ; update tb set field1 = 'ts2', inc_f1 = inc_f1 + 10 , inc_f2 = 1, inc_f3 = 1 WHERE ( field1 = 'ts2' )");
+                result = tbMapper.invoke("upsertByExample", tbBuilder.invoke("build"), tbExample.getObject());
+                Assert.assertEquals(result, 1);
+                // 再次执行触发update
+                tbBuilder.invoke("incF1", 10L, tbBuilderInc.getObject());
+                tbMapper.invoke("upsertByExample", tbBuilder.invoke("build"), tbExample.getObject());
+                rs = DBHelper.execute(sqlSession, "select * from tb where id = 10");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 20);
+            }
+        });
+    }
+
+    /**
      * 测试 autoDelimitKeywords
      */
     @Test
