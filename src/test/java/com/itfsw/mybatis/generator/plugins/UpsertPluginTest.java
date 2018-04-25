@@ -337,6 +337,7 @@ public class UpsertPluginTest {
         tool.generate(new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // ------------------------------------------ upsert ---------------------------------------------------
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbWithIncIdMapper")));
 
                 ObjectUtil tb = new ObjectUtil(loader, packagz + ".TbWithIncId");
@@ -356,6 +357,67 @@ public class UpsertPluginTest {
                 ResultSet rs = DBHelper.execute(sqlSession, "select * from tb_with_inc_id where id = " + id);
                 rs.first();
                 Assert.assertEquals(rs.getInt("field2"), 20);
+
+                // ------------------------------------------ upsertWithBlobs ---------------------------------------------------
+                tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsWithIncIdMapper")));
+
+                ObjectUtil tbWithBLOBs = new ObjectUtil(loader, packagz + ".TbBlobsWithIncIdWithBLOBs");
+                tbWithBLOBs.set("field1", "ts1");
+                tbWithBLOBs.set("field2", "ts2");
+
+                // sql
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertWithBLOBs", tbWithBLOBs.getObject());
+                Assert.assertEquals(sql, "insert into tb_blobs_with_inc_id ( field1, field2, field3 ) values ( 'ts1', 'ts2', 'null' ) on duplicate key update field1 = 'ts1', field2 = 'ts2', field3 = 'null'");
+                tbMapper.invoke("upsert", tbWithBLOBs.getObject());
+                // 获取ID
+                id = (Long) tbWithBLOBs.get("id");
+
+                tbWithBLOBs.set("field2", "ts3");
+                tbMapper.invoke("upsertWithBLOBs", tbWithBLOBs.getObject());
+
+                rs = DBHelper.execute(sqlSession, "select * from tb_blobs_with_inc_id where id = " + id);
+                rs.first();
+                Assert.assertEquals(rs.getString("field2"), "ts3");
+
+                // sql(withOutBlobs)
+                tb = new ObjectUtil(loader, packagz + ".TbBlobsWithIncId");
+                tb.set("field1", "ts4");
+
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsert", tb.getObject());
+                Assert.assertEquals(sql, "insert into tb_blobs_with_inc_id ( field1 ) values ( 'ts4' ) on duplicate key update field1 = 'ts4'");
+                tbMapper.invoke("upsert", tb.getObject());
+                // 获取ID
+                id = (Long) tb.get("id");
+
+                tb.set("field1", "ts5");
+                tbMapper.invoke("upsert", tb.getObject());
+
+                rs = DBHelper.execute(sqlSession, "select * from tb_blobs_with_inc_id where id = " + id);
+                rs.first();
+                Assert.assertEquals(rs.getString("field1"), "ts5");
+
+                // ------------------------------------------ upsertByExample ---------------------------------------------------
+                tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbWithIncIdMapper")));
+
+                tb = new ObjectUtil(loader, packagz + ".TbWithIncId");
+                tb.set("field1", "ts6");
+                tb.set("field2", 5);
+
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbWithIncIdExample");
+                ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andField1EqualTo", "ts6");
+
+                // sql
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExample", tb.getObject(), tbExample.getObject());
+                Assert.assertEquals(sql, "update tb_with_inc_id set field1 = 'ts6', field2 = 5 WHERE ( field1 = 'ts6' ) ; insert into tb_with_inc_id ( field1, field2 ) select 'ts6', 5 from dual where not exists ( select 1 from tb_with_inc_id WHERE ( field1 = 'ts6' ) )");
+                tbMapper.invoke("upsertByExample", tb.getObject(), tbExample.getObject());
+
+                tb.set("field2", 21);
+                tbMapper.invoke("upsertByExample", tb.getObject(), tbExample.getObject());
+
+                rs = DBHelper.execute(sqlSession, "select * from tb_with_inc_id where field1 = 'ts6'");
+                rs.first();
+                Assert.assertEquals(rs.getInt("field2"), 21);
             }
         });
     }

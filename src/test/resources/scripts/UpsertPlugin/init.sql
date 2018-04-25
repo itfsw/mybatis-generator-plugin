@@ -96,3 +96,18 @@ CREATE TABLE `tb_with_inc_id` (
 -- ----------------------------
 -- Table structure for tb_with_inc_id
 -- ----------------------------
+
+-- ----------------------------
+-- Table structure for tb_blobs_with_inc_id
+-- ----------------------------
+DROP TABLE IF EXISTS `tb_blobs_with_inc_id`;
+CREATE TABLE `tb_blobs_with_inc_id` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '注释1',
+  `field1` varchar(255) DEFAULT NULL COMMENT '注释2',
+  `field2` longtext COMMENT '注释3',
+  `field3` longtext,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+-- ----------------------------
+-- Table structure for tb_blobs_with_inc_id
+-- ----------------------------
