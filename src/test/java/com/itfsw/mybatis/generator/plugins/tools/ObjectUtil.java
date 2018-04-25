@@ -18,7 +18,6 @@ package com.itfsw.mybatis.generator.plugins.tools;
 
 import com.sun.deploy.util.StringUtils;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -134,7 +133,7 @@ public class ObjectUtil {
                 Class[] parameterTypes = method.getParameterTypes();
                 // !! mapper动态代理后VarArgs检查有问题
                 // 暂时只检查前几位相同就假设为可变参数
-                int check = args.length > 0 ? (args[args.length - 1] instanceof Array ? args.length - 1 : args.length) : 0;
+                int check = parameterTypes.length > 0 ? parameterTypes.length - (parameterTypes[parameterTypes.length - 1].getName().startsWith("[") ? 1 : 0) : 0;
                 for (int i = 0; i < check; i++) {
                     Class parameterType = parameterTypes[i];
                     if (!(parameterType.isAssignableFrom(args[i].getClass()))) {
