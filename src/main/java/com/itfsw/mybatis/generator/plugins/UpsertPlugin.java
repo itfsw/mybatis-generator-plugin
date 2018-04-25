@@ -257,6 +257,7 @@ public class UpsertPlugin extends BasePlugin {
             insertTrimElement.addAttribute(new Attribute("suffixOverrides", ","));
             insertOtherwiseEle.addElement(insertTrimElement);
 
+            eleUpsertSelective.addElement(new TextElement("values"));
 
             XmlElement valuesChooseEle = new XmlElement("choose");
             eleUpsertSelective.addElement(valuesChooseEle);
@@ -268,21 +269,15 @@ public class UpsertPlugin extends BasePlugin {
             XmlElement valuesForeachEle = new XmlElement("foreach");
             valuesForeachEle.addAttribute(new Attribute("collection", "selective"));
             valuesForeachEle.addAttribute(new Attribute("item", "column"));
-            valuesForeachEle.addAttribute(new Attribute("open", "values ("));
+            valuesForeachEle.addAttribute(new Attribute("open", "("));
             valuesForeachEle.addAttribute(new Attribute("separator", ","));
             valuesForeachEle.addAttribute(new Attribute("close", ")"));
             valuesForeachEle.addElement(new TextElement("#{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
             valuesWhenEle.addElement(valuesForeachEle);
 
             XmlElement valuesOtherwiseEle = new XmlElement("otherwise");
-            valuesOtherwiseEle.addElement(XmlElementGeneratorTools.generateValuesSelective(columns, "record."));
             valuesChooseEle.addElement(valuesOtherwiseEle);
-
-            XmlElement valuesTrimElement = new XmlElement("trim");
-            valuesTrimElement.addAttribute(new Attribute("prefix", "values ("));
-            valuesTrimElement.addAttribute(new Attribute("suffix", ")"));
-            valuesTrimElement.addAttribute(new Attribute("suffixOverrides", ","));
-            valuesOtherwiseEle.addElement(valuesTrimElement);
+            valuesOtherwiseEle.addElement(XmlElementGeneratorTools.generateValuesSelective(columns, "record."));
 
             eleUpsertSelective.addElement(new TextElement("on duplicate key update "));
 
@@ -295,11 +290,17 @@ public class UpsertPlugin extends BasePlugin {
             setChooseEle.addElement(setWhenEle);
 
             XmlElement setForeachEle = new XmlElement("foreach");
+            setWhenEle.addElement(setForeachEle);
             setForeachEle.addAttribute(new Attribute("collection", "selective"));
             setForeachEle.addAttribute(new Attribute("item", "column"));
             setForeachEle.addAttribute(new Attribute("separator", ","));
-            setForeachEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
-            setWhenEle.addElement(setForeachEle);
+            // set 操作增加增量插件支持
+            IncrementsPluginTools incTools = IncrementsPluginTools.getTools(context, introspectedTable, warnings);
+            if (incTools.support()) {
+                incTools.generateSetsSelectiveWithSelectiveEnhancedPlugin(setForeachEle);
+            } else {
+                setForeachEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+            }
 
             XmlElement setOtherwiseEle = new XmlElement("otherwise");
             // set 操作增加增量插件支持
@@ -334,11 +335,16 @@ public class UpsertPlugin extends BasePlugin {
                 setChooseEle.addElement(setWhenEle);
 
                 setForeachEle = new XmlElement("foreach");
+                setWhenEle.addElement(setForeachEle);
                 setForeachEle.addAttribute(new Attribute("collection", "selective"));
                 setForeachEle.addAttribute(new Attribute("item", "column"));
                 setForeachEle.addAttribute(new Attribute("separator", ","));
-                setForeachEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
-                setWhenEle.addElement(setForeachEle);
+                // set 操作增加增量插件支持
+                if (incTools.support()) {
+                    incTools.generateSetsSelectiveWithSelectiveEnhancedPlugin(setForeachEle);
+                } else {
+                    setForeachEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+                }
 
                 setOtherwiseEle = new XmlElement("otherwise");
 
@@ -580,7 +586,7 @@ public class UpsertPlugin extends BasePlugin {
                 selectWhenEle.addElement(valuesForeachEle);
 
                 XmlElement selectOtherwiseEle = new XmlElement("otherwise");
-                selectOtherwiseEle.addElement(XmlElementGeneratorTools.generateValuesSelective(columns, "record."));
+                selectOtherwiseEle.addElement(XmlElementGeneratorTools.generateValuesSelective(columns, "record.", false));
                 chooseEle.addElement(selectOtherwiseEle);
 
                 XmlElement valuesTrimElement = new XmlElement("trim");
