@@ -73,18 +73,21 @@ public class SelectiveEnhancedPluginTest {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
 
                 ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
-                tb.set("incF3", 10l);
-                tb.set("tsIncF2", 5l);
+                tb.set("id", 121L);
+                tb.set("incF3", 10L);
+                tb.set("tsIncF2", 5L);
                 // selective
+                ObjectUtil TbColumnId = new ObjectUtil(loader, packagz + ".Tb$Column#id");
                 ObjectUtil TbColumnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
                 ObjectUtil TbColumnTsIncF2 = new ObjectUtil(loader, packagz + ".Tb$Column#tsIncF2");
-                Object columns = Array.newInstance(TbColumnField1.getCls(), 2);
-                Array.set(columns, 0, TbColumnField1.getObject());
-                Array.set(columns, 1, TbColumnTsIncF2.getObject());
+                Object columns = Array.newInstance(TbColumnField1.getCls(), 3);
+                Array.set(columns, 0, TbColumnId.getObject());
+                Array.set(columns, 1, TbColumnField1.getObject());
+                Array.set(columns, 2, TbColumnTsIncF2.getObject());
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "insertSelective", tb.getObject(), columns);
-                Assert.assertEquals(sql, "insert into tb ( field_1 , inc_f2 ) values ( 'null' , 5 )");
+                Assert.assertEquals(sql, "insert into tb ( id , field_1 , inc_f2 ) values ( 121 , 'null' , 5 )");
                 Object result = tbMapper.invoke("insertSelective", tb.getObject(), columns);
                 Assert.assertEquals(result, 1);
             }

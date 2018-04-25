@@ -130,6 +130,16 @@ public class IncrementsPluginTools {
      * 生成sets Selective Ele
      * @param columns
      * @param prefix
+     * @return
+     */
+    public XmlElement generateSetsSelective(List<IntrospectedColumn> columns, String prefix) {
+        return generateSetsSelective(columns, prefix, false);
+    }
+
+    /**
+     * 生成sets Selective Ele
+     * @param columns
+     * @param prefix
      * @param bracket
      * @return
      */
@@ -157,6 +167,16 @@ public class IncrementsPluginTools {
         }
 
         return eleTrim;
+    }
+
+    /**
+     * 生成sets Ele
+     * @param columns
+     * @param prefix
+     * @return
+     */
+    public List<Element> generateSets(List<IntrospectedColumn> columns, String prefix) {
+        return generateSets(columns, prefix, false);
     }
 
     /**

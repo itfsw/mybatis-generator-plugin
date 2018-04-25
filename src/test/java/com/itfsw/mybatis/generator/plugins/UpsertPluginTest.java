@@ -165,7 +165,7 @@ public class UpsertPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertSelective", tb.getObject());
-                Assert.assertEquals(sql, "insert into tb ( id, field1 ) values ( 20, 'ts1' ) on duplicate key update field1 = 'ts1'");
+                Assert.assertEquals(sql, "insert into tb ( id, field1 ) values ( 20, 'ts1' ) on duplicate key update id = 20, field1 = 'ts1'");
                 Object result = tbMapper.invoke("upsertSelective", tb.getObject());
                 Assert.assertEquals(result, 1);
 
@@ -179,7 +179,7 @@ public class UpsertPluginTest {
 
                 // sql
                 sql = SqlHelper.getFormatMapperSql(TbBlobsMapper.getObject(), "upsertSelective", TbBlobsWithBLOBs.getObject());
-                Assert.assertEquals(sql, "insert into tb_blobs ( id, field1, field2 ) values ( 500, 'ts1', 'ts2' ) on duplicate key update field1 = 'ts1', field2 = 'ts2'");
+                Assert.assertEquals(sql, "insert into tb_blobs ( id, field1, field2 ) values ( 500, 'ts1', 'ts2' ) on duplicate key update id = 500, field1 = 'ts1', field2 = 'ts2'");
                 result = TbBlobsMapper.invoke("upsertSelective", TbBlobsWithBLOBs.getObject());
                 Assert.assertEquals(result, 1);
             }
@@ -208,7 +208,7 @@ public class UpsertPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExample", tb.getObject(), TbExample.getObject());
-                Assert.assertEquals(sql, "update tb set field1 = 'ts1', field2 = 5 WHERE ( id = '50' ) ; insert into tb (id, field1, field2) select 50, 'ts1', 5 from dual where not exists ( select 1 from tb WHERE ( id = '50' ) )");
+                Assert.assertEquals(sql, "update tb set id = 50, field1 = 'ts1', field2 = 5 WHERE ( id = '50' ) ; insert into tb (id, field1, field2) select 50, 'ts1', 5 from dual where not exists ( select 1 from tb WHERE ( id = '50' ) )");
                 tbMapper.invoke("upsertByExample", tb.getObject(), TbExample.getObject());
 
 
@@ -305,7 +305,7 @@ public class UpsertPluginTest {
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExampleSelective", tb.getObject(), TbExample.getObject());
-                Assert.assertEquals(sql, "update tb set field1 = 'ts1' WHERE ( id = '100' ) ; insert into tb ( id, field1 ) select 100, 'ts1' from dual where not exists ( select 1 from tb WHERE ( id = '100' ) )");
+                Assert.assertEquals(sql, "update tb set id = 100, field1 = 'ts1' WHERE ( id = '100' ) ; insert into tb ( id, field1 ) select 100, 'ts1' from dual where not exists ( select 1 from tb WHERE ( id = '100' ) )");
                 tbMapper.invoke("upsertByExampleSelective", tb.getObject(), TbExample.getObject());
 
                 // 2. blobs
@@ -322,8 +322,40 @@ public class UpsertPluginTest {
 
                 // sql
                 sql = SqlHelper.getFormatMapperSql(TbBlobsMapper.getObject(), "upsertByExampleSelective", TbBlobsWithBLOBs.getObject(), TbBlobsExample.getObject());
-                Assert.assertEquals(sql, "update tb_blobs set field1 = 'ts1', field2 = 'ts2' WHERE ( id = '60' ) ; insert into tb_blobs ( id, field1, field2 ) select 200, 'ts1', 'ts2' from dual where not exists ( select 1 from tb_blobs WHERE ( id = '60' ) )");
+                Assert.assertEquals(sql, "update tb_blobs set id = 200, field1 = 'ts1', field2 = 'ts2' WHERE ( id = '60' ) ; insert into tb_blobs ( id, field1, field2 ) select 200, 'ts1', 'ts2' from dual where not exists ( select 1 from tb_blobs WHERE ( id = '60' ) )");
                 TbBlobsMapper.invoke("upsertByExampleSelective", TbBlobsWithBLOBs.getObject(), TbBlobsExample.getObject());
+            }
+        });
+    }
+
+    /**
+     * 测试 存在自增主键的情况
+     */
+    @Test
+    public void testWithIdentityAndGeneratedAlwaysColumns() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbWithIncIdMapper")));
+
+                ObjectUtil tb = new ObjectUtil(loader, packagz + ".TbWithIncId");
+                tb.set("field1", "ts1");
+                tb.set("field2", 5);
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsert", tb.getObject());
+                Assert.assertEquals(sql, "insert into tb_with_inc_id ( field1, field2 ) values ( 'ts1', 5 ) on duplicate key update field1 = 'ts1', field2 = 5");
+                tbMapper.invoke("upsert", tb.getObject());
+                // 获取ID
+                Long id = (Long) tb.get("id");
+
+                tb.set("field2", 20);
+                tbMapper.invoke("upsert", tb.getObject());
+
+                ResultSet rs = DBHelper.execute(sqlSession, "select * from tb_with_inc_id where id = " + id);
+                rs.first();
+                Assert.assertEquals(rs.getInt("field2"), 20);
             }
         });
     }

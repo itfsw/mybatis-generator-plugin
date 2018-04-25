@@ -20,7 +20,7 @@ SET FOREIGN_KEY_CHECKS=0;
 -- ----------------------------
 DROP TABLE IF EXISTS `tb`;
 CREATE TABLE `tb` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '注释1',
+  `id` bigint(20) NOT NULL COMMENT '注释1',
   `field1` varchar(255) DEFAULT NULL COMMENT '注释2',
   `field2` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
@@ -38,7 +38,7 @@ INSERT INTO `tb` VALUES ('3', 'fd3', '3');
 -- ----------------------------
 DROP TABLE IF EXISTS `tb_blobs`;
 CREATE TABLE `tb_blobs` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '注释1',
+  `id` bigint(20) NOT NULL COMMENT '注释1',
   `field1` varchar(255) DEFAULT NULL,
   `field2` longtext COMMENT '注释2',
   `field3` longtext,
@@ -54,7 +54,7 @@ CREATE TABLE `tb_blobs` (
 -- ----------------------------
 DROP TABLE IF EXISTS `tb_keys`;
 CREATE TABLE `tb_keys` (
-  `key1` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '注释1',
+  `key1` bigint(20) NOT NULL COMMENT '注释1',
   `key2` varchar(255) NOT NULL,
   `field1` varchar(255) DEFAULT NULL COMMENT '注释2',
   `field2` int(11) DEFAULT NULL,
@@ -73,7 +73,7 @@ INSERT INTO `tb_keys` VALUES ('3', '4', 'fd2', '3');
 -- ----------------------------
 DROP TABLE IF EXISTS `tb_single_blob`;
 CREATE TABLE `tb_single_blob` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '注释1',
+  `id` bigint(20) NOT NULL COMMENT '注释1',
   `field1` longtext COMMENT '注释2',
   `field2` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
@@ -81,4 +81,18 @@ CREATE TABLE `tb_single_blob` (
 
 -- ----------------------------
 -- Records of tb_single_blob
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for tb_with_inc_id
+-- ----------------------------
+DROP TABLE IF EXISTS `tb_with_inc_id`;
+CREATE TABLE `tb_with_inc_id` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '注释1',
+  `field1` varchar(255) DEFAULT NULL COMMENT '注释2',
+  `field2` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+-- ----------------------------
+-- Table structure for tb_with_inc_id
 -- ----------------------------

@@ -46,8 +46,6 @@
 
         <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 要自动生成的表 +++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
         <table tableName="tb">
-            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
-
             <columnOverride column="inc_f2" property="tsIncF2"/>
         </table>
     </context>

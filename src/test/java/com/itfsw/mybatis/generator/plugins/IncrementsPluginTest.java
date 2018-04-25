@@ -347,7 +347,7 @@ public class IncrementsPluginTest {
 
                 // sql
                 sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExample", tbBuilder.invoke("build"), tbExample.getObject());
-                Assert.assertEquals(sql, "update tb set field1 = 'ts2', inc_f1 = inc_f1 + 10 , inc_f2 = 1, inc_f3 = 1 WHERE ( field1 = 'ts2' ) ; insert into tb (id, field1, inc_f1, inc_f2, inc_f3) select 20, 'ts2', 10, 1, 1 from dual where not exists ( select 1 from tb WHERE ( field1 = 'ts2' ) )");
+                Assert.assertEquals(sql, "update tb set id = 20, field1 = 'ts2', inc_f1 = inc_f1 + 10 , inc_f2 = 1, inc_f3 = 1 WHERE ( field1 = 'ts2' ) ; insert into tb (id, field1, inc_f1, inc_f2, inc_f3) select 20, 'ts2', 10, 1, 1 from dual where not exists ( select 1 from tb WHERE ( field1 = 'ts2' ) )");
                 tbMapper.invoke("upsertByExample", tbBuilder.invoke("build"), tbExample.getObject());
 
                 // 再次执行触发update
@@ -363,7 +363,7 @@ public class IncrementsPluginTest {
 
                 // sql
                 sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertSelective", tbBuilder.invoke("build"));
-                Assert.assertEquals(sql, "insert into tb ( id, field1, inc_f1, inc_f2 ) values ( 30, 'ts2', 10, 1 ) on duplicate key update field1 = 'ts2', inc_f1 = inc_f1 + 10 , inc_f2 = 1");
+                Assert.assertEquals(sql, "insert into tb ( id, field1, inc_f1, inc_f2 ) values ( 30, 'ts2', 10, 1 ) on duplicate key update id = 30, field1 = 'ts2', inc_f1 = inc_f1 + 10 , inc_f2 = 1");
                 result = tbMapper.invoke("upsert", tbBuilder.invoke("build"));
                 Assert.assertEquals(result, 1);
                 // 再次执行触发update
@@ -382,7 +382,7 @@ public class IncrementsPluginTest {
 
                 // sql
                 sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExampleSelective", tbBuilder.invoke("build"), tbExample.getObject());
-                Assert.assertEquals(sql, "update tb set field1 = 'ts3', inc_f1 = inc_f1 + 10 , inc_f2 = 1 WHERE ( field1 = 'ts3' ) ; insert into tb ( id, field1, inc_f1, inc_f2 ) select 40, 'ts3', 10, 1 from dual where not exists ( select 1 from tb WHERE ( field1 = 'ts3' ) )");
+                Assert.assertEquals(sql, "update tb set id = 40, field1 = 'ts3', inc_f1 = inc_f1 + 10 , inc_f2 = 1 WHERE ( field1 = 'ts3' ) ; insert into tb ( id, field1, inc_f1, inc_f2 ) select 40, 'ts3', 10, 1 from dual where not exists ( select 1 from tb WHERE ( field1 = 'ts3' ) )");
                 result = tbMapper.invoke("upsert", tbBuilder.invoke("build"));
                 Assert.assertEquals(result, 1);
                 // 再次执行触发update

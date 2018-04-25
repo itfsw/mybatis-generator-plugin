@@ -53,8 +53,6 @@
         <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 要自动生成的表 +++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
         <table tableName="tb">
             <property name="incrementsColumns" value="inc_f1"/>
-
-            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
         </table>
         <table tableName="tb_keys">
             <property name="incrementsColumns" value="inc_f1,inc_f2,inc_f3"/>

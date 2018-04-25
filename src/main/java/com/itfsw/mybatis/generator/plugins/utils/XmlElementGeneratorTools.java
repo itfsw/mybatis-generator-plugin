@@ -137,7 +137,7 @@ public class XmlElementGeneratorTools {
      * @param columns
      * @return
      */
-    public static List<TextElement> generateKeys(List<IntrospectedColumn> columns) {
+    public static List<Element> generateKeys(List<IntrospectedColumn> columns) {
         return generateKeys(columns, true);
     }
 
@@ -147,7 +147,7 @@ public class XmlElementGeneratorTools {
      * @param bracket
      * @return
      */
-    public static List<TextElement> generateKeys(List<IntrospectedColumn> columns, boolean bracket) {
+    public static List<Element> generateKeys(List<IntrospectedColumn> columns, boolean bracket) {
         return generateCommColumns(columns, null, bracket, 1);
     }
 
@@ -186,7 +186,7 @@ public class XmlElementGeneratorTools {
      * @param columns
      * @return
      */
-    public static List<TextElement> generateValues(List<IntrospectedColumn> columns) {
+    public static List<Element> generateValues(List<IntrospectedColumn> columns) {
         return generateValues(columns, null);
     }
 
@@ -196,7 +196,7 @@ public class XmlElementGeneratorTools {
      * @param prefix
      * @return
      */
-    public static List<TextElement> generateValues(List<IntrospectedColumn> columns, String prefix) {
+    public static List<Element> generateValues(List<IntrospectedColumn> columns, String prefix) {
         return generateValues(columns, prefix, true);
     }
 
@@ -207,7 +207,7 @@ public class XmlElementGeneratorTools {
      * @param bracket
      * @return
      */
-    public static List<TextElement> generateValues(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
+    public static List<Element> generateValues(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
         return generateCommColumns(columns, prefix, bracket, 2);
     }
 
@@ -246,8 +246,8 @@ public class XmlElementGeneratorTools {
      * @param columns
      * @return
      */
-    public static List<TextElement> generateSets(List<IntrospectedColumn> columns) {
-        return generateSets(columns, null, false);
+    public static List<Element> generateSets(List<IntrospectedColumn> columns) {
+        return generateSets(columns, null);
     }
 
     /**
@@ -256,7 +256,7 @@ public class XmlElementGeneratorTools {
      * @param prefix
      * @return
      */
-    public static List<TextElement> generateSets(List<IntrospectedColumn> columns, String prefix) {
+    public static List<Element> generateSets(List<IntrospectedColumn> columns, String prefix) {
         return generateSets(columns, prefix, false);
     }
 
@@ -267,7 +267,7 @@ public class XmlElementGeneratorTools {
      * @param bracket
      * @return
      */
-    public static List<TextElement> generateSets(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
+    public static List<Element> generateSets(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
         return generateCommColumns(columns, prefix, bracket, 3);
     }
 
@@ -309,8 +309,8 @@ public class XmlElementGeneratorTools {
      * @param type    1:key,2:value,3:set
      * @return
      */
-    private static List<TextElement> generateCommColumns(List<IntrospectedColumn> columns, String prefix, boolean bracket, int type) {
-        List<TextElement> list = new ArrayList<>();
+    public static List<Element> generateCommColumns(List<IntrospectedColumn> columns, String prefix, boolean bracket, int type) {
+        List<Element> list = new ArrayList<>();
         StringBuilder sb = new StringBuilder(bracket ? "(" : "");
         Iterator<IntrospectedColumn> columnIterator = columns.iterator();
         while (columnIterator.hasNext()) {
