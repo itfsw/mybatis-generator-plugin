@@ -19,16 +19,11 @@ package com.itfsw.mybatis.generator.plugins;
 import com.itfsw.mybatis.generator.plugins.tools.*;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import org.mybatis.generator.exception.InvalidConfigurationException;
-import org.mybatis.generator.exception.XMLParserException;
 
-import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,15 +36,6 @@ import java.util.List;
  * ---------------------------------------------------------------------------
  */
 public class IncrementsPluginTest {
-
-    /**
-     * 初始化数据库
-     */
-    @Before
-    public void init() throws Exception {
-        DBHelper.createDB("scripts/IncrementsPlugin/init.sql");
-    }
-
     /**
      * 测试没有配置ModelBuilderPlugin
      */
@@ -67,7 +53,7 @@ public class IncrementsPluginTest {
     @Test
     public void testModelBuilderMethod() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator.xml");
-        tool.generate(new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试生成的方法
@@ -116,7 +102,7 @@ public class IncrementsPluginTest {
     @Test
     public void testSqlAndExecute() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator.xml");
-        tool.generate(new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
 
@@ -216,9 +202,9 @@ public class IncrementsPluginTest {
      * 测试整合 SelectiveEnhancedPlugin 插件
      */
     @Test
-    public void testWithSelectiveEnhancedPlugin() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testWithSelectiveEnhancedPlugin() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator-with-selective-enhanced-plugin.xml");
-        tool.generate(new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试updateByExampleSelective
@@ -309,9 +295,9 @@ public class IncrementsPluginTest {
      * 测试整合 UpsertPlugin
      */
     @Test
-    public void testWithUpsertPlugin() throws InterruptedException, SQLException, InvalidConfigurationException, IOException, XMLParserException {
+    public void testWithUpsertPlugin() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator-with-upsert-plugin.xml");
-        tool.generate(new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -364,11 +350,12 @@ public class IncrementsPluginTest {
                 // sql
                 sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertSelective", tbBuilder.invoke("build"));
                 Assert.assertEquals(sql, "insert into tb ( id, field1, inc_f1, inc_f2 ) values ( 30, 'ts2', 10, 1 ) on duplicate key update id = 30, field1 = 'ts2', inc_f1 = inc_f1 + 10 , inc_f2 = 1");
-                result = tbMapper.invoke("upsert", tbBuilder.invoke("build"));
+                result = tbMapper.invoke("upsertSelective", tbBuilder.invoke("build"));
                 Assert.assertEquals(result, 1);
                 // 再次执行触发update
                 tbBuilder.invoke("incF1", 10L, tbBuilderInc.getObject());
-                tbMapper.invoke("upsertSelective", tbBuilder.invoke("build"));
+                result = tbMapper.invoke("upsertSelective", tbBuilder.invoke("build"));
+                Assert.assertEquals(result, 2);
                 rs = DBHelper.execute(sqlSession, "select * from tb where id = 30");
                 rs.first();
                 Assert.assertEquals(rs.getInt("inc_f1"), 20);
@@ -383,11 +370,12 @@ public class IncrementsPluginTest {
                 // sql
                 sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExampleSelective", tbBuilder.invoke("build"), tbExample.getObject());
                 Assert.assertEquals(sql, "update tb set id = 40, field1 = 'ts3', inc_f1 = inc_f1 + 10 , inc_f2 = 1 WHERE ( field1 = 'ts3' ) ; insert into tb ( id, field1, inc_f1, inc_f2 ) select 40, 'ts3', 10, 1 from dual where not exists ( select 1 from tb WHERE ( field1 = 'ts3' ) )");
-                result = tbMapper.invoke("upsert", tbBuilder.invoke("build"));
-                Assert.assertEquals(result, 1);
+                result = tbMapper.invoke("upsertByExampleSelective", tbBuilder.invoke("build"), tbExample.getObject());
+                Assert.assertEquals(result, 0);
                 // 再次执行触发update
                 tbBuilder.invoke("incF1", 10L, tbBuilderInc.getObject());
-                tbMapper.invoke("upsertByExampleSelective", tbBuilder.invoke("build"), tbExample.getObject());
+                result = tbMapper.invoke("upsertByExampleSelective", tbBuilder.invoke("build"), tbExample.getObject());
+                Assert.assertEquals(result, 1);
                 rs = DBHelper.execute(sqlSession, "select * from tb where id = 40");
                 rs.first();
                 Assert.assertEquals(rs.getInt("inc_f1"), 20);
@@ -399,9 +387,9 @@ public class IncrementsPluginTest {
      * 测试 autoDelimitKeywords
      */
     @Test
-    public void testWithAutoDelimitKeywords() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testWithAutoDelimitKeywords() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator-with-autoDelimitKeywords.xml");
-        tool.generate(new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试updateByExample、updateByExampleSelective
@@ -423,6 +411,74 @@ public class IncrementsPluginTest {
                 ResultSet rs = DBHelper.execute(sqlSession.getConnection(), "select * from tb_key_word where id = 1");
                 rs.first();
                 Assert.assertEquals(rs.getLong("update"), 101);
+            }
+        });
+    }
+
+    /**
+     * 测试同时整合 UpsertPlugin 和 SelectiveEnhancedPlugin
+     */
+    @Test
+    public void testWithUpsertAndSelectiveEnhancedPlugin() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator-with-upsert-and-selective-enhanced-plugin.xml");
+        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+
+
+                // --------------------------- upsertSelective （非空判断） ---------------------------------
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tbBuilder = new ObjectUtil(loader, packagz + ".Tb$Builder");
+                ObjectUtil tbBuilderInc = new ObjectUtil(loader, packagz + ".Tb$Builder$Inc#INC");
+                tbBuilder.invoke("id", 10L);
+                tbBuilder.invoke("field1", "ts1");
+                tbBuilder.invoke("incF1", 10L, tbBuilderInc.getObject());
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertSelective", tbBuilder.invoke("build"));
+                Assert.assertEquals(sql, "insert into tb ( id, field1, inc_f1 ) values ( 10, 'ts1', 10 ) on duplicate key update id = 10, field1 = 'ts1', inc_f1 = inc_f1 + 10");
+                Object result = tbMapper.invoke("upsertSelective", tbBuilder.invoke("build"), Array.newInstance(new ObjectUtil(loader, packagz + ".Tb$Column#field1").getCls(), 0));
+                Assert.assertEquals(result, 1);
+                // 再次执行触发update
+                tbBuilder.invoke("incF1", 10L, tbBuilderInc.getObject());
+                tbMapper.invoke("upsertSelective", tbBuilder.invoke("build"), Array.newInstance(new ObjectUtil(loader, packagz + ".Tb$Column#field1").getCls(), 0));
+                ResultSet rs = DBHelper.execute(sqlSession, "select * from tb where id = 10");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 20);
+
+
+                // --------------------------- upsertSelective （指定字段） ---------------------------------
+                tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                tbBuilder = new ObjectUtil(loader, packagz + ".Tb$Builder");
+                tbBuilderInc = new ObjectUtil(loader, packagz + ".Tb$Builder$Inc#INC");
+                tbBuilder.invoke("id", 20L);
+                tbBuilder.invoke("field1", "ts1");
+                tbBuilder.invoke("incF1", 20L, tbBuilderInc.getObject());
+
+                ObjectUtil TbColumnId = new ObjectUtil(loader, packagz + ".Tb$Column#id");
+                ObjectUtil TbColumnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
+                ObjectUtil TbColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Column#incF1");
+                ObjectUtil TbColumnIncF2 = new ObjectUtil(loader, packagz + ".Tb$Column#incF2");
+                Object columns = Array.newInstance(TbColumnField1.getCls(), 4);
+                Array.set(columns, 0, TbColumnId.getObject());
+                Array.set(columns, 1, TbColumnField1.getObject());
+                Array.set(columns, 2, TbColumnIncF1.getObject());
+                Array.set(columns, 3, TbColumnIncF2.getObject());
+
+                // sql
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertSelective", tbBuilder.invoke("build"), columns);
+                Assert.assertEquals(sql, "insert into tb ( id , field1 , inc_f1 , inc_f2 ) values ( 20 , 'ts1' , 20 , null ) on duplicate key update id = 20 , field1 = 'ts1' , inc_f1 = inc_f1 + 20 , inc_f2 = null");
+                result = tbMapper.invoke("upsertSelective", tbBuilder.invoke("build"), columns);
+                Assert.assertEquals(result, 1);
+                // 再次执行触发update
+                tbBuilder.invoke("incF1", 20L, tbBuilderInc.getObject());
+                result = tbMapper.invoke("upsertSelective", tbBuilder.invoke("build"), columns);
+                Assert.assertEquals(result, 2);
+                rs = DBHelper.execute(sqlSession, "select * from tb where id = 20");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 40);
             }
         });
     }

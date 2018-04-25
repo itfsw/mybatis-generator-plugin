@@ -24,8 +24,6 @@ import org.apache.ibatis.session.SqlSession;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mybatis.generator.exception.InvalidConfigurationException;
-import org.mybatis.generator.exception.XMLParserException;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -51,7 +49,7 @@ public class ModelBuilderPluginTest {
      * 测试生成的model
      */
     @Test
-    public void test() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void test() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ModelBuilderPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
@@ -113,7 +111,7 @@ public class ModelBuilderPluginTest {
      * 测试静态builder方法
      */
     @Test
-    public void testBuilderMethod() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testBuilderMethod() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ModelBuilderPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override

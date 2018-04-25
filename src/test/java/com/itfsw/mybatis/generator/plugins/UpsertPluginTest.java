@@ -65,7 +65,7 @@ public class UpsertPluginTest {
      * 测试 upsert
      */
     @Test
-    public void testUpsert() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testUpsert() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
@@ -97,7 +97,7 @@ public class UpsertPluginTest {
      * 测试 upsertWithBLOBs
      */
     @Test
-    public void testUpsertWithBLOBs() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testUpsertWithBLOBs() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
@@ -151,7 +151,7 @@ public class UpsertPluginTest {
      * 测试 upsertSelective
      */
     @Test
-    public void testUpsertSelective() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testUpsertSelective() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
@@ -190,7 +190,7 @@ public class UpsertPluginTest {
      * 测试 upsertByExample
      */
     @Test
-    public void testUpsertByExample() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testUpsertByExample() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
@@ -226,7 +226,7 @@ public class UpsertPluginTest {
      * 测试 upsertByExampleWithBLOBs
      */
     @Test
-    public void testUpsertByExampleWithBLOBs() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testUpsertByExampleWithBLOBs() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
@@ -287,7 +287,7 @@ public class UpsertPluginTest {
      * 测试 upsertByExampleSelective
      */
     @Test
-    public void testUpsertByExampleSelective() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testUpsertByExampleSelective() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
@@ -332,7 +332,7 @@ public class UpsertPluginTest {
      * 测试 存在自增主键的情况
      */
     @Test
-    public void testWithIdentityAndGeneratedAlwaysColumns() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testWithIdentityAndGeneratedAlwaysColumns() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override

@@ -21,8 +21,6 @@ import org.apache.ibatis.session.SqlSession;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mybatis.generator.exception.InvalidConfigurationException;
-import org.mybatis.generator.exception.XMLParserException;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -52,7 +50,7 @@ public class ExampleEnhancedPluginTest {
      * 测试生成的example方法
      */
     @Test
-    public void testExample() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testExample() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ExampleEnhancedPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
@@ -73,7 +71,7 @@ public class ExampleEnhancedPluginTest {
      * 测试生成的orderBy方法
      */
     @Test
-    public void testOrderBy() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testOrderBy() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ExampleEnhancedPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
@@ -96,7 +94,7 @@ public class ExampleEnhancedPluginTest {
      * 测试andIf方法
      */
     @Test
-    public void testAndIf() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testAndIf() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ExampleEnhancedPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override

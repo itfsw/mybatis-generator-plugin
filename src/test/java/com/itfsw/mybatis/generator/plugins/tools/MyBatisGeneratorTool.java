@@ -81,17 +81,33 @@ public class MyBatisGeneratorTool {
 
     /**
      * 执行MyBatisGenerator
+     * @param before
      * @param callback
      * @return
      * @throws SQLException
      * @throws IOException
      * @throws InterruptedException
      */
-    public MyBatisGenerator generate(AbstractShellCallback callback) throws InvalidConfigurationException, InterruptedException, SQLException, IOException {
+    public MyBatisGenerator generate(IBeforeCallback before, AbstractShellCallback callback) throws Exception {
+        before.run();
         callback.setTool(this);
         MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, callback, warnings);
         myBatisGenerator.generate(null, null, null, true);
         return myBatisGenerator;
+    }
+
+    /**
+     * 执行MyBatisGenerator
+     * @param callback
+     * @return
+     * @throws SQLException
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public MyBatisGenerator generate(AbstractShellCallback callback) throws Exception {
+       return this.generate(() -> {
+
+       }, callback);
     }
 
     /**

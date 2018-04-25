@@ -65,7 +65,7 @@ public class SelectiveEnhancedPluginTest {
      * 测试insertSelective增强
      */
     @Test
-    public void testInsertSelective() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testInsertSelective() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/SelectiveEnhancedPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
@@ -98,7 +98,7 @@ public class SelectiveEnhancedPluginTest {
      * 测试 updateByExampleSelective
      */
     @Test
-    public void testUpdateByExampleSelective() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testUpdateByExampleSelective() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/SelectiveEnhancedPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
@@ -132,7 +132,7 @@ public class SelectiveEnhancedPluginTest {
      * 测试 updateByPrimaryKeySelective
      */
     @Test
-    public void testUpdateByPrimaryKeySelective() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testUpdateByPrimaryKeySelective() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/SelectiveEnhancedPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
@@ -163,7 +163,7 @@ public class SelectiveEnhancedPluginTest {
      * 测试 upsertSelective
      */
     @Test
-    public void testUpsertSelective() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testUpsertSelective() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/SelectiveEnhancedPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
@@ -196,7 +196,7 @@ public class SelectiveEnhancedPluginTest {
      * 测试 upsertByExampleSelective
      */
     @Test
-    public void testUpsertByExampleSelective() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testUpsertByExampleSelective() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/SelectiveEnhancedPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override

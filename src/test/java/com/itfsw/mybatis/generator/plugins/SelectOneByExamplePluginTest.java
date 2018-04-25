@@ -21,8 +21,6 @@ import org.apache.ibatis.session.SqlSession;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mybatis.generator.exception.InvalidConfigurationException;
-import org.mybatis.generator.exception.XMLParserException;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -48,7 +46,7 @@ public class SelectOneByExamplePluginTest {
      * 测试 selectOneByExample
      */
     @Test
-    public void testSelectOneByExample() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testSelectOneByExample() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/SelectOneByExamplePlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
@@ -75,7 +73,7 @@ public class SelectOneByExamplePluginTest {
      * 测试 selectOneByExampleWithBLOBs
      */
     @Test
-    public void testSelectOneByExampleWithBLOBs() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testSelectOneByExampleWithBLOBs() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/SelectOneByExamplePlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override

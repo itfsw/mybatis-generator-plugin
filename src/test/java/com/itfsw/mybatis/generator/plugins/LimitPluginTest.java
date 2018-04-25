@@ -61,7 +61,7 @@ public class LimitPluginTest {
      * 测试生成的Sql语句和具体执行
      */
     @Test
-    public void testSqlAndExecute() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testSqlAndExecute() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LimitPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override

@@ -80,7 +80,7 @@ public class LogicalDeletePluginTest {
      * 测试 logicalDeleteByExample
      */
     @Test
-    public void testLogicalDeleteByExample() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testLogicalDeleteByExample() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LogicalDeletePlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
@@ -108,7 +108,7 @@ public class LogicalDeletePluginTest {
      * 测试 logicalDeleteByPrimaryKey
      */
     @Test
-    public void testLogicalDeleteByPrimaryKey() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testLogicalDeleteByPrimaryKey() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LogicalDeletePlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
@@ -132,7 +132,7 @@ public class LogicalDeletePluginTest {
      * 测试关联生成的方法和常量
      */
     @Test
-    public void testOtherMethods() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testOtherMethods() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LogicalDeletePlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
@@ -159,7 +159,7 @@ public class LogicalDeletePluginTest {
      * 测试自定义常量
      */
     @Test
-    public void testCustomConst() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testCustomConst() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LogicalDeletePlugin/mybatis-generator-with-customConstName.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
@@ -186,7 +186,7 @@ public class LogicalDeletePluginTest {
      * 测试Model andLogicalDeleted 方法
      */
     @Test
-    public void testModelAndLogicalDeletedMethod() throws InterruptedException, SQLException, InvalidConfigurationException, IOException, XMLParserException {
+    public void testModelAndLogicalDeletedMethod() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LogicalDeletePlugin/mybatis-generator-with-customConstName.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
@@ -206,7 +206,7 @@ public class LogicalDeletePluginTest {
      * 测试 selectByPrimaryKeyWithLogicalDelete
      */
     @Test
-    public void testSelectByPrimaryKeyWithLogicalDelete() throws IOException, XMLParserException, InvalidConfigurationException, InterruptedException, SQLException {
+    public void testSelectByPrimaryKeyWithLogicalDelete() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LogicalDeletePlugin/mybatis-generator-with-customConstName.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
