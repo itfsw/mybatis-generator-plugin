@@ -27,6 +27,7 @@ import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 import org.mybatis.generator.config.GeneratedKey;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -151,7 +152,7 @@ public class XmlElementGeneratorTools {
      * @param element
      * @param name
      */
-    public static void removeAttribute(XmlElement element, String name){
+    public static void removeAttribute(XmlElement element, String name) {
         Iterator<Attribute> iterator = element.getAttributes().iterator();
         while (iterator.hasNext()) {
             Attribute attribute = iterator.next();
@@ -166,7 +167,7 @@ public class XmlElementGeneratorTools {
      * @param element
      * @param attribute
      */
-    public static void replaceAttribute(XmlElement element, Attribute attribute){
+    public static void replaceAttribute(XmlElement element, Attribute attribute) {
         removeAttribute(element, attribute.getName());
         element.addAttribute(attribute);
     }
@@ -176,7 +177,7 @@ public class XmlElementGeneratorTools {
      * @param srcEle
      * @param destEle
      */
-    public static void replaceXmlElement(XmlElement srcEle, XmlElement destEle){
+    public static void replaceXmlElement(XmlElement srcEle, XmlElement destEle) {
         srcEle.setName(destEle.getName());
         srcEle.getAttributes().clear();
         srcEle.getAttributes().addAll(destEle.getAttributes());
@@ -190,17 +191,28 @@ public class XmlElementGeneratorTools {
      * @return
      */
     public static List<Element> generateKeys(List<IntrospectedColumn> columns) {
-        return generateKeys(columns, true);
+        return generateKeys(columns, null);
     }
 
     /**
      * 生成keys Ele
      * @param columns
+     * @param prefix
+     * @return
+     */
+    public static List<Element> generateKeys(List<IntrospectedColumn> columns, String prefix) {
+        return generateKeys(columns, prefix, true);
+    }
+
+    /**
+     * 生成keys Ele
+     * @param columns
+     * @param prefix
      * @param bracket
      * @return
      */
-    public static List<Element> generateKeys(List<IntrospectedColumn> columns, boolean bracket) {
-        return generateCommColumns(columns, null, bracket, 1);
+    public static List<Element> generateKeys(List<IntrospectedColumn> columns,String prefix, boolean bracket) {
+        return generateCommColumns(columns, prefix, bracket, 1);
     }
 
     /**
@@ -361,48 +373,80 @@ public class XmlElementGeneratorTools {
      * @param type    1:key,2:value,3:set
      * @return
      */
-    public static List<Element> generateCommColumns(List<IntrospectedColumn> columns, String prefix, boolean bracket, int type) {
+    private static List<Element> generateCommColumns(List<IntrospectedColumn> columns, String prefix, boolean bracket, int type) {
         List<Element> list = new ArrayList<>();
-        StringBuilder sb = new StringBuilder(bracket ? "(" : "");
-        Iterator<IntrospectedColumn> columnIterator = columns.iterator();
-        while (columnIterator.hasNext()) {
-            IntrospectedColumn introspectedColumn = columnIterator.next();
 
-            switch (type) {
-                case 3:
-                    sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
-                    sb.append(" = ");
-                    sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
-                    break;
-                case 2:
-                    sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
-                    break;
-                case 1:
-                    sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
-                    break;
+        if (hasIdentityAndGeneratedAlwaysColumns(columns)) {
+            XmlElement eleTrim = new XmlElement("trim");
+            if (bracket) {
+                eleTrim.addAttribute(new Attribute("prefix", "("));
+                eleTrim.addAttribute(new Attribute("suffix", ")"));
+                eleTrim.addAttribute(new Attribute("suffixOverrides", ","));
+            } else {
+                eleTrim.addAttribute(new Attribute("suffixOverrides", ","));
             }
 
-            if (columnIterator.hasNext()) {
-                sb.append(", ");
+            for (IntrospectedColumn introspectedColumn : columns) {
+                if (introspectedColumn.isGeneratedAlways() || introspectedColumn.isIdentity()) {
+                    generateSelectiveToTrimEle(eleTrim, introspectedColumn, prefix, type);
+                } else {
+                    switch (type) {
+                        case 3:
+                            eleTrim.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = " + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
+                            break;
+                        case 2:
+                            eleTrim.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
+                            break;
+                        case 1:
+                            eleTrim.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + ","));
+                            break;
+                    }
+                }
             }
 
-            // 保持和官方一致 80 进行换行
-            if (type == 1 || type == 2) {
-                if (sb.length() > 80) {
+            return Arrays.asList(eleTrim);
+        } else {
+            StringBuilder sb = new StringBuilder(bracket ? "(" : "");
+            Iterator<IntrospectedColumn> columnIterator = columns.iterator();
+            while (columnIterator.hasNext()) {
+                IntrospectedColumn introspectedColumn = columnIterator.next();
+
+                switch (type) {
+                    case 3:
+                        sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
+                        sb.append(" = ");
+                        sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
+                        break;
+                    case 2:
+                        sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
+                        break;
+                    case 1:
+                        sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
+                        break;
+                }
+
+                if (columnIterator.hasNext()) {
+                    sb.append(", ");
+                }
+
+                // 保持和官方一致 80 进行换行
+                if (type == 1 || type == 2) {
+                    if (sb.length() > 80) {
+                        list.add(new TextElement(sb.toString()));
+                        sb.setLength(0);
+                        OutputUtilities.xmlIndent(sb, 1);
+                    }
+                } else {
                     list.add(new TextElement(sb.toString()));
                     sb.setLength(0);
-                    OutputUtilities.xmlIndent(sb, 1);
                 }
-            } else {
-                list.add(new TextElement(sb.toString()));
-                sb.setLength(0);
             }
-        }
-        if (sb.length() > 0 || bracket) {
-            list.add(new TextElement(sb.append(bracket ? ")" : "").toString()));
-        }
+            if (sb.length() > 0 || bracket) {
+                list.add(new TextElement(sb.append(bracket ? ")" : "").toString()));
+            }
 
-        return list;
+            return list;
+        }
     }
 
     /**
@@ -424,41 +468,52 @@ public class XmlElementGeneratorTools {
         }
 
         for (IntrospectedColumn introspectedColumn : columns) {
-            if (type != 3 && (introspectedColumn.isSequenceColumn() || introspectedColumn.getFullyQualifiedJavaType().isPrimitive())) {
-                // if it is a sequence column, it is not optional
-                // This is required for MyBatis3 because MyBatis3 parses
-                // and calculates the SQL before executing the selectKey
-
-                // if it is primitive, we cannot do a null check
-                switch (type) {
-                    case 2:
-                        eleTrim.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
-                        break;
-                    case 1:
-                        eleTrim.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + ","));
-                        break;
-                }
-            } else {
-                XmlElement eleIf = new XmlElement("if");
-                eleIf.addAttribute(new Attribute("test", introspectedColumn.getJavaProperty(prefix) + " != null"));
-
-                switch (type) {
-                    case 3:
-                        eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = " + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
-                        break;
-                    case 2:
-                        eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
-                        break;
-                    case 1:
-                        eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + ","));
-                        break;
-                }
-
-                eleTrim.addElement(eleIf);
-            }
+            generateSelectiveToTrimEle(eleTrim, introspectedColumn, prefix, type);
         }
 
         return eleTrim;
+    }
+
+    /**
+     * 生成选择列到trim 节点
+     * @param trimEle
+     * @param introspectedColumn
+     * @param prefix
+     * @param type               1:key,2:value,3:set
+     */
+    private static void generateSelectiveToTrimEle(XmlElement trimEle, IntrospectedColumn introspectedColumn, String prefix, int type) {
+        if (type != 3 && (introspectedColumn.isSequenceColumn() || introspectedColumn.getFullyQualifiedJavaType().isPrimitive())) {
+            // if it is a sequence column, it is not optional
+            // This is required for MyBatis3 because MyBatis3 parses
+            // and calculates the SQL before executing the selectKey
+
+            // if it is primitive, we cannot do a null check
+            switch (type) {
+                case 2:
+                    trimEle.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
+                    break;
+                case 1:
+                    trimEle.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + ","));
+                    break;
+            }
+        } else {
+            XmlElement eleIf = new XmlElement("if");
+            eleIf.addAttribute(new Attribute("test", introspectedColumn.getJavaProperty(prefix) + " != null"));
+
+            switch (type) {
+                case 3:
+                    eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = " + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
+                    break;
+                case 2:
+                    eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
+                    break;
+                case 1:
+                    eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + ","));
+                    break;
+            }
+
+            trimEle.addElement(eleIf);
+        }
     }
 
     /**
@@ -515,5 +570,19 @@ public class XmlElementGeneratorTools {
             sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
             element.addElement(new TextElement(sb.toString()));
         }
+    }
+
+    /**
+     * 是否存在自增或者生成的column
+     * @param columns
+     * @return
+     */
+    private static boolean hasIdentityAndGeneratedAlwaysColumns(List<IntrospectedColumn> columns) {
+        for (IntrospectedColumn ic : columns) {
+            if (ic.isGeneratedAlways() || ic.isIdentity()) {
+                return true;
+            }
+        }
+        return false;
     }
 }

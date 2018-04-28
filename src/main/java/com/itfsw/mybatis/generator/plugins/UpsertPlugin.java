@@ -217,7 +217,7 @@ public class UpsertPlugin extends BasePlugin {
         insertEle.addAttribute(new Attribute("parameterType", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
 
         // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-        XmlElementGeneratorTools.useGeneratedKeys(insertEle, introspectedTable);
+        XmlElementGeneratorTools.useGeneratedKeys(insertEle, introspectedTable, "record.");
 
         // insert
         insertEle.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
@@ -349,7 +349,7 @@ public class UpsertPlugin extends BasePlugin {
 
             // insert
             updateEle.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-            for (Element element : XmlElementGeneratorTools.generateKeys(columns)) {
+            for (Element element : XmlElementGeneratorTools.generateKeys(columns, "record.")) {
                 updateEle.addElement(element);
             }
             this.generateExistsClause(introspectedTable, updateEle, XmlElementGeneratorTools.generateValues(columns, "record.", false));

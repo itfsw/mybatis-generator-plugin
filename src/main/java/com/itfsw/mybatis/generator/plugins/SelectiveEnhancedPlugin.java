@@ -339,7 +339,17 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
      */
     @Override
     public boolean sqlMapUpsertByExampleSelectiveElementGenerated(XmlElement element, List<IntrospectedColumn> columns, XmlElement insertColumnsEle, XmlElement insertValuesEle, XmlElement setsEle, IntrospectedTable introspectedTable) {
-        return false;
+
+        // 替换insert column
+        XmlElementGeneratorTools.replaceXmlElement(insertColumnsEle, this.generateInsertColumnSelective(columns));
+
+        // 替换insert values
+        XmlElementGeneratorTools.replaceXmlElement(insertValuesEle, this.generateInsertValuesSelective(columns, false));
+
+        // 替换update set
+        XmlElementGeneratorTools.replaceXmlElement(setsEle, this.generateSetsSelective(columns));
+
+        return true;
     }
 
     // ====================================================== 一些私有节点生成方法 =========================================================
@@ -384,6 +394,16 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
      * @return
      */
     private XmlElement generateInsertValuesSelective(List<IntrospectedColumn> columns) {
+        return generateInsertValuesSelective(columns, true);
+    }
+
+    /**
+     * insert column selective
+     * @param columns
+     * @param bracket
+     * @return
+     */
+    private XmlElement generateInsertValuesSelective(List<IntrospectedColumn> columns, boolean bracket) {
         XmlElement insertValuesChooseEle = new XmlElement("choose");
 
         XmlElement valuesWhenEle = new XmlElement("when");
@@ -393,15 +413,17 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         XmlElement valuesForeachEle = new XmlElement("foreach");
         valuesForeachEle.addAttribute(new Attribute("collection", "selective"));
         valuesForeachEle.addAttribute(new Attribute("item", "column"));
-        valuesForeachEle.addAttribute(new Attribute("open", "("));
         valuesForeachEle.addAttribute(new Attribute("separator", ","));
-        valuesForeachEle.addAttribute(new Attribute("close", ")"));
+        if (bracket) {
+            valuesForeachEle.addAttribute(new Attribute("open", "("));
+            valuesForeachEle.addAttribute(new Attribute("close", ")"));
+        }
         valuesForeachEle.addElement(new TextElement("#{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
         valuesWhenEle.addElement(valuesForeachEle);
 
         XmlElement valuesOtherwiseEle = new XmlElement("otherwise");
         insertValuesChooseEle.addElement(valuesOtherwiseEle);
-        valuesOtherwiseEle.addElement(XmlElementGeneratorTools.generateValuesSelective(columns, "record."));
+        valuesOtherwiseEle.addElement(XmlElementGeneratorTools.generateValuesSelective(columns, "record.", bracket));
 
         return insertValuesChooseEle;
     }
