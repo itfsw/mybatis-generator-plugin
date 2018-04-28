@@ -20,8 +20,10 @@ import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.Plugin;
+import org.mybatis.generator.api.dom.java.InnerClass;
 import org.mybatis.generator.api.dom.java.Interface;
 import org.mybatis.generator.api.dom.java.Method;
+import org.mybatis.generator.api.dom.java.TopLevelClass;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.config.Context;
 import org.slf4j.Logger;
@@ -38,7 +40,7 @@ import java.util.List;
  * @time:2018/4/27 11:33
  * ---------------------------------------------------------------------------
  */
-public class HookAggregator implements IUpsertPluginHook {
+public class HookAggregator implements IUpsertPluginHook, IModelBuilderPluginHook {
     protected static final Logger logger = LoggerFactory.getLogger(BasePlugin.class); // 日志
     private final static HookAggregator instance = new HookAggregator();
     private Context context;
@@ -68,16 +70,6 @@ public class HookAggregator implements IUpsertPluginHook {
     }
 
     /**
-     * 获取挂载
-     * @param clazz
-     * @param <T>
-     * @return
-     */
-    public <T> T getHook(Class<T> clazz) {
-        return (T) this;
-    }
-
-    /**
      * 获取插件
      * @param clazz
      * @param <T>
@@ -101,7 +93,18 @@ public class HookAggregator implements IUpsertPluginHook {
         return list;
     }
 
-    // ================================================= default ===============================================
+    // ============================================ IModelBuilderPluginHook =============================================
+    @Override
+    public boolean modelBuilderClassGenerated(TopLevelClass topLevelClass, InnerClass builderClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
+        for (IModelBuilderPluginHook plugin : this.getPlugins(IModelBuilderPluginHook.class)) {
+            if (!plugin.modelBuilderClassGenerated(topLevelClass, builderClass, columns, introspectedTable)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // ================================================= IUpsertPluginHook ===============================================
     @Override
     public boolean clientUpsertSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         for (IUpsertPluginHook plugin : this.getPlugins(IUpsertPluginHook.class)) {

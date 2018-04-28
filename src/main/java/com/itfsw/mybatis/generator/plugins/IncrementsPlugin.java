@@ -17,12 +17,14 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.*;
+import com.itfsw.mybatis.generator.plugins.utils.hook.IModelBuilderPluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
-import org.mybatis.generator.api.dom.java.TopLevelClass;
+import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.Element;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
+import org.mybatis.generator.internal.util.JavaBeansUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +37,7 @@ import java.util.List;
  * @time:2017/6/19 15:20
  * ---------------------------------------------------------------------------
  */
-public class IncrementsPlugin extends BasePlugin {
+public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginHook {
     public static final String PRO_INCREMENTS_COLUMNS = "incrementsColumns";  // incrementsColumns property
     public static final String FIELD_INC_MAP = "incrementsColumnsInfoMap";    // 为了防止和用户数据库字段冲突，特殊命名
     public static final String METHOD_INC_CHECK = "hasIncsForColumn";   // inc 检查方法名称
@@ -64,31 +66,8 @@ public class IncrementsPlugin extends BasePlugin {
      */
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
+        super.initialized(introspectedTable);
         this.incTools = IncrementsPluginTools.getTools(context, introspectedTable, warnings);
-    }
-
-    /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
-     */
-    @Override
-    public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        // 具体实现在 ModelBuilderPlugin.generateModelBuilder
-        return true;
-    }
-
-    /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
-     */
-    @Override
-    public boolean modelRecordWithBLOBsClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        // 具体实现在 ModelBuilderPlugin.generateModelBuilder
-        return true;
     }
 
     /**
@@ -99,13 +78,8 @@ public class IncrementsPlugin extends BasePlugin {
      */
     @Override
     public boolean sqlMapUpdateByExampleSelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
-        if (PluginTools.checkDependencyPlugin(context, SelectiveEnhancedPlugin.class)) {
-            // TODO SelectiveEnhancedPlugin.sqlMapUpdateByExampleSelectiveElementGenerated
-        } else {
-            generatedWithSelective(element, introspectedTable, true);
-        }
-
-        return true;
+        generatedWithSelective(element, introspectedTable, true);
+        return super.sqlMapUpdateByExampleSelectiveElementGenerated(element, introspectedTable);
     }
 
     /**
@@ -117,7 +91,7 @@ public class IncrementsPlugin extends BasePlugin {
     @Override
     public boolean sqlMapUpdateByExampleWithBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
         generatedWithoutSelective(element, introspectedTable, true);
-        return true;
+        return super.sqlMapUpdateByExampleWithBLOBsElementGenerated(element, introspectedTable);
     }
 
     /**
@@ -129,7 +103,7 @@ public class IncrementsPlugin extends BasePlugin {
     @Override
     public boolean sqlMapUpdateByExampleWithoutBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
         generatedWithoutSelective(element, introspectedTable, true);
-        return true;
+        return super.sqlMapUpdateByExampleWithoutBLOBsElementGenerated(element, introspectedTable);
     }
 
     /**
@@ -140,13 +114,8 @@ public class IncrementsPlugin extends BasePlugin {
      */
     @Override
     public boolean sqlMapUpdateByPrimaryKeySelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
-        if (PluginTools.checkDependencyPlugin(context, SelectiveEnhancedPlugin.class)) {
-            // TODO SelectiveEnhancedPlugin.sqlMapUpdateByPrimaryKeySelectiveElementGenerated
-        } else {
-            generatedWithSelective(element, introspectedTable, false);
-        }
-
-        return true;
+        generatedWithSelective(element, introspectedTable, false);
+        return super.sqlMapUpdateByPrimaryKeySelectiveElementGenerated(element, introspectedTable);
     }
 
     /**
@@ -158,7 +127,7 @@ public class IncrementsPlugin extends BasePlugin {
     @Override
     public boolean sqlMapUpdateByPrimaryKeyWithBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
         generatedWithoutSelective(element, introspectedTable, false);
-        return true;
+        return super.sqlMapUpdateByPrimaryKeyWithBLOBsElementGenerated(element, introspectedTable);
     }
 
     /**
@@ -170,9 +139,100 @@ public class IncrementsPlugin extends BasePlugin {
     @Override
     public boolean sqlMapUpdateByPrimaryKeyWithoutBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
         generatedWithoutSelective(element, introspectedTable, false);
-        return true;
+        return super.sqlMapUpdateByPrimaryKeyWithoutBLOBsElementGenerated(element, introspectedTable);
     }
 
+    // =============================================== IModelBuilderPluginHook ===================================================
+
+    /**
+     * Model builder class 生成
+     * @param topLevelClass
+     * @param builderClass
+     * @param columns
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public boolean modelBuilderClassGenerated(TopLevelClass topLevelClass, InnerClass builderClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
+        // 增加枚举
+        InnerEnum eIncrements = new InnerEnum(new FullyQualifiedJavaType("Inc"));
+        eIncrements.setVisibility(JavaVisibility.PUBLIC);
+        eIncrements.setStatic(true);
+        eIncrements.addEnumConstant("INC(\"+\")");
+        eIncrements.addEnumConstant("DEC(\"-\")");
+        commentGenerator.addEnumComment(eIncrements, introspectedTable);
+        // 生成属性和构造函数
+        Field fValue = new Field("value", FullyQualifiedJavaType.getStringInstance());
+        fValue.setVisibility(JavaVisibility.PRIVATE);
+        fValue.setFinal(true);
+        commentGenerator.addFieldComment(fValue, introspectedTable);
+        eIncrements.addField(fValue);
+
+        Method mInc = new Method("Inc");
+        mInc.setConstructor(true);
+        mInc.addBodyLine("this.value = value;");
+        mInc.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "value"));
+        commentGenerator.addGeneralMethodComment(mInc, introspectedTable);
+        eIncrements.addMethod(mInc);
+
+        Method mValue = JavaElementGeneratorTools.generateGetterMethod(fValue);
+        commentGenerator.addGeneralMethodComment(mValue, introspectedTable);
+        eIncrements.addMethod(mValue);
+
+        builderClass.addInnerEnum(eIncrements);
+        // 增加field
+        Field fIncrements = JavaElementGeneratorTools.generateField(
+                IncrementsPlugin.FIELD_INC_MAP,
+                JavaVisibility.PROTECTED,
+                new FullyQualifiedJavaType("Map<String, " + incTools.getIncEnum().getFullyQualifiedName() + ">"),
+                "new HashMap<String, " + incTools.getIncEnum().getFullyQualifiedName() + ">()"
+        );
+        commentGenerator.addFieldComment(fIncrements, introspectedTable);
+        topLevelClass.addField(fIncrements);
+        topLevelClass.addImportedType("java.util.Map");
+        topLevelClass.addImportedType("java.util.HashMap");
+        // getter&setter
+        Method mGetter = JavaElementGeneratorTools.generateGetterMethod(fIncrements);
+        commentGenerator.addGetterComment(mGetter, introspectedTable, null);
+        topLevelClass.addMethod(mGetter);
+        Method mSetter = JavaElementGeneratorTools.generateSetterMethod(fIncrements);
+        commentGenerator.addSetterComment(mSetter, introspectedTable, null);
+        topLevelClass.addMethod(mSetter);
+        // 增加判断方法
+        Method mHasIncsForColumn = JavaElementGeneratorTools.generateMethod(
+                IncrementsPlugin.METHOD_INC_CHECK,
+                JavaVisibility.PUBLIC,
+                FullyQualifiedJavaType.getBooleanPrimitiveInstance(),
+                new Parameter(FullyQualifiedJavaType.getStringInstance(), "column")
+        );
+        commentGenerator.addGeneralMethodComment(mHasIncsForColumn, introspectedTable);
+        mHasIncsForColumn.addBodyLine("return " + IncrementsPlugin.FIELD_INC_MAP + ".get(column) != null;");
+        FormatTools.addMethodWithBestPosition(topLevelClass, mHasIncsForColumn);
+
+        // Builder 中 添加字段支持
+        for (IntrospectedColumn column : columns) {
+            if (incTools.supportColumn(column)) {
+                Field field = JavaBeansUtil.getJavaBeansField(column, context, introspectedTable);
+                // 增加方法
+                Method mIncrements = JavaElementGeneratorTools.generateMethod(
+                        field.getName(),
+                        JavaVisibility.PUBLIC,
+                        builderClass.getType(),
+                        new Parameter(field.getType(), field.getName()),
+                        new Parameter(incTools.getIncEnum(), "inc")
+                );
+                commentGenerator.addSetterComment(mIncrements, introspectedTable, column);
+
+                Method setterMethod = JavaBeansUtil.getJavaBeansSetter(column, context, introspectedTable);
+                mIncrements.addBodyLine("obj." + IncrementsPlugin.FIELD_INC_MAP + ".put(\"" + column.getActualColumnName() + "\", inc);");
+                mIncrements.addBodyLine("obj." + setterMethod.getName() + "(" + field.getName() + ");");
+                mIncrements.addBodyLine("return this;");
+
+                FormatTools.addMethodWithBestPosition(builderClass, mIncrements);
+            }
+        }
+        return true;
+    }
 
     /**
      * 有Selective代码生成
