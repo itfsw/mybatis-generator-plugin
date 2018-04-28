@@ -17,9 +17,9 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
-import com.itfsw.mybatis.generator.plugins.utils.IncrementsPluginTools;
 import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
 import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
+import com.itfsw.mybatis.generator.plugins.utils.hook.IUpsertPluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
@@ -42,7 +42,7 @@ import java.util.List;
  * @time:2018/4/20 15:39
  * ---------------------------------------------------------------------------
  */
-public class SelectiveEnhancedPlugin extends BasePlugin {
+public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPluginHook {
 
     /**
      * {@inheritDoc}
@@ -53,12 +53,6 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
         // 插件使用前提是使用了ModelColumnPlugin插件
         if (!PluginTools.checkDependencyPlugin(getContext(), ModelColumnPlugin.class)) {
             warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件需配合" + ModelColumnPlugin.class.getTypeName() + "插件使用！");
-            return false;
-        }
-
-        // 和 OldSelectiveEnhancedPlugin 不能同时使用
-        if (PluginTools.checkDependencyPlugin(getContext(), OldSelectiveEnhancedPlugin.class)) {
-            warnings.add("itfsw:插件" + this.getClass().getTypeName() + "不能和" + OldSelectiveEnhancedPlugin.class.getTypeName() + "插件同时使用！");
             return false;
         }
 
@@ -164,12 +158,8 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
     @Override
     public boolean sqlMapInsertSelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
         // 清空
-        XmlElement answer = element;
-        answer.getElements().clear();
-        answer.getAttributes().clear();
-
+        XmlElement answer = new XmlElement("insert");
         answer.addAttribute(new Attribute("id", introspectedTable.getInsertSelectiveStatementId()));
-
         answer.addAttribute(new Attribute("parameterType", "map"));
 
         commentGenerator.addComment(answer);
@@ -196,65 +186,13 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
         sb.append(introspectedTable.getFullyQualifiedTableNameAtRuntime());
         answer.addElement(new TextElement(sb.toString()));
 
-        // selective
-        XmlElement insertChooseEle = new XmlElement("choose");
-        answer.addElement(insertChooseEle);
+        // columns
+        answer.addElement(this.generateInsertColumnSelective(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns())));
+        // values
+        answer.addElement(new TextElement("values"));
+        answer.addElement(this.generateInsertValuesSelective(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns())));
 
-        XmlElement insertWhenEle = new XmlElement("when");
-        insertWhenEle.addAttribute(new Attribute("test", "selective != null and selective.length > 0"));
-        insertChooseEle.addElement(insertWhenEle);
-
-        XmlElement insertForeachEle = new XmlElement("foreach");
-        insertForeachEle.addAttribute(new Attribute("collection", "selective"));
-        insertForeachEle.addAttribute(new Attribute("item", "column"));
-        insertForeachEle.addAttribute(new Attribute("open", "("));
-        insertForeachEle.addAttribute(new Attribute("separator", ","));
-        insertForeachEle.addAttribute(new Attribute("close", ")"));
-        insertForeachEle.addElement(new TextElement("${column.value}"));
-        insertWhenEle.addElement(insertForeachEle);
-
-        XmlElement insertOtherwiseEle = new XmlElement("otherwise");
-        insertOtherwiseEle.addElement(XmlElementGeneratorTools.generateKeysSelective(
-                ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()),
-                "record."
-        ));
-        insertChooseEle.addElement(insertOtherwiseEle);
-
-        XmlElement insertTrimElement = new XmlElement("trim");
-        insertTrimElement.addAttribute(new Attribute("prefix", "("));
-        insertTrimElement.addAttribute(new Attribute("suffix", ")"));
-        insertTrimElement.addAttribute(new Attribute("suffixOverrides", ","));
-        insertOtherwiseEle.addElement(insertTrimElement);
-
-
-        XmlElement valuesChooseEle = new XmlElement("choose");
-        answer.addElement(valuesChooseEle);
-
-        XmlElement valuesWhenEle = new XmlElement("when");
-        valuesWhenEle.addAttribute(new Attribute("test", "selective != null and selective.length > 0"));
-        valuesChooseEle.addElement(valuesWhenEle);
-
-        XmlElement valuesForeachEle = new XmlElement("foreach");
-        valuesForeachEle.addAttribute(new Attribute("collection", "selective"));
-        valuesForeachEle.addAttribute(new Attribute("item", "column"));
-        valuesForeachEle.addAttribute(new Attribute("open", "values ("));
-        valuesForeachEle.addAttribute(new Attribute("separator", ","));
-        valuesForeachEle.addAttribute(new Attribute("close", ")"));
-        valuesForeachEle.addElement(new TextElement("#{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
-        valuesWhenEle.addElement(valuesForeachEle);
-
-        XmlElement valuesOtherwiseEle = new XmlElement("otherwise");
-        valuesOtherwiseEle.addElement(XmlElementGeneratorTools.generateValuesSelective(
-                ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()),
-                "record."
-        ));
-        valuesChooseEle.addElement(valuesOtherwiseEle);
-
-        XmlElement valuesTrimElement = new XmlElement("trim");
-        valuesTrimElement.addAttribute(new Attribute("prefix", "values ("));
-        valuesTrimElement.addAttribute(new Attribute("suffix", ")"));
-        valuesTrimElement.addAttribute(new Attribute("suffixOverrides", ","));
-        valuesOtherwiseEle.addElement(valuesTrimElement);
+        XmlElementGeneratorTools.replaceXmlElement(element, answer);
 
         return super.sqlMapInsertSelectiveElementGenerated(element, introspectedTable);
     }
@@ -268,12 +206,8 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
      */
     @Override
     public boolean sqlMapUpdateByExampleSelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
-        IncrementsPluginTools incTools = IncrementsPluginTools.getTools(context, introspectedTable, warnings);
         // 清空
-        XmlElement answer = element;
-        answer.getElements().clear();
-        answer.getAttributes().clear();
-
+        XmlElement answer = new XmlElement("update");
         answer.addAttribute(new Attribute("id", introspectedTable.getUpdateByExampleSelectiveStatementId()));
         answer.addAttribute(new Attribute("parameterType", "map"));
 
@@ -286,45 +220,11 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
 
         // selective
         answer.addElement(new TextElement("SET"));
-        XmlElement setChooseEle = new XmlElement("choose");
-        answer.addElement(setChooseEle);
-
-        XmlElement setWhenEle = new XmlElement("when");
-        setWhenEle.addAttribute(new Attribute("test", "selective != null and selective.length > 0"));
-        setChooseEle.addElement(setWhenEle);
-
-        XmlElement setForeachEle = new XmlElement("foreach");
-        setForeachEle.addAttribute(new Attribute("collection", "selective"));
-        setForeachEle.addAttribute(new Attribute("item", "column"));
-        setForeachEle.addAttribute(new Attribute("separator", ","));
-        // 自增插件支持
-        if (incTools.support()) {
-            incTools.generateSetsSelectiveWithSelectiveEnhancedPlugin(setForeachEle);
-        } else {
-            setForeachEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
-        }
-        setWhenEle.addElement(setForeachEle);
-
-        XmlElement setOtherwiseEle = new XmlElement("otherwise");
-
-        // 自增插件支持
-        if (incTools.support()) {
-            setOtherwiseEle.addElement(incTools.generateSetsSelective(
-                    ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getAllColumns()),
-                    "record.",
-                    false
-
-            ));
-        } else {
-            setOtherwiseEle.addElement(XmlElementGeneratorTools.generateSetsSelective(
-                    ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getAllColumns()),
-                    "record."
-            ));
-        }
-
-        setChooseEle.addElement(setOtherwiseEle);
+        answer.addElement(this.generateSetsSelective(ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getAllColumns())));
 
         answer.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
+
+        XmlElementGeneratorTools.replaceXmlElement(element, answer);
 
         return super.sqlMapUpdateByExampleSelectiveElementGenerated(element, introspectedTable);
     }
@@ -338,12 +238,8 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
      */
     @Override
     public boolean sqlMapUpdateByPrimaryKeySelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
-        IncrementsPluginTools incTools = IncrementsPluginTools.getTools(context, introspectedTable, warnings);
         // 清空
-        XmlElement answer = element;
-        answer.getElements().clear();
-        answer.getAttributes().clear();
-
+        XmlElement answer = new XmlElement("update");
         answer.addAttribute(new Attribute("id", introspectedTable.getUpdateByPrimaryKeySelectiveStatementId()));
         answer.addAttribute(new Attribute("parameterType", "map"));
 
@@ -357,44 +253,182 @@ public class SelectiveEnhancedPlugin extends BasePlugin {
 
         // selective
         answer.addElement(new TextElement("SET"));
-        XmlElement setChooseEle = new XmlElement("choose");
-        answer.addElement(setChooseEle);
-
-        XmlElement setWhenEle = new XmlElement("when");
-        setWhenEle.addAttribute(new Attribute("test", "selective != null and selective.length > 0"));
-        setChooseEle.addElement(setWhenEle);
-
-        XmlElement setForeachEle = new XmlElement("foreach");
-        setForeachEle.addAttribute(new Attribute("collection", "selective"));
-        setForeachEle.addAttribute(new Attribute("item", "column"));
-        setForeachEle.addAttribute(new Attribute("separator", ","));
-        // 自增插件支持
-        if (incTools.support()) {
-            incTools.generateSetsSelectiveWithSelectiveEnhancedPlugin(setForeachEle);
-        } else {
-            setForeachEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
-        }
-        setWhenEle.addElement(setForeachEle);
-
-        XmlElement setOtherwiseEle = new XmlElement("otherwise");
-        setChooseEle.addElement(setOtherwiseEle);
-        // 自增插件支持
-        if (incTools.support()) {
-            setOtherwiseEle.addElement(incTools.generateSetsSelective(
-                    ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getNonPrimaryKeyColumns()),
-                    "record.",
-                    false
-
-            ));
-        } else {
-            setOtherwiseEle.addElement(XmlElementGeneratorTools.generateSetsSelective(
-                    ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getNonPrimaryKeyColumns()),
-                    "record."
-            ));
-        }
+        answer.addElement(this.generateSetsSelective(ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getAllColumns())));
 
         XmlElementGeneratorTools.generateWhereByPrimaryKeyTo(answer, introspectedTable.getPrimaryKeyColumns(), "record.");
 
+        XmlElementGeneratorTools.replaceXmlElement(element, answer);
         return super.sqlMapUpdateByPrimaryKeySelectiveElementGenerated(element, introspectedTable);
+    }
+
+
+    // =============================================== IUpsertPluginHook ===================================================
+
+    /**
+     * upsertSelective 方法
+     * @param method
+     * @param interfaze
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public boolean clientUpsertSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        // @Param("record")
+        method.getParameters().get(0).addAnnotation("@Param(\"record\")");
+        // column枚举
+        // 找出全字段对应的Model
+        FullyQualifiedJavaType fullFieldModel = introspectedTable.getRules().calculateAllFieldsClass();
+        FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
+        method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
+        return true;
+    }
+
+    /**
+     * upsertByExampleSelective 方法
+     * @param method
+     * @param interfaze
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public boolean clientUpsertByExampleSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        // column枚举
+        // 找出全字段对应的Model
+        FullyQualifiedJavaType fullFieldModel = introspectedTable.getRules().calculateAllFieldsClass();
+        FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
+        method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
+        return true;
+    }
+
+    /**
+     * upsertSelective xml
+     * @param element
+     * @param columns
+     * @param insertColumnsEle
+     * @param insertValuesEle
+     * @param setsEle
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public boolean sqlMapUpsertSelectiveElementGenerated(XmlElement element, List<IntrospectedColumn> columns, XmlElement insertColumnsEle, XmlElement insertValuesEle, XmlElement setsEle, IntrospectedTable introspectedTable) {
+        // parameterType
+        XmlElementGeneratorTools.replaceAttribute(element, new Attribute("parameterType", "map"));
+
+        // 替换insert column
+        XmlElementGeneratorTools.replaceXmlElement(insertColumnsEle, this.generateInsertColumnSelective(columns));
+
+        // 替换insert values
+        XmlElementGeneratorTools.replaceXmlElement(insertValuesEle, this.generateInsertValuesSelective(columns));
+
+        // 替换update set
+        XmlElementGeneratorTools.replaceXmlElement(setsEle, this.generateSetsSelective(columns));
+
+        return true;
+    }
+
+    /**
+     * upsertByExampleSelective xml
+     * @param element
+     * @param columns
+     * @param insertColumnsEle
+     * @param insertValuesEle
+     * @param setsEle
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public boolean sqlMapUpsertByExampleSelectiveElementGenerated(XmlElement element, List<IntrospectedColumn> columns, XmlElement insertColumnsEle, XmlElement insertValuesEle, XmlElement setsEle, IntrospectedTable introspectedTable) {
+        return false;
+    }
+
+    // ====================================================== 一些私有节点生成方法 =========================================================
+
+    /**
+     * insert column selective
+     * @param columns
+     * @return
+     */
+    private XmlElement generateInsertColumnSelective(List<IntrospectedColumn> columns) {
+        XmlElement insertColumnsChooseEle = new XmlElement("choose");
+
+        XmlElement insertWhenEle = new XmlElement("when");
+        insertWhenEle.addAttribute(new Attribute("test", "selective != null and selective.length > 0"));
+        insertColumnsChooseEle.addElement(insertWhenEle);
+
+        XmlElement insertForeachEle = new XmlElement("foreach");
+        insertForeachEle.addAttribute(new Attribute("collection", "selective"));
+        insertForeachEle.addAttribute(new Attribute("item", "column"));
+        insertForeachEle.addAttribute(new Attribute("open", "("));
+        insertForeachEle.addAttribute(new Attribute("separator", ","));
+        insertForeachEle.addAttribute(new Attribute("close", ")"));
+        insertForeachEle.addElement(new TextElement("${column.value}"));
+        insertWhenEle.addElement(insertForeachEle);
+
+        XmlElement insertOtherwiseEle = new XmlElement("otherwise");
+        insertOtherwiseEle.addElement(XmlElementGeneratorTools.generateKeysSelective(columns, "record."));
+        insertColumnsChooseEle.addElement(insertOtherwiseEle);
+
+        XmlElement insertTrimElement = new XmlElement("trim");
+        insertTrimElement.addAttribute(new Attribute("prefix", "("));
+        insertTrimElement.addAttribute(new Attribute("suffix", ")"));
+        insertTrimElement.addAttribute(new Attribute("suffixOverrides", ","));
+        insertOtherwiseEle.addElement(insertTrimElement);
+
+        return insertColumnsChooseEle;
+    }
+
+    /**
+     * insert column selective
+     * @param columns
+     * @return
+     */
+    private XmlElement generateInsertValuesSelective(List<IntrospectedColumn> columns) {
+        XmlElement insertValuesChooseEle = new XmlElement("choose");
+
+        XmlElement valuesWhenEle = new XmlElement("when");
+        valuesWhenEle.addAttribute(new Attribute("test", "selective != null and selective.length > 0"));
+        insertValuesChooseEle.addElement(valuesWhenEle);
+
+        XmlElement valuesForeachEle = new XmlElement("foreach");
+        valuesForeachEle.addAttribute(new Attribute("collection", "selective"));
+        valuesForeachEle.addAttribute(new Attribute("item", "column"));
+        valuesForeachEle.addAttribute(new Attribute("open", "("));
+        valuesForeachEle.addAttribute(new Attribute("separator", ","));
+        valuesForeachEle.addAttribute(new Attribute("close", ")"));
+        valuesForeachEle.addElement(new TextElement("#{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+        valuesWhenEle.addElement(valuesForeachEle);
+
+        XmlElement valuesOtherwiseEle = new XmlElement("otherwise");
+        insertValuesChooseEle.addElement(valuesOtherwiseEle);
+        valuesOtherwiseEle.addElement(XmlElementGeneratorTools.generateValuesSelective(columns, "record."));
+
+        return insertValuesChooseEle;
+    }
+
+    /**
+     * sets selective
+     * @param columns
+     * @return
+     */
+    private XmlElement generateSetsSelective(List<IntrospectedColumn> columns) {
+        XmlElement setsChooseEle = new XmlElement("choose");
+
+        XmlElement setWhenEle = new XmlElement("when");
+        setWhenEle.addAttribute(new Attribute("test", "selective != null and selective.length > 0"));
+        setsChooseEle.addElement(setWhenEle);
+
+        XmlElement setForeachEle = new XmlElement("foreach");
+        setWhenEle.addElement(setForeachEle);
+        setForeachEle.addAttribute(new Attribute("collection", "selective"));
+        setForeachEle.addAttribute(new Attribute("item", "column"));
+        setForeachEle.addAttribute(new Attribute("separator", ","));
+        setForeachEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+
+        XmlElement setOtherwiseEle = new XmlElement("otherwise");
+        setOtherwiseEle.addElement(XmlElementGeneratorTools.generateSetsSelective(columns, "record."));
+        setsChooseEle.addElement(setOtherwiseEle);
+
+        return setsChooseEle;
     }
 }

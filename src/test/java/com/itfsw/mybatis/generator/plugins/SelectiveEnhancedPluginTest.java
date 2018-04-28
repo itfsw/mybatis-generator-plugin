@@ -42,7 +42,7 @@ public class SelectiveEnhancedPluginTest {
      */
     @BeforeClass
     public static void init() throws SQLException, IOException, ClassNotFoundException {
-        DBHelper.createDB("scripts/OldSelectiveEnhancedPlugin/init.sql");
+        DBHelper.createDB("scripts/SelectiveEnhancedPlugin/init.sql");
     }
 
     /**
@@ -54,11 +54,6 @@ public class SelectiveEnhancedPluginTest {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/SelectiveEnhancedPlugin/mybatis-generator-without-ModelColumnPlugin.xml");
         tool.generate();
         Assert.assertEquals(tool.getWarnings().get(0), "itfsw:插件com.itfsw.mybatis.generator.plugins.SelectiveEnhancedPlugin插件需配合com.itfsw.mybatis.generator.plugins.ModelColumnPlugin插件使用！");
-
-        // 2. 同时配置了OldSelectiveEnhancedPlugin插件
-        tool = MyBatisGeneratorTool.create("scripts/SelectiveEnhancedPlugin/mybatis-generator-with-OldSelectiveEnhancedPlugin.xml");
-        tool.generate();
-        Assert.assertEquals(tool.getWarnings().get(0), "itfsw:插件com.itfsw.mybatis.generator.plugins.SelectiveEnhancedPlugin不能和com.itfsw.mybatis.generator.plugins.OldSelectiveEnhancedPlugin插件同时使用！");
     }
 
     /**

@@ -133,6 +133,58 @@ public class XmlElementGeneratorTools {
     }
 
     /**
+     * 移除 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
+     * @param element
+     * @param introspectedTable
+     */
+    public static void removeUseGeneratedKeys(XmlElement element, IntrospectedTable introspectedTable) {
+        GeneratedKey gk = introspectedTable.getGeneratedKey();
+        if (gk != null) {
+            removeAttribute(element, "useGeneratedKeys");
+            removeAttribute(element, "keyProperty");
+            removeAttribute(element, "keyColumn");
+        }
+    }
+
+    /**
+     * 移除属性
+     * @param element
+     * @param name
+     */
+    public static void removeAttribute(XmlElement element, String name){
+        Iterator<Attribute> iterator = element.getAttributes().iterator();
+        while (iterator.hasNext()) {
+            Attribute attribute = iterator.next();
+            if (attribute.getName().equals(name)) {
+                iterator.remove();
+            }
+        }
+    }
+
+    /**
+     * 替换属性
+     * @param element
+     * @param attribute
+     */
+    public static void replaceAttribute(XmlElement element, Attribute attribute){
+        removeAttribute(element, attribute.getName());
+        element.addAttribute(attribute);
+    }
+
+    /**
+     * xmlElement 替换
+     * @param srcEle
+     * @param destEle
+     */
+    public static void replaceXmlElement(XmlElement srcEle, XmlElement destEle){
+        srcEle.setName(destEle.getName());
+        srcEle.getAttributes().clear();
+        srcEle.getAttributes().addAll(destEle.getAttributes());
+        srcEle.getElements().clear();
+        srcEle.getElements().addAll(destEle.getElements());
+    }
+
+    /**
      * 生成keys Ele
      * @param columns
      * @return
@@ -156,7 +208,7 @@ public class XmlElementGeneratorTools {
      * @param columns
      * @return
      */
-    public static Element generateKeysSelective(List<IntrospectedColumn> columns) {
+    public static XmlElement generateKeysSelective(List<IntrospectedColumn> columns) {
         return generateKeysSelective(columns, null);
     }
 
@@ -166,7 +218,7 @@ public class XmlElementGeneratorTools {
      * @param prefix
      * @return
      */
-    public static Element generateKeysSelective(List<IntrospectedColumn> columns, String prefix) {
+    public static XmlElement generateKeysSelective(List<IntrospectedColumn> columns, String prefix) {
         return generateKeysSelective(columns, prefix, true);
     }
 
@@ -216,7 +268,7 @@ public class XmlElementGeneratorTools {
      * @param columns
      * @return
      */
-    public static Element generateValuesSelective(List<IntrospectedColumn> columns) {
+    public static XmlElement generateValuesSelective(List<IntrospectedColumn> columns) {
         return generateValuesSelective(columns, null);
     }
 
@@ -226,7 +278,7 @@ public class XmlElementGeneratorTools {
      * @param prefix
      * @return
      */
-    public static Element generateValuesSelective(List<IntrospectedColumn> columns, String prefix) {
+    public static XmlElement generateValuesSelective(List<IntrospectedColumn> columns, String prefix) {
         return generateValuesSelective(columns, prefix, true);
     }
 

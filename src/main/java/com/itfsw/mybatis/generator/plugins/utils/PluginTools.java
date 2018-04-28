@@ -16,6 +16,7 @@
 
 package com.itfsw.mybatis.generator.plugins.utils;
 
+import com.itfsw.mybatis.generator.plugins.utils.hook.HookAggregator;
 import org.mybatis.generator.config.Context;
 import org.mybatis.generator.config.PluginConfiguration;
 import org.slf4j.Logger;
@@ -35,6 +36,16 @@ import java.util.List;
  */
 public class PluginTools {
     private static final Logger logger = LoggerFactory.getLogger(PluginTools.class);
+
+    /**
+     * 获取挂载
+     * @param clazz
+     * @param <T>
+     * @return
+     */
+    public static <T> T getHook(Class<T> clazz){
+        return (T) HookAggregator.getInstance();
+    }
 
     /**
      * 检查插件依赖

@@ -16,14 +16,16 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.*;
+import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
+import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
+import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
+import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
+import com.itfsw.mybatis.generator.plugins.utils.hook.IUpsertPluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
-import org.mybatis.generator.api.dom.OutputUtilities;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.*;
 import org.mybatis.generator.codegen.mybatis3.ListUtilities;
-import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 import org.mybatis.generator.internal.util.StringUtility;
 
 import java.util.Arrays;
@@ -50,7 +52,6 @@ public class UpsertPlugin extends BasePlugin {
 
     public static final String PRO_ALLOW_MULTI_QUERIES = "allowMultiQueries";   // property allowMultiQueries
     private boolean allowMultiQueries = false;  // 是否允许多sql提交
-    private boolean withSelectiveEnhancedPlugin = false;    // 是否启用了Selective增强插件
 
     /**
      * {@inheritDoc}
@@ -72,9 +73,6 @@ public class UpsertPlugin extends BasePlugin {
             // 提示用户注意信息
             warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件您开启了allowMultiQueries支持，注意在jdbc url 配置中增加“allowMultiQueries=true”支持（不怎么建议使用该功能，开启多sql提交会增加sql注入的风险，请确保你所有sql都使用MyBatis书写，请不要使用statement进行sql提交）！");
         }
-
-        // 是否启用了Selective增强插件
-        this.withSelectiveEnhancedPlugin = PluginTools.checkDependencyPlugin(context, SelectiveEnhancedPlugin.class);
 
         return super.validate(warnings);
     }
@@ -122,20 +120,16 @@ public class UpsertPlugin extends BasePlugin {
         Method mUpsertSelective = JavaElementGeneratorTools.generateMethod(
                 METHOD_UPSERT_SELECTIVE,
                 JavaVisibility.DEFAULT,
-                FullyQualifiedJavaType.getIntInstance()
+                FullyQualifiedJavaType.getIntInstance(),
+                new Parameter(fullFieldModel, "record")
         );
-        if (withSelectiveEnhancedPlugin) {
-            mUpsertSelective.addParameter(new Parameter(fullFieldModel, "record", "@Param(\"record\")"));
-            // column枚举
-            FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
-            mUpsertSelective.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
-        } else {
-            mUpsertSelective.addParameter(new Parameter(fullFieldModel, "record"));
-        }
         commentGenerator.addGeneralMethodComment(mUpsertSelective, introspectedTable);
-        // interface 增加方法
-        interfaze.addMethod(mUpsertSelective);
-        logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertSelective方法。");
+        // hook
+        if (PluginTools.getHook(IUpsertPluginHook.class).clientUpsertSelectiveMethodGenerated(mUpsertSelective, interfaze, introspectedTable)) {
+            // interface 增加方法
+            interfaze.addMethod(mUpsertSelective);
+            logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertSelective方法。");
+        }
 
         if (this.allowMultiQueries) {
             // ====================================== upsertByExample ======================================
@@ -175,15 +169,13 @@ public class UpsertPlugin extends BasePlugin {
                     new Parameter(introspectedTable.getRules().calculateAllFieldsClass(), "record", "@Param(\"record\")"),
                     new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")")
             );
-            if (withSelectiveEnhancedPlugin) {
-                // column枚举
-                FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
-                mUpsertByExampleSelective.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
-            }
             commentGenerator.addGeneralMethodComment(mUpsertByExampleSelective, introspectedTable);
-            // interface 增加方法
-            interfaze.addMethod(mUpsertByExampleSelective);
-            logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertByExampleSelective方法。");
+            // hook
+            if (PluginTools.getHook(IUpsertPluginHook.class).clientUpsertByExampleSelectiveMethodGenerated(mUpsertByExampleSelective, interfaze, introspectedTable)) {
+                // interface 增加方法
+                interfaze.addMethod(mUpsertByExampleSelective);
+                logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertByExampleSelective方法。");
+            }
         }
 
         return super.clientGenerated(interfaze, topLevelClass, introspectedTable);
@@ -215,239 +207,73 @@ public class UpsertPlugin extends BasePlugin {
     private void generateXmlElementWithSelective(Document document, IntrospectedTable introspectedTable) {
         List<IntrospectedColumn> columns = ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getAllColumns());
 
-        if (withSelectiveEnhancedPlugin) {
-            // ====================================== upsertSelective ======================================
-            XmlElement eleUpsertSelective = new XmlElement("insert");
-            eleUpsertSelective.addAttribute(new Attribute("id", METHOD_UPSERT_SELECTIVE));
-            eleUpsertSelective.addAttribute(new Attribute("parameterType", "map"));
+        // ====================================== upsertSelective ======================================
+        XmlElement insertEle = new XmlElement("insert");
+        insertEle.addAttribute(new Attribute("id", METHOD_UPSERT_SELECTIVE));
+        // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
+        commentGenerator.addComment(insertEle);
 
-            // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
-            commentGenerator.addComment(eleUpsertSelective);
+        // 参数类型
+        insertEle.addAttribute(new Attribute("parameterType", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
 
-            // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-            XmlElementGeneratorTools.useGeneratedKeys(eleUpsertSelective, introspectedTable, "record.");
+        // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
+        XmlElementGeneratorTools.useGeneratedKeys(insertEle, introspectedTable);
 
-            // insert
-            eleUpsertSelective.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
+        // insert
+        insertEle.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
+        XmlElement insertColumnsEle = XmlElementGeneratorTools.generateKeysSelective(columns);
+        insertEle.addElement(insertColumnsEle);
+        insertEle.addElement(new TextElement("values"));
+        XmlElement insertValuesEle = XmlElementGeneratorTools.generateValuesSelective(columns);
+        insertEle.addElement(insertValuesEle);
+        insertEle.addElement(new TextElement("on duplicate key update "));
+        // set
+        XmlElement setsEle = XmlElementGeneratorTools.generateSetsSelective(columns);
+        insertEle.addElement(setsEle);
 
-            // selective
-            XmlElement insertChooseEle = new XmlElement("choose");
-            eleUpsertSelective.addElement(insertChooseEle);
-
-            XmlElement insertWhenEle = new XmlElement("when");
-            insertWhenEle.addAttribute(new Attribute("test", "selective != null and selective.length > 0"));
-            insertChooseEle.addElement(insertWhenEle);
-
-            XmlElement insertForeachEle = new XmlElement("foreach");
-            insertForeachEle.addAttribute(new Attribute("collection", "selective"));
-            insertForeachEle.addAttribute(new Attribute("item", "column"));
-            insertForeachEle.addAttribute(new Attribute("open", "("));
-            insertForeachEle.addAttribute(new Attribute("separator", ","));
-            insertForeachEle.addAttribute(new Attribute("close", ")"));
-            insertForeachEle.addElement(new TextElement("${column.value}"));
-            insertWhenEle.addElement(insertForeachEle);
-
-            XmlElement insertOtherwiseEle = new XmlElement("otherwise");
-            insertOtherwiseEle.addElement(XmlElementGeneratorTools.generateKeysSelective(columns, "record."));
-            insertChooseEle.addElement(insertOtherwiseEle);
-
-            XmlElement insertTrimElement = new XmlElement("trim");
-            insertTrimElement.addAttribute(new Attribute("prefix", "("));
-            insertTrimElement.addAttribute(new Attribute("suffix", ")"));
-            insertTrimElement.addAttribute(new Attribute("suffixOverrides", ","));
-            insertOtherwiseEle.addElement(insertTrimElement);
-
-            eleUpsertSelective.addElement(new TextElement("values"));
-
-            XmlElement valuesChooseEle = new XmlElement("choose");
-            eleUpsertSelective.addElement(valuesChooseEle);
-
-            XmlElement valuesWhenEle = new XmlElement("when");
-            valuesWhenEle.addAttribute(new Attribute("test", "selective != null and selective.length > 0"));
-            valuesChooseEle.addElement(valuesWhenEle);
-
-            XmlElement valuesForeachEle = new XmlElement("foreach");
-            valuesForeachEle.addAttribute(new Attribute("collection", "selective"));
-            valuesForeachEle.addAttribute(new Attribute("item", "column"));
-            valuesForeachEle.addAttribute(new Attribute("open", "("));
-            valuesForeachEle.addAttribute(new Attribute("separator", ","));
-            valuesForeachEle.addAttribute(new Attribute("close", ")"));
-            valuesForeachEle.addElement(new TextElement("#{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
-            valuesWhenEle.addElement(valuesForeachEle);
-
-            XmlElement valuesOtherwiseEle = new XmlElement("otherwise");
-            valuesChooseEle.addElement(valuesOtherwiseEle);
-            valuesOtherwiseEle.addElement(XmlElementGeneratorTools.generateValuesSelective(columns, "record."));
-
-            eleUpsertSelective.addElement(new TextElement("on duplicate key update "));
-
-            // update selective
-            XmlElement setChooseEle = new XmlElement("choose");
-            eleUpsertSelective.addElement(setChooseEle);
-
-            XmlElement setWhenEle = new XmlElement("when");
-            setWhenEle.addAttribute(new Attribute("test", "selective != null and selective.length > 0"));
-            setChooseEle.addElement(setWhenEle);
-
-            XmlElement setForeachEle = new XmlElement("foreach");
-            setWhenEle.addElement(setForeachEle);
-            setForeachEle.addAttribute(new Attribute("collection", "selective"));
-            setForeachEle.addAttribute(new Attribute("item", "column"));
-            setForeachEle.addAttribute(new Attribute("separator", ","));
-            // set 操作增加增量插件支持
-            IncrementsPluginTools incTools = IncrementsPluginTools.getTools(context, introspectedTable, warnings);
-            if (incTools.support()) {
-                incTools.generateSetsSelectiveWithSelectiveEnhancedPlugin(setForeachEle);
-            } else {
-                setForeachEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
-            }
-
-            XmlElement setOtherwiseEle = new XmlElement("otherwise");
-            // set 操作增加增量插件支持
-            this.setsSupportIncrementsPlugin(setOtherwiseEle, "record.", true, columns, introspectedTable);
-            setChooseEle.addElement(setOtherwiseEle);
-
-
-            document.getRootElement().addElement(eleUpsertSelective);
+        // hook
+        if (PluginTools.getHook(IUpsertPluginHook.class).sqlMapUpsertSelectiveElementGenerated(insertEle, columns, insertColumnsEle, insertValuesEle, setsEle, introspectedTable)) {
+            document.getRootElement().addElement(insertEle);
             logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsertSelective实现方法。");
-            if (this.allowMultiQueries) {
-                // ====================================== upsertByExampleSelective ======================================
-                XmlElement updateEle = new XmlElement("update");
-                updateEle.addAttribute(new Attribute("id", METHOD_UPSERT_BY_EXAMPLE_SELECTIVE));
-                // 参数类型
-                updateEle.addAttribute(new Attribute("parameterType", "map"));
-                // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
-                commentGenerator.addComment(updateEle);
+        }
 
-                // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-                // XmlElementGeneratorTools.useGeneratedKeys(updateEle, introspectedTable, "record.");
-
-                // update
-                updateEle.addElement(new TextElement("update " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
-                updateEle.addElement(new TextElement("set"));
-
-                // selective
-                setChooseEle = new XmlElement("choose");
-                updateEle.addElement(setChooseEle);
-
-                setWhenEle = new XmlElement("when");
-                setWhenEle.addAttribute(new Attribute("test", "selective != null and selective.length > 0"));
-                setChooseEle.addElement(setWhenEle);
-
-                setForeachEle = new XmlElement("foreach");
-                setWhenEle.addElement(setForeachEle);
-                setForeachEle.addAttribute(new Attribute("collection", "selective"));
-                setForeachEle.addAttribute(new Attribute("item", "column"));
-                setForeachEle.addAttribute(new Attribute("separator", ","));
-                // set 操作增加增量插件支持
-                if (incTools.support()) {
-                    incTools.generateSetsSelectiveWithSelectiveEnhancedPlugin(setForeachEle);
-                } else {
-                    setForeachEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
-                }
-
-                setOtherwiseEle = new XmlElement("otherwise");
-
-                // set 操作增加增量插件支持
-                this.setsSupportIncrementsPlugin(setOtherwiseEle, "record.", true, columns, introspectedTable);
-                setChooseEle.addElement(setOtherwiseEle);
-
-                // update where
-                updateEle.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
-
-                // multiQueries
-                updateEle.addElement(new TextElement(";"));
-
-
-                // insert
-                updateEle.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-
-                // selective
-                insertChooseEle = new XmlElement("choose");
-                updateEle.addElement(insertChooseEle);
-
-                insertWhenEle = new XmlElement("when");
-                insertWhenEle.addAttribute(new Attribute("test", "selective != null and selective.length > 0"));
-                insertChooseEle.addElement(insertWhenEle);
-
-                insertForeachEle = new XmlElement("foreach");
-                insertForeachEle.addAttribute(new Attribute("collection", "selective"));
-                insertForeachEle.addAttribute(new Attribute("item", "column"));
-                insertForeachEle.addAttribute(new Attribute("open", "("));
-                insertForeachEle.addAttribute(new Attribute("separator", ","));
-                insertForeachEle.addAttribute(new Attribute("close", ")"));
-                insertForeachEle.addElement(new TextElement("${column.value}"));
-                insertWhenEle.addElement(insertForeachEle);
-
-                insertOtherwiseEle = new XmlElement("otherwise");
-                insertOtherwiseEle.addElement(XmlElementGeneratorTools.generateKeysSelective(columns, "record."));
-                insertChooseEle.addElement(insertOtherwiseEle);
-
-                insertTrimElement = new XmlElement("trim");
-                insertTrimElement.addAttribute(new Attribute("prefix", "("));
-                insertTrimElement.addAttribute(new Attribute("suffix", ")"));
-                insertTrimElement.addAttribute(new Attribute("suffixOverrides", ","));
-                insertOtherwiseEle.addElement(insertTrimElement);
-
-                this.generateExistsClause(introspectedTable, updateEle, true, columns);
-
-                document.getRootElement().addElement(updateEle);
-                logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsertSelective实现方法。");
-            }
-        } else {
-            // ====================================== upsertSelective ======================================
-            XmlElement eleUpsertSelective = new XmlElement("insert");
-            eleUpsertSelective.addAttribute(new Attribute("id", METHOD_UPSERT_SELECTIVE));
-            // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
-            commentGenerator.addComment(eleUpsertSelective);
-
+        if (this.allowMultiQueries) {
+            // ====================================== upsertByExampleSelective ======================================
+            XmlElement updateEle = new XmlElement("update");
+            updateEle.addAttribute(new Attribute("id", METHOD_UPSERT_BY_EXAMPLE_SELECTIVE));
             // 参数类型
-            eleUpsertSelective.addAttribute(new Attribute("parameterType", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
+            updateEle.addAttribute(new Attribute("parameterType", "map"));
+            // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
+            commentGenerator.addComment(updateEle);
 
             // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-            XmlElementGeneratorTools.useGeneratedKeys(eleUpsertSelective, introspectedTable);
+            // XmlElementGeneratorTools.useGeneratedKeys(updateEle, introspectedTable, "record.");
+            // upsertByExample 先执行的update，所以没法获取id
+
+            // update
+            updateEle.addElement(new TextElement("update " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
+            updateEle.addElement(new TextElement("set"));
+            // set 操作增加增量插件支持
+            setsEle = XmlElementGeneratorTools.generateSetsSelective(columns, "record.");
+            updateEle.addElement(setsEle);
+
+            // update where
+            updateEle.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
+
+            // multiQueries
+            updateEle.addElement(new TextElement(";"));
 
             // insert
-            eleUpsertSelective.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-            eleUpsertSelective.addElement(XmlElementGeneratorTools.generateKeysSelective(columns));
-            eleUpsertSelective.addElement(new TextElement("values"));
-            eleUpsertSelective.addElement(XmlElementGeneratorTools.generateValuesSelective(columns));
-            eleUpsertSelective.addElement(new TextElement("on duplicate key update "));
-            // set 操作增加增量插件支持
-            this.setsSupportIncrementsPlugin(eleUpsertSelective, null, true, columns, introspectedTable);
+            updateEle.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
+            insertColumnsEle = XmlElementGeneratorTools.generateKeysSelective(columns, "record.");
+            updateEle.addElement(insertColumnsEle);
 
-            document.getRootElement().addElement(eleUpsertSelective);
-            logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsertSelective实现方法。");
-            if (this.allowMultiQueries) {
-                // ====================================== upsertByExampleSelective ======================================
-                XmlElement updateEle = new XmlElement("update");
-                updateEle.addAttribute(new Attribute("id", METHOD_UPSERT_BY_EXAMPLE_SELECTIVE));
-                // 参数类型
-                updateEle.addAttribute(new Attribute("parameterType", "map"));
-                // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
-                commentGenerator.addComment(updateEle);
+            insertValuesEle = XmlElementGeneratorTools.generateValuesSelective(columns, "record.", false);
+            // 查询值
+            this.generateExistsClause(introspectedTable, updateEle, Arrays.asList(insertValuesEle));
 
-                // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-                // XmlElementGeneratorTools.useGeneratedKeys(updateEle, introspectedTable, "record.");
-                // upsertByExample 先执行的update，所以没法获取id
-
-                // update
-                updateEle.addElement(new TextElement("update " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
-                updateEle.addElement(new TextElement("set"));
-                // set 操作增加增量插件支持
-                this.setsSupportIncrementsPlugin(updateEle, "record.", true, columns, introspectedTable);
-
-                // update where
-                updateEle.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
-
-                // multiQueries
-                updateEle.addElement(new TextElement(";"));
-
-                // insert
-                updateEle.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-                updateEle.addElement(XmlElementGeneratorTools.generateKeysSelective(columns, "record."));
-                this.generateExistsClause(introspectedTable, updateEle, true, columns);
-
+            // hook
+            if (PluginTools.getHook(IUpsertPluginHook.class).sqlMapUpsertByExampleSelectiveElementGenerated(updateEle, columns, insertColumnsEle, insertValuesEle, setsEle, introspectedTable)) {
                 document.getRootElement().addElement(updateEle);
                 logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsertSelective实现方法。");
             }
@@ -478,16 +304,18 @@ public class UpsertPlugin extends BasePlugin {
 
         // insert
         insertEle.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-        for (Element element : this.generateKeys(columns)) {
+        for (Element element : XmlElementGeneratorTools.generateKeys(columns)) {
             insertEle.addElement(element);
         }
         insertEle.addElement(new TextElement("values"));
-        for (Element element : this.generateValues(columns)) {
+        for (Element element : XmlElementGeneratorTools.generateValues(columns)) {
             insertEle.addElement(element);
         }
         insertEle.addElement(new TextElement("on duplicate key update "));
-        // set 操作增加增量插件支持
-        this.setsSupportIncrementsPlugin(insertEle, null, false, columns, introspectedTable);
+        // set
+        for (Element set : XmlElementGeneratorTools.generateSets(columns)) {
+            insertEle.addElement(set);
+        }
 
         document.getRootElement().addElement(insertEle);
         logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsert实现方法。");
@@ -508,8 +336,10 @@ public class UpsertPlugin extends BasePlugin {
             // update
             updateEle.addElement(new TextElement("update " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
             updateEle.addElement(new TextElement("set"));
-            // set 操作增加增量插件支持
-            this.setsSupportIncrementsPlugin(updateEle, "record.", false, columns, introspectedTable);
+            // set
+            for (Element set : XmlElementGeneratorTools.generateSets(columns, "record.")) {
+                updateEle.addElement(set);
+            }
 
             // update where
             updateEle.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
@@ -519,42 +349,13 @@ public class UpsertPlugin extends BasePlugin {
 
             // insert
             updateEle.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-            for (Element element : this.generateKeys(columns, "record.")) {
+            for (Element element : XmlElementGeneratorTools.generateKeys(columns)) {
                 updateEle.addElement(element);
             }
-            this.generateExistsClause(introspectedTable, updateEle, false, columns);
+            this.generateExistsClause(introspectedTable, updateEle, XmlElementGeneratorTools.generateValues(columns, "record.", false));
 
             document.getRootElement().addElement(updateEle);
             logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsertByExample实现方法。");
-        }
-    }
-
-    /**
-     * sets 节点整合 IncrementsPlugin
-     * @param element
-     * @param prefix
-     * @param selective
-     * @param columns
-     * @param introspectedTable
-     */
-    private void setsSupportIncrementsPlugin(XmlElement element, String prefix, boolean selective, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
-        IncrementsPluginTools incTools = IncrementsPluginTools.getTools(context, introspectedTable, warnings);
-        if (incTools.support()) {
-            if (selective) {
-                element.addElement(incTools.generateSetsSelective(columns, prefix));
-            } else {
-                for (Element ele : this.generateCommColumns(columns, prefix, false, 4, introspectedTable)) {
-                    element.addElement(ele);
-                }
-            }
-        } else {
-            if (selective) {
-                element.addElement(XmlElementGeneratorTools.generateSetsSelective(columns, prefix));
-            } else {
-                for (Element ele : this.generateSets(columns, prefix)) {
-                    element.addElement(ele);
-                }
-            }
         }
     }
 
@@ -563,43 +364,15 @@ public class UpsertPlugin extends BasePlugin {
      * +635
      * @param introspectedTable
      * @param element
-     * @param selective
-     * @param columns
+     * @param values
      */
-    private void generateExistsClause(IntrospectedTable introspectedTable, XmlElement element, boolean selective, List<IntrospectedColumn> columns) {
+    private void generateExistsClause(IntrospectedTable introspectedTable, XmlElement element, List<Element> values) {
         element.addElement(new TextElement("select"));
-        if (selective) {
-            if (this.withSelectiveEnhancedPlugin) {
-                // selective
-                XmlElement chooseEle = new XmlElement("choose");
-                element.addElement(chooseEle);
 
-                XmlElement selectWhenEle = new XmlElement("when");
-                selectWhenEle.addAttribute(new Attribute("test", "selective != null and selective.length > 0"));
-                chooseEle.addElement(selectWhenEle);
-
-                XmlElement valuesForeachEle = new XmlElement("foreach");
-                valuesForeachEle.addAttribute(new Attribute("collection", "selective"));
-                valuesForeachEle.addAttribute(new Attribute("item", "column"));
-                valuesForeachEle.addAttribute(new Attribute("separator", ","));
-                valuesForeachEle.addElement(new TextElement("#{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
-                selectWhenEle.addElement(valuesForeachEle);
-
-                XmlElement selectOtherwiseEle = new XmlElement("otherwise");
-                selectOtherwiseEle.addElement(XmlElementGeneratorTools.generateValuesSelective(columns, "record.", false));
-                chooseEle.addElement(selectOtherwiseEle);
-
-                XmlElement valuesTrimElement = new XmlElement("trim");
-                valuesTrimElement.addAttribute(new Attribute("suffixOverrides", ","));
-                selectOtherwiseEle.addElement(valuesTrimElement);
-            } else {
-                element.addElement(XmlElementGeneratorTools.generateValuesSelective(columns, "record.", false));
-            }
-        } else {
-            for (Element element1 : this.generateValues(columns, "record.", false)) {
-                element.addElement(element1);
-            }
+        for (Element value : values) {
+            element.addElement(value);
         }
+
         element.addElement(new TextElement("from dual where not exists"));
         element.addElement(new TextElement("("));
         element.addElement(new TextElement("select 1 from " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
@@ -608,208 +381,5 @@ public class UpsertPlugin extends BasePlugin {
         element.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
 
         element.addElement(new TextElement(")"));
-    }
-
-    /**
-     * 生成values Ele
-     * @param columns
-     * @return
-     */
-    private List<Element> generateValues(List<IntrospectedColumn> columns) {
-        return generateValues(columns, null);
-    }
-
-    /**
-     * 生成values Ele
-     * @param columns
-     * @param prefix
-     * @return
-     */
-    private List<Element> generateValues(List<IntrospectedColumn> columns, String prefix) {
-        return generateValues(columns, prefix, true);
-    }
-
-    /**
-     * 生成values Ele
-     * @param columns
-     * @param prefix
-     * @param bracket
-     * @return
-     */
-    private List<Element> generateValues(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
-        return generateCommColumns(columns, prefix, bracket, 2);
-    }
-
-    /**
-     * 生成keys Ele
-     * @param columns
-     * @return
-     */
-    private List<Element> generateKeys(List<IntrospectedColumn> columns) {
-        return generateKeys(columns, null);
-    }
-
-    /**
-     * 生成keys Ele
-     * @param columns
-     * @param prefix
-     * @return
-     */
-    private List<Element> generateKeys(List<IntrospectedColumn> columns, String prefix) {
-        return generateCommColumns(columns, prefix, true, 1);
-    }
-
-    /**
-     * 生成sets Ele
-     * @param columns
-     * @param prefix
-     * @return
-     */
-    private List<Element> generateSets(List<IntrospectedColumn> columns, String prefix) {
-        return generateCommColumns(columns, prefix, false, 3);
-    }
-
-    /**
-     * 通用遍历columns
-     * @param columns
-     * @param bracket
-     * @param prefix
-     * @param type    1:key,2:value,3:set
-     * @return
-     */
-    private List<Element> generateCommColumns(List<IntrospectedColumn> columns, String prefix, boolean bracket, int type) {
-        return this.generateCommColumns(columns, prefix, bracket, type, null);
-    }
-
-    /**
-     * 通用遍历columns
-     * @param columns
-     * @param bracket
-     * @param prefix
-     * @param type              1:key,2:value,3:set,4:set(withIncrementsPlugin)
-     * @param introspectedTable
-     * @return
-     */
-    private List<Element> generateCommColumns(List<IntrospectedColumn> columns, String prefix, boolean bracket, int type, IntrospectedTable introspectedTable) {
-        IncrementsPluginTools incTools = null;
-        if (type == 4) {
-            incTools = IncrementsPluginTools.getTools(context, introspectedTable, warnings);
-        }
-        if (hasIdentityAndGeneratedAlwaysColumns(columns)) {
-            XmlElement eleTrim = new XmlElement("trim");
-            if (bracket) {
-                eleTrim.addAttribute(new Attribute("prefix", "("));
-                eleTrim.addAttribute(new Attribute("suffix", ")"));
-                eleTrim.addAttribute(new Attribute("suffixOverrides", ","));
-            } else {
-                eleTrim.addAttribute(new Attribute("suffixOverrides", ","));
-            }
-
-            StringBuilder sb = new StringBuilder();
-            for (IntrospectedColumn introspectedColumn : columns) {
-                if (introspectedColumn.isGeneratedAlways() || introspectedColumn.isIdentity()) {
-                    if (sb.length() > 0) {
-                        eleTrim.addElement(new TextElement(sb.toString()));
-                        sb.setLength(0);
-                    }
-
-                    // if 节点
-                    XmlElement eleIf = new XmlElement("if");
-                    eleIf.addAttribute(new Attribute("test", introspectedColumn.getJavaProperty(prefix) + " != null"));
-
-                    switch (type) {
-                        case 4:
-                            if (incTools.supportColumn(introspectedColumn)) {
-                                for (Element ele : incTools.generatedIncrementsElement(introspectedColumn, prefix, true)) {
-                                    eleIf.addElement(ele);
-                                }
-                            } else {
-                                eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = " + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
-                            }
-                            break;
-                        case 3:
-                            eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = " + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
-                            break;
-                        case 2:
-                            eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
-                            break;
-                        case 1:
-                            eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + ","));
-                            break;
-                    }
-
-                    eleTrim.addElement(eleIf);
-
-                } else {
-                    switch (type) {
-                        case 4:
-                            if (incTools.supportColumn(introspectedColumn)) {
-                                if (sb.length() > 0) {
-                                    eleTrim.addElement(new TextElement(sb.toString()));
-                                    sb.setLength(0);
-                                }
-
-                                for (Element ele : incTools.generatedIncrementsElement(introspectedColumn, prefix, true)) {
-                                    eleTrim.addElement(ele);
-                                }
-                            } else {
-                                sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
-                                sb.append(" = ");
-                                sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
-                            }
-                            break;
-                        case 3:
-                            sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
-                            sb.append(" = ");
-                            sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
-                            break;
-                        case 2:
-                            sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
-                            break;
-                        case 1:
-                            sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
-                            break;
-                    }
-                    sb.append(", ");
-                }
-
-                // 保持和官方一致 80 进行换行
-                if (type == 1 || type == 2) {
-                    if (sb.length() > 80) {
-                        eleTrim.addElement(new TextElement(sb.toString()));
-                        sb.setLength(0);
-                        OutputUtilities.xmlIndent(sb, 1);
-                    }
-                } else {
-                    eleTrim.addElement(new TextElement(sb.toString()));
-                    sb.setLength(0);
-                }
-            }
-
-            if (sb.length() > 0) {
-                eleTrim.addElement(new TextElement(sb.toString()));
-            }
-
-
-            return Arrays.asList(eleTrim);
-        } else if (type == 4) {
-            return incTools.generateSets(columns, prefix, bracket);
-        } else {
-            return XmlElementGeneratorTools.generateCommColumns(columns, prefix, bracket, type);
-        }
-    }
-
-    /**
-     * 是否存在自增或者生成的column
-     * @param columns
-     * @return
-     */
-    private boolean hasIdentityAndGeneratedAlwaysColumns(List<IntrospectedColumn> columns) {
-        for (IntrospectedColumn ic : columns) {
-            if (ic.isGeneratedAlways() || ic.isIdentity()) {
-                return true;
-            }
-        }
-        return false;
     }
 }

@@ -18,6 +18,7 @@ package com.itfsw.mybatis.generator.plugins.utils;
 
 import com.itfsw.mybatis.generator.plugins.CommentPlugin;
 import com.itfsw.mybatis.generator.plugins.utils.enhanced.TemplateCommentGenerator;
+import com.itfsw.mybatis.generator.plugins.utils.hook.HookAggregator;
 import org.mybatis.generator.api.CommentGenerator;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.config.Context;
@@ -45,19 +46,20 @@ public class BasePlugin extends PluginAdapter {
 
     /**
      * Set the context under which this plugin is running.
-     *
-     * @param context
-     *            the new context
+     * @param context the new context
      */
     @Override
     public void setContext(Context context) {
         super.setContext(context);
 
+        // 添加插件
+        HookAggregator.getInstance().setContext(context);
+
         // 配置插件使用的模板引擎
         PluginConfiguration cfg = PluginTools.getPluginConfiguration(context, CommentPlugin.class);
 
-        if (cfg == null || cfg.getProperty(CommentPlugin.PRO_TEMPLATE) == null){
-            if (context.getCommentGenerator() instanceof DefaultCommentGenerator){
+        if (cfg == null || cfg.getProperty(CommentPlugin.PRO_TEMPLATE) == null) {
+            if (context.getCommentGenerator() instanceof DefaultCommentGenerator) {
                 // 使用默认模板引擎
                 commentGenerator = new TemplateCommentGenerator("default-comment.ftl", true);
             } else {
@@ -79,7 +81,7 @@ public class BasePlugin extends PluginAdapter {
                 field.setAccessible(true);
                 field.set(context, templateCommentGenerator);
             } catch (Exception e) {
-                logger.error("反射异常",e);
+                logger.error("反射异常", e);
             }
         }
     }

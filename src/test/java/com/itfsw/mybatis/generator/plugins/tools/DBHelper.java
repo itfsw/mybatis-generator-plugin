@@ -64,33 +64,29 @@ public class DBHelper {
         String password = properties.getProperty("password");
         // 获取connection
         Class.forName(driver);
-        Connection connection = DriverManager.getConnection(url, username, password);
-
-        Statement statement = connection.createStatement();
-        // 获取建表和初始化sql
-        InputStream inputStream = Resources.getResourceAsStream(resource);
-        InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
-        BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-        // 读取sql语句执行
-        StringBuffer sb = new StringBuffer();
-        String line;
-        while ((line = bufferedReader.readLine()) != null) {
-            sb.append(line).append("\n");
-            if (line.matches(".*;$")) {
-                statement.execute(sb.toString());
-                sb.setLength(0);
+        try (
+                Connection connection = DriverManager.getConnection(url, username, password);
+                Statement statement = connection.createStatement();
+                // 获取建表和初始化sql
+                InputStream inputStream = Resources.getResourceAsStream(resource);
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+        ) {
+            // 读取sql语句执行
+            StringBuffer sb = new StringBuffer();
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                sb.append(line).append("\n");
+                if (line.matches(".*;$")) {
+                    statement.execute(sb.toString());
+                    sb.setLength(0);
+                }
             }
         }
-        bufferedReader.close();
-        inputStreamReader.close();
-        inputStream.close();
-        statement.close();
-        connection.close();
     }
 
     /**
      * 执行sql
-     *
      * @param sqlSession
      * @param sql
      * @return
@@ -102,7 +98,6 @@ public class DBHelper {
 
     /**
      * 执行sql
-     *
      * @param connection
      * @param sql
      * @return
