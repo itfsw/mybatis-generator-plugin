@@ -247,10 +247,10 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
      * @return
      */
     @Override
-    public List<Element> incrementElementGenerated(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma) {
+    public List<Element> incrementSetElementGenerated(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma) {
         List<Element> list = new ArrayList<>();
 
-        if (incTools.supportColumn(introspectedColumn)){
+        if (incTools.supportColumn(introspectedColumn)) {
             // 1. column = 节点
             list.add(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = "));
 
@@ -289,6 +289,43 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
 
         return list;
     }
+
+    /**
+     * 生成增量操作节点(SelectiveEnhancedPlugin)
+     * @return
+     */
+    @Override
+    public Element incrementSetsWithSelectiveEnhancedPluginElementGenerated() {
+        if (incTools.support()) {
+            XmlElement choose = new XmlElement("choose");
+
+            for (IntrospectedColumn introspectedColumn : incTools.getColumns()) {
+                XmlElement when = new XmlElement("when");
+
+                // 需要 inc 的列
+                StringBuilder sb = new StringBuilder();
+                sb.append("'");
+                sb.append(introspectedColumn.getActualColumnName());
+                sb.append("'.toString()");
+                sb.append(" == ");
+                sb.append("column.value");
+
+                when.addAttribute(new Attribute("test", sb.toString()));
+                when.addElement(new TextElement("${column.value} = ${column.value} ${record.incrementsColumnsInfoMap."
+                        + introspectedColumn.getActualColumnName()
+                        + ".value} #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+                choose.addElement(when);
+            }
+
+            XmlElement otherwise = new XmlElement("otherwise");
+            otherwise.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+            choose.addElement(otherwise);
+
+            return choose;
+        }
+        return null;
+    }
+
     // =================================================== 原生方法的支持 ====================================================
 
     /**
@@ -310,7 +347,7 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
                         String columnName = strs[0].trim();
                         IntrospectedColumn introspectedColumn = IntrospectedTableTools.safeGetColumn(introspectedTable, columnName);
                         // 查找是否需要进行增量操作
-                        List<Element> incrementEles = PluginTools.getHook(IIncrementsPluginHook.class).incrementElementGenerated(introspectedColumn, hasPrefix ? "record." : null, true);
+                        List<Element> incrementEles = PluginTools.getHook(IIncrementsPluginHook.class).incrementSetElementGenerated(introspectedColumn, hasPrefix ? "record." : null, true);
                         if (!incrementEles.isEmpty()) {
                             xmlElement.getElements().clear();
                             xmlElement.getElements().addAll(incrementEles);
@@ -340,7 +377,7 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
                         String columnName = text.split("=")[0].trim();
                         IntrospectedColumn introspectedColumn = IntrospectedTableTools.safeGetColumn(introspectedTable, columnName);
                         // 查找判断是否需要进行节点替换
-                        List<Element> incrementEles = PluginTools.getHook(IIncrementsPluginHook.class).incrementElementGenerated(introspectedColumn, hasPrefix ? "record." : null, text.endsWith(","));
+                        List<Element> incrementEles = PluginTools.getHook(IIncrementsPluginHook.class).incrementSetElementGenerated(introspectedColumn, hasPrefix ? "record." : null, text.endsWith(","));
                         if (!incrementEles.isEmpty()) {
                             newEles.addAll(incrementEles);
 

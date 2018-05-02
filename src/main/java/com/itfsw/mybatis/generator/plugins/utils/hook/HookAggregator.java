@@ -97,11 +97,20 @@ public class HookAggregator implements IUpsertPluginHook, IModelBuilderPluginHoo
     // ============================================= IIncrementsPluginHook ==============================================
 
     @Override
-    public List<Element> incrementElementGenerated(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma) {
+    public List<Element> incrementSetElementGenerated(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma) {
         if (this.getPlugins(IIncrementsPluginHook.class).isEmpty()) {
             return new ArrayList<>();
         } else {
-            return this.getPlugins(IIncrementsPluginHook.class).get(0).incrementElementGenerated(introspectedColumn, prefix, hasComma);
+            return this.getPlugins(IIncrementsPluginHook.class).get(0).incrementSetElementGenerated(introspectedColumn, prefix, hasComma);
+        }
+    }
+
+    @Override
+    public Element incrementSetsWithSelectiveEnhancedPluginElementGenerated() {
+        if (this.getPlugins(IIncrementsPluginHook.class).isEmpty()){
+            return null;
+        } else {
+            return this.getPlugins(IIncrementsPluginHook.class).get(0).incrementSetsWithSelectiveEnhancedPluginElementGenerated();
         }
     }
 

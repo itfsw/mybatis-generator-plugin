@@ -383,8 +383,8 @@ public class XmlElementGeneratorTools {
 
                 switch (type) {
                     case 3:
-                        List<Element> incrementEles = PluginTools.getHook(IIncrementsPluginHook.class).incrementElementGenerated(introspectedColumn, prefix, columnIterator.hasNext());
-                        if (incrementEles.isEmpty()) {
+                        List<Element> incrementEles = PluginTools.getHook(IIncrementsPluginHook.class).incrementSetElementGenerated(introspectedColumn, prefix, false);
+                        if (!incrementEles.isEmpty()) {
                             // 增量插件支持
                             if (sb.length() > 0) {
                                 list.add(new TextElement(sb.toString()));
@@ -498,8 +498,8 @@ public class XmlElementGeneratorTools {
     private static void generateSelectiveCommColumnTo(XmlElement element, IntrospectedColumn introspectedColumn, String prefix, int type) {
         switch (type) {
             case 3:
-                List<Element> incrementEles = PluginTools.getHook(IIncrementsPluginHook.class).incrementElementGenerated(introspectedColumn, prefix, true);
-                if (incrementEles.isEmpty()) {
+                List<Element> incrementEles = PluginTools.getHook(IIncrementsPluginHook.class).incrementSetElementGenerated(introspectedColumn, prefix, true);
+                if (!incrementEles.isEmpty()) {
                     // 增量插件支持
                     for (Element ele : incrementEles) {
                         element.addElement(ele);

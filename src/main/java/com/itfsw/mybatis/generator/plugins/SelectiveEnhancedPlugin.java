@@ -19,6 +19,7 @@ package com.itfsw.mybatis.generator.plugins;
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
 import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
+import com.itfsw.mybatis.generator.plugins.utils.hook.IIncrementsPluginHook;
 import com.itfsw.mybatis.generator.plugins.utils.hook.IUpsertPluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
@@ -27,6 +28,7 @@ import org.mybatis.generator.api.dom.java.Interface;
 import org.mybatis.generator.api.dom.java.Method;
 import org.mybatis.generator.api.dom.java.Parameter;
 import org.mybatis.generator.api.dom.xml.Attribute;
+import org.mybatis.generator.api.dom.xml.Element;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.mybatis3.ListUtilities;
@@ -253,7 +255,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
 
         // selective
         answer.addElement(new TextElement("SET"));
-        answer.addElement(this.generateSetsSelective(ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getAllColumns())));
+        answer.addElement(this.generateSetsSelective(ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getNonPrimaryKeyColumns())));
 
         XmlElementGeneratorTools.generateWhereByPrimaryKeyTo(answer, introspectedTable.getPrimaryKeyColumns(), "record.");
 
@@ -445,7 +447,14 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         setForeachEle.addAttribute(new Attribute("collection", "selective"));
         setForeachEle.addAttribute(new Attribute("item", "column"));
         setForeachEle.addAttribute(new Attribute("separator", ","));
-        setForeachEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+
+        Element incrementEle = PluginTools.getHook(IIncrementsPluginHook.class).incrementSetsWithSelectiveEnhancedPluginElementGenerated();
+        if (incrementEle == null) {
+            setForeachEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+        } else {
+            setForeachEle.addElement(incrementEle);
+        }
+
 
         XmlElement setOtherwiseEle = new XmlElement("otherwise");
         setOtherwiseEle.addElement(XmlElementGeneratorTools.generateSetsSelective(columns, "record."));

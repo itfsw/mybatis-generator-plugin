@@ -37,5 +37,11 @@ public interface IIncrementsPluginHook {
      * @param hasComma
      * @return
      */
-    List<Element> incrementElementGenerated(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma);
+    List<Element> incrementSetElementGenerated(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma);
+
+    /**
+     * 生成增量操作节点(SelectiveEnhancedPlugin)
+     * @return
+     */
+    Element incrementSetsWithSelectiveEnhancedPluginElementGenerated();
 }
