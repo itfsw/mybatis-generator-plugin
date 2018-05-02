@@ -377,34 +377,17 @@ public class XmlElementGeneratorTools {
         List<Element> list = new ArrayList<>();
 
         if (hasIdentityAndGeneratedAlwaysColumns(columns)) {
-            XmlElement eleTrim = new XmlElement("trim");
-            if (bracket) {
-                eleTrim.addAttribute(new Attribute("prefix", "("));
-                eleTrim.addAttribute(new Attribute("suffix", ")"));
-                eleTrim.addAttribute(new Attribute("suffixOverrides", ","));
-            } else {
-                eleTrim.addAttribute(new Attribute("suffixOverrides", ","));
-            }
+            XmlElement trimEle = generateTrim(bracket);
 
             for (IntrospectedColumn introspectedColumn : columns) {
                 if (introspectedColumn.isGeneratedAlways() || introspectedColumn.isIdentity()) {
-                    generateSelectiveToTrimEle(eleTrim, introspectedColumn, prefix, type);
+                    generateSelectiveToTrimEleTo(trimEle, introspectedColumn, prefix, type);
                 } else {
-                    switch (type) {
-                        case 3:
-                            eleTrim.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = " + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
-                            break;
-                        case 2:
-                            eleTrim.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
-                            break;
-                        case 1:
-                            eleTrim.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + ","));
-                            break;
-                    }
+                    generateSelectiveCommColumnTo(trimEle, introspectedColumn, prefix, type);
                 }
             }
 
-            return Arrays.asList(eleTrim);
+            return Arrays.asList(trimEle);
         } else {
             StringBuilder sb = new StringBuilder(bracket ? "(" : "");
             Iterator<IntrospectedColumn> columnIterator = columns.iterator();
@@ -458,20 +441,28 @@ public class XmlElementGeneratorTools {
      * @return
      */
     private static XmlElement generateCommColumnsSelective(List<IntrospectedColumn> columns, String prefix, boolean bracket, int type) {
-        XmlElement eleTrim = new XmlElement("trim");
-        if (bracket) {
-            eleTrim.addAttribute(new Attribute("prefix", "("));
-            eleTrim.addAttribute(new Attribute("suffix", ")"));
-            eleTrim.addAttribute(new Attribute("suffixOverrides", ","));
-        } else {
-            eleTrim.addAttribute(new Attribute("suffixOverrides", ","));
-        }
-
+        XmlElement trimEle = generateTrim(bracket);
         for (IntrospectedColumn introspectedColumn : columns) {
-            generateSelectiveToTrimEle(eleTrim, introspectedColumn, prefix, type);
+            generateSelectiveToTrimEleTo(trimEle, introspectedColumn, prefix, type);
         }
+        return trimEle;
+    }
 
-        return eleTrim;
+    /**
+     * trim 节点
+     * @param bracket
+     * @return
+     */
+    private static XmlElement generateTrim(boolean bracket){
+        XmlElement trimEle = new XmlElement("trim");
+        if (bracket) {
+            trimEle.addAttribute(new Attribute("prefix", "("));
+            trimEle.addAttribute(new Attribute("suffix", ")"));
+            trimEle.addAttribute(new Attribute("suffixOverrides", ","));
+        } else {
+            trimEle.addAttribute(new Attribute("suffixOverrides", ","));
+        }
+        return trimEle;
     }
 
     /**
@@ -481,38 +472,42 @@ public class XmlElementGeneratorTools {
      * @param prefix
      * @param type               1:key,2:value,3:set
      */
-    private static void generateSelectiveToTrimEle(XmlElement trimEle, IntrospectedColumn introspectedColumn, String prefix, int type) {
+    private static void generateSelectiveToTrimEleTo(XmlElement trimEle, IntrospectedColumn introspectedColumn, String prefix, int type) {
         if (type != 3 && (introspectedColumn.isSequenceColumn() || introspectedColumn.getFullyQualifiedJavaType().isPrimitive())) {
             // if it is a sequence column, it is not optional
             // This is required for MyBatis3 because MyBatis3 parses
             // and calculates the SQL before executing the selectKey
 
             // if it is primitive, we cannot do a null check
-            switch (type) {
-                case 2:
-                    trimEle.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
-                    break;
-                case 1:
-                    trimEle.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + ","));
-                    break;
-            }
+            generateSelectiveCommColumnTo(trimEle, introspectedColumn, prefix, type);
         } else {
             XmlElement eleIf = new XmlElement("if");
             eleIf.addAttribute(new Attribute("test", introspectedColumn.getJavaProperty(prefix) + " != null"));
 
-            switch (type) {
-                case 3:
-                    eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = " + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
-                    break;
-                case 2:
-                    eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
-                    break;
-                case 1:
-                    eleIf.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + ","));
-                    break;
-            }
+            generateSelectiveCommColumnTo(eleIf, introspectedColumn, prefix, type);
 
             trimEle.addElement(eleIf);
+        }
+    }
+
+    /**
+     * 生成
+     * @param element
+     * @param introspectedColumn
+     * @param prefix
+     * @param type 1:key,2:value,3:set
+     */
+    private static void generateSelectiveCommColumnTo(XmlElement element, IntrospectedColumn introspectedColumn, String prefix, int type){
+        switch (type) {
+            case 3:
+                element.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = " + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
+                break;
+            case 2:
+                element.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
+                break;
+            case 1:
+                element.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + ","));
+                break;
         }
     }
 

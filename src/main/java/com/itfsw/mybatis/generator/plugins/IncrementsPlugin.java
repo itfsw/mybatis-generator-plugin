@@ -234,6 +234,8 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
         return true;
     }
 
+    // =================================================== 原生方法的支持 ====================================================
+
     /**
      * 有Selective代码生成
      * @param element

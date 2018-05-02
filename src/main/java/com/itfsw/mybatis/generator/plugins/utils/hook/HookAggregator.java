@@ -40,7 +40,7 @@ import java.util.List;
  * @time:2018/4/27 11:33
  * ---------------------------------------------------------------------------
  */
-public class HookAggregator implements IUpsertPluginHook, IModelBuilderPluginHook {
+public class HookAggregator implements IUpsertPluginHook, IModelBuilderPluginHook, IIncrementsPluginHook {
     protected static final Logger logger = LoggerFactory.getLogger(BasePlugin.class); // 日志
     private final static HookAggregator instance = new HookAggregator();
     private Context context;
@@ -92,6 +92,8 @@ public class HookAggregator implements IUpsertPluginHook, IModelBuilderPluginHoo
         }
         return list;
     }
+
+    // ============================================= IIncrementsPluginHook ==============================================
 
     // ============================================ IModelBuilderPluginHook =============================================
     @Override
