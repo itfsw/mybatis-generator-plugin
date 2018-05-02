@@ -17,13 +17,16 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.*;
+import com.itfsw.mybatis.generator.plugins.utils.hook.IIncrementsPluginHook;
 import com.itfsw.mybatis.generator.plugins.utils.hook.IModelBuilderPluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
+import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.Element;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
+import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 import org.mybatis.generator.internal.util.JavaBeansUtil;
 
 import java.util.ArrayList;
@@ -37,7 +40,7 @@ import java.util.List;
  * @time:2017/6/19 15:20
  * ---------------------------------------------------------------------------
  */
-public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginHook {
+public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginHook, IIncrementsPluginHook {
     public static final String PRO_INCREMENTS_COLUMNS = "incrementsColumns";  // incrementsColumns property
     public static final String FIELD_INC_MAP = "incrementsColumnsInfoMap";    // 为了防止和用户数据库字段冲突，特殊命名
     public static final String METHOD_INC_CHECK = "hasIncsForColumn";   // inc 检查方法名称
@@ -234,6 +237,58 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
         return true;
     }
 
+    // =============================================== IIncrementsPluginHook ===================================================
+
+    /**
+     * 生成增量操作节点
+     * @param introspectedColumn
+     * @param prefix
+     * @param hasComma
+     * @return
+     */
+    @Override
+    public List<Element> incrementElementGenerated(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma) {
+        List<Element> list = new ArrayList<>();
+
+        if (incTools.supportColumn(introspectedColumn)){
+            // 1. column = 节点
+            list.add(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = "));
+
+            // 2. 选择节点
+            // 条件
+            XmlElement choose = new XmlElement("choose");
+
+            // 没有启用增量操作
+            XmlElement when = new XmlElement("when");
+            when.addAttribute(new Attribute(
+                    "test",
+                    (prefix != null ? prefix : "_parameter.") + IncrementsPlugin.METHOD_INC_CHECK
+                            + "('" + MyBatis3FormattingUtilities.escapeStringForMyBatis3(introspectedColumn.getActualColumnName()) + "')"
+            ));
+            TextElement spec = new TextElement(
+                    MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn)
+                            + " ${" + (prefix != null ? prefix : "")
+                            + IncrementsPlugin.FIELD_INC_MAP + "." + MyBatis3FormattingUtilities.escapeStringForMyBatis3(introspectedColumn.getActualColumnName()) + ".value} "
+                            + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
+            when.addElement(spec);
+            choose.addElement(when);
+
+            // 启用了增量操作
+            XmlElement otherwise = new XmlElement("otherwise");
+            TextElement normal = new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
+            otherwise.addElement(normal);
+            choose.addElement(otherwise);
+
+            list.add(choose);
+
+            // 3. 结尾逗号
+            if (hasComma) {
+                list.add(new TextElement(","));
+            }
+        }
+
+        return list;
+    }
     // =================================================== 原生方法的支持 ====================================================
 
     /**
@@ -255,9 +310,10 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
                         String columnName = strs[0].trim();
                         IntrospectedColumn introspectedColumn = IntrospectedTableTools.safeGetColumn(introspectedTable, columnName);
                         // 查找是否需要进行增量操作
-                        if (incTools.supportColumn(introspectedColumn)) {
+                        List<Element> incrementEles = PluginTools.getHook(IIncrementsPluginHook.class).incrementElementGenerated(introspectedColumn, hasPrefix ? "record." : null, true);
+                        if (!incrementEles.isEmpty()) {
                             xmlElement.getElements().clear();
-                            xmlElement.getElements().addAll(incTools.generatedIncrementsElement(introspectedColumn, hasPrefix ? "record." : null, true));
+                            xmlElement.getElements().addAll(incrementEles);
                         }
                     }
                 }
@@ -284,8 +340,9 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
                         String columnName = text.split("=")[0].trim();
                         IntrospectedColumn introspectedColumn = IntrospectedTableTools.safeGetColumn(introspectedTable, columnName);
                         // 查找判断是否需要进行节点替换
-                        if (incTools.supportColumn(introspectedColumn)) {
-                            newEles.addAll(incTools.generatedIncrementsElement(introspectedColumn, hasPrefix ? "record." : null, text.endsWith(",")));
+                        List<Element> incrementEles = PluginTools.getHook(IIncrementsPluginHook.class).incrementElementGenerated(introspectedColumn, hasPrefix ? "record." : null, text.endsWith(","));
+                        if (!incrementEles.isEmpty()) {
+                            newEles.addAll(incrementEles);
 
                             continue;
                         }

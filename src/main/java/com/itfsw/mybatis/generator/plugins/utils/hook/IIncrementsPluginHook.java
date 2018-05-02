@@ -16,6 +16,11 @@
 
 package com.itfsw.mybatis.generator.plugins.utils.hook;
 
+import org.mybatis.generator.api.IntrospectedColumn;
+import org.mybatis.generator.api.dom.xml.Element;
+
+import java.util.List;
+
 /**
  * ---------------------------------------------------------------------------
  *
@@ -25,4 +30,12 @@ package com.itfsw.mybatis.generator.plugins.utils.hook;
  * ---------------------------------------------------------------------------
  */
 public interface IIncrementsPluginHook {
+    /**
+     * 生成增量操作节点
+     * @param introspectedColumn
+     * @param prefix
+     * @param hasComma
+     * @return
+     */
+    List<Element> incrementElementGenerated(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma);
 }

@@ -16,6 +16,7 @@
 
 package com.itfsw.mybatis.generator.plugins.utils;
 
+import com.itfsw.mybatis.generator.plugins.utils.hook.IIncrementsPluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.OutputUtilities;
@@ -134,20 +135,6 @@ public class XmlElementGeneratorTools {
     }
 
     /**
-     * 移除 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-     * @param element
-     * @param introspectedTable
-     */
-    public static void removeUseGeneratedKeys(XmlElement element, IntrospectedTable introspectedTable) {
-        GeneratedKey gk = introspectedTable.getGeneratedKey();
-        if (gk != null) {
-            removeAttribute(element, "useGeneratedKeys");
-            removeAttribute(element, "keyProperty");
-            removeAttribute(element, "keyColumn");
-        }
-    }
-
-    /**
      * 移除属性
      * @param element
      * @param name
@@ -211,7 +198,7 @@ public class XmlElementGeneratorTools {
      * @param bracket
      * @return
      */
-    public static List<Element> generateKeys(List<IntrospectedColumn> columns,String prefix, boolean bracket) {
+    public static List<Element> generateKeys(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
         return generateCommColumns(columns, prefix, bracket, 1);
     }
 
@@ -396,9 +383,20 @@ public class XmlElementGeneratorTools {
 
                 switch (type) {
                     case 3:
-                        sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
-                        sb.append(" = ");
-                        sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
+                        List<Element> incrementEles = PluginTools.getHook(IIncrementsPluginHook.class).incrementElementGenerated(introspectedColumn, prefix, columnIterator.hasNext());
+                        if (incrementEles.isEmpty()) {
+                            // 增量插件支持
+                            if (sb.length() > 0) {
+                                list.add(new TextElement(sb.toString()));
+                                sb.setLength(0);
+                            }
+                            list.addAll(incrementEles);
+                        } else {
+                            sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
+                            sb.append(" = ");
+                            sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
+                        }
+
                         break;
                     case 2:
                         sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
@@ -453,7 +451,7 @@ public class XmlElementGeneratorTools {
      * @param bracket
      * @return
      */
-    private static XmlElement generateTrim(boolean bracket){
+    private static XmlElement generateTrim(boolean bracket) {
         XmlElement trimEle = new XmlElement("trim");
         if (bracket) {
             trimEle.addAttribute(new Attribute("prefix", "("));
@@ -495,12 +493,20 @@ public class XmlElementGeneratorTools {
      * @param element
      * @param introspectedColumn
      * @param prefix
-     * @param type 1:key,2:value,3:set
+     * @param type               1:key,2:value,3:set
      */
-    private static void generateSelectiveCommColumnTo(XmlElement element, IntrospectedColumn introspectedColumn, String prefix, int type){
+    private static void generateSelectiveCommColumnTo(XmlElement element, IntrospectedColumn introspectedColumn, String prefix, int type) {
         switch (type) {
             case 3:
-                element.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = " + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
+                List<Element> incrementEles = PluginTools.getHook(IIncrementsPluginHook.class).incrementElementGenerated(introspectedColumn, prefix, true);
+                if (incrementEles.isEmpty()) {
+                    // 增量插件支持
+                    for (Element ele : incrementEles) {
+                        element.addElement(ele);
+                    }
+                } else {
+                    element.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = " + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
+                }
                 break;
             case 2:
                 element.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));

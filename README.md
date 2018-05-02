@@ -27,7 +27,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.1.2</version>
+  <version>1.1.3</version>
 </dependency>
 ```
 ---------------------------------------
@@ -556,17 +556,57 @@ public class Test {
 ```
 ### 10. Selective选择插入更新增强插件
 项目中往往需要指定某些字段进行插入或者更新，或者把某些字段进行设置null处理，这种情况下原生xxxSelective方法往往不能达到需求，因为它的判断条件是对象字段是否为null，这种情况下可使用该插件对xxxSelective方法进行增强。  
->warning:配置插件时请把插件配置在所有插件末尾最后执行，这样才能把上面提供的某些插件的Selective方法也同时增强！
+>warning:配置老版本插件（<=1.1.2）时请把插件配置在所有插件末尾最后执行，这样才能把上面提供的某些插件的Selective方法也同时增强！  
+>warning:以前老版本（<=1.1.2）插件处理需要指定的列时是放入Model中指定的，但在实际使用过程中有同事反馈这个处理有点反直觉，导致某些新同事不能及时找到对应方法，而且和增强的SelectSelectivePlugin以及UpsertSelective使用方式都不一致，所以统一修改之。  
 
 插件：
 ```xml
-<!-- Selective选择插入更新增强插件！请配在所有插件末尾以便最后执行 -->
+<!-- Selective选择插入更新增强插件 -->
 <plugin type="com.itfsw.mybatis.generator.plugins.SelectiveEnhancedPlugin"/>
 ```
 使用：  
 ```java
 public class Test {
     public static void main(String[] args) {
+        // ------------------------------ 新版本（SelectiveEnhancedPlugin）--------------------------------
+        // 1. 指定插入或更新字段
+        Tb tb = new Tb.Builder()
+                .field1(1)
+                .field2("xx2")
+                .field3(1)
+                .createTime(new Date())
+                .build();
+        // 只插入或者更新field1,field2字段
+        this.tbMapper.insertSelective(tb, Tb.Column.field1, Tb.Column.field2);
+        this.tbMapper.updateByExampleSelective(
+                tb,
+                new TbExample()
+                        .createCriteria()
+                        .andIdEqualTo(1l)
+                        .example(),
+                Tb.Column.field1, Tb.Column.field2
+        );
+        this.tbMapper.updateByPrimaryKeySelective(tb, Tb.Column.field1, Tb.Column.field2);
+        this.tbMapper.upsertSelective(tb, Tb.Column.field1, Tb.Column.field2);
+        this.tbMapper.upsertByExampleSelective(
+                tb,
+                new TbExample()
+                        .createCriteria()
+                        .andField3EqualTo(1)
+                        .example(),
+                Tb.Column.field1, Tb.Column.field2
+        );
+
+        // 2. 更新某些字段为null
+        this.tbMapper.updateByPrimaryKeySelective(
+                new Tb.Builder()
+                .id(1l)
+                .field1(null)   // 方便展示，不用设也可以
+                .build(),
+                Tb.Column.field1
+        );
+        
+        // ------------------------------ 老版本（SelectiveEnhancedPlugin）--------------------------------
         // 1. 指定插入或更新字段
         Tb tb = new Tb.Builder()
                 .field1(1)
@@ -724,7 +764,7 @@ Mybatis Generator是原生支持自定义注释的（commentGenerator配置type�
     </plugin>
 </xml>
 ```
-使用（参考模板）：  
+使用（[参考模板](https://github.com/itfsw/mybatis-generator-plugin/blob/master/src/main/resources/default-comment.ftl)）：  
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <template>

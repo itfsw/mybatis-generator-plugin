@@ -24,6 +24,7 @@ import org.mybatis.generator.api.dom.java.InnerClass;
 import org.mybatis.generator.api.dom.java.Interface;
 import org.mybatis.generator.api.dom.java.Method;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
+import org.mybatis.generator.api.dom.xml.Element;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.config.Context;
 import org.slf4j.Logger;
@@ -95,7 +96,17 @@ public class HookAggregator implements IUpsertPluginHook, IModelBuilderPluginHoo
 
     // ============================================= IIncrementsPluginHook ==============================================
 
+    @Override
+    public List<Element> incrementElementGenerated(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma) {
+        if (this.getPlugins(IIncrementsPluginHook.class).isEmpty()) {
+            return new ArrayList<>();
+        } else {
+            return this.getPlugins(IIncrementsPluginHook.class).get(0).incrementElementGenerated(introspectedColumn, prefix, hasComma);
+        }
+    }
+
     // ============================================ IModelBuilderPluginHook =============================================
+
     @Override
     public boolean modelBuilderClassGenerated(TopLevelClass topLevelClass, InnerClass builderClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
         for (IModelBuilderPluginHook plugin : this.getPlugins(IModelBuilderPluginHook.class)) {
@@ -107,6 +118,7 @@ public class HookAggregator implements IUpsertPluginHook, IModelBuilderPluginHoo
     }
 
     // ================================================= IUpsertPluginHook ===============================================
+
     @Override
     public boolean clientUpsertSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         for (IUpsertPluginHook plugin : this.getPlugins(IUpsertPluginHook.class)) {
