@@ -335,9 +335,9 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
     private void generatedWithSelective(XmlElement element, IntrospectedTable introspectedTable, boolean hasPrefix) {
         if (incTools.support()) {
             // 查找 set->if->text
-            List<XmlElement> sets = XmlElementGeneratorTools.findXmlElements(element, "set");
+            List<XmlElement> sets = XmlElementTools.findXmlElements(element, "set");
             if (sets.size() > 0) {
-                List<XmlElement> ifs = XmlElementGeneratorTools.findXmlElements(sets.get(0), "if");
+                List<XmlElement> ifs = XmlElementTools.findXmlElements(sets.get(0), "if");
                 if (ifs.size() > 0) {
                     for (XmlElement xmlElement : ifs) {
                         // 下面为if的text节点

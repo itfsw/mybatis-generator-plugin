@@ -17,6 +17,7 @@
 package com.itfsw.mybatis.generator.plugins.utils.hook;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
+import com.itfsw.mybatis.generator.plugins.utils.BeanUtils;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.Plugin;
@@ -80,9 +81,7 @@ public class HookAggregator implements IUpsertPluginHook, IModelBuilderPluginHoo
         List list = new ArrayList();
         // 反射获取插件列表，不能用单例去弄，不然因为类释放的问题而导致测试用例出问题
         try {
-            java.lang.reflect.Field field = this.context.getPlugins().getClass().getDeclaredField("plugins");
-            field.setAccessible(true);
-            List<Plugin> plugins = (List<Plugin>) field.get(this.context.getPlugins());
+            List<Plugin> plugins = (List<Plugin>) BeanUtils.getProperty(this.context.getPlugins(), "plugins");
             for (Plugin plugin : plugins) {
                 if (clazz.isInstance(plugin)) {
                     list.add(plugin);

@@ -567,7 +567,7 @@ public class LogicalDeletePlugin extends BasePlugin {
                     innerClass.addMethod(method);
 
                     // TODO 过期方法
-                    Method mAndDeleted = JavaElementGeneratorTools.cloneMethod(method);
+                    Method mAndDeleted = new Method(method);
                     mAndDeleted.setName("andDeleted");
                     mAndDeleted.addAnnotation("@Deprecated");
                     innerClass.addMethod(mAndDeleted);

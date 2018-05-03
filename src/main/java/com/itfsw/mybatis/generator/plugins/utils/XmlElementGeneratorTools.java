@@ -135,44 +135,6 @@ public class XmlElementGeneratorTools {
     }
 
     /**
-     * 移除属性
-     * @param element
-     * @param name
-     */
-    public static void removeAttribute(XmlElement element, String name) {
-        Iterator<Attribute> iterator = element.getAttributes().iterator();
-        while (iterator.hasNext()) {
-            Attribute attribute = iterator.next();
-            if (attribute.getName().equals(name)) {
-                iterator.remove();
-            }
-        }
-    }
-
-    /**
-     * 替换属性
-     * @param element
-     * @param attribute
-     */
-    public static void replaceAttribute(XmlElement element, Attribute attribute) {
-        removeAttribute(element, attribute.getName());
-        element.addAttribute(attribute);
-    }
-
-    /**
-     * xmlElement 替换
-     * @param srcEle
-     * @param destEle
-     */
-    public static void replaceXmlElement(XmlElement srcEle, XmlElement destEle) {
-        srcEle.setName(destEle.getName());
-        srcEle.getAttributes().clear();
-        srcEle.getAttributes().addAll(destEle.getAttributes());
-        srcEle.getElements().clear();
-        srcEle.getElements().addAll(destEle.getElements());
-    }
-
-    /**
      * 生成keys Ele
      * @param columns
      * @return
@@ -515,26 +477,6 @@ public class XmlElementGeneratorTools {
                 element.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + ","));
                 break;
         }
-    }
-
-    /**
-     * 查找指定xml节点下指定节点名称的元素
-     * @param xmlElement
-     * @param name
-     * @return
-     */
-    public static List<XmlElement> findXmlElements(XmlElement xmlElement, String name) {
-        List<XmlElement> list = new ArrayList<>();
-        List<Element> elements = xmlElement.getElements();
-        for (Element ele : elements) {
-            if (ele instanceof XmlElement) {
-                XmlElement xmlElement1 = (XmlElement) ele;
-                if (name.equalsIgnoreCase(xmlElement1.getName())) {
-                    list.add(xmlElement1);
-                }
-            }
-        }
-        return list;
     }
 
     /**

@@ -163,28 +163,4 @@ public class JavaElementGeneratorTools {
         }
         return type;
     }
-
-    /**
-     * 克隆方法
-     * @param method
-     */
-    public static Method cloneMethod(Method method) {
-        Method result = new Method();
-        result.setConstructor(method.isConstructor());
-        result.setFinal(method.isFinal());
-        result.setName(method.getName());
-        result.setNative(method.isNative());
-        result.setReturnType(method.getReturnType());
-        result.setSynchronized(method.isSynchronized());
-        result.setStatic(method.isStatic());
-        result.setVisibility(method.getVisibility());
-        for (Parameter parameter : method.getParameters()) {
-            result.addParameter(parameter);
-        }
-        for (String docLine : method.getJavaDocLines()){
-            result.addJavaDocLine(docLine);
-        }
-        result.addBodyLines(method.getBodyLines());
-        return result;
-    }
 }

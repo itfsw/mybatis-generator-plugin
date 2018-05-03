@@ -17,7 +17,6 @@
 package com.itfsw.mybatis.generator.plugins.utils;
 
 import com.itfsw.mybatis.generator.plugins.ExampleTargetPlugin;
-import org.mybatis.generator.api.FullyQualifiedTable;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.config.Context;
@@ -25,9 +24,7 @@ import org.mybatis.generator.config.JavaModelGeneratorConfiguration;
 import org.mybatis.generator.config.PluginConfiguration;
 import org.mybatis.generator.internal.util.StringUtility;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
 /**
  * ---------------------------------------------------------------------------
@@ -52,22 +49,12 @@ public class IntrospectedTableTools {
         introspectedTable.getTableConfiguration().setDomainObjectName(domainObjectName);
 
         // FullyQualifiedTable修正
-        Field domainObjectNameField = FullyQualifiedTable.class.getDeclaredField("domainObjectName");
-        domainObjectNameField.setAccessible(true);
-        domainObjectNameField.set(introspectedTable.getFullyQualifiedTable(), domainObjectName);
+        BeanUtils.setProperty(introspectedTable.getFullyQualifiedTable(), "domainObjectName", domainObjectName);
 
         // 重新修正introspectedTable属性信息
-        Method calculateJavaClientAttributes = IntrospectedTable.class.getDeclaredMethod("calculateJavaClientAttributes");
-        calculateJavaClientAttributes.setAccessible(true);
-        calculateJavaClientAttributes.invoke(introspectedTable);
-
-        Method calculateModelAttributes = IntrospectedTable.class.getDeclaredMethod("calculateModelAttributes");
-        calculateModelAttributes.setAccessible(true);
-        calculateModelAttributes.invoke(introspectedTable);
-
-        Method calculateXmlAttributes = IntrospectedTable.class.getDeclaredMethod("calculateXmlAttributes");
-        calculateXmlAttributes.setAccessible(true);
-        calculateXmlAttributes.invoke(introspectedTable);
+        BeanUtils.invoke(introspectedTable, "calculateJavaClientAttributes");
+        BeanUtils.invoke(introspectedTable, "calculateModelAttributes");
+        BeanUtils.invoke(introspectedTable, "calculateXmlAttributes");
 
         // 注意！！ 如果配置了ExampleTargetPlugin插件，要修正Example 位置
         PluginConfiguration configuration = PluginTools.getPluginConfiguration(context, ExampleTargetPlugin.class);

@@ -22,7 +22,6 @@ import org.mybatis.generator.config.PluginConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -83,9 +82,7 @@ public class PluginTools {
     public static List<PluginConfiguration> getConfigPlugins(Context ctx) {
         try {
             // 利用反射获取pluginConfigurations属性
-            Field field = Context.class.getDeclaredField("pluginConfigurations");
-            field.setAccessible(true);
-            return (List<PluginConfiguration>) field.get(ctx);
+            return (List<PluginConfiguration>) BeanUtils.getProperty(ctx, "pluginConfigurations");
         } catch (Exception e) {
             logger.error("插件检查反射异常", e);
         }
