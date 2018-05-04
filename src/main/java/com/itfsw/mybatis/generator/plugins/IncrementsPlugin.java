@@ -292,34 +292,46 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
 
     /**
      * 生成增量操作节点(SelectiveEnhancedPlugin)
+     * @param versionColumn 需要排除的column（主要是和乐观锁插件整合时要把版本列排除掉）
      * @return
      */
     @Override
-    public Element incrementSetsWithSelectiveEnhancedPluginElementGenerated() {
+    public Element incrementSetsWithSelectiveEnhancedPluginElementGenerated(IntrospectedColumn versionColumn) {
         if (incTools.support()) {
             XmlElement choose = new XmlElement("choose");
 
             for (IntrospectedColumn introspectedColumn : incTools.getColumns()) {
-                XmlElement when = new XmlElement("when");
+                if (versionColumn == null || !introspectedColumn.getActualColumnName().equals(versionColumn.getActualColumnName())) {
+                    XmlElement when = new XmlElement("when");
 
-                // 需要 inc 的列
-                StringBuilder sb = new StringBuilder();
-                sb.append("'");
-                sb.append(introspectedColumn.getActualColumnName());
-                sb.append("'.toString()");
-                sb.append(" == ");
-                sb.append("column.value");
+                    // 需要 inc 的列
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("'");
+                    sb.append(introspectedColumn.getActualColumnName());
+                    sb.append("'.toString()");
+                    sb.append(" == ");
+                    sb.append("column.value");
 
-                when.addAttribute(new Attribute("test", sb.toString()));
-                when.addElement(new TextElement("${column.value} = ${column.value} ${record.incrementsColumnsInfoMap."
-                        + introspectedColumn.getActualColumnName()
-                        + ".value} #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
-                choose.addElement(when);
+                    when.addAttribute(new Attribute("test", sb.toString()));
+                    when.addElement(new TextElement("${column.value} = ${column.value} ${record.incrementsColumnsInfoMap."
+                            + introspectedColumn.getActualColumnName()
+                            + ".value} #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+                    choose.addElement(when);
+                }
             }
 
-            XmlElement otherwise = new XmlElement("otherwise");
-            otherwise.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
-            choose.addElement(otherwise);
+            if (versionColumn == null) {
+                XmlElement otherwise = new XmlElement("otherwise");
+                otherwise.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+                choose.addElement(otherwise);
+            } else {
+                XmlElement when = new XmlElement("when");
+                when.addAttribute(new Attribute("test", "column.value != '" + versionColumn.getActualColumnName() + "'.toString()"));
+
+                when.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+
+                choose.addElement(when);
+            }
 
             return choose;
         }

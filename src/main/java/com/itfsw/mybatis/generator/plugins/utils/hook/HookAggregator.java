@@ -42,7 +42,7 @@ import java.util.List;
  * @time:2018/4/27 11:33
  * ---------------------------------------------------------------------------
  */
-public class HookAggregator implements IUpsertPluginHook, IModelBuilderPluginHook, IIncrementsPluginHook {
+public class HookAggregator implements IUpsertPluginHook, IModelBuilderPluginHook, IIncrementsPluginHook, IOptimisticLockerPluginHook {
     protected static final Logger logger = LoggerFactory.getLogger(BasePlugin.class); // 日志
     private final static HookAggregator instance = new HookAggregator();
     private Context context;
@@ -105,11 +105,11 @@ public class HookAggregator implements IUpsertPluginHook, IModelBuilderPluginHoo
     }
 
     @Override
-    public Element incrementSetsWithSelectiveEnhancedPluginElementGenerated() {
-        if (this.getPlugins(IIncrementsPluginHook.class).isEmpty()){
+    public Element incrementSetsWithSelectiveEnhancedPluginElementGenerated(IntrospectedColumn versionColumn) {
+        if (this.getPlugins(IIncrementsPluginHook.class).isEmpty()) {
             return null;
         } else {
-            return this.getPlugins(IIncrementsPluginHook.class).get(0).incrementSetsWithSelectiveEnhancedPluginElementGenerated();
+            return this.getPlugins(IIncrementsPluginHook.class).get(0).incrementSetsWithSelectiveEnhancedPluginElementGenerated(versionColumn);
         }
     }
 
@@ -165,5 +165,36 @@ public class HookAggregator implements IUpsertPluginHook, IModelBuilderPluginHoo
             }
         }
         return true;
+    }
+
+    // ================================================= IOptimisticLockerPluginHook ===============================================
+
+    @Override
+    public boolean clientUpdateWithVersionByExampleSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        for (IOptimisticLockerPluginHook plugin : this.getPlugins(IOptimisticLockerPluginHook.class)) {
+            if (!plugin.clientUpdateWithVersionByExampleSelectiveMethodGenerated(method, interfaze, introspectedTable)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean clientUpdateWithVersionByPrimaryKeySelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        for (IOptimisticLockerPluginHook plugin : this.getPlugins(IOptimisticLockerPluginHook.class)) {
+            if (!plugin.clientUpdateWithVersionByPrimaryKeySelectiveMethodGenerated(method, interfaze, introspectedTable)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean generateSetsSelectiveElement(List<IntrospectedColumn> columns, IntrospectedColumn versionColumn, XmlElement setsElement) {
+        if (this.getPlugins(IOptimisticLockerPluginHook.class).isEmpty()) {
+            return false;
+        } else {
+            return this.getPlugins(IOptimisticLockerPluginHook.class).get(0).generateSetsSelectiveElement(columns, versionColumn, setsElement);
+        }
     }
 }

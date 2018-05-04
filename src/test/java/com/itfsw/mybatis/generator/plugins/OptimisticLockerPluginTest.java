@@ -766,4 +766,49 @@ public class OptimisticLockerPluginTest {
             }
         });
     }
+
+    /**
+     * 测试整合SelectiveEnhancedPlugin插件
+     */
+    @Test
+    public void testWithSelectiveEnhancedPlugin() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator-with-SelectiveEnhancedPlugin.xml");
+
+        // 测试updateWithVersionByExampleSelective
+        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdEqualTo", 1l);
+
+                ObjectUtil tbBuilder = new ObjectUtil(loader, packagz + ".Tb$Builder");
+                ObjectUtil tbBuilderInc = new ObjectUtil(loader, packagz + ".Tb$Builder$Inc#INC");
+                tbBuilder.invoke("id", 1L);
+                tbBuilder.invoke("incF1", 121l, tbBuilderInc.getObject()); // 这个不会在sql才为正常
+                tbBuilder.invoke("incF2", 5l, tbBuilderInc.getObject());
+                tbBuilder.invoke("incF3", 10l);
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateWithVersionByExampleSelective", 100L, tbBuilder.invoke("build"), tbExample.getObject());
+                Assert.assertEquals(sql, "update tb SET inc_f1 = inc_f1 + 1, id = 1, inc_f2 = inc_f2 + 5 , inc_f3 = 10 WHERE inc_f1 = 100 and ( ( id = '1' ) )");
+
+                // 执行一次，因为版本号100不存在所以应该返回0
+                Object result = tbMapper.invoke("updateWithVersionByExampleSelective", 100L, tbBuilder.invoke("build"), tbExample.getObject());
+                Assert.assertEquals(result, 0);
+
+                // id = 1 的版本号应该是0
+                result = tbMapper.invoke("updateWithVersionByExampleSelective", 0L, tbBuilder.invoke("build"), tbExample.getObject());
+                Assert.assertEquals(result, 1);
+
+                // 执行完成后版本号应该加1
+                ResultSet rs = DBHelper.execute(sqlSession.getConnection(), "select * from tb where id = 1");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 1);
+                Assert.assertEquals(rs.getInt("inc_f2"), 7);
+            }
+        });
+    }
 }

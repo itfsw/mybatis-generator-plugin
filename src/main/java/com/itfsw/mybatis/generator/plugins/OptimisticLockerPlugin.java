@@ -16,10 +16,8 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
-import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
-import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
-import com.itfsw.mybatis.generator.plugins.utils.XmlElementTools;
+import com.itfsw.mybatis.generator.plugins.utils.*;
+import com.itfsw.mybatis.generator.plugins.utils.hook.IOptimisticLockerPluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
@@ -98,10 +96,10 @@ public class OptimisticLockerPlugin extends BasePlugin {
     @Override
     public boolean clientUpdateByExampleSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            FormatTools.addMethodWithBestPosition(
-                    interfaze,
-                    this.replaceUpdateExampleMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_SELECTIVE)
-            );
+            Method withVersion = this.replaceUpdateExampleMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_SELECTIVE);
+            if (PluginTools.getHook(IOptimisticLockerPluginHook.class).clientUpdateWithVersionByExampleSelectiveMethodGenerated(withVersion, interfaze, introspectedTable)) {
+                FormatTools.addMethodWithBestPosition(interfaze, withVersion);
+            }
         }
         return super.clientUpdateByExampleSelectiveMethodGenerated(method, interfaze, introspectedTable);
     }
@@ -131,10 +129,10 @@ public class OptimisticLockerPlugin extends BasePlugin {
     @Override
     public boolean clientUpdateByPrimaryKeySelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            FormatTools.addMethodWithBestPosition(
-                    interfaze,
-                    this.replaceUpdatePrimaryKeyXmlMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_SELECTIVE)
-            );
+            Method withVersion = this.replaceUpdateExampleMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_SELECTIVE);
+            if (PluginTools.getHook(IOptimisticLockerPluginHook.class).clientUpdateWithVersionByPrimaryKeySelectiveMethodGenerated(withVersion, interfaze, introspectedTable)) {
+                FormatTools.addMethodWithBestPosition(interfaze, withVersion);
+            }
         }
         return super.clientUpdateByPrimaryKeySelectiveMethodGenerated(method, interfaze, introspectedTable);
     }
@@ -572,11 +570,18 @@ public class OptimisticLockerPlugin extends BasePlugin {
             updateEle.addElement(setEle);
 
             // set 节点
-            XmlElement trimEle = XmlElementGeneratorTools.generateSetsSelective(columns, "record.");
-            setEle.addElement(trimEle);
+            XmlElement setsEle = XmlElementGeneratorTools.generateSetsSelective(columns, "record.");
+            setEle.addElement(setsEle);
+
+            XmlElement needVersionEle;
+            if (PluginTools.getHook(IOptimisticLockerPluginHook.class).generateSetsSelectiveElement(columns, this.versionColumn, setsEle)) {
+                needVersionEle = setEle;
+            } else {
+                needVersionEle = setsEle;
+            }
 
             // 版本自增
-            trimEle.addElement(0, new TextElement(
+            needVersionEle.addElement(0, new TextElement(
                     MyBatis3FormattingUtilities.getEscapedColumnName(this.versionColumn)
                             + " = "
                             + MyBatis3FormattingUtilities.getEscapedColumnName(this.versionColumn)

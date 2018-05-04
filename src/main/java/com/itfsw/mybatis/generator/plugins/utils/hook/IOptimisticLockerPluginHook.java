@@ -17,7 +17,10 @@
 package com.itfsw.mybatis.generator.plugins.utils.hook;
 
 import org.mybatis.generator.api.IntrospectedColumn;
-import org.mybatis.generator.api.dom.xml.Element;
+import org.mybatis.generator.api.IntrospectedTable;
+import org.mybatis.generator.api.dom.java.Interface;
+import org.mybatis.generator.api.dom.java.Method;
+import org.mybatis.generator.api.dom.xml.XmlElement;
 
 import java.util.List;
 
@@ -26,23 +29,17 @@ import java.util.List;
  *
  * ---------------------------------------------------------------------------
  * @author: hewei
- * @time:2018/4/28 17:50
+ * @time:2018/5/4 18:08
  * ---------------------------------------------------------------------------
  */
-public interface IIncrementsPluginHook {
-    /**
-     * 生成增量操作节点
-     * @param introspectedColumn
-     * @param prefix
-     * @param hasComma
-     * @return
-     */
-    List<Element> incrementSetElementGenerated(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma);
+public interface IOptimisticLockerPluginHook {
+    // ========================================= method 生成 ============================================
 
-    /**
-     * 生成增量操作节点(SelectiveEnhancedPlugin)
-     * @param versionColumn 需要排除的column（主要是和乐观锁插件整合时要把版本列排除掉）
-     * @return
-     */
-    Element incrementSetsWithSelectiveEnhancedPluginElementGenerated(IntrospectedColumn versionColumn);
+    boolean clientUpdateWithVersionByExampleSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable);
+
+    boolean clientUpdateWithVersionByPrimaryKeySelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable);
+
+    // ========================================= sqlMap 生成 ============================================
+
+    boolean generateSetsSelectiveElement(List<IntrospectedColumn> columns, IntrospectedColumn versionColumn, XmlElement setsElement);
 }

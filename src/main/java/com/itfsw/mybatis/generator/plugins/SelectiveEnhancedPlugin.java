@@ -18,6 +18,7 @@ package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.*;
 import com.itfsw.mybatis.generator.plugins.utils.hook.IIncrementsPluginHook;
+import com.itfsw.mybatis.generator.plugins.utils.hook.IOptimisticLockerPluginHook;
 import com.itfsw.mybatis.generator.plugins.utils.hook.IUpsertPluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
@@ -42,7 +43,7 @@ import java.util.List;
  * @time:2018/4/20 15:39
  * ---------------------------------------------------------------------------
  */
-public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPluginHook {
+public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPluginHook, IOptimisticLockerPluginHook {
 
     /**
      * {@inheritDoc}
@@ -349,6 +350,33 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         return true;
     }
 
+    // ================================================= IOptimisticLockerPluginHook ===============================================
+
+    @Override
+    public boolean clientUpdateWithVersionByExampleSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        // column枚举,找出全字段对应的Model
+        FullyQualifiedJavaType fullFieldModel = introspectedTable.getRules().calculateAllFieldsClass();
+        FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
+        method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
+        return true;
+    }
+
+    @Override
+    public boolean clientUpdateWithVersionByPrimaryKeySelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        // column枚举,找出全字段对应的Model
+        FullyQualifiedJavaType fullFieldModel = introspectedTable.getRules().calculateAllFieldsClass();
+        FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
+        method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
+        return true;
+    }
+
+    @Override
+    public boolean generateSetsSelectiveElement(List<IntrospectedColumn> columns, IntrospectedColumn versionColumn, XmlElement setsElement) {
+        // 替换update set
+        XmlElementTools.replaceXmlElement(setsElement, this.generateSetsSelective(columns, versionColumn));
+        return true;
+    }
+
     // ====================================================== 一些私有节点生成方法 =========================================================
 
     /**
@@ -431,6 +459,15 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
      * @return
      */
     private XmlElement generateSetsSelective(List<IntrospectedColumn> columns) {
+        return generateSetsSelective(columns, null);
+    }
+
+    /**
+     * sets selective
+     * @param columns
+     * @return
+     */
+    private XmlElement generateSetsSelective(List<IntrospectedColumn> columns, IntrospectedColumn versionColumn) {
         XmlElement setsChooseEle = new XmlElement("choose");
 
         XmlElement setWhenEle = new XmlElement("when");
@@ -443,11 +480,18 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         setForeachEle.addAttribute(new Attribute("item", "column"));
         setForeachEle.addAttribute(new Attribute("separator", ","));
 
-        Element incrementEle = PluginTools.getHook(IIncrementsPluginHook.class).incrementSetsWithSelectiveEnhancedPluginElementGenerated();
-        if (incrementEle == null) {
+        Element incrementEle = PluginTools.getHook(IIncrementsPluginHook.class).incrementSetsWithSelectiveEnhancedPluginElementGenerated(versionColumn);
+        // 普通情况
+        if (incrementEle == null && versionColumn == null) {
             setForeachEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
-        } else {
+        } else if (incrementEle != null) {
             setForeachEle.addElement(incrementEle);
+        } else if (versionColumn != null) {
+            XmlElement ifEle = new XmlElement("if");
+            ifEle.addAttribute(new Attribute("test", "column.value != '" + versionColumn.getActualColumnName() + "'.toString()"));
+            ifEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+
+            setForeachEle.addElement(ifEle);
         }
 
 
