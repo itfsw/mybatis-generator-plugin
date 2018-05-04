@@ -47,10 +47,10 @@ public class OptimisticLockerPlugin extends BasePlugin {
     public static final String METHOD_DELETE_WITH_VERSION_BY_PRIMARY_KEY = "deleteWithVersionByPrimaryKey";  // 方法名
     public static final String METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_SELECTIVE = "updateWithVersionByExampleSelective";  // 方法名
     public static final String METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_WITH_BLOBS = "updateWithVersionByExampleWithBLOBs";  // 方法名
-    public static final String METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_WITHOUT_BLOBS = "updateWithVersionByExampleWithoutBLOBs";  // 方法名
+    public static final String METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_WITHOUT_BLOBS = "updateWithVersionByExample";  // 方法名
     public static final String METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_SELECTIVE = "updateWithVersionByPrimaryKeySelective";  // 方法名
     public static final String METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_WITH_BLOBS = "updateWithVersionByPrimaryKeyWithBLOBs";  // 方法名
-    public static final String METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_WITHOUT_BLOBS = "updateWithVersionByPrimaryKeyWithoutBLOBs";  // 方法名
+    public static final String METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_WITHOUT_BLOBS = "updateWithVersionByPrimaryKey";  // 方法名
     public static final String SQL_UPDATE_BY_EXAMPLE_WITH_VERSION_WHERE_CLAUSE = "Update_By_Example_With_Version_Where_Clause";
 
     public static final String PRO_VERSION_COLUMN = "versionColumn";  // 版本列-Key
