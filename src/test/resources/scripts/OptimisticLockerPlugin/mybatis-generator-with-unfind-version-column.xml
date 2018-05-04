@@ -47,7 +47,7 @@
 
         <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 要自动生成的表 +++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
         <table tableName="tb">
-            <property name="versionColumn" value="inc_f1"/>
+            <property name="versionColumn" value="ttssss"/>
 
             <generatedKey column="id" sqlStatement="MySql" identity="true"/>
         </table>

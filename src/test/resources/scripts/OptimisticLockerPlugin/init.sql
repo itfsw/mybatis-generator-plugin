@@ -31,7 +31,7 @@ CREATE TABLE `tb` (
 -- ----------------------------
 -- Records of tb
 -- ----------------------------
-INSERT INTO `tb` VALUES ('1', 'fd1', '0', '0', '0');
+INSERT INTO `tb` VALUES ('1', 'fd1', '0', '2', '0');
 INSERT INTO `tb` VALUES ('2', 'fd2', '1', '2', '3');
 INSERT INTO `tb` VALUES ('3', null, '3', '2', '1');
 INSERT INTO `tb` VALUES ('4', 'fd3', '1', '1', '1');
