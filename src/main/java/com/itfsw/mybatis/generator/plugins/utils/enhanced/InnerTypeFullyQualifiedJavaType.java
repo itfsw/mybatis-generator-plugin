@@ -16,7 +16,6 @@
 
 package com.itfsw.mybatis.generator.plugins.utils.enhanced;
 
-import com.itfsw.mybatis.generator.plugins.utils.BeanUtils;
 import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,9 +40,10 @@ public class InnerTypeFullyQualifiedJavaType extends FullyQualifiedJavaType {
 
         try{
             // 修正package
+            java.lang.reflect.Field packageName = this.getClass().getSuperclass().getDeclaredField("packageName");
+            packageName.setAccessible(true);
             String oldPackageName = getPackageName();
-
-            BeanUtils.setProperty(this, "packageName", oldPackageName.substring(0, oldPackageName.lastIndexOf(".")));
+            packageName.set(this, oldPackageName.substring(0, oldPackageName.lastIndexOf(".")));
 
             outerType = oldPackageName.substring(oldPackageName.lastIndexOf(".") + 1);
         } catch (Exception e){

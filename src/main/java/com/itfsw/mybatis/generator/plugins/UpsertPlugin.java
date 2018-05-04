@@ -304,16 +304,16 @@ public class UpsertPlugin extends BasePlugin {
 
         // insert
         insertEle.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-        for (Element element : XmlElementGeneratorTools.generateKeys(columns)) {
+        for (Element element : XmlElementGeneratorTools.generateUpsertKeys(columns, null)) {
             insertEle.addElement(element);
         }
         insertEle.addElement(new TextElement("values"));
-        for (Element element : XmlElementGeneratorTools.generateValues(columns)) {
+        for (Element element : XmlElementGeneratorTools.generateUpsertValues(columns, null, true)) {
             insertEle.addElement(element);
         }
         insertEle.addElement(new TextElement("on duplicate key update "));
         // set
-        for (Element set : XmlElementGeneratorTools.generateSets(columns)) {
+        for (Element set : XmlElementGeneratorTools.generateUpsertSets(columns, null)) {
             insertEle.addElement(set);
         }
 
@@ -337,7 +337,7 @@ public class UpsertPlugin extends BasePlugin {
             updateEle.addElement(new TextElement("update " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
             updateEle.addElement(new TextElement("set"));
             // set
-            for (Element set : XmlElementGeneratorTools.generateSets(columns, "record.")) {
+            for (Element set : XmlElementGeneratorTools.generateUpsertSets(columns, "record.")) {
                 updateEle.addElement(set);
             }
 
@@ -349,10 +349,10 @@ public class UpsertPlugin extends BasePlugin {
 
             // insert
             updateEle.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-            for (Element element : XmlElementGeneratorTools.generateKeys(columns, "record.")) {
+            for (Element element : XmlElementGeneratorTools.generateUpsertKeys(columns, "record.")) {
                 updateEle.addElement(element);
             }
-            this.generateExistsClause(introspectedTable, updateEle, XmlElementGeneratorTools.generateValues(columns, "record.", false));
+            this.generateExistsClause(introspectedTable, updateEle, XmlElementGeneratorTools.generateUpsertValues(columns, "record.", false));
 
             document.getRootElement().addElement(updateEle);
             logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsertByExample实现方法。");

@@ -285,6 +285,37 @@ public class XmlElementGeneratorTools {
     }
 
     /**
+     * 生成keys Ele (upsert)
+     * @param columns
+     * @param prefix
+     * @return
+     */
+    public static List<Element> generateUpsertKeys(List<IntrospectedColumn> columns, String prefix) {
+        return generateCommColumns(columns, prefix, true, 1, true);
+    }
+
+    /**
+     * 生成values Ele (upsert)
+     * @param columns
+     * @param prefix
+     * @param bracket
+     * @return
+     */
+    public static List<Element> generateUpsertValues(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
+        return generateCommColumns(columns, prefix, bracket, 2, true);
+    }
+
+    /**
+     * 生成sets Ele (upsert)
+     * @param columns
+     * @param prefix
+     * @return
+     */
+    public static List<Element> generateUpsertSets(List<IntrospectedColumn> columns, String prefix) {
+        return generateCommColumns(columns, prefix, false, 3, true);
+    }
+
+    /**
      * 通用遍历columns
      * @param columns
      * @param prefix
@@ -293,10 +324,23 @@ public class XmlElementGeneratorTools {
      * @return
      */
     private static List<Element> generateCommColumns(List<IntrospectedColumn> columns, String prefix, boolean bracket, int type) {
+        return generateCommColumns(columns, prefix, bracket, type, false);
+    }
+
+    /**
+     * 通用遍历columns
+     * @param columns
+     * @param prefix
+     * @param bracket
+     * @param type    1:key,2:value,3:set
+     * @param upsert
+     * @return
+     */
+    private static List<Element> generateCommColumns(List<IntrospectedColumn> columns, String prefix, boolean bracket, int type, boolean upsert) {
         List<Element> list = new ArrayList<>();
 
         // 只有upsert插件才会传入 IdentityAndGeneratedAlwaysColumn
-        if (hasIdentityAndGeneratedAlwaysColumns(columns)) {
+        if (upsert && hasIdentityAndGeneratedAlwaysColumns(columns)) {
             XmlElement trimEle = generateTrim(bracket);
 
             for (IntrospectedColumn introspectedColumn : columns) {
