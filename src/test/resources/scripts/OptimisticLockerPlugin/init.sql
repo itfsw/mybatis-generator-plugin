@@ -46,8 +46,8 @@ CREATE TABLE `tb_blobs` (
   `field2` longtext COMMENT '注释2',
   `field3` longtext,
   `inc_f1` bigint(20) NOT NULL DEFAULT '0',
-  `inc_f2` bigint(20) NOT NULL DEFAULT '0',
-  `inc_f3` bigint(20) NOT NULL DEFAULT '0',
+  `inc_f2` bigint(20) DEFAULT '0',
+  `inc_f3` bigint(20) DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 
