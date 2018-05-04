@@ -129,7 +129,7 @@ public class OptimisticLockerPlugin extends BasePlugin {
     @Override
     public boolean clientUpdateByPrimaryKeySelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            Method withVersion = this.replaceUpdateExampleMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_SELECTIVE);
+            Method withVersion = this.replaceUpdatePrimaryKeyMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_SELECTIVE);
             if (PluginTools.getHook(IOptimisticLockerPluginHook.class).clientUpdateWithVersionByPrimaryKeySelectiveMethodGenerated(withVersion, interfaze, introspectedTable)) {
                 FormatTools.addMethodWithBestPosition(interfaze, withVersion);
             }
@@ -142,7 +142,7 @@ public class OptimisticLockerPlugin extends BasePlugin {
         if (this.versionColumn != null) {
             FormatTools.addMethodWithBestPosition(
                     interfaze,
-                    this.replaceUpdatePrimaryKeyXmlMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_WITH_BLOBS)
+                    this.replaceUpdatePrimaryKeyMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_WITH_BLOBS)
             );
         }
         return super.clientUpdateByPrimaryKeyWithBLOBsMethodGenerated(method, interfaze, introspectedTable);
@@ -153,7 +153,7 @@ public class OptimisticLockerPlugin extends BasePlugin {
         if (this.versionColumn != null) {
             FormatTools.addMethodWithBestPosition(
                     interfaze,
-                    this.replaceUpdatePrimaryKeyXmlMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_WITHOUT_BLOBS)
+                    this.replaceUpdatePrimaryKeyMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_WITHOUT_BLOBS)
             );
         }
         return super.clientUpdateByPrimaryKeyWithoutBLOBsMethodGenerated(method, interfaze, introspectedTable);
@@ -404,7 +404,7 @@ public class OptimisticLockerPlugin extends BasePlugin {
      * @param methodName
      * @return
      */
-    private Method replaceUpdatePrimaryKeyXmlMethod(IntrospectedTable introspectedTable, Method method, Interface interfaze, String methodName) {
+    private Method replaceUpdatePrimaryKeyMethod(IntrospectedTable introspectedTable, Method method, Interface interfaze, String methodName) {
         Method withVersionMethod = new Method(method);
 
         // 替换方法名
