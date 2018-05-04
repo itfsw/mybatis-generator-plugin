@@ -610,7 +610,7 @@ public class OptimisticLockerPlugin extends BasePlugin {
 
             updateEle.addElement(ifElement);
         } else {
-            this.replacePrimaryKeyXmlElement(introspectedTable, updateEle, id, true);
+            updateEle = this.replacePrimaryKeyXmlElement(introspectedTable, updateEle, id, true);
         }
 
         return updateEle;

@@ -179,10 +179,10 @@ public class OptimisticLockerPluginTest {
     }
 
     /**
-     * 测试 updateWithVersionByExampleWithoutBLOBs
+     * 测试 updateWithVersionByExample
      */
     @Test
-    public void testUpdateWithVersionByExampleWithoutBLOBs() throws Exception {
+    public void testUpdateWithVersionByExample() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator.xml");
         // 测试不带or的更新
         tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
@@ -318,6 +318,152 @@ public class OptimisticLockerPluginTest {
 
                 // id = 1 的版本号应该是1
                 result = tbBlobsMapper.invoke("updateWithVersionByExampleWithBLOBs", 1L, tbBlobsWithBLOBs.getObject(), tbBlobsExample.getObject());
+                Assert.assertEquals(result, 1);
+
+                // 执行完成后版本号应该加1
+                ResultSet rs = DBHelper.execute(sqlSession.getConnection(), "select * from tb_blobs where id = 1");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 2);
+                Assert.assertEquals(rs.getString("field1"), "ts1");
+            }
+        });
+    }
+
+    /**
+     * 测试 updateWithVersionByPrimaryKeySelective
+     */
+    @Test
+    public void testUpdateWithVersionByPrimaryKeySelective() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator.xml");
+        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
+                tb.set("id", 1L);
+                tb.set("incF1", 152L);  // 这个不会在sql才为正常
+                tb.set("incF2", 10L);
+                tb.set("incF3", 5L);
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateWithVersionByPrimaryKeySelective", 100L, tb.getObject());
+                Assert.assertEquals(sql, "update tb SET inc_f1 = inc_f1 + 1, inc_f2 = 10, inc_f3 = 5 where inc_f1 = 100 and id = 1");
+
+                // 执行一次，因为版本号100不存在所以应该返回0
+                Object result = tbMapper.invoke("updateWithVersionByPrimaryKeySelective", 100L, tb.getObject());
+                Assert.assertEquals(result, 0);
+
+                // id = 1 的版本号应该是0
+                result = tbMapper.invoke("updateWithVersionByPrimaryKeySelective", 0L, tb.getObject());
+                Assert.assertEquals(result, 1);
+
+                // 执行完成后版本号应该加1
+                ResultSet rs = DBHelper.execute(sqlSession.getConnection(), "select * from tb where id = 1");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 1);
+            }
+        });
+    }
+
+    /**
+     * 测试 updateWithVersionByPrimaryKey
+     */
+    @Test
+    public void testUpdateWithVersionByPrimaryKey() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator.xml");
+        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
+                tb.set("id", 1L);
+                tb.set("incF1", 152L);  // 这个不会在sql才为正常
+                tb.set("incF2", 10L);
+                tb.set("incF3", 5L);
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateWithVersionByPrimaryKey", 100L, tb.getObject());
+                Assert.assertEquals(sql, "update tb set inc_f1 = inc_f1 + 1, field1 = 'null', inc_f2 = 10, inc_f3 = 5 where inc_f1 = 100 and id = 1");
+
+                // 执行一次，因为版本号100不存在所以应该返回0
+                Object result = tbMapper.invoke("updateWithVersionByPrimaryKey", 100L, tb.getObject());
+                Assert.assertEquals(result, 0);
+
+                // id = 1 的版本号应该是0
+                result = tbMapper.invoke("updateWithVersionByPrimaryKey", 0L, tb.getObject());
+                Assert.assertEquals(result, 1);
+
+                // 执行完成后版本号应该加1
+                ResultSet rs = DBHelper.execute(sqlSession.getConnection(), "select * from tb where id = 1");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 1);
+            }
+        });
+    }
+
+    /**
+     * 测试 updateWithVersionByPrimaryKeyWithBLOBs
+     */
+    @Test
+    public void testUpdateWithVersionByPrimaryKeyWithBLOBs() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator.xml");
+
+        // 测试执行withoutBLOBs
+        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
+
+                ObjectUtil tbBlobs = new ObjectUtil(loader, packagz + ".TbBlobs");
+                tbBlobs.set("id", 1L);
+                tbBlobs.set("incF1", 152L);  // 这个不会在sql才为正常
+                tbBlobs.set("incF2", 10L);
+                tbBlobs.set("incF3", 5L);
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbBlobsMapper.getObject(), "updateWithVersionByPrimaryKey", 100L, tbBlobs.getObject());
+                Assert.assertEquals(sql, "update tb_blobs set inc_f1 = inc_f1 + 1, field1 = 'null', inc_f2 = 10, inc_f3 = 5 where inc_f1 = 100 and id = 1");
+
+                // 执行一次，因为版本号100不存在所以应该返回0
+                Object result = tbBlobsMapper.invoke("updateWithVersionByPrimaryKey", 100L, tbBlobs.getObject());
+                Assert.assertEquals(result, 0);
+
+                // id = 1 的版本号应该是1
+                result = tbBlobsMapper.invoke("updateWithVersionByPrimaryKey", 1L, tbBlobs.getObject());
+                Assert.assertEquals(result, 1);
+
+                // 执行完成后版本号应该加1
+                ResultSet rs = DBHelper.execute(sqlSession.getConnection(), "select * from tb_blobs where id = 1");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 2);
+            }
+        });
+
+        // 测试执行withBLOBs
+        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
+
+                ObjectUtil tbBlobsWithBLOBs = new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs");
+                tbBlobsWithBLOBs.set("id", 1L);
+                tbBlobsWithBLOBs.set("incF1", 152L);  // 这个不会在sql才为正常
+                tbBlobsWithBLOBs.set("incF2", 10L);
+                tbBlobsWithBLOBs.set("incF3", 5L);
+                tbBlobsWithBLOBs.set("field1", "ts1");
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbBlobsMapper.getObject(), "updateWithVersionByPrimaryKeyWithBLOBs", 100L, tbBlobsWithBLOBs.getObject());
+                Assert.assertEquals(sql, "update tb_blobs set inc_f1 = inc_f1 + 1, field1 = 'ts1', inc_f2 = 10, inc_f3 = 5, field2 = 'null', field3 = 'null' where inc_f1 = 100 and id = 1");
+
+                // 执行一次，因为版本号100不存在所以应该返回0
+                Object result = tbBlobsMapper.invoke("updateWithVersionByPrimaryKeyWithBLOBs", 100L, tbBlobsWithBLOBs.getObject());
+                Assert.assertEquals(result, 0);
+
+                // id = 1 的版本号应该是1
+                result = tbBlobsMapper.invoke("updateWithVersionByPrimaryKeyWithBLOBs", 1L, tbBlobsWithBLOBs.getObject());
                 Assert.assertEquals(result, 1);
 
                 // 执行完成后版本号应该加1
