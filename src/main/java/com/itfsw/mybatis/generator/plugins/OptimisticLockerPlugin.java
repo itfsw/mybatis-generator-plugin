@@ -570,15 +570,18 @@ public class OptimisticLockerPlugin extends BasePlugin {
         if (selective) {
             XmlElement setEle = new XmlElement("set");
             updateEle.addElement(setEle);
+
+            // set 节点
+            XmlElement trimEle = XmlElementGeneratorTools.generateSetsSelective(columns, "record.");
+            setEle.addElement(trimEle);
+
             // 版本自增
-            setEle.addElement(new TextElement(
+            trimEle.addElement(0, new TextElement(
                     MyBatis3FormattingUtilities.getEscapedColumnName(this.versionColumn)
                             + " = "
                             + MyBatis3FormattingUtilities.getEscapedColumnName(this.versionColumn)
                             + " + 1,"
             ));
-            // set 节点
-            setEle.addElement(XmlElementGeneratorTools.generateSetsSelective(columns, "record."));
         } else {
             // 版本自增
             updateEle.addElement(new TextElement(
