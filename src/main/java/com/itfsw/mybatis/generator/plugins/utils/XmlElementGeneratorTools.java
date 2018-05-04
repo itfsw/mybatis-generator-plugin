@@ -50,33 +50,27 @@ public class XmlElementGeneratorTools {
      * @return the selectKey element
      */
     public static Element getSelectKey(IntrospectedColumn introspectedColumn, GeneratedKey generatedKey) {
-        String identityColumnType = introspectedColumn
-                .getFullyQualifiedJavaType().getFullyQualifiedName();
+        String identityColumnType = introspectedColumn.getFullyQualifiedJavaType().getFullyQualifiedName();
 
         XmlElement answer = new XmlElement("selectKey");
         answer.addAttribute(new Attribute("resultType", identityColumnType));
-        answer.addAttribute(new Attribute(
-                "keyProperty", introspectedColumn.getJavaProperty()));
-        answer.addAttribute(new Attribute("order",
-                generatedKey.getMyBatis3Order()));
+        answer.addAttribute(new Attribute("keyProperty", introspectedColumn.getJavaProperty()));
+        answer.addAttribute(new Attribute("order", generatedKey.getMyBatis3Order()));
 
-        answer.addElement(new TextElement(generatedKey
-                .getRuntimeSqlStatement()));
+        answer.addElement(new TextElement(generatedKey.getRuntimeSqlStatement()));
 
         return answer;
     }
 
     public static Element getBaseColumnListElement(IntrospectedTable introspectedTable) {
         XmlElement answer = new XmlElement("include");
-        answer.addAttribute(new Attribute("refid",
-                introspectedTable.getBaseColumnListId()));
+        answer.addAttribute(new Attribute("refid", introspectedTable.getBaseColumnListId()));
         return answer;
     }
 
     public static Element getBlobColumnListElement(IntrospectedTable introspectedTable) {
         XmlElement answer = new XmlElement("include");
-        answer.addAttribute(new Attribute("refid",
-                introspectedTable.getBlobColumnListId()));
+        answer.addAttribute(new Attribute("refid", introspectedTable.getBlobColumnListId()));
         return answer;
     }
 
@@ -85,8 +79,7 @@ public class XmlElementGeneratorTools {
         ifElement.addAttribute(new Attribute("test", "_parameter != null"));
 
         XmlElement includeElement = new XmlElement("include");
-        includeElement.addAttribute(new Attribute("refid",
-                introspectedTable.getExampleWhereClauseId()));
+        includeElement.addAttribute(new Attribute("refid", introspectedTable.getExampleWhereClauseId()));
         ifElement.addElement(includeElement);
 
         return ifElement;
@@ -97,8 +90,7 @@ public class XmlElementGeneratorTools {
         ifElement.addAttribute(new Attribute("test", "_parameter != null"));
 
         XmlElement includeElement = new XmlElement("include");
-        includeElement.addAttribute(new Attribute("refid",
-                introspectedTable.getMyBatis3UpdateByExampleWhereClauseId()));
+        includeElement.addAttribute(new Attribute("refid", introspectedTable.getMyBatis3UpdateByExampleWhereClauseId()));
         ifElement.addElement(includeElement);
 
         return ifElement;
@@ -270,18 +262,7 @@ public class XmlElementGeneratorTools {
      * @return
      */
     public static List<Element> generateSets(List<IntrospectedColumn> columns, String prefix) {
-        return generateSets(columns, prefix, false);
-    }
-
-    /**
-     * 生成sets Ele
-     * @param columns
-     * @param prefix
-     * @param bracket
-     * @return
-     */
-    public static List<Element> generateSets(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
-        return generateCommColumns(columns, prefix, bracket, 3);
+        return generateCommColumns(columns, prefix, false, 3);
     }
 
     /**
@@ -290,7 +271,7 @@ public class XmlElementGeneratorTools {
      * @return
      */
     public static XmlElement generateSetsSelective(List<IntrospectedColumn> columns) {
-        return generateSetsSelective(columns, null, false);
+        return generateSetsSelective(columns, null);
     }
 
     /**
@@ -300,18 +281,7 @@ public class XmlElementGeneratorTools {
      * @return
      */
     public static XmlElement generateSetsSelective(List<IntrospectedColumn> columns, String prefix) {
-        return generateSetsSelective(columns, prefix, false);
-    }
-
-    /**
-     * 生成sets Selective Ele
-     * @param columns
-     * @param prefix
-     * @param bracket
-     * @return
-     */
-    public static XmlElement generateSetsSelective(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
-        return generateCommColumnsSelective(columns, prefix, bracket, 3);
+        return generateCommColumnsSelective(columns, prefix, false, 3);
     }
 
     /**
@@ -325,6 +295,7 @@ public class XmlElementGeneratorTools {
     private static List<Element> generateCommColumns(List<IntrospectedColumn> columns, String prefix, boolean bracket, int type) {
         List<Element> list = new ArrayList<>();
 
+        // 只有upsert插件才会传入 IdentityAndGeneratedAlwaysColumn
         if (hasIdentityAndGeneratedAlwaysColumns(columns)) {
             XmlElement trimEle = generateTrim(bracket);
 

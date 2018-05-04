@@ -17,8 +17,8 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
-import com.itfsw.mybatis.generator.plugins.utils.BeanUtils;
 import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
+import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.XmlElementTools;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
@@ -27,12 +27,11 @@ import org.mybatis.generator.api.dom.java.Interface;
 import org.mybatis.generator.api.dom.java.Method;
 import org.mybatis.generator.api.dom.java.Parameter;
 import org.mybatis.generator.api.dom.xml.*;
+import org.mybatis.generator.codegen.mybatis3.ListUtilities;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 import org.mybatis.generator.internal.util.StringUtility;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * ---------------------------------------------------------------------------
@@ -77,7 +76,10 @@ public class OptimisticLockerPlugin extends BasePlugin {
     @Override
     public boolean clientDeleteByExampleMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            this.replaceDeleteExampleMethod(introspectedTable, method, interfaze, METHOD_DELETE_WITH_VERSION_BY_EXAMPLE);
+            FormatTools.addMethodWithBestPosition(
+                    interfaze,
+                    this.replaceDeleteExampleMethod(introspectedTable, method, interfaze, METHOD_DELETE_WITH_VERSION_BY_EXAMPLE)
+            );
         }
         return super.clientDeleteByExampleMethodGenerated(method, interfaze, introspectedTable);
     }
@@ -85,7 +87,10 @@ public class OptimisticLockerPlugin extends BasePlugin {
     @Override
     public boolean clientDeleteByPrimaryKeyMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            this.replaceDeletePrimaryKeyMethod(introspectedTable, method, interfaze, METHOD_DELETE_WITH_VERSION_BY_PRIMARY_KEY);
+            FormatTools.addMethodWithBestPosition(
+                    interfaze,
+                    this.replaceDeletePrimaryKeyMethod(introspectedTable, method, interfaze, METHOD_DELETE_WITH_VERSION_BY_PRIMARY_KEY)
+            );
         }
         return super.clientDeleteByPrimaryKeyMethodGenerated(method, interfaze, introspectedTable);
     }
@@ -93,7 +98,10 @@ public class OptimisticLockerPlugin extends BasePlugin {
     @Override
     public boolean clientUpdateByExampleSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            this.replaceUpdateExampleMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_SELECTIVE);
+            FormatTools.addMethodWithBestPosition(
+                    interfaze,
+                    this.replaceUpdateExampleMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_SELECTIVE)
+            );
         }
         return super.clientUpdateByExampleSelectiveMethodGenerated(method, interfaze, introspectedTable);
     }
@@ -101,7 +109,10 @@ public class OptimisticLockerPlugin extends BasePlugin {
     @Override
     public boolean clientUpdateByExampleWithBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            this.replaceUpdateExampleMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_WITH_BLOBS);
+            FormatTools.addMethodWithBestPosition(
+                    interfaze,
+                    this.replaceUpdateExampleMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_WITH_BLOBS)
+            );
         }
         return super.clientUpdateByExampleWithBLOBsMethodGenerated(method, interfaze, introspectedTable);
     }
@@ -109,7 +120,10 @@ public class OptimisticLockerPlugin extends BasePlugin {
     @Override
     public boolean clientUpdateByExampleWithoutBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            this.replaceUpdateExampleMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_WITHOUT_BLOBS);
+            FormatTools.addMethodWithBestPosition(
+                    interfaze,
+                    this.replaceUpdateExampleMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_WITHOUT_BLOBS)
+            );
         }
         return super.clientUpdateByExampleWithoutBLOBsMethodGenerated(method, interfaze, introspectedTable);
     }
@@ -117,7 +131,10 @@ public class OptimisticLockerPlugin extends BasePlugin {
     @Override
     public boolean clientUpdateByPrimaryKeySelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            this.replaceUpdatePrimaryKeyXmlMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_SELECTIVE);
+            FormatTools.addMethodWithBestPosition(
+                    interfaze,
+                    this.replaceUpdatePrimaryKeyXmlMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_SELECTIVE)
+            );
         }
         return super.clientUpdateByPrimaryKeySelectiveMethodGenerated(method, interfaze, introspectedTable);
     }
@@ -125,7 +142,10 @@ public class OptimisticLockerPlugin extends BasePlugin {
     @Override
     public boolean clientUpdateByPrimaryKeyWithBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            this.replaceUpdatePrimaryKeyXmlMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_WITH_BLOBS);
+            FormatTools.addMethodWithBestPosition(
+                    interfaze,
+                    this.replaceUpdatePrimaryKeyXmlMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_WITH_BLOBS)
+            );
         }
         return super.clientUpdateByPrimaryKeyWithBLOBsMethodGenerated(method, interfaze, introspectedTable);
     }
@@ -133,7 +153,10 @@ public class OptimisticLockerPlugin extends BasePlugin {
     @Override
     public boolean clientUpdateByPrimaryKeyWithoutBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            this.replaceUpdatePrimaryKeyXmlMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_WITHOUT_BLOBS);
+            FormatTools.addMethodWithBestPosition(
+                    interfaze,
+                    this.replaceUpdatePrimaryKeyXmlMethod(introspectedTable, method, interfaze, METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_WITHOUT_BLOBS)
+            );
         }
         return super.clientUpdateByPrimaryKeyWithoutBLOBsMethodGenerated(method, interfaze, introspectedTable);
     }
@@ -143,7 +166,9 @@ public class OptimisticLockerPlugin extends BasePlugin {
     @Override
     public boolean sqlMapDeleteByExampleElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            this.replaceExampleXmlElement(introspectedTable, element, METHOD_DELETE_WITH_VERSION_BY_EXAMPLE);
+            this.sqlMaps.get(introspectedTable).add(
+                    this.replaceExampleXmlElement(introspectedTable, element, METHOD_DELETE_WITH_VERSION_BY_EXAMPLE)
+            );
         }
         return super.sqlMapDeleteByExampleElementGenerated(element, introspectedTable);
     }
@@ -157,7 +182,9 @@ public class OptimisticLockerPlugin extends BasePlugin {
     @Override
     public boolean sqlMapDeleteByPrimaryKeyElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            this.replacePrimaryKeyXmlElement(introspectedTable, element, METHOD_DELETE_WITH_VERSION_BY_PRIMARY_KEY, false);
+            this.sqlMaps.get(introspectedTable).add(
+                    this.replacePrimaryKeyXmlElement(introspectedTable, element, METHOD_DELETE_WITH_VERSION_BY_PRIMARY_KEY, false)
+            );
         }
         return super.sqlMapDeleteByPrimaryKeyElementGenerated(element, introspectedTable);
     }
@@ -165,7 +192,15 @@ public class OptimisticLockerPlugin extends BasePlugin {
     @Override
     public boolean sqlMapUpdateByExampleSelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            this.replaceExampleXmlElement(introspectedTable, element, METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_SELECTIVE);
+            this.sqlMaps.get(introspectedTable).add(
+                    this.generateSqlMapUpdate(
+                            introspectedTable,
+                            ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getAllColumns()),
+                            METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_SELECTIVE,
+                            true,
+                            true
+                    )
+            );
         }
         return super.sqlMapUpdateByExampleSelectiveElementGenerated(element, introspectedTable);
     }
@@ -173,7 +208,15 @@ public class OptimisticLockerPlugin extends BasePlugin {
     @Override
     public boolean sqlMapUpdateByExampleWithBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            this.replaceExampleXmlElement(introspectedTable, element, METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_WITH_BLOBS);
+            this.sqlMaps.get(introspectedTable).add(
+                    this.generateSqlMapUpdate(
+                            introspectedTable,
+                            ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getAllColumns()),
+                            METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_WITH_BLOBS,
+                            false,
+                            true
+                    )
+            );
         }
         return super.sqlMapUpdateByExampleWithBLOBsElementGenerated(element, introspectedTable);
     }
@@ -181,7 +224,15 @@ public class OptimisticLockerPlugin extends BasePlugin {
     @Override
     public boolean sqlMapUpdateByExampleWithoutBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            this.replaceExampleXmlElement(introspectedTable, element, METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_WITHOUT_BLOBS);
+            this.sqlMaps.get(introspectedTable).add(
+                    this.generateSqlMapUpdate(
+                            introspectedTable,
+                            ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getNonBLOBColumns()),
+                            METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_WITHOUT_BLOBS,
+                            false,
+                            true
+                    )
+            );
         }
         return super.sqlMapUpdateByExampleWithoutBLOBsElementGenerated(element, introspectedTable);
     }
@@ -189,7 +240,15 @@ public class OptimisticLockerPlugin extends BasePlugin {
     @Override
     public boolean sqlMapUpdateByPrimaryKeySelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            this.replaceUpdateByPrimaryKeyXmlElement(introspectedTable, element, METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_SELECTIVE);
+            this.sqlMaps.get(introspectedTable).add(
+                    this.generateSqlMapUpdate(
+                            introspectedTable,
+                            ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getNonPrimaryKeyColumns()),
+                            METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_SELECTIVE,
+                            true,
+                            false
+                    )
+            );
         }
         return super.sqlMapUpdateByPrimaryKeySelectiveElementGenerated(element, introspectedTable);
     }
@@ -197,7 +256,15 @@ public class OptimisticLockerPlugin extends BasePlugin {
     @Override
     public boolean sqlMapUpdateByPrimaryKeyWithBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            this.replaceUpdateByPrimaryKeyXmlElement(introspectedTable, element, METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_WITH_BLOBS);
+            this.sqlMaps.get(introspectedTable).add(
+                    this.generateSqlMapUpdate(
+                            introspectedTable,
+                            ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getNonPrimaryKeyColumns()),
+                            METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_WITH_BLOBS,
+                            false,
+                            false
+                    )
+            );
         }
         return super.sqlMapUpdateByPrimaryKeyWithBLOBsElementGenerated(element, introspectedTable);
     }
@@ -205,7 +272,15 @@ public class OptimisticLockerPlugin extends BasePlugin {
     @Override
     public boolean sqlMapUpdateByPrimaryKeyWithoutBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            this.replaceUpdateByPrimaryKeyXmlElement(introspectedTable, element, METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_WITHOUT_BLOBS);
+            this.sqlMaps.get(introspectedTable).add(
+                    this.generateSqlMapUpdate(
+                            introspectedTable,
+                            ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getBaseColumns()),
+                            METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_WITHOUT_BLOBS,
+                            false,
+                            false
+                    )
+            );
         }
         return super.sqlMapUpdateByPrimaryKeyWithoutBLOBsElementGenerated(element, introspectedTable);
     }
@@ -282,8 +357,9 @@ public class OptimisticLockerPlugin extends BasePlugin {
      * @param method
      * @param interfaze
      * @param methodName
+     * @return
      */
-    private void replaceUpdateExampleMethod(IntrospectedTable introspectedTable, Method method, Interface interfaze, String methodName) {
+    private Method replaceUpdateExampleMethod(IntrospectedTable introspectedTable, Method method, Interface interfaze, String methodName) {
         Method withVersionMethod = new Method(method);
 
         // 替换方法名
@@ -294,7 +370,7 @@ public class OptimisticLockerPlugin extends BasePlugin {
 
         withVersionMethod.addParameter(0, versionParam);
 
-        FormatTools.addMethodWithBestPosition(interfaze, withVersionMethod);
+        return withVersionMethod;
     }
 
     /**
@@ -303,8 +379,9 @@ public class OptimisticLockerPlugin extends BasePlugin {
      * @param method
      * @param interfaze
      * @param methodName
+     * @return
      */
-    private void replaceDeleteExampleMethod(IntrospectedTable introspectedTable, Method method, Interface interfaze, String methodName) {
+    private Method replaceDeleteExampleMethod(IntrospectedTable introspectedTable, Method method, Interface interfaze, String methodName) {
         Method withVersionMethod = new Method(method);
 
         // 替换方法名
@@ -318,7 +395,7 @@ public class OptimisticLockerPlugin extends BasePlugin {
         withVersionMethod.addParameter(versionParam);
         withVersionMethod.addParameter(exampleParam);
 
-        FormatTools.addMethodWithBestPosition(interfaze, withVersionMethod);
+        return withVersionMethod;
     }
 
     /**
@@ -327,8 +404,9 @@ public class OptimisticLockerPlugin extends BasePlugin {
      * @param method
      * @param interfaze
      * @param methodName
+     * @return
      */
-    private void replaceUpdatePrimaryKeyXmlMethod(IntrospectedTable introspectedTable, Method method, Interface interfaze, String methodName) {
+    private Method replaceUpdatePrimaryKeyXmlMethod(IntrospectedTable introspectedTable, Method method, Interface interfaze, String methodName) {
         Method withVersionMethod = new Method(method);
 
         // 替换方法名
@@ -342,7 +420,7 @@ public class OptimisticLockerPlugin extends BasePlugin {
         withVersionMethod.addParameter(versionParam);
         withVersionMethod.addParameter(recordParam);
 
-        FormatTools.addMethodWithBestPosition(interfaze, withVersionMethod);
+        return withVersionMethod;
     }
 
     /**
@@ -351,8 +429,9 @@ public class OptimisticLockerPlugin extends BasePlugin {
      * @param method
      * @param interfaze
      * @param methodName
+     * @return
      */
-    private void replaceDeletePrimaryKeyMethod(IntrospectedTable introspectedTable, Method method, Interface interfaze, String methodName) {
+    private Method replaceDeletePrimaryKeyMethod(IntrospectedTable introspectedTable, Method method, Interface interfaze, String methodName) {
         Method withVersionMethod = new Method(method);
 
         // 替换方法名
@@ -366,36 +445,7 @@ public class OptimisticLockerPlugin extends BasePlugin {
         withVersionMethod.addParameter(versionParam);
         withVersionMethod.addParameter(keyParam);
 
-        FormatTools.addMethodWithBestPosition(interfaze, withVersionMethod);
-    }
-
-    /**
-     * updateByPrimaryKeyXXXXX 因为替换了传入参数，使用注解record来赋值
-     * @param introspectedTable
-     * @param element
-     * @param id
-     * @return
-     */
-    private XmlElement replaceUpdateByPrimaryKeyXmlElement(IntrospectedTable introspectedTable, XmlElement element, String id) {
-        XmlElement withVersionEle = XmlElementTools.clone(element);
-
-        // 查找所有文本节点，替换set操作text xml 节点
-        for (TextElement textElement : XmlElementTools.findAllTextElements(withVersionEle)) {
-            if (textElement.getContent().matches(".*#\\{\\w+,.*}.*")) {
-
-                Matcher matcher = Pattern.compile("(.*#\\{)(\\w+,.*}.*)").matcher(textElement.getContent());
-                if (matcher.find()) {
-                    String context = matcher.group(1) + "record." + matcher.group(2);
-                    try {
-                        BeanUtils.setProperty(textElement, "content", context);
-                    } catch (Exception e) {
-                        warnings.add("Java反射失败！");
-                    }
-                }
-            }
-        }
-
-        return replacePrimaryKeyXmlElement(introspectedTable, withVersionEle, id, true);
+        return withVersionMethod;
     }
 
     /**
@@ -403,6 +453,7 @@ public class OptimisticLockerPlugin extends BasePlugin {
      * @param introspectedTable
      * @param element
      * @param id
+     * @return
      */
     private XmlElement replaceExampleXmlElement(IntrospectedTable introspectedTable, XmlElement element, String id) {
         XmlElement withVersionEle = XmlElementTools.clone(element);
@@ -423,8 +474,6 @@ public class OptimisticLockerPlugin extends BasePlugin {
             }
         }
 
-        this.sqlMaps.get(introspectedTable).add(withVersionEle);
-
         return withVersionEle;
     }
 
@@ -434,6 +483,7 @@ public class OptimisticLockerPlugin extends BasePlugin {
      * @param element
      * @param id
      * @param update
+     * @return
      */
     private XmlElement replacePrimaryKeyXmlElement(IntrospectedTable introspectedTable, XmlElement element, String id, boolean update) {
         XmlElement withVersionEle = XmlElementTools.clone(element);
@@ -488,8 +538,78 @@ public class OptimisticLockerPlugin extends BasePlugin {
             }
         }
 
-        this.sqlMaps.get(introspectedTable).add(withVersionEle);
-
         return withVersionEle;
+    }
+
+    /**
+     * 生成update sql map
+     * @param introspectedTable
+     * @param columns
+     * @param id
+     * @param selective
+     * @param byExample
+     * @return
+     */
+    private XmlElement generateSqlMapUpdate(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, String id, boolean selective, boolean byExample) {
+        // 移除版本列
+        Iterator<IntrospectedColumn> columnIterator = columns.iterator();
+        while (columnIterator.hasNext()) {
+            IntrospectedColumn introspectedColumn = columnIterator.next();
+            if (introspectedColumn.getActualColumnName().equals(this.versionColumn.getActualColumnName())) {
+                columnIterator.remove();
+            }
+        }
+
+        XmlElement updateEle = new XmlElement("update");
+
+        updateEle.addAttribute(new Attribute("id", id));
+        updateEle.addAttribute(new Attribute("parameterType", "map"));
+        commentGenerator.addComment(updateEle);
+
+        updateEle.addElement(new TextElement("update " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
+        if (selective) {
+            XmlElement setEle = new XmlElement("set");
+            updateEle.addElement(setEle);
+            // 版本自增
+            setEle.addElement(new TextElement(
+                    MyBatis3FormattingUtilities.getEscapedColumnName(this.versionColumn)
+                            + " = "
+                            + MyBatis3FormattingUtilities.getEscapedColumnName(this.versionColumn)
+                            + " + 1,"
+            ));
+            // set 节点
+            setEle.addElement(XmlElementGeneratorTools.generateSetsSelective(columns, "record."));
+        } else {
+            // 版本自增
+            updateEle.addElement(new TextElement(
+                    "set "
+                            + MyBatis3FormattingUtilities.getEscapedColumnName(this.versionColumn)
+                            + " = "
+                            + MyBatis3FormattingUtilities.getEscapedColumnName(this.versionColumn)
+                            + " + 1,"
+            ));
+            // set 节点
+            List<Element> setsEles = XmlElementGeneratorTools.generateSets(columns, "record.");
+            //  XmlElementGeneratorTools.generateSets, 因为传入参数不可能带IdentityAndGeneratedAlwaysColumn所以返回的是set列表而不可能是trim 元素
+            for (Element ele : setsEles) {
+                updateEle.addElement(ele);
+            }
+        }
+
+        // 更新条件
+        if (byExample) {
+            XmlElement ifElement = new XmlElement("if");
+            ifElement.addAttribute(new Attribute("test", "_parameter != null"));
+
+            XmlElement includeElement = new XmlElement("include");
+            includeElement.addAttribute(new Attribute("refid", SQL_UPDATE_BY_EXAMPLE_WITH_VERSION_WHERE_CLAUSE));
+            ifElement.addElement(includeElement);
+
+            updateEle.addElement(ifElement);
+        } else {
+            this.replacePrimaryKeyXmlElement(introspectedTable, updateEle, id, true);
+        }
+
+        return updateEle;
     }
 }

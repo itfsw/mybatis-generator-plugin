@@ -53,9 +53,13 @@
         </table>
         <table tableName="tb_keys">
             <property name="versionColumn" value="inc_f1"/>
+
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
         </table>
         <table tableName="tb_blobs">
             <property name="versionColumn" value="inc_f1"/>
+
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
         </table>
     </context>
 </generatorConfiguration>

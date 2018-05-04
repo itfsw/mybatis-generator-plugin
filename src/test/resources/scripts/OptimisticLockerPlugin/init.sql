@@ -20,7 +20,7 @@ SET FOREIGN_KEY_CHECKS=0;
 -- ----------------------------
 DROP TABLE IF EXISTS `tb`;
 CREATE TABLE `tb` (
-  `id` bigint(20) NOT NULL COMMENT '注释1',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '注释1',
   `field1` varchar(255) DEFAULT NULL COMMENT '注释2',
   `inc_f1` bigint(20) NOT NULL DEFAULT '0',
   `inc_f2` bigint(20) DEFAULT '0',
