@@ -132,9 +132,13 @@ public class SelectOneByExamplePlugin extends BasePlugin {
 
         // 只查询一条
         selectOneElement.addElement(new TextElement("limit 1"));
-        // 添加到根节点
-        FormatTools.addElementWithBestPosition(document.getRootElement(), selectOneElement);
-        logger.debug("itfsw(查询单条数据插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加selectOneByExample方法。");
+
+        // hook
+        if (PluginTools.getHook(ISelectOneByExamplePluginHook.class).sqlMapSelectOneByExampleWithoutBLOBsElementGenerated(document, selectOneElement, introspectedTable)) {
+            // 添加到根节点
+            FormatTools.addElementWithBestPosition(document.getRootElement(), selectOneElement);
+            logger.debug("itfsw(查询单条数据插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加selectOneByExample方法。");
+        }
 
         // ------------------------------------ selectOneByExampleWithBLOBs ----------------------------------
         // !!! 注意这里的行为不以有没有生成Model 的 WithBLOBs类为基准
@@ -179,9 +183,12 @@ public class SelectOneByExamplePlugin extends BasePlugin {
             // 只查询一条
             selectOneWithBLOBsElement.addElement(new TextElement("limit 1"));
 
-            // 添加到根节点
-            FormatTools.addElementWithBestPosition(document.getRootElement(), selectOneWithBLOBsElement);
-            logger.debug("itfsw(查询单条数据插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加selectOneByExampleWithBLOBs方法。");
+            // hook
+            if (PluginTools.getHook(ISelectOneByExamplePluginHook.class).sqlMapSelectOneByExampleWithBLOBsElementGenerated(document, selectOneWithBLOBsElement, introspectedTable)) {
+                // 添加到根节点
+                FormatTools.addElementWithBestPosition(document.getRootElement(), selectOneWithBLOBsElement);
+                logger.debug("itfsw(查询单条数据插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加selectOneByExampleWithBLOBs方法。");
+            }
         }
 
 

@@ -134,28 +134,17 @@ public class XmlElementGeneratorTools {
      * @return
      */
     public static List<Element> generateKeys(List<IntrospectedColumn> columns) {
-        return generateKeys(columns, null);
+        return generateKeys(columns, false);
     }
 
     /**
      * 生成keys Ele
      * @param columns
-     * @param prefix
-     * @return
-     */
-    public static List<Element> generateKeys(List<IntrospectedColumn> columns, String prefix) {
-        return generateKeys(columns, prefix, true);
-    }
-
-    /**
-     * 生成keys Ele
-     * @param columns
-     * @param prefix
      * @param bracket
      * @return
      */
-    public static List<Element> generateKeys(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
-        return generateCommColumns(columns, prefix, bracket, 1);
+    public static List<Element> generateKeys(List<IntrospectedColumn> columns, boolean bracket) {
+        return generateCommColumns(columns, null, bracket, 1);
     }
 
     /**

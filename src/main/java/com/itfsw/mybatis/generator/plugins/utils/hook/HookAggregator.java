@@ -25,6 +25,7 @@ import org.mybatis.generator.api.dom.java.InnerClass;
 import org.mybatis.generator.api.dom.java.Interface;
 import org.mybatis.generator.api.dom.java.Method;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
+import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.Element;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.config.Context;
@@ -210,7 +211,6 @@ public class HookAggregator implements IUpsertPluginHook, IModelBuilderPluginHoo
 
     // ============================================= ISelectOneByExamplePluginHook ==============================================
 
-
     @Override
     public boolean clientSelectOneByExampleWithBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         for (ISelectOneByExamplePluginHook plugin : this.getPlugins(ISelectOneByExamplePluginHook.class)) {
@@ -225,6 +225,26 @@ public class HookAggregator implements IUpsertPluginHook, IModelBuilderPluginHoo
     public boolean clientSelectOneByExampleWithoutBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         for (ISelectOneByExamplePluginHook plugin : this.getPlugins(ISelectOneByExamplePluginHook.class)) {
             if (!plugin.clientSelectOneByExampleWithoutBLOBsMethodGenerated(method, interfaze, introspectedTable)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean sqlMapSelectOneByExampleWithoutBLOBsElementGenerated(Document document, XmlElement element, IntrospectedTable introspectedTable) {
+        for (ISelectOneByExamplePluginHook plugin : this.getPlugins(ISelectOneByExamplePluginHook.class)) {
+            if (!plugin.sqlMapSelectOneByExampleWithoutBLOBsElementGenerated(document, element, introspectedTable)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean sqlMapSelectOneByExampleWithBLOBsElementGenerated(Document document, XmlElement element, IntrospectedTable introspectedTable) {
+        for (ISelectOneByExamplePluginHook plugin : this.getPlugins(ISelectOneByExamplePluginHook.class)) {
+            if (!plugin.sqlMapSelectOneByExampleWithBLOBsElementGenerated(document, element, introspectedTable)) {
                 return false;
             }
         }

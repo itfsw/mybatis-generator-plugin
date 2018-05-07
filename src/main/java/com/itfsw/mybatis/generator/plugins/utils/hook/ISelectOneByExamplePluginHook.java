@@ -19,6 +19,8 @@ package com.itfsw.mybatis.generator.plugins.utils.hook;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.Interface;
 import org.mybatis.generator.api.dom.java.Method;
+import org.mybatis.generator.api.dom.xml.Document;
+import org.mybatis.generator.api.dom.xml.XmlElement;
 
 /**
  * ---------------------------------------------------------------------------
@@ -48,4 +50,21 @@ public interface ISelectOneByExamplePluginHook {
      */
     boolean clientSelectOneByExampleWithoutBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable);
 
+    /**
+     * selectOneByExample 方法sqlMap实现
+     * @param document
+     * @param element
+     * @param introspectedTable
+     * @return
+     */
+    boolean sqlMapSelectOneByExampleWithoutBLOBsElementGenerated(Document document, XmlElement element, IntrospectedTable introspectedTable);
+
+    /**
+     * selectOneByExampleWithBLOBs 方法sqlMap实现
+     * @param document
+     * @param element
+     * @param introspectedTable
+     * @return
+     */
+    boolean sqlMapSelectOneByExampleWithBLOBsElementGenerated(Document document, XmlElement element, IntrospectedTable introspectedTable);
 }

@@ -129,7 +129,7 @@ public class BatchInsertPlugin extends BasePlugin {
         XmlElementGeneratorTools.useGeneratedKeys(batchInsertEle, introspectedTable);
 
         batchInsertEle.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-        for (Element element : XmlElementGeneratorTools.generateKeys(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()))) {
+        for (Element element : XmlElementGeneratorTools.generateKeys(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()), true)) {
             batchInsertEle.addElement(element);
         }
 
