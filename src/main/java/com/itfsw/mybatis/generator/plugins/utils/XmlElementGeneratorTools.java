@@ -32,6 +32,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
+
 /**
  * ---------------------------------------------------------------------------
  * Xml 节点生成工具 参考 org.mybatis.generator.codegen.mybatis3.xmlmapper.elements.AbstractXmlElementGenerator
@@ -542,5 +544,24 @@ public class XmlElementGeneratorTools {
             }
         }
         return false;
+    }
+
+    /**
+     * 生成resultMap的result 节点
+     * @param name
+     * @param introspectedColumn
+     * @return
+     */
+    public static XmlElement generateResultMapResultElement(String name, IntrospectedColumn introspectedColumn) {
+        XmlElement resultElement = new XmlElement(name);
+
+        resultElement.addAttribute(new Attribute("column", MyBatis3FormattingUtilities.getRenamedColumnNameForResultMap(introspectedColumn)));
+        resultElement.addAttribute(new Attribute("property", introspectedColumn.getJavaProperty()));
+        resultElement.addAttribute(new Attribute("jdbcType", introspectedColumn.getJdbcTypeName()));
+
+        if (stringHasValue(introspectedColumn.getTypeHandler())) {
+            resultElement.addAttribute(new Attribute("typeHandler", introspectedColumn.getTypeHandler()));
+        }
+        return resultElement;
     }
 }

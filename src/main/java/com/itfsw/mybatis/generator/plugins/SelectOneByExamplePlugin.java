@@ -16,10 +16,8 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
-import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
-import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
-import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
+import com.itfsw.mybatis.generator.plugins.utils.*;
+import com.itfsw.mybatis.generator.plugins.utils.hook.ISelectOneByExamplePluginHook;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.Attribute;
@@ -60,9 +58,12 @@ public class SelectOneByExamplePlugin extends BasePlugin {
         );
         commentGenerator.addGeneralMethodComment(method, introspectedTable);
 
-        // interface 增加方法
-        FormatTools.addMethodWithBestPosition(interfaze, method);
-        logger.debug("itfsw(查询单条数据插件):" + interfaze.getType().getShortName() + "增加selectOneByExample方法。");
+        // hook
+        if (PluginTools.getHook(ISelectOneByExamplePluginHook.class).clientSelectOneByExampleWithoutBLOBsMethodGenerated(method, interfaze, introspectedTable)) {
+            // interface 增加方法
+            FormatTools.addMethodWithBestPosition(interfaze, method);
+            logger.debug("itfsw(查询单条数据插件):" + interfaze.getType().getShortName() + "增加selectOneByExample方法。");
+        }
 
         // 方法生成 selectOneByExampleWithBLOBs !!! 注意这里的行为不以有没有生成Model 的 WithBLOBs类为基准
         if (introspectedTable.hasBLOBColumns()) {
@@ -75,9 +76,12 @@ public class SelectOneByExamplePlugin extends BasePlugin {
             );
             commentGenerator.addGeneralMethodComment(method1, introspectedTable);
 
-            // interface 增加方法
-            FormatTools.addMethodWithBestPosition(interfaze, method1);
-            logger.debug("itfsw(查询单条数据插件):" + interfaze.getType().getShortName() + "增加selectOneByExampleWithBLOBs方法。");
+            // hook
+            if (PluginTools.getHook(ISelectOneByExamplePluginHook.class).clientSelectOneByExampleWithBLOBsMethodGenerated(method1, interfaze, introspectedTable)) {
+                // interface 增加方法
+                FormatTools.addMethodWithBestPosition(interfaze, method1);
+                logger.debug("itfsw(查询单条数据插件):" + interfaze.getType().getShortName() + "增加selectOneByExampleWithBLOBs方法。");
+            }
         }
 
         return true;

@@ -17,6 +17,7 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.*;
+import com.itfsw.mybatis.generator.plugins.utils.hook.ISelectOneByExamplePluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
@@ -40,7 +41,7 @@ import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
  * @time:2017/6/29 13:34
  * ---------------------------------------------------------------------------
  */
-public class SelectSelectivePlugin extends BasePlugin {
+public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExamplePluginHook {
     public static final String METHOD_SELECT_BY_EXAMPLE_SELECTIVE = "selectByExampleSelective";
     public static final String METHOD_SELECT_BY_PRIMARY_KEY_SELECTIVE = "selectByPrimaryKeySelective";
     public static final String METHOD_SELECT_ONE_BY_EXAMPLE_SELECTIVE = "selectOneByExampleSelective";
@@ -63,74 +64,83 @@ public class SelectSelectivePlugin extends BasePlugin {
         return super.validate(warnings);
     }
 
-    /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param interfaze
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
-     */
+    // =========================================== client 方法生成 ===================================================
+
     @Override
-    public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        // 找出全字段对应的Model
-        FullyQualifiedJavaType fullFieldModel = introspectedTable.getRules().calculateAllFieldsClass();
-        // 返回list类型
-        FullyQualifiedJavaType listType = FullyQualifiedJavaType.getNewListInstance();
-        listType.addTypeArgument(fullFieldModel);
-        // column枚举
-        FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
-
-        // 1. selectByExampleSelective 方法
-        Method mSelectByExampleSelective = JavaElementGeneratorTools.generateMethod(
+    public boolean clientSelectByExampleWithBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        FormatTools.addMethodWithBestPosition(interfaze, this.replaceMethodWithSelective(
+                method,
                 METHOD_SELECT_BY_EXAMPLE_SELECTIVE,
-                JavaVisibility.DEFAULT,
-                listType,
-                new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")"),
-                new Parameter(selectiveType, "selective", "@Param(\"selective\")", true)
-        );
-        commentGenerator.addGeneralMethodComment(mSelectByExampleSelective, introspectedTable);
-        FormatTools.addMethodWithBestPosition(interfaze, mSelectByExampleSelective);
+                "@Param(\"example\")",
+                introspectedTable
+        ));
+        return super.clientSelectByExampleWithBLOBsMethodGenerated(method, interfaze, introspectedTable);
+    }
 
-        // 2. selectByPrimaryKeySelective
-        Method mSelectByPrimaryKeySelective = JavaElementGeneratorTools.generateMethod(
-                METHOD_SELECT_BY_PRIMARY_KEY_SELECTIVE,
-                JavaVisibility.DEFAULT,
-                fullFieldModel
-        );
+    @Override
+    public boolean clientSelectByExampleWithoutBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        if (!introspectedTable.hasBLOBColumns()) {
+            FormatTools.addMethodWithBestPosition(interfaze, this.replaceMethodWithSelective(
+                    method,
+                    METHOD_SELECT_BY_EXAMPLE_SELECTIVE,
+                    "@Param(\"example\")",
+                    introspectedTable
+            ));
+        }
+        return super.clientSelectByExampleWithoutBLOBsMethodGenerated(method, interfaze, introspectedTable);
+    }
+
+
+    @Override
+    public boolean clientSelectByPrimaryKeyMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         if (introspectedTable.getRules().generatePrimaryKeyClass()) {
-            FullyQualifiedJavaType type = new FullyQualifiedJavaType(introspectedTable.getPrimaryKeyType());
-            mSelectByPrimaryKeySelective.addParameter(new Parameter(type, "key", "@Param(\"record\")"));
+            FormatTools.addMethodWithBestPosition(interfaze, this.replaceMethodWithSelective(
+                    method,
+                    METHOD_SELECT_BY_PRIMARY_KEY_SELECTIVE,
+                    "@Param(\"record\")",
+                    introspectedTable
+            ));
         } else {
-            // no primary key class - fields are in the base class
-            // if more than one PK field, then we need to annotate the
-            // parameters
-            // for MyBatis3
-            List<IntrospectedColumn> introspectedColumns = introspectedTable.getPrimaryKeyColumns();
+            Method withSelective = JavaElementTools.clone(method);
+            FormatTools.replaceGeneralMethodComment(commentGenerator, withSelective, introspectedTable);
 
-            for (IntrospectedColumn introspectedColumn : introspectedColumns) {
-                FullyQualifiedJavaType type = introspectedColumn.getFullyQualifiedJavaType();
-                Parameter parameter = new Parameter(type, introspectedColumn.getJavaProperty());
-                parameter.addAnnotation("@Param(\"" + introspectedColumn.getJavaProperty() + "\")");
-                mSelectByPrimaryKeySelective.addParameter(parameter);
+            withSelective.setName(METHOD_SELECT_BY_PRIMARY_KEY_SELECTIVE);
+
+            withSelective.getParameters().clear();
+            for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
+                withSelective.addParameter(new Parameter(introspectedColumn.getFullyQualifiedJavaType(), introspectedColumn.getJavaProperty(), "@Param(\"" + introspectedColumn.getJavaProperty() + "\")"));
             }
-        }
-        mSelectByPrimaryKeySelective.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
-        commentGenerator.addGeneralMethodComment(mSelectByPrimaryKeySelective, introspectedTable);
-        FormatTools.addMethodWithBestPosition(interfaze, mSelectByPrimaryKeySelective);
-
-        // 3. selectOneByExampleSelective
-        if (PluginTools.getPluginConfiguration(context, SelectOneByExamplePlugin.class) != null) {
-            Method mSelectOneByExampleSelective = JavaElementGeneratorTools.generateMethod(
-                    METHOD_SELECT_ONE_BY_EXAMPLE_SELECTIVE,
-                    JavaVisibility.DEFAULT,
-                    fullFieldModel,
-                    new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")"),
-                    new Parameter(selectiveType, "selective", "@Param(\"selective\")", true)
+            // selective
+            withSelective.addParameter(
+                    new Parameter(this.getModelColumnFullyQualifiedJavaType(introspectedTable), "selective", "@Param(\"selective\")", true)
             );
-            commentGenerator.addGeneralMethodComment(mSelectOneByExampleSelective, introspectedTable);
-            FormatTools.addMethodWithBestPosition(interfaze, mSelectOneByExampleSelective);
-        }
 
+            FormatTools.addMethodWithBestPosition(interfaze, withSelective);
+        }
+        return super.clientSelectByPrimaryKeyMethodGenerated(method, interfaze, introspectedTable);
+    }
+
+    @Override
+    public boolean clientSelectOneByExampleWithBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        FormatTools.addMethodWithBestPosition(interfaze, this.replaceMethodWithSelective(
+                method,
+                METHOD_SELECT_ONE_BY_EXAMPLE_SELECTIVE,
+                "@Param(\"example\")",
+                introspectedTable
+        ));
+        return true;
+    }
+
+    @Override
+    public boolean clientSelectOneByExampleWithoutBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        if (!introspectedTable.hasBLOBColumns()) {
+            FormatTools.addMethodWithBestPosition(interfaze, this.replaceMethodWithSelective(
+                    method,
+                    METHOD_SELECT_ONE_BY_EXAMPLE_SELECTIVE,
+                    "@Param(\"example\")",
+                    introspectedTable
+            ));
+        }
         return true;
     }
 
@@ -285,6 +295,40 @@ public class SelectSelectivePlugin extends BasePlugin {
         return true;
     }
 
+    // =========================================== 一些私有方法 =====================================================
+
+    /**
+     * 替换方法成withSelective
+     * @param method
+     * @param name
+     * @param firstAnnotation
+     * @param introspectedTable
+     * @return
+     */
+    private Method replaceMethodWithSelective(Method method, String name, String firstAnnotation, IntrospectedTable introspectedTable) {
+        Method withSelective = JavaElementTools.clone(method);
+        FormatTools.replaceGeneralMethodComment(commentGenerator, withSelective, introspectedTable);
+
+        withSelective.setName(name);
+        // example
+        withSelective.getParameters().get(0).addAnnotation(firstAnnotation);
+        // selective
+        withSelective.addParameter(
+                new Parameter(this.getModelColumnFullyQualifiedJavaType(introspectedTable), "selective", "@Param(\"selective\")", true)
+        );
+
+        return withSelective;
+    }
+
+    /**
+     * 获取ModelColumn type
+     * @param introspectedTable
+     * @return
+     */
+    private FullyQualifiedJavaType getModelColumnFullyQualifiedJavaType(IntrospectedTable introspectedTable) {
+        return new FullyQualifiedJavaType(introspectedTable.getRules().calculateAllFieldsClass().getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
+    }
+
     /**
      * @param answer
      * @param introspectedTable
@@ -292,31 +336,12 @@ public class SelectSelectivePlugin extends BasePlugin {
      */
     private void addResultMapElementsWithoutBLOBs(XmlElement answer, IntrospectedTable introspectedTable) {
         for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
-            XmlElement resultElement = new XmlElement("id");
-
-            resultElement.addAttribute(new Attribute("column", MyBatis3FormattingUtilities.getRenamedColumnNameForResultMap(introspectedColumn)));
-            resultElement.addAttribute(new Attribute("property", introspectedColumn.getJavaProperty()));
-            resultElement.addAttribute(new Attribute("jdbcType", introspectedColumn.getJdbcTypeName()));
-
-            if (stringHasValue(introspectedColumn.getTypeHandler())) {
-                resultElement.addAttribute(new Attribute("typeHandler", introspectedColumn.getTypeHandler()));
-            }
-
-            answer.addElement(resultElement);
+            answer.addElement(XmlElementGeneratorTools.generateResultMapResultElement("id", introspectedColumn));
         }
 
         List<IntrospectedColumn> columns = introspectedTable.getBaseColumns();
         for (IntrospectedColumn introspectedColumn : columns) {
-            XmlElement resultElement = new XmlElement("result");
-
-            resultElement.addAttribute(new Attribute("column", MyBatis3FormattingUtilities.getRenamedColumnNameForResultMap(introspectedColumn)));
-            resultElement.addAttribute(new Attribute("property", introspectedColumn.getJavaProperty()));
-            resultElement.addAttribute(new Attribute("jdbcType", introspectedColumn.getJdbcTypeName()));
-
-            if (stringHasValue(introspectedColumn.getTypeHandler())) {
-                resultElement.addAttribute(new Attribute("typeHandler", introspectedColumn.getTypeHandler()));
-            }
-            answer.addElement(resultElement);
+            answer.addElement(XmlElementGeneratorTools.generateResultMapResultElement("result", introspectedColumn));
         }
     }
 
@@ -327,15 +352,7 @@ public class SelectSelectivePlugin extends BasePlugin {
      */
     private void addResultMapElementsWithBLOBs(XmlElement answer, IntrospectedTable introspectedTable) {
         for (IntrospectedColumn introspectedColumn : introspectedTable.getBLOBColumns()) {
-            XmlElement resultElement = new XmlElement("result");
-            resultElement.addAttribute(new Attribute("column", MyBatis3FormattingUtilities.getRenamedColumnNameForResultMap(introspectedColumn)));
-            resultElement.addAttribute(new Attribute("property", introspectedColumn.getJavaProperty()));
-            resultElement.addAttribute(new Attribute("jdbcType", introspectedColumn.getJdbcTypeName()));
-
-            if (stringHasValue(introspectedColumn.getTypeHandler())) {
-                resultElement.addAttribute(new Attribute("typeHandler", introspectedColumn.getTypeHandler()));
-            }
-            answer.addElement(resultElement);
+            answer.addElement(XmlElementGeneratorTools.generateResultMapResultElement("result", introspectedColumn));
         }
     }
 }
