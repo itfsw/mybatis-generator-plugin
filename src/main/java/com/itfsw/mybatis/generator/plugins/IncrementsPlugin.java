@@ -237,6 +237,20 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
         return true;
     }
 
+    /**
+     * Model builder set 方法生成
+     * @param method
+     * @param topLevelClass
+     * @param builderClass
+     * @param introspectedColumn
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public boolean modelBuilderSetterMethodGenerated(Method method, TopLevelClass topLevelClass, InnerClass builderClass, IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable) {
+        return true;
+    }
+
     // =============================================== IIncrementsPluginHook ===================================================
 
     /**

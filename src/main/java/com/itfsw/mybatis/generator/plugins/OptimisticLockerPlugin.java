@@ -200,9 +200,18 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
         return super.modelSetterMethodGenerated(method, topLevelClass, introspectedColumn, introspectedTable, modelClassType);
     }
 
+    /**
+     * Model builder set 方法生成
+     * @param method
+     * @param topLevelClass
+     * @param builderClass
+     * @param introspectedColumn
+     * @param introspectedTable
+     * @return
+     */
     @Override
-    public boolean modelBuilderClassGenerated(TopLevelClass topLevelClass, InnerClass builderClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
-        if (this.versionColumn != null && this.customizedNextVersion) {
+    public boolean modelBuilderSetterMethodGenerated(Method method, TopLevelClass topLevelClass, InnerClass builderClass, IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable) {
+        if (this.versionColumn != null && this.customizedNextVersion && introspectedColumn.getActualColumnName().equals(this.versionColumn.getActualColumnName())) {
             // nextVersion 方法
             Method nextVersion = JavaElementGeneratorTools.generateMethod(
                     METHOD_NEXT_VERSION,
@@ -222,7 +231,21 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
 
             FormatTools.addMethodWithBestPosition(builderClass, nextVersion);
         }
+
         return true;
+    }
+
+    /**
+     * Model builder class 生成
+     * @param topLevelClass
+     * @param builderClass
+     * @param columns
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public boolean modelBuilderClassGenerated(TopLevelClass topLevelClass, InnerClass builderClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
+        return false;
     }
 
     // ========================================= sqlMap 生成 ============================================

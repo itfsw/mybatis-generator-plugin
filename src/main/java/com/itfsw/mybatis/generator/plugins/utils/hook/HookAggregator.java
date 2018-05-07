@@ -125,6 +125,16 @@ public class HookAggregator implements IUpsertPluginHook, IModelBuilderPluginHoo
         return true;
     }
 
+    @Override
+    public boolean modelBuilderSetterMethodGenerated(Method method, TopLevelClass topLevelClass, InnerClass builderClass, IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable) {
+        for (IModelBuilderPluginHook plugin : this.getPlugins(IModelBuilderPluginHook.class)) {
+            if (!plugin.modelBuilderSetterMethodGenerated(method, topLevelClass, builderClass, introspectedColumn, introspectedTable)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     // ================================================= IUpsertPluginHook ===============================================
 
     @Override
