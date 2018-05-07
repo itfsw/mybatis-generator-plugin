@@ -17,16 +17,15 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.*;
+import com.itfsw.mybatis.generator.plugins.utils.hook.IModelBuilderPluginHook;
 import com.itfsw.mybatis.generator.plugins.utils.hook.IOptimisticLockerPluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
-import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
-import org.mybatis.generator.api.dom.java.Interface;
-import org.mybatis.generator.api.dom.java.Method;
-import org.mybatis.generator.api.dom.java.Parameter;
+import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.*;
 import org.mybatis.generator.codegen.mybatis3.ListUtilities;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
+import org.mybatis.generator.internal.util.JavaBeansUtil;
 import org.mybatis.generator.internal.util.StringUtility;
 
 import java.util.*;
@@ -39,7 +38,7 @@ import java.util.*;
  * @time:2018/4/26 10:24
  * ---------------------------------------------------------------------------
  */
-public class OptimisticLockerPlugin extends BasePlugin {
+public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderPluginHook {
     public static final String METHOD_DELETE_WITH_VERSION_BY_EXAMPLE = "deleteWithVersionByExample";  // 方法名
     public static final String METHOD_DELETE_WITH_VERSION_BY_PRIMARY_KEY = "deleteWithVersionByPrimaryKey";  // 方法名
     public static final String METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_SELECTIVE = "updateWithVersionByExampleSelective";  // 方法名
@@ -48,12 +47,15 @@ public class OptimisticLockerPlugin extends BasePlugin {
     public static final String METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_SELECTIVE = "updateWithVersionByPrimaryKeySelective";  // 方法名
     public static final String METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_WITH_BLOBS = "updateWithVersionByPrimaryKeyWithBLOBs";  // 方法名
     public static final String METHOD_UPDATE_WITH_VERSION_BY_PRIMARY_KEY_WITHOUT_BLOBS = "updateWithVersionByPrimaryKey";  // 方法名
+    public static final String METHOD_NEXT_VERSION = "nextVersion";  // 方法名
     public static final String SQL_UPDATE_BY_EXAMPLE_WITH_VERSION_WHERE_CLAUSE = "Update_By_Example_With_Version_Where_Clause";
 
     public static final String PRO_VERSION_COLUMN = "versionColumn";  // 版本列-Key
+    public static final String PRO_CUSTOMIZED_NEXT_VERSION = "customizedNextVersion";    // 使用用户自定义nextVersion key
 
     private Map<IntrospectedTable, List<XmlElement>> sqlMaps = new HashMap<>(); // sqlMap xml 节点
     private IntrospectedColumn versionColumn;   // 版本列
+    private boolean customizedNextVersion;  // 使用用户自定义nextVersion
 
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
@@ -67,6 +69,21 @@ public class OptimisticLockerPlugin extends BasePlugin {
                 warnings.add("itfsw(乐观锁插件):表" + introspectedTable.getFullyQualifiedTable() + "配置的版本列(" + introspectedTable.getTableConfigurationProperty(PRO_VERSION_COLUMN) + ")没有找到！");
             }
         }
+
+        // 自定义nextVersion
+        // 首先获取全局配置
+        Properties properties = getProperties();
+        String customizedNextVersion = properties.getProperty(PRO_CUSTOMIZED_NEXT_VERSION);
+        // 获取表单独配置，如果有则覆盖全局配置
+        if (introspectedTable.getTableConfigurationProperty(PRO_CUSTOMIZED_NEXT_VERSION) != null) {
+            customizedNextVersion = introspectedTable.getTableConfigurationProperty(PRO_CUSTOMIZED_NEXT_VERSION);
+        }
+        if (StringUtility.stringHasValue(customizedNextVersion) && StringUtility.isTrue(customizedNextVersion)) {
+            this.customizedNextVersion = true;
+        } else {
+            this.customizedNextVersion = false;
+        }
+
         super.initialized(introspectedTable);
     }
 
@@ -157,6 +174,55 @@ public class OptimisticLockerPlugin extends BasePlugin {
             );
         }
         return super.clientUpdateByPrimaryKeyWithoutBLOBsMethodGenerated(method, interfaze, introspectedTable);
+    }
+
+    // ========================================= model 生成 ============================================
+
+    @Override
+    public boolean modelSetterMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable, ModelClassType modelClassType) {
+        if (this.versionColumn != null && this.customizedNextVersion && introspectedColumn.getActualColumnName().equals(this.versionColumn.getActualColumnName())) {
+            // nextVersion 方法
+            Method nextVersion = JavaElementGeneratorTools.generateMethod(
+                    METHOD_NEXT_VERSION,
+                    JavaVisibility.PUBLIC,
+                    null,
+                    new Parameter(this.versionColumn.getFullyQualifiedJavaType(), "version")
+            );
+            commentGenerator.addSetterComment(nextVersion, introspectedTable, this.versionColumn);
+            JavaElementGeneratorTools.generateMethodBody(
+                    nextVersion,
+                    "this." + this.versionColumn.getJavaProperty() + " = version;"
+            );
+
+            FormatTools.addMethodWithBestPosition(topLevelClass, nextVersion);
+        }
+
+        return super.modelSetterMethodGenerated(method, topLevelClass, introspectedColumn, introspectedTable, modelClassType);
+    }
+
+    @Override
+    public boolean modelBuilderClassGenerated(TopLevelClass topLevelClass, InnerClass builderClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
+        if (this.versionColumn != null && this.customizedNextVersion) {
+            // nextVersion 方法
+            Method nextVersion = JavaElementGeneratorTools.generateMethod(
+                    METHOD_NEXT_VERSION,
+                    JavaVisibility.PUBLIC,
+                    null,
+                    new Parameter(this.versionColumn.getFullyQualifiedJavaType(), "version")
+            );
+            commentGenerator.addSetterComment(nextVersion, introspectedTable, this.versionColumn);
+
+            Method setterMethod = JavaBeansUtil.getJavaBeansSetter(this.versionColumn, context, introspectedTable);
+
+            JavaElementGeneratorTools.generateMethodBody(
+                    nextVersion,
+                    "obj." + setterMethod.getName() + "(version);",
+                    "return this;"
+            );
+
+            FormatTools.addMethodWithBestPosition(builderClass, nextVersion);
+        }
+        return true;
     }
 
     // ========================================= sqlMap 生成 ============================================
@@ -581,21 +647,10 @@ public class OptimisticLockerPlugin extends BasePlugin {
             }
 
             // 版本自增
-            needVersionEle.addElement(0, new TextElement(
-                    MyBatis3FormattingUtilities.getEscapedColumnName(this.versionColumn)
-                            + " = "
-                            + MyBatis3FormattingUtilities.getEscapedColumnName(this.versionColumn)
-                            + " + 1,"
-            ));
+            needVersionEle.addElement(0, this.generateVersionSetEle(selective));
         } else {
             // 版本自增
-            updateEle.addElement(new TextElement(
-                    "set "
-                            + MyBatis3FormattingUtilities.getEscapedColumnName(this.versionColumn)
-                            + " = "
-                            + MyBatis3FormattingUtilities.getEscapedColumnName(this.versionColumn)
-                            + " + 1,"
-            ));
+            updateEle.addElement(this.generateVersionSetEle(selective));
             // set 节点
             List<Element> setsEles = XmlElementGeneratorTools.generateSets(columns, "record.");
             //  XmlElementGeneratorTools.generateSets, 因为传入参数不可能带IdentityAndGeneratedAlwaysColumn所以返回的是set列表而不可能是trim 元素
@@ -619,5 +674,30 @@ public class OptimisticLockerPlugin extends BasePlugin {
         }
 
         return updateEle;
+    }
+
+    /**
+     * 生成版本号set节点
+     * @param selective
+     * @return
+     */
+    private TextElement generateVersionSetEle(boolean selective) {
+        if (this.customizedNextVersion) {
+            return new TextElement(
+                    (selective ? "" : "set ")
+                            + MyBatis3FormattingUtilities.getEscapedColumnName(this.versionColumn)
+                            + " = "
+                            + MyBatis3FormattingUtilities.getParameterClause(this.versionColumn)
+                            + ","
+            );
+        } else {
+            return new TextElement(
+                    (selective ? "" : "set ")
+                            + MyBatis3FormattingUtilities.getEscapedColumnName(this.versionColumn)
+                            + " = "
+                            + MyBatis3FormattingUtilities.getEscapedColumnName(this.versionColumn)
+                            + " + 1,"
+            );
+        }
     }
 }
