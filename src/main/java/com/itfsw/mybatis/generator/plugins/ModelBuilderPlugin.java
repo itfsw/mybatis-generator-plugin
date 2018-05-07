@@ -151,8 +151,12 @@ public class ModelBuilderPlugin extends BasePlugin {
                     "obj." + setterMethod.getName() + "(" + field.getName() + ");",
                     "return this;"
             );
-            innerClass.addMethod(method);
-            logger.debug("itfsw(数据Model链式构建插件):" + topLevelClass.getType().getShortName() + ".Builder增加" + method.getName() + "方法(复合主键)。");
+
+            // hook
+            if (PluginTools.getHook(IModelBuilderPluginHook.class).modelBuilderSetterMethodGenerated(method, topLevelClass, innerClass, introspectedColumn, introspectedTable)) {
+                innerClass.addMethod(method);
+                logger.debug("itfsw(数据Model链式构建插件):" + topLevelClass.getType().getShortName() + ".Builder增加" + method.getName() + "方法(复合主键)。");
+            }
         }
 
         Method build = JavaElementGeneratorTools.generateMethod(

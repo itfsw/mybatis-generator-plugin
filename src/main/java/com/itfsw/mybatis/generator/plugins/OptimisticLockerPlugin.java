@@ -245,7 +245,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
      */
     @Override
     public boolean modelBuilderClassGenerated(TopLevelClass topLevelClass, InnerClass builderClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
-        return false;
+        return true;
     }
 
     // ========================================= sqlMap 生成 ============================================
