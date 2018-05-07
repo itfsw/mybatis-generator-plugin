@@ -23,6 +23,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -784,30 +785,89 @@ public class OptimisticLockerPluginTest {
                 ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
                 criteria.invoke("andIdEqualTo", 1l);
 
-                ObjectUtil tbBuilder = new ObjectUtil(loader, packagz + ".Tb$Builder");
-                ObjectUtil tbBuilderInc = new ObjectUtil(loader, packagz + ".Tb$Builder$Inc#INC");
-                tbBuilder.invoke("id", 1L);
-                tbBuilder.invoke("incF1", 121l, tbBuilderInc.getObject()); // 这个不会在sql才为正常
-                tbBuilder.invoke("incF2", 5l, tbBuilderInc.getObject());
-                tbBuilder.invoke("incF3", 10l);
+                ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
+                tb.set("id", 1L);
+                tb.set("incF1", 152L);  // 这个不会在sql才为正常
+                tb.set("incF2", 10L);
+                tb.set("incF3", 5L);
 
-                // sql
-                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateWithVersionByExampleSelective", 100L, tbBuilder.invoke("build"), tbExample.getObject());
-                Assert.assertEquals(sql, "update tb SET inc_f1 = inc_f1 + 1, id = 1, inc_f2 = inc_f2 + 5 , inc_f3 = 10 WHERE inc_f1 = 100 and ( ( id = '1' ) )");
+                // selective
+                ObjectUtil TbColumnId = new ObjectUtil(loader, packagz + ".Tb$Column#id");
+                ObjectUtil TbColumnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
+                ObjectUtil TbColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Column#incF1");  // 这个不会在sql才为正常
+                ObjectUtil TbColumnIncF2 = new ObjectUtil(loader, packagz + ".Tb$Column#incF2");
+                Object columns = Array.newInstance(TbColumnField1.getCls(), 4);
+                Array.set(columns, 0, TbColumnId.getObject());
+                Array.set(columns, 1, TbColumnField1.getObject());
+                Array.set(columns, 2, TbColumnIncF1.getObject());
+                Array.set(columns, 3, TbColumnIncF2.getObject());
 
-                // 执行一次，因为版本号100不存在所以应该返回0
-                Object result = tbMapper.invoke("updateWithVersionByExampleSelective", 100L, tbBuilder.invoke("build"), tbExample.getObject());
+                // sql(普通非空判断)
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateWithVersionByExampleSelective", 100L, tb.getObject(), tbExample.getObject());
+                Assert.assertEquals(sql, "update tb SET inc_f1 = inc_f1 + 1, id = 1, inc_f2 = 10, inc_f3 = 5 WHERE inc_f1 = 100 and ( ( id = '1' ) )");
+                // sql(selective增强)
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateWithVersionByExampleSelective", 100L, tb.getObject(), tbExample.getObject(), columns);
+                Assert.assertEquals(sql, "update tb SET inc_f1 = inc_f1 + 1, id = 1 , field1 = 'null' , inc_f2 = 10 WHERE inc_f1 = 100 and ( ( id = '1' ) )");
+
+                // 执行一次，因为版本号100不存在所以应该返回0(普通非空判断)
+                Object result = tbMapper.invoke("updateWithVersionByExampleSelective", 100L, tb.getObject(), tbExample.getObject(), null);
                 Assert.assertEquals(result, 0);
 
-                // id = 1 的版本号应该是0
-                result = tbMapper.invoke("updateWithVersionByExampleSelective", 0L, tbBuilder.invoke("build"), tbExample.getObject());
+                // id = 1 的版本号应该是0(selective 增强)
+                result = tbMapper.invoke("updateWithVersionByExampleSelective", 0L, tb.getObject(), tbExample.getObject(), columns);
                 Assert.assertEquals(result, 1);
 
                 // 执行完成后版本号应该加1
                 ResultSet rs = DBHelper.execute(sqlSession.getConnection(), "select * from tb where id = 1");
                 rs.first();
                 Assert.assertEquals(rs.getInt("inc_f1"), 1);
-                Assert.assertEquals(rs.getInt("inc_f2"), 7);
+                Assert.assertEquals(rs.getInt("inc_f2"), 10);
+            }
+        });
+
+        // 测试updateWithVersionByPrimaryKeySelective
+        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
+                tb.set("id", 1L);
+                tb.set("incF1", 152L);  // 这个不会在sql才为正常
+                tb.set("incF2", 10L);
+                tb.set("incF3", 5L);
+
+                // selective
+                ObjectUtil TbColumnId = new ObjectUtil(loader, packagz + ".Tb$Column#id");
+                ObjectUtil TbColumnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
+                ObjectUtil TbColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Column#incF1");  // 这个不会在sql才为正常
+                ObjectUtil TbColumnIncF2 = new ObjectUtil(loader, packagz + ".Tb$Column#incF2");
+                Object columns = Array.newInstance(TbColumnField1.getCls(), 4);
+                Array.set(columns, 0, TbColumnId.getObject());
+                Array.set(columns, 1, TbColumnField1.getObject());
+                Array.set(columns, 2, TbColumnIncF1.getObject());
+                Array.set(columns, 3, TbColumnIncF2.getObject());
+
+                // sql(普通非空判断)
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateWithVersionByPrimaryKeySelective", 100L, tb.getObject());
+                Assert.assertEquals(sql, "update tb SET inc_f1 = inc_f1 + 1, inc_f2 = 10, inc_f3 = 5 where inc_f1 = 100 and id = 1");
+                // sql(selective增强)
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateWithVersionByPrimaryKeySelective", 100L, tb.getObject(), columns);
+                Assert.assertEquals(sql, "update tb SET inc_f1 = inc_f1 + 1, id = 1 , field1 = 'null' , inc_f2 = 10 where inc_f1 = 100 and id = 1");
+
+                // 执行一次，因为版本号100不存在所以应该返回0(普通非空判断)
+                Object result = tbMapper.invoke("updateWithVersionByPrimaryKeySelective", 100L, tb.getObject(), null);
+                Assert.assertEquals(result, 0);
+
+                // id = 1 的版本号应该是0(selective 增强)
+                result = tbMapper.invoke("updateWithVersionByPrimaryKeySelective", 0L, tb.getObject(), columns);
+                Assert.assertEquals(result, 1);
+
+                // 执行完成后版本号应该加1
+                ResultSet rs = DBHelper.execute(sqlSession.getConnection(), "select * from tb where id = 1");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 1);
+                Assert.assertEquals(rs.getInt("inc_f2"), 10);
             }
         });
     }
