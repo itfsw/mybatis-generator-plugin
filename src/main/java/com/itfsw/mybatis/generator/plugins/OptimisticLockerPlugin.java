@@ -207,7 +207,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
             Method nextVersion = JavaElementGeneratorTools.generateMethod(
                     METHOD_NEXT_VERSION,
                     JavaVisibility.PUBLIC,
-                    null,
+                    builderClass.getType(),
                     new Parameter(this.versionColumn.getFullyQualifiedJavaType(), "version")
             );
             commentGenerator.addSetterComment(nextVersion, introspectedTable, this.versionColumn);
