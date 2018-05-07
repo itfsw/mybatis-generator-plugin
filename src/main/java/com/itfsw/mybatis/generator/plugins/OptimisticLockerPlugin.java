@@ -687,7 +687,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
                     (selective ? "" : "set ")
                             + MyBatis3FormattingUtilities.getEscapedColumnName(this.versionColumn)
                             + " = "
-                            + MyBatis3FormattingUtilities.getParameterClause(this.versionColumn)
+                            + MyBatis3FormattingUtilities.getParameterClause(this.versionColumn, "record.")
                             + ","
             );
         } else {
