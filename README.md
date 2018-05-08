@@ -559,7 +559,7 @@ public class Test {
 ```
 ### 10. Selective选择插入更新增强插件
 项目中往往需要指定某些字段进行插入或者更新，或者把某些字段进行设置null处理，这种情况下原生xxxSelective方法往往不能达到需求，因为它的判断条件是对象字段是否为null，这种情况下可使用该插件对xxxSelective方法进行增强。  
->warning:以前老版本（<=1.1.2）插件处理需要指定的列时是放入Model中指定的，但在实际使用过程中有同事反馈这个处理有点反直觉，导致某些新同事不能及时找到对应方法，而且和增强的SelectSelectivePlugin以及UpsertSelective使用方式都不一致，所以统一修改之。  
+>warning:以前老版本（1.1.x）插件处理需要指定的列时是放入Model中指定的，但在实际使用过程中有同事反馈这个处理有点反直觉，导致某些新同事不能及时找到对应方法，而且和增强的SelectSelectivePlugin以及UpsertSelective使用方式都不一致，所以统一修改之。  
 
 插件：
 ```xml
