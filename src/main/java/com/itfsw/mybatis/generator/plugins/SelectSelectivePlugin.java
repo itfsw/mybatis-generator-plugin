@@ -147,14 +147,7 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
         if (introspectedTable.isConstructorBased()) {
             XmlElement resultMapEle = new XmlElement("resultMap");
             resultMapEle.addAttribute(new Attribute("id", ID_FOR_PROPERTY_BASED_RESULT_MAP));
-            String returnType;
-            if (introspectedTable.getRules().generateBaseRecordClass()) {
-                returnType = introspectedTable.getBaseRecordType();
-            } else {
-                returnType = introspectedTable.getPrimaryKeyType();
-            }
-
-            resultMapEle.addAttribute(new Attribute("type", returnType));
+            resultMapEle.addAttribute(new Attribute("type", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
             commentGenerator.addComment(resultMapEle);
 
             for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
