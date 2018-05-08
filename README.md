@@ -1,7 +1,9 @@
-# 这是 MyBatis Generator 插件的拓展插件包
+# 这是 MyBatis Generator 插件的拓展插件包  
 应该说使用Mybatis就一定离不开[MyBatis Generator](https://github.com/mybatis/generator)这款代码生成插件，而这款插件自身还提供了插件拓展功能用于强化插件本身，官方已经提供了一些[拓展插件](http://www.mybatis.org/generator/reference/plugins.html)，本项目的目的也是通过该插件机制来强化Mybatis Generator本身，方便和减少我们平时的代码开发量。  
->因为插件是本人兴之所至所临时发布的项目（本人已近三年未做JAVA开发，代码水平请大家见谅），但基本插件都是在实际项目中经过检验的请大家放心使用，但因为项目目前主要数据库为MySQL，Mybatis实现使用Mapper.xml方式，所以代码生成时对于其他数据库和注解方式的支持未予考虑，请大家见谅。  
+>因为插件是本人兴之所至所临时发布的项目（本人已近三年未做JAVA开发，代码水平请大家见谅），但基本插件都是在实际项目中经过检验的请大家放心使用，但因为项目目前主要数据库为MySQL，Mybatis实现使用Mapper.xml方式，所以代码生成时对于其他数据库和注解方式的支持未予考虑，请大家见谅。    
   
+>因为1.2版本对Selective选择插入更新增强插件进行了重构，不再兼容老版。老版本参见分支[V1.1.x](https://github.com/itfsw/mybatis-generator-plugin/tree/V1.1)(只进行BUG修正，不再添加新功能)；  
+
 ---------------------------------------
 插件列表：  
 * [查询单条数据插件（SelectOneByExamplePlugin）](#1-查询单条数据插件)
@@ -20,6 +22,7 @@
 * [增量插件（IncrementsPlugin）](#14-增量插件)
 * [查询结果选择性返回插件（SelectSelectivePlugin）](#15-查询结果选择性返回插件)
 * [~~官方ConstructorBased配置BUG临时修正插件（ConstructorBasedBugFixPlugin）~~](#16-官方constructorbased配置bug临时修正插件)
+* [乐观锁插件（OptimisticLockerPlugin）](#17-乐观锁插件)
 
 ---------------------------------------
 Maven引用：  
@@ -27,7 +30,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.1.3</version>
+  <version>1.2.0</version>
 </dependency>
 ```
 ---------------------------------------
@@ -556,7 +559,6 @@ public class Test {
 ```
 ### 10. Selective选择插入更新增强插件
 项目中往往需要指定某些字段进行插入或者更新，或者把某些字段进行设置null处理，这种情况下原生xxxSelective方法往往不能达到需求，因为它的判断条件是对象字段是否为null，这种情况下可使用该插件对xxxSelective方法进行增强。  
->warning:配置老版本插件（<=1.1.2）时请把插件配置在所有插件末尾最后执行，这样才能把上面提供的某些插件的Selective方法也同时增强！  
 >warning:以前老版本（<=1.1.2）插件处理需要指定的列时是放入Model中指定的，但在实际使用过程中有同事反馈这个处理有点反直觉，导致某些新同事不能及时找到对应方法，而且和增强的SelectSelectivePlugin以及UpsertSelective使用方式都不一致，所以统一修改之。  
 
 插件：
@@ -604,42 +606,6 @@ public class Test {
                 .field1(null)   // 方便展示，不用设也可以
                 .build(),
                 Tb.Column.field1
-        );
-        
-        // ------------------------------ 老版本（SelectiveEnhancedPlugin）--------------------------------
-        // 1. 指定插入或更新字段
-        Tb tb = new Tb.Builder()
-                .field1(1)
-                .field2("xx2")
-                .field3(1)
-                .field4(new Date())
-                .createTime(new Date())
-                .delFlag(Tb.DEL_FLAG_ON)
-                .build();
-        // 只插入或者更新field1,field2字段
-        this.tbMapper.insertSelective(tb.selective(Tb.Column.field1, Tb.Column.field2));
-        this.tbMapper.updateByExampleSelective(tb.selective(Tb.Column.field1, Tb.Column.field2),
-                new TbExample()
-                        .createCriteria()
-                        .andIdEqualTo(1l)
-                        .example()
-        );
-        this.tbMapper.updateByPrimaryKeySelective(tb.selective(Tb.Column.field1, Tb.Column.field2));
-        this.tbMapper.upsertSelective(tb.selective(Tb.Column.field1, Tb.Column.field2));
-        this.tbMapper.upsertByExampleSelective(tb.selective(Tb.Column.field1, Tb.Column.field2),
-                new TbExample()
-                        .createCriteria()
-                        .andField3EqualTo(1)
-                        .example()
-        );
-
-        // 2. 更新某些字段为null
-        this.tbMapper.updateByPrimaryKeySelective(
-                new Tb.Builder()
-                .id(1l)
-                .field1(null)   // 方便展示，不用设也可以
-                .build()
-                .selective(Tb.Column.field1)
         );
     }
 }
@@ -1123,4 +1089,70 @@ public class Test {
     <!-- 官方ConstructorBased配置BUG临时修正插件 -->
     <plugin type="com.itfsw.mybatis.generator.plugins.ConstructorBasedBugFixPlugin" />
 </xml>
+```
+### 17. 乐观锁插件
+为并发操作引入乐观锁，当发生删除或者更新操作时调用相应的WithVersion方法传入版本号，插件会在相应的查询条件上附加上版本号的检查，防止非法操作的发生。  
+同时在更新操作中支持自定义nextVersion或者利用sql 的“set column = column + 1”去维护版本号。   
+
+插件：
+```xml
+<xml>
+    <!-- 乐观锁插件 -->
+    <plugin type="com.itfsw.mybatis.generator.plugins.OptimisticLockerPlugin">
+        <!-- 是否启用自定义nextVersion, 默认不启用使用(使用sql的 set column = column + 1) -->
+        <property name="customizedNextVersion" value="true"/>
+    </plugin>
+    
+    <table tableName="tb">
+        <!-- 这里可以单独表配置，覆盖全局配置 -->
+        <property name="customizedNextVersion" value="false"/>
+        <!-- 指定版本列 -->
+        <property name="versionColumn" value="version"/>
+    </table>
+</xml>
+```
+使用：  
+```java
+public class Test {
+    public static void main(String[] args) {
+        // ============================ 带版本号的删除更新等操作 ===============================
+        int result = this.tbMapper.deleteWithVersionByExample(
+                        100, // 版本号
+                        new TbExample()
+                           .createCriteria()
+                           .andField1GreaterThan(1)
+                           .example()
+                     );
+        if (result == 0){
+            throw new Exception("没有找到数据或者数据版本号错误！");
+        }
+        // 对应生成的Sql: delete from tb WHERE version = 100 and ( ( field1 > 1 ) )
+        
+        // 带版本号的方法有：
+        // deleteWithVersionByExample、deleteWithVersionByPrimaryKey、
+        // updateWithVersionByExampleSelective、updateWithVersionByExampleWithBLOBs、updateWithVersionByExample
+        // updateWithVersionByPrimaryKeySelective、updateWithVersionByPrimaryKeyWithBLOBs、updateWithVersionByPrimaryKey
+        
+        // ============================= 使用默认版本号生成策略 ===========================
+        this.tbMapper.updateWithVersionByPrimaryKey(
+                100,    // 版本号
+                new Tb.Builder()
+                    .id(102)
+                    .field1("ts1")
+                    .build()
+        );
+        // 对应生成的Sql: update tb set version = version + 1, field1 = 'ts1' where version = 100 and id = 102
+        
+        // ============================= 使用自定义版本号生成策略 ===========================
+        this.tbMapper.updateWithVersionByPrimaryKey(
+                100,    // 版本号
+                new Tb.Builder()
+                    .id(102)
+                    .field1("ts1")
+                    .nextVersion(System.currentTimeMillis())    // 传入nextVersion
+                    .build()
+        );
+        // 对应生成的Sql: update tb set version = 1525773888559, field1 = 'ts1' where version = 100 and id = 102
+    }
+}
 ```
