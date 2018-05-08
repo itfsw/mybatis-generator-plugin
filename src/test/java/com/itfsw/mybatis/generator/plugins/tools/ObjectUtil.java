@@ -16,7 +16,6 @@
 
 package com.itfsw.mybatis.generator.plugins.tools;
 
-import com.sun.deploy.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -81,8 +80,8 @@ public class ObjectUtil {
      * @throws NoSuchFieldException
      * @throws IllegalAccessException
      */
-    public ObjectUtil set(String filedName, Object value) throws NoSuchFieldException, IllegalAccessException, InstantiationException, ClassNotFoundException {
-        String[] strs = StringUtils.splitString(filedName, ".");
+    public ObjectUtil set(String filedName, Object value) throws IllegalAccessException {
+        String[] strs = filedName.split("\\.");
         if (strs.length > 1) {
             Object obj = this.get(strs[0]);
             new ObjectUtil(obj).set(filedName.replaceFirst("\\w+\\.", ""), value);
