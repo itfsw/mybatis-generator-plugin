@@ -54,5 +54,12 @@
 
             <columnOverride column="field1" property="tsF1"/>
         </table>
+        <table tableName="tb_keys" />
+        <table tableName="tb_single_blob">
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+        </table>
+        <table tableName="tb_blobs">
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+        </table>
     </context>
 </generatorConfiguration>

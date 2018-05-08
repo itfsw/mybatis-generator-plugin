@@ -43,13 +43,14 @@ public class SelectSelectivePluginTest {
     }
 
     /**
-     * 测试生成的方法
+     * 测试selectByExampleSelective
      * @throws Exception
      */
     @Test
     public void testSelectByExampleSelective() throws Exception {
+        // 一些基础测试
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/SelectSelectivePlugin/mybatis-generator.xml");
-        tool.generate(new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试sql
@@ -109,6 +110,95 @@ public class SelectSelectivePluginTest {
                 Assert.assertEquals(list1.size(), 3);
             }
         });
+        // 测试Selective不传
+        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdLessThan", 100l);
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject());
+                Assert.assertEquals(sql, "select id, field1, field2 from tb WHERE ( id < '100' )");
+
+                // 测试执行
+                List list = (List) tbMapper.invoke("selectByExampleSelective", tbExample.getObject(), null);
+                // 取第四条数据出来比较
+                ObjectUtil result = new ObjectUtil(list.get(3));
+                Assert.assertEquals(result.get("id"), 4L);
+                Assert.assertEquals(result.get("field1"), "fd3");
+                Assert.assertEquals(result.get("field2"), 4);
+            }
+        });
+        // 测试WithBLOBs的情况
+        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
+
+                ObjectUtil tbBlobsExample = new ObjectUtil(loader, packagz + ".TbBlobsExample");
+                ObjectUtil criteria = new ObjectUtil(tbBlobsExample.invoke("createCriteria"));
+                criteria.invoke("andIdLessThan", 100l);
+
+                // selective
+                // 从base model 和 WithBLOBs都各取一个，更有代表性
+                ObjectUtil columnId = new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs$Column#id");
+                ObjectUtil columnField2 = new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs$Column#field2");
+
+                Object columns = Array.newInstance(columnId.getCls(), 2);
+                Array.set(columns, 0, columnId.getObject());
+                Array.set(columns, 1, columnField2.getObject());
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbBlobsMapper.getObject(), "selectByExampleSelective", tbBlobsExample.getObject(), columns);
+                Assert.assertEquals(sql, "select id , field2 from tb_blobs WHERE ( id < '100' )");
+
+                // 测试执行
+                List list = (List) tbBlobsMapper.invoke("selectByExampleSelective", tbBlobsExample.getObject(), columns);
+                // 取第四条数据出来比较(这条数据所有字段是全的)
+                ObjectUtil result = new ObjectUtil(list.get(3));
+                Assert.assertEquals(result.get("id"), 4L);
+                Assert.assertNull(result.get("field1"));
+                Assert.assertEquals(result.get("field2"), "L4");
+                Assert.assertNull(result.get("field3"));
+            }
+        });
+        // 测试Key的情况
+        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbKeysMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbKeysMapper")));
+
+                ObjectUtil tbKeysExample = new ObjectUtil(loader, packagz + ".TbKeysExample");
+                ObjectUtil criteria = new ObjectUtil(tbKeysExample.invoke("createCriteria"));
+                criteria.invoke("andKey1LessThan", 100l);
+
+                // selective
+                // 从base model 和 key model都各取一个，更有代表性
+                ObjectUtil columnKey1 = new ObjectUtil(loader, packagz + ".TbKeys$Column#key1");
+                ObjectUtil columnField1 = new ObjectUtil(loader, packagz + ".TbKeys$Column#field1");
+
+                Object columns = Array.newInstance(columnKey1.getCls(), 2);
+                Array.set(columns, 0, columnKey1.getObject());
+                Array.set(columns, 1, columnField1.getObject());
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbKeysMapper.getObject(), "selectByExampleSelective", tbKeysExample.getObject(), columns);
+                Assert.assertEquals(sql, "select key1 , field1 from tb_keys WHERE ( key1 < '100' )");
+
+                // 测试执行
+                List list = (List) tbKeysMapper.invoke("selectByExampleSelective", tbKeysExample.getObject(), columns);
+                // 取第三条数据出来比较(这条数据所有字段是全的)
+                ObjectUtil result = new ObjectUtil(list.get(2));
+                Assert.assertEquals(result.get("key1"), 3L);
+                Assert.assertNull(result.get("key2"));
+                Assert.assertEquals(result.get("field1"), "fd2");
+                Assert.assertNull(result.get("field2"));
+            }
+        });
     }
 
     /**
@@ -118,7 +208,8 @@ public class SelectSelectivePluginTest {
     @Test
     public void testSelectByPrimaryKeySelective() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/SelectSelectivePlugin/mybatis-generator.xml");
-        tool.generate(new AbstractShellCallback() {
+        // 一些基础测试
+        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试sql
@@ -149,6 +240,84 @@ public class SelectSelectivePluginTest {
                 // 3. 执行sql
                 Object tbKeys = tbKeysMapper.invoke("selectByPrimaryKeySelective", tbKeysKey.getObject(), columns1);
                 Assert.assertEquals(new ObjectUtil(tbKeys).get("field1"), "fd1");
+            }
+        });
+        // 测试Selective不传
+        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByPrimaryKeySelective", 4L);
+                Assert.assertEquals(sql, "select id, field1, field2 from tb where id = 4");
+
+                // 测试执行
+                ObjectUtil result = new ObjectUtil(tbMapper.invoke("selectByPrimaryKeySelective", 4L, null));
+                // 取数据出来比较
+                Assert.assertEquals(result.get("id"), 4L);
+                Assert.assertEquals(result.get("field1"), "fd3");
+                Assert.assertEquals(result.get("field2"), 4);
+            }
+        });
+        // 测试WithBLOBs的情况
+        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
+
+                // selective
+                // 从base model 和 WithBLOBs都各取一个，更有代表性
+                ObjectUtil columnId = new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs$Column#id");
+                ObjectUtil columnField2 = new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs$Column#field2");
+
+                Object columns = Array.newInstance(columnId.getCls(), 2);
+                Array.set(columns, 0, columnId.getObject());
+                Array.set(columns, 1, columnField2.getObject());
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbBlobsMapper.getObject(), "selectByPrimaryKeySelective", 4L, columns);
+                Assert.assertEquals(sql, "select id , field2 from tb_blobs where id = 4");
+
+                // 测试执行
+                ObjectUtil result = new ObjectUtil(tbBlobsMapper.invoke("selectByPrimaryKeySelective", 4L, columns));
+                // 取第数据出来比较(这条数据所有字段是全的)
+                Assert.assertEquals(result.get("id"), 4L);
+                Assert.assertNull(result.get("field1"));
+                Assert.assertEquals(result.get("field2"), "L4");
+                Assert.assertNull(result.get("field3"));
+            }
+        });
+        // 测试Key的情况
+        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbKeysMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbKeysMapper")));
+
+                // selective
+                // 从base model 和 key model都各取一个，更有代表性
+                ObjectUtil columnKey1 = new ObjectUtil(loader, packagz + ".TbKeys$Column#key1");
+                ObjectUtil columnField1 = new ObjectUtil(loader, packagz + ".TbKeys$Column#field1");
+
+                Object columns = Array.newInstance(columnKey1.getCls(), 2);
+                Array.set(columns, 0, columnKey1.getObject());
+                Array.set(columns, 1, columnField1.getObject());
+
+                ObjectUtil tbKeysKey = new ObjectUtil(loader, packagz + ".TbKeysKey");
+                tbKeysKey.set("key1", 3L);
+                tbKeysKey.set("key2", "4");
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbKeysMapper.getObject(), "selectByPrimaryKeySelective", tbKeysKey.getObject(), columns);
+                Assert.assertEquals(sql, "select key1 , field1 from tb_keys where key1 = 3 and key2 = '4'");
+
+                // 测试执行
+                ObjectUtil result = new ObjectUtil(tbKeysMapper.invoke("selectByPrimaryKeySelective", tbKeysKey.getObject(), columns));
+                // 取第三条数据出来比较(这条数据所有字段是全的)
+                Assert.assertEquals(result.get("key1"), 3L);
+                Assert.assertNull(result.get("key2"));
+                Assert.assertEquals(result.get("field1"), "fd2");
+                Assert.assertNull(result.get("field2"));
             }
         });
     }
@@ -195,6 +364,94 @@ public class SelectSelectivePluginTest {
                 ObjectUtil tb = new ObjectUtil(result);
                 Assert.assertEquals(tb.get("field1"), "fd3");
                 Assert.assertNull(tb.get("field2"));
+            }
+        });
+
+        // 测试Selective不传
+        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdEqualTo", 4L);
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectOneByExampleSelective", tbExample.getObject());
+                Assert.assertEquals(sql, "select id, field1, field2 from tb WHERE ( id = '4' ) limit 1");
+
+                // 测试执行
+                ObjectUtil result = new ObjectUtil( tbMapper.invoke("selectOneByExampleSelective", tbExample.getObject(), null));
+                // 取第四条数据出来比较
+                Assert.assertEquals(result.get("id"), 4L);
+                Assert.assertEquals(result.get("field1"), "fd3");
+                Assert.assertEquals(result.get("field2"), 4);
+            }
+        });
+        // 测试WithBLOBs的情况
+        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
+
+                ObjectUtil tbBlobsExample = new ObjectUtil(loader, packagz + ".TbBlobsExample");
+                ObjectUtil criteria = new ObjectUtil(tbBlobsExample.invoke("createCriteria"));
+                criteria.invoke("andIdEqualTo", 4L);
+
+                // selective
+                // 从base model 和 WithBLOBs都各取一个，更有代表性
+                ObjectUtil columnId = new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs$Column#id");
+                ObjectUtil columnField2 = new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs$Column#field2");
+
+                Object columns = Array.newInstance(columnId.getCls(), 2);
+                Array.set(columns, 0, columnId.getObject());
+                Array.set(columns, 1, columnField2.getObject());
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbBlobsMapper.getObject(), "selectOneByExampleSelective", tbBlobsExample.getObject(), columns);
+                Assert.assertEquals(sql, "select id , field2 from tb_blobs WHERE ( id = '4' ) limit 1");
+
+                // 测试执行
+                ObjectUtil result = new ObjectUtil( tbBlobsMapper.invoke("selectOneByExampleSelective", tbBlobsExample.getObject(), columns));
+                // 取数据出来比较(这条数据所有字段是全的)
+                Assert.assertEquals(result.get("id"), 4L);
+                Assert.assertNull(result.get("field1"));
+                Assert.assertEquals(result.get("field2"), "L4");
+                Assert.assertNull(result.get("field3"));
+            }
+        });
+        // 测试Key的情况
+        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbKeysMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbKeysMapper")));
+
+                ObjectUtil tbKeysExample = new ObjectUtil(loader, packagz + ".TbKeysExample");
+                ObjectUtil criteria = new ObjectUtil(tbKeysExample.invoke("createCriteria"));
+                criteria.invoke("andKey1EqualTo", 3L);
+                criteria.invoke("andKey2EqualTo", "4");
+
+                // selective
+                // 从base model 和 key model都各取一个，更有代表性
+                ObjectUtil columnKey1 = new ObjectUtil(loader, packagz + ".TbKeys$Column#key1");
+                ObjectUtil columnField1 = new ObjectUtil(loader, packagz + ".TbKeys$Column#field1");
+
+                Object columns = Array.newInstance(columnKey1.getCls(), 2);
+                Array.set(columns, 0, columnKey1.getObject());
+                Array.set(columns, 1, columnField1.getObject());
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbKeysMapper.getObject(), "selectOneByExampleSelective", tbKeysExample.getObject(), columns);
+                Assert.assertEquals(sql, "select key1 , field1 from tb_keys WHERE ( key1 = '3' and key2 = '4' ) limit 1");
+
+                // 测试执行
+                ObjectUtil result = new ObjectUtil(tbKeysMapper.invoke("selectOneByExampleSelective", tbKeysExample.getObject(), columns));
+                // 取第三条数据出来比较(这条数据所有字段是全的)
+                Assert.assertEquals(result.get("key1"), 3L);
+                Assert.assertNull(result.get("key2"));
+                Assert.assertEquals(result.get("field1"), "fd2");
+                Assert.assertNull(result.get("field2"));
             }
         });
     }
