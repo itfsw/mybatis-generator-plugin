@@ -50,7 +50,7 @@ public class SelectSelectivePluginTest {
     public void testSelectByExampleSelective() throws Exception {
         // 一些基础测试
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/SelectSelectivePlugin/mybatis-generator.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试sql
@@ -111,7 +111,7 @@ public class SelectSelectivePluginTest {
             }
         });
         // 测试Selective不传
-        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -134,7 +134,7 @@ public class SelectSelectivePluginTest {
             }
         });
         // 测试WithBLOBs的情况
-        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
@@ -167,7 +167,7 @@ public class SelectSelectivePluginTest {
             }
         });
         // 测试Key的情况
-        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbKeysMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbKeysMapper")));
@@ -209,7 +209,7 @@ public class SelectSelectivePluginTest {
     public void testSelectByPrimaryKeySelective() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/SelectSelectivePlugin/mybatis-generator.xml");
         // 一些基础测试
-        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试sql
@@ -243,7 +243,7 @@ public class SelectSelectivePluginTest {
             }
         });
         // 测试Selective不传
-        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -261,7 +261,7 @@ public class SelectSelectivePluginTest {
             }
         });
         // 测试WithBLOBs的情况
-        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
@@ -289,7 +289,7 @@ public class SelectSelectivePluginTest {
             }
         });
         // 测试Key的情况
-        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbKeysMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbKeysMapper")));
@@ -368,7 +368,7 @@ public class SelectSelectivePluginTest {
         });
 
         // 测试Selective不传
-        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -390,7 +390,7 @@ public class SelectSelectivePluginTest {
             }
         });
         // 测试WithBLOBs的情况
-        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
@@ -422,7 +422,7 @@ public class SelectSelectivePluginTest {
             }
         });
         // 测试Key的情况
-        tool.generate(() -> DBHelper.createDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/SelectSelectivePlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbKeysMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbKeysMapper")));

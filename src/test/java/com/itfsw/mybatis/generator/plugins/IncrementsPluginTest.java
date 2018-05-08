@@ -63,7 +63,7 @@ public class IncrementsPluginTest {
     @Test
     public void testModelBuilderMethod() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试生成的方法
@@ -112,7 +112,7 @@ public class IncrementsPluginTest {
     @Test
     public void testSqlAndExecute() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
 
@@ -214,7 +214,7 @@ public class IncrementsPluginTest {
     @Test
     public void testWithSelectiveEnhancedPlugin() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator-with-selective-enhanced-plugin.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试updateByExampleSelective
@@ -307,7 +307,7 @@ public class IncrementsPluginTest {
     @Test
     public void testWithUpsertPlugin() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator-with-upsert-plugin.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -399,7 +399,7 @@ public class IncrementsPluginTest {
     @Test
     public void testWithAutoDelimitKeywords() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator-with-autoDelimitKeywords.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试updateByExample、updateByExampleSelective
@@ -433,7 +433,7 @@ public class IncrementsPluginTest {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator-with-upsert-and-selective-enhanced-plugin.xml");
 
         // upsertSelective 基于原生非空判断
-        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -459,7 +459,7 @@ public class IncrementsPluginTest {
         });
 
         // upsertByExampleSelective 基于原生非空判断
-        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试updateByExampleSelective
@@ -499,7 +499,7 @@ public class IncrementsPluginTest {
         });
 
         // upsertSelective 基于指定字段
-        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -536,7 +536,7 @@ public class IncrementsPluginTest {
         });
 
         // upsertByExampleSelective 基于指定字段
-        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试updateByExampleSelective

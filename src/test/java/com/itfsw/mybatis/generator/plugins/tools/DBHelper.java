@@ -37,15 +37,24 @@ import java.util.Properties;
 public class DBHelper {
     private static final String DB_CONFIG = "db.properties";
     public static Properties properties; // 数据库信息
+    private static Connection connection;   // 数据库连接
+    private static String dbLock;
 
     static {
         try {
             // 获取数据库配置信息
             properties = new Properties();
-            InputStream inputStream = Resources.getResourceAsStream(DB_CONFIG);
-            properties.load(inputStream);
-            inputStream.close();
-        } catch (IOException e) {
+            try (InputStream inputStream = Resources.getResourceAsStream(DB_CONFIG)) {
+                properties.load(inputStream);
+            }
+            // 数据库连接
+            String driver = properties.getProperty("driver");
+            String url = properties.getProperty("url");
+            String username = properties.getProperty("username");
+            String password = properties.getProperty("password");
+            Class.forName(driver);
+            connection = DriverManager.getConnection(url, username, password);
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -53,19 +62,11 @@ public class DBHelper {
     /**
      * 创建数据库
      * @param resource
-     * @throws ClassNotFoundException
      * @throws SQLException
      * @throws IOException
      */
-    public static void createDB(String resource) throws ClassNotFoundException, SQLException, IOException {
-        String driver = properties.getProperty("driver");
-        String url = properties.getProperty("url");
-        String username = properties.getProperty("username");
-        String password = properties.getProperty("password");
-        // 获取connection
-        Class.forName(driver);
+    public static void createDB(String resource) throws SQLException, IOException {
         try (
-                Connection connection = DriverManager.getConnection(url, username, password);
                 Statement statement = connection.createStatement();
                 // 获取建表和初始化sql
                 InputStream inputStream = Resources.getResourceAsStream(resource);
@@ -76,10 +77,52 @@ public class DBHelper {
             StringBuffer sb = new StringBuffer();
             String line;
             while ((line = bufferedReader.readLine()) != null) {
-                sb.append(line).append("\n");
-                if (line.matches(".*;$")) {
-                    statement.execute(sb.toString());
-                    sb.setLength(0);
+                if (!line.startsWith("--")) {
+                    sb.append(line).append("\n");
+                }
+            }
+            statement.execute(sb.toString());
+
+            dbLock = resource;
+        }
+    }
+
+    /**
+     * 重置数据库
+     * @param resource
+     * @throws SQLException
+     * @throws IOException
+     */
+    public static void resetDB(String resource) throws Exception {
+        if (dbLock == null || !dbLock.equals(resource)) {
+            throw new Exception("重置数据库只能重置已锁定的！");
+        }
+
+        try (
+                Statement statement = connection.createStatement();
+                // 获取建表和初始化sql
+                InputStream inputStream = Resources.getResourceAsStream(resource);
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+        ) {
+            // 读取sql语句执行
+            StringBuffer sb = new StringBuffer();
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                if (!line.startsWith("--")) {
+                    sb.append(line).append("\n");
+
+                    if (line.matches(".*;$\\s*")) {
+                        String sql = sb.toString().trim();
+
+                        if (sql.startsWith("DROP")) {
+                            statement.execute(sql.replace("DROP TABLE IF EXISTS", "TRUNCATE TABLE"));
+                        } else if (!sql.startsWith("CREATE")) {
+                            statement.execute(sql);
+                        }
+
+                        sb.setLength(0);
+                    }
                 }
             }
         }

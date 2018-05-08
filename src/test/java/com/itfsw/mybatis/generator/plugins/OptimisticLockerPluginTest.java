@@ -61,7 +61,7 @@ public class OptimisticLockerPluginTest {
     @Test
     public void testDeleteWithVersionByExample() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -97,7 +97,7 @@ public class OptimisticLockerPluginTest {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator.xml");
 
         // 测试只有单一主键的情况，这种情况下key使用@Param("key")注解
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -121,7 +121,7 @@ public class OptimisticLockerPluginTest {
         });
 
         // 测试多个主键的情况，这种情况下key使用@Param("record")注解
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbKeysMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbKeysMapper")));
@@ -156,7 +156,7 @@ public class OptimisticLockerPluginTest {
     public void testUpdateWithVersionByExampleSelective() throws Exception {
         // 测试默认自增版本号
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -192,7 +192,7 @@ public class OptimisticLockerPluginTest {
 
         // 测试自定义版本号
         tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator-customizedNextVersion.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -234,7 +234,7 @@ public class OptimisticLockerPluginTest {
     public void testUpdateWithVersionByExample() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator.xml");
         // 测试不带or的更新
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -269,7 +269,7 @@ public class OptimisticLockerPluginTest {
         });
 
         // 测试一下 byExample 对于or 是否正常生成了括号
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -299,7 +299,7 @@ public class OptimisticLockerPluginTest {
 
         // 测试自定义版本号
         tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator-customizedNextVersion.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -342,7 +342,7 @@ public class OptimisticLockerPluginTest {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator.xml");
 
         // 测试执行withoutBLOBs
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
@@ -377,7 +377,7 @@ public class OptimisticLockerPluginTest {
         });
 
         // 测试执行withBLOBs
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
@@ -416,7 +416,7 @@ public class OptimisticLockerPluginTest {
         // ================================================ 测试自定义版本号 =======================================================
         tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator-customizedNextVersion.xml");
         // 测试执行withoutBLOBs
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
@@ -451,7 +451,7 @@ public class OptimisticLockerPluginTest {
         });
 
         // 测试执行withBLOBs
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
@@ -494,7 +494,7 @@ public class OptimisticLockerPluginTest {
     @Test
     public void testUpdateWithVersionByPrimaryKeySelective() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -526,7 +526,7 @@ public class OptimisticLockerPluginTest {
 
         // 测试自定义版本号
         tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator-customizedNextVersion.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -563,7 +563,7 @@ public class OptimisticLockerPluginTest {
     @Test
     public void testUpdateWithVersionByPrimaryKey() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -595,7 +595,7 @@ public class OptimisticLockerPluginTest {
 
         // 测试自定义版本号
         tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator-customizedNextVersion.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -634,7 +634,7 @@ public class OptimisticLockerPluginTest {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator.xml");
 
         // 测试执行withoutBLOBs
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
@@ -665,7 +665,7 @@ public class OptimisticLockerPluginTest {
         });
 
         // 测试执行withBLOBs
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
@@ -700,7 +700,7 @@ public class OptimisticLockerPluginTest {
         // ====================================== 测试自定义版本号 ==========================================
         tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator-customizedNextVersion.xml");
         // 测试执行withoutBLOBs
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
@@ -731,7 +731,7 @@ public class OptimisticLockerPluginTest {
         });
 
         // 测试执行withBLOBs
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
@@ -772,7 +772,7 @@ public class OptimisticLockerPluginTest {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator-with-IncrementsPlugin.xml");
 
         // 测试updateWithVersionByExampleSelective
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -809,7 +809,7 @@ public class OptimisticLockerPluginTest {
         });
 
         // 测试updateWithVersionByExample
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -845,7 +845,7 @@ public class OptimisticLockerPluginTest {
         });
 
         // 测试withBLOBs两种情况之一：无BLOBs方式
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
@@ -880,7 +880,7 @@ public class OptimisticLockerPluginTest {
         });
 
         // 测试withBLOBs两种情况之一：有BLOBs方式
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
@@ -917,7 +917,7 @@ public class OptimisticLockerPluginTest {
         });
 
         // 测试updateWithVersionByPrimaryKeySelective
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -949,7 +949,7 @@ public class OptimisticLockerPluginTest {
         });
 
         // 测试updateWithVersionByPrimaryKey
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -981,7 +981,7 @@ public class OptimisticLockerPluginTest {
         });
 
         // 测试withBLOBs两种情况之一：无BLOBs方式
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
@@ -1012,7 +1012,7 @@ public class OptimisticLockerPluginTest {
         });
 
         // 测试withBLOBs两种情况之一：有BLOBs方式
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
@@ -1053,7 +1053,7 @@ public class OptimisticLockerPluginTest {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator-with-SelectiveEnhancedPlugin.xml");
 
         // 测试updateWithVersionByExampleSelective
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -1103,7 +1103,7 @@ public class OptimisticLockerPluginTest {
         });
 
         // 测试updateWithVersionByPrimaryKeySelective
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -1157,7 +1157,7 @@ public class OptimisticLockerPluginTest {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator-with-SelectiveEnhancedPlugin-IncrementsPlugin.xml");
 
         // 测试updateWithVersionByExampleSelective
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -1208,7 +1208,7 @@ public class OptimisticLockerPluginTest {
         });
 
         // 测试updateWithVersionByPrimaryKeySelective
-        tool.generate(() -> DBHelper.createDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));

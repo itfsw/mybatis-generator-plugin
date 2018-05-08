@@ -19,6 +19,7 @@ package com.itfsw.mybatis.generator.plugins;
 import com.itfsw.mybatis.generator.plugins.tools.*;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mybatis.generator.exception.InvalidConfigurationException;
 import org.mybatis.generator.exception.XMLParserException;
@@ -36,6 +37,13 @@ import java.sql.SQLException;
  * ---------------------------------------------------------------------------
  */
 public class UpsertPluginTest {
+    /**
+     * 初始化
+     */
+    @BeforeClass
+    public static void init() throws Exception{
+        DBHelper.createDB("scripts/UpsertPlugin/init.sql");
+    }
 
     /**
      * 测试配置异常
@@ -59,7 +67,7 @@ public class UpsertPluginTest {
     @Test
     public void testUpsert() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/UpsertPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/UpsertPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -91,7 +99,7 @@ public class UpsertPluginTest {
     @Test
     public void testUpsertWithBLOBs() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/UpsertPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/UpsertPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 多个 blob
@@ -145,7 +153,7 @@ public class UpsertPluginTest {
     @Test
     public void testUpsertSelective() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/UpsertPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/UpsertPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 普通
@@ -184,7 +192,7 @@ public class UpsertPluginTest {
     @Test
     public void testUpsertByExample() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/UpsertPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/UpsertPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -220,7 +228,7 @@ public class UpsertPluginTest {
     @Test
     public void testUpsertByExampleWithBLOBs() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/UpsertPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/UpsertPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 多个 blob
@@ -281,7 +289,7 @@ public class UpsertPluginTest {
     @Test
     public void testUpsertByExampleSelective() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/UpsertPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/UpsertPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 普通
@@ -326,7 +334,7 @@ public class UpsertPluginTest {
     @Test
     public void testWithIdentityAndGeneratedAlwaysColumns() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator.xml");
-        tool.generate(() -> DBHelper.createDB("scripts/UpsertPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/UpsertPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // ------------------------------------------ upsert ---------------------------------------------------
