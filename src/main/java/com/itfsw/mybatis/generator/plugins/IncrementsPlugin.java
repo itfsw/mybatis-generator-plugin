@@ -157,81 +157,83 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
      */
     @Override
     public boolean modelBuilderClassGenerated(TopLevelClass topLevelClass, InnerClass builderClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
-        // 增加枚举
-        InnerEnum eIncrements = new InnerEnum(new FullyQualifiedJavaType("Inc"));
-        eIncrements.setVisibility(JavaVisibility.PUBLIC);
-        eIncrements.setStatic(true);
-        eIncrements.addEnumConstant("INC(\"+\")");
-        eIncrements.addEnumConstant("DEC(\"-\")");
-        commentGenerator.addEnumComment(eIncrements, introspectedTable);
-        // 生成属性和构造函数
-        Field fValue = new Field("value", FullyQualifiedJavaType.getStringInstance());
-        fValue.setVisibility(JavaVisibility.PRIVATE);
-        fValue.setFinal(true);
-        commentGenerator.addFieldComment(fValue, introspectedTable);
-        eIncrements.addField(fValue);
+        if (incTools.support()) {
+            // 增加枚举
+            InnerEnum eIncrements = new InnerEnum(new FullyQualifiedJavaType("Inc"));
+            eIncrements.setVisibility(JavaVisibility.PUBLIC);
+            eIncrements.setStatic(true);
+            eIncrements.addEnumConstant("INC(\"+\")");
+            eIncrements.addEnumConstant("DEC(\"-\")");
+            commentGenerator.addEnumComment(eIncrements, introspectedTable);
+            // 生成属性和构造函数
+            Field fValue = new Field("value", FullyQualifiedJavaType.getStringInstance());
+            fValue.setVisibility(JavaVisibility.PRIVATE);
+            fValue.setFinal(true);
+            commentGenerator.addFieldComment(fValue, introspectedTable);
+            eIncrements.addField(fValue);
 
-        Method mInc = new Method("Inc");
-        mInc.setConstructor(true);
-        mInc.addBodyLine("this.value = value;");
-        mInc.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "value"));
-        commentGenerator.addGeneralMethodComment(mInc, introspectedTable);
-        eIncrements.addMethod(mInc);
+            Method mInc = new Method("Inc");
+            mInc.setConstructor(true);
+            mInc.addBodyLine("this.value = value;");
+            mInc.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "value"));
+            commentGenerator.addGeneralMethodComment(mInc, introspectedTable);
+            eIncrements.addMethod(mInc);
 
-        Method mValue = JavaElementGeneratorTools.generateGetterMethod(fValue);
-        commentGenerator.addGeneralMethodComment(mValue, introspectedTable);
-        eIncrements.addMethod(mValue);
+            Method mValue = JavaElementGeneratorTools.generateGetterMethod(fValue);
+            commentGenerator.addGeneralMethodComment(mValue, introspectedTable);
+            eIncrements.addMethod(mValue);
 
-        builderClass.addInnerEnum(eIncrements);
-        // 增加field
-        Field fIncrements = JavaElementGeneratorTools.generateField(
-                IncrementsPlugin.FIELD_INC_MAP,
-                JavaVisibility.PROTECTED,
-                new FullyQualifiedJavaType("Map<String, " + incTools.getIncEnum().getFullyQualifiedName() + ">"),
-                "new HashMap<String, " + incTools.getIncEnum().getFullyQualifiedName() + ">()"
-        );
-        commentGenerator.addFieldComment(fIncrements, introspectedTable);
-        topLevelClass.addField(fIncrements);
-        topLevelClass.addImportedType("java.util.Map");
-        topLevelClass.addImportedType("java.util.HashMap");
-        // getter&setter
-        Method mGetter = JavaElementGeneratorTools.generateGetterMethod(fIncrements);
-        commentGenerator.addGetterComment(mGetter, introspectedTable, null);
-        topLevelClass.addMethod(mGetter);
-        Method mSetter = JavaElementGeneratorTools.generateSetterMethod(fIncrements);
-        commentGenerator.addSetterComment(mSetter, introspectedTable, null);
-        topLevelClass.addMethod(mSetter);
-        // 增加判断方法
-        Method mHasIncsForColumn = JavaElementGeneratorTools.generateMethod(
-                IncrementsPlugin.METHOD_INC_CHECK,
-                JavaVisibility.PUBLIC,
-                FullyQualifiedJavaType.getBooleanPrimitiveInstance(),
-                new Parameter(FullyQualifiedJavaType.getStringInstance(), "column")
-        );
-        commentGenerator.addGeneralMethodComment(mHasIncsForColumn, introspectedTable);
-        mHasIncsForColumn.addBodyLine("return " + IncrementsPlugin.FIELD_INC_MAP + ".get(column) != null;");
-        FormatTools.addMethodWithBestPosition(topLevelClass, mHasIncsForColumn);
+            builderClass.addInnerEnum(eIncrements);
+            // 增加field
+            Field fIncrements = JavaElementGeneratorTools.generateField(
+                    IncrementsPlugin.FIELD_INC_MAP,
+                    JavaVisibility.PROTECTED,
+                    new FullyQualifiedJavaType("Map<String, " + incTools.getIncEnum().getFullyQualifiedName() + ">"),
+                    "new HashMap<String, " + incTools.getIncEnum().getFullyQualifiedName() + ">()"
+            );
+            commentGenerator.addFieldComment(fIncrements, introspectedTable);
+            topLevelClass.addField(fIncrements);
+            topLevelClass.addImportedType("java.util.Map");
+            topLevelClass.addImportedType("java.util.HashMap");
+            // getter&setter
+            Method mGetter = JavaElementGeneratorTools.generateGetterMethod(fIncrements);
+            commentGenerator.addGetterComment(mGetter, introspectedTable, null);
+            topLevelClass.addMethod(mGetter);
+            Method mSetter = JavaElementGeneratorTools.generateSetterMethod(fIncrements);
+            commentGenerator.addSetterComment(mSetter, introspectedTable, null);
+            topLevelClass.addMethod(mSetter);
+            // 增加判断方法
+            Method mHasIncsForColumn = JavaElementGeneratorTools.generateMethod(
+                    IncrementsPlugin.METHOD_INC_CHECK,
+                    JavaVisibility.PUBLIC,
+                    FullyQualifiedJavaType.getBooleanPrimitiveInstance(),
+                    new Parameter(FullyQualifiedJavaType.getStringInstance(), "column")
+            );
+            commentGenerator.addGeneralMethodComment(mHasIncsForColumn, introspectedTable);
+            mHasIncsForColumn.addBodyLine("return " + IncrementsPlugin.FIELD_INC_MAP + ".get(column) != null;");
+            FormatTools.addMethodWithBestPosition(topLevelClass, mHasIncsForColumn);
 
-        // Builder 中 添加字段支持
-        for (IntrospectedColumn column : columns) {
-            if (incTools.supportColumn(column)) {
-                Field field = JavaBeansUtil.getJavaBeansField(column, context, introspectedTable);
-                // 增加方法
-                Method mIncrements = JavaElementGeneratorTools.generateMethod(
-                        field.getName(),
-                        JavaVisibility.PUBLIC,
-                        builderClass.getType(),
-                        new Parameter(field.getType(), field.getName()),
-                        new Parameter(incTools.getIncEnum(), "inc")
-                );
-                commentGenerator.addSetterComment(mIncrements, introspectedTable, column);
+            // Builder 中 添加字段支持
+            for (IntrospectedColumn column : columns) {
+                if (incTools.supportColumn(column)) {
+                    Field field = JavaBeansUtil.getJavaBeansField(column, context, introspectedTable);
+                    // 增加方法
+                    Method mIncrements = JavaElementGeneratorTools.generateMethod(
+                            field.getName(),
+                            JavaVisibility.PUBLIC,
+                            builderClass.getType(),
+                            new Parameter(field.getType(), field.getName()),
+                            new Parameter(incTools.getIncEnum(), "inc")
+                    );
+                    commentGenerator.addSetterComment(mIncrements, introspectedTable, column);
 
-                Method setterMethod = JavaBeansUtil.getJavaBeansSetter(column, context, introspectedTable);
-                mIncrements.addBodyLine("obj." + IncrementsPlugin.FIELD_INC_MAP + ".put(\"" + column.getActualColumnName() + "\", inc);");
-                mIncrements.addBodyLine("obj." + setterMethod.getName() + "(" + field.getName() + ");");
-                mIncrements.addBodyLine("return this;");
+                    Method setterMethod = JavaBeansUtil.getJavaBeansSetter(column, context, introspectedTable);
+                    mIncrements.addBodyLine("obj." + IncrementsPlugin.FIELD_INC_MAP + ".put(\"" + column.getActualColumnName() + "\", inc);");
+                    mIncrements.addBodyLine("obj." + setterMethod.getName() + "(" + field.getName() + ");");
+                    mIncrements.addBodyLine("return this;");
 
-                FormatTools.addMethodWithBestPosition(builderClass, mIncrements);
+                    FormatTools.addMethodWithBestPosition(builderClass, mIncrements);
+                }
             }
         }
         return true;
@@ -327,7 +329,7 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
                     sb.append("column.value");
 
                     when.addAttribute(new Attribute("test", sb.toString()));
-                    when.addElement(new TextElement("${column.value} = ${column.value} ${record.incrementsColumnsInfoMap."
+                    when.addElement(new TextElement("${column.value} = ${column.value} ${record." + FIELD_INC_MAP + "."
                             + introspectedColumn.getActualColumnName()
                             + ".value} #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
                     choose.addElement(when);
