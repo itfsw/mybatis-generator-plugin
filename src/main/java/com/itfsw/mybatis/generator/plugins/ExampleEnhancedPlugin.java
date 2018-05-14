@@ -1,6 +1,7 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
+import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.enhanced.InnerInterface;
 import com.itfsw.mybatis.generator.plugins.utils.enhanced.InnerInterfaceWrapperToInnerClass;
@@ -91,7 +92,7 @@ public class ExampleEnhancedPlugin extends BasePlugin {
                 exampleMethod,
                 "return this.example;"
         );
-        innerClass.addMethod(exampleMethod);
+        FormatTools.addMethodWithBestPosition(innerClass, exampleMethod);
         logger.debug("itfsw(Example增强插件):" + topLevelClass.getType().getShortName() + "." + innerClass.getType().getShortName() + "增加工厂方法example");
     }
 
@@ -116,7 +117,7 @@ public class ExampleEnhancedPlugin extends BasePlugin {
                 new Parameter(innerClass.getType(), "add")
         );
         commentGenerator.addGeneralMethodComment(addMethod, introspectedTable);
-        criteriaAddInterface.addMethod(addMethod);
+        FormatTools.addMethodWithBestPosition(criteriaAddInterface, addMethod);
         logger.debug("itfsw(Example增强插件):" + topLevelClass.getType().getShortName() + "." + innerClass.getType().getShortName() + "." + criteriaAddInterface.getType().getShortName() + "增加方法add");
 
         InnerClass innerClassWrapper = new InnerInterfaceWrapperToInnerClass(criteriaAddInterface);
@@ -140,7 +141,7 @@ public class ExampleEnhancedPlugin extends BasePlugin {
                 "}",
                 "return this;"
         );
-        innerClass.addMethod(andIfMethod);
+        FormatTools.addMethodWithBestPosition(innerClass, andIfMethod);
         logger.debug("itfsw(Example增强插件):" + topLevelClass.getType().getShortName() + "." + innerClass.getType().getShortName() + "增加方法andIf");
     }
 
@@ -163,7 +164,7 @@ public class ExampleEnhancedPlugin extends BasePlugin {
                 "this.setOrderByClause(orderByClause);",
                 "return this;"
         );
-        topLevelClass.addMethod(orderByMethod);
+        FormatTools.addMethodWithBestPosition(topLevelClass, orderByMethod);
         logger.debug("itfsw(Example增强插件):" + topLevelClass.getType().getShortName() + "增加方法orderBy");
 
         // 添加orderBy
@@ -187,7 +188,7 @@ public class ExampleEnhancedPlugin extends BasePlugin {
                 "return this;"
         );
 
-        topLevelClass.addMethod(orderByMethod1);
+        FormatTools.addMethodWithBestPosition(topLevelClass, orderByMethod1);
         logger.debug("itfsw(Example增强插件):" + topLevelClass.getType().getShortName() + "增加方法orderBy(String ... orderByClauses)");
     }
 }

@@ -16,10 +16,7 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
-import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
-import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
-import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
+import com.itfsw.mybatis.generator.plugins.utils.*;
 import com.itfsw.mybatis.generator.plugins.utils.hook.IUpsertPluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
@@ -96,7 +93,7 @@ public class UpsertPlugin extends BasePlugin {
         );
         commentGenerator.addGeneralMethodComment(mUpsert, introspectedTable);
         // interface 增加方法
-        interfaze.addMethod(mUpsert);
+        FormatTools.addMethodWithBestPosition(interfaze, mUpsert);
         logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsert方法。");
 
         // ====================================== upsertWithBLOBs ======================================
@@ -110,7 +107,7 @@ public class UpsertPlugin extends BasePlugin {
             );
             commentGenerator.addGeneralMethodComment(mUpsertWithBLOBs, introspectedTable);
             // interface 增加方法
-            interfaze.addMethod(mUpsertWithBLOBs);
+            FormatTools.addMethodWithBestPosition(interfaze, mUpsertWithBLOBs);
             logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsert方法。");
         }
 
@@ -127,7 +124,7 @@ public class UpsertPlugin extends BasePlugin {
         // hook
         if (PluginTools.getHook(IUpsertPluginHook.class).clientUpsertSelectiveMethodGenerated(mUpsertSelective, interfaze, introspectedTable)) {
             // interface 增加方法
-            interfaze.addMethod(mUpsertSelective);
+            FormatTools.addMethodWithBestPosition(interfaze, mUpsertSelective);
             logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertSelective方法。");
         }
 
@@ -142,7 +139,7 @@ public class UpsertPlugin extends BasePlugin {
             );
             commentGenerator.addGeneralMethodComment(mUpsertByExample, introspectedTable);
             // interface 增加方法
-            interfaze.addMethod(mUpsertByExample);
+            FormatTools.addMethodWithBestPosition(interfaze, mUpsertByExample);
             logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertByExample方法。");
 
             // ====================================== upsertByExampleWithBLOBs ======================================
@@ -157,7 +154,7 @@ public class UpsertPlugin extends BasePlugin {
                 );
                 commentGenerator.addGeneralMethodComment(mUpsertByExampleWithBLOBs, introspectedTable);
                 // interface 增加方法
-                interfaze.addMethod(mUpsertByExampleWithBLOBs);
+                FormatTools.addMethodWithBestPosition(interfaze, mUpsertByExampleWithBLOBs);
                 logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertByExample方法。");
             }
 
@@ -173,7 +170,7 @@ public class UpsertPlugin extends BasePlugin {
             // hook
             if (PluginTools.getHook(IUpsertPluginHook.class).clientUpsertByExampleSelectiveMethodGenerated(mUpsertByExampleSelective, interfaze, introspectedTable)) {
                 // interface 增加方法
-                interfaze.addMethod(mUpsertByExampleSelective);
+                FormatTools.addMethodWithBestPosition(interfaze, mUpsertByExampleSelective);
                 logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertByExampleSelective方法。");
             }
         }

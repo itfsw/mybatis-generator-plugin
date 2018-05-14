@@ -16,10 +16,7 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
-import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
-import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
-import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
+import com.itfsw.mybatis.generator.plugins.utils.*;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
@@ -88,7 +85,7 @@ public class BatchInsertPlugin extends BasePlugin {
         );
         commentGenerator.addGeneralMethodComment(mBatchInsert, introspectedTable);
         // interface 增加方法
-        interfaze.addMethod(mBatchInsert);
+        FormatTools.addMethodWithBestPosition(interfaze, mBatchInsert);
         logger.debug("itfsw(批量插入插件):" + interfaze.getType().getShortName() + "增加batchInsert方法。");
 
         // 2. batchInsertSelective
@@ -102,7 +99,7 @@ public class BatchInsertPlugin extends BasePlugin {
         );
         commentGenerator.addGeneralMethodComment(mBatchInsertSelective, introspectedTable);
         // interface 增加方法
-        interfaze.addMethod(mBatchInsertSelective);
+        FormatTools.addMethodWithBestPosition(interfaze, mBatchInsertSelective);
         logger.debug("itfsw(批量插入插件):" + interfaze.getType().getShortName() + "增加batchInsertSelective方法。");
 
         return true;

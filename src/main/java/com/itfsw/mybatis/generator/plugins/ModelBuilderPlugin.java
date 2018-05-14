@@ -17,6 +17,7 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
+import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
 import com.itfsw.mybatis.generator.plugins.utils.enhanced.InnerTypeFullyQualifiedJavaType;
@@ -116,7 +117,7 @@ public class ModelBuilderPlugin extends BasePlugin {
         commentGenerator.addGeneralMethodComment(builder, introspectedTable);
         builder.setStatic(true);
         builder.addBodyLine("return new " + builderType.getShortName() + "();");
-        topLevelClass.addMethod(builder);
+        FormatTools.addMethodWithBestPosition(topLevelClass, builder);
 
         commentGenerator.addClassComment(innerClass, introspectedTable);
         logger.debug("itfsw(数据Model链式构建插件):" + topLevelClass.getType().getShortName() + "增加内部Builder类。");
@@ -132,7 +133,7 @@ public class ModelBuilderPlugin extends BasePlugin {
         constructor.setConstructor(true);
         constructor.addBodyLine(new StringBuilder("this.obj = new ").append(topLevelClass.getType().getShortName()).append("();").toString());
         commentGenerator.addGeneralMethodComment(constructor, introspectedTable);
-        innerClass.addMethod(constructor);
+        FormatTools.addMethodWithBestPosition(innerClass, constructor);
         logger.debug("itfsw(数据Model链式构建插件):" + topLevelClass.getType().getShortName() + ".Builder增加的构造方法。");
 
         for (IntrospectedColumn introspectedColumn : columns) {
@@ -154,7 +155,7 @@ public class ModelBuilderPlugin extends BasePlugin {
 
             // hook
             if (PluginTools.getHook(IModelBuilderPluginHook.class).modelBuilderSetterMethodGenerated(method, topLevelClass, innerClass, introspectedColumn, introspectedTable)) {
-                innerClass.addMethod(method);
+                FormatTools.addMethodWithBestPosition(innerClass, method);
                 logger.debug("itfsw(数据Model链式构建插件):" + topLevelClass.getType().getShortName() + ".Builder增加" + method.getName() + "方法(复合主键)。");
             }
         }
@@ -166,7 +167,7 @@ public class ModelBuilderPlugin extends BasePlugin {
         );
         build.addBodyLine("return this.obj;");
         commentGenerator.addGeneralMethodComment(build, introspectedTable);
-        innerClass.addMethod(build);
+        FormatTools.addMethodWithBestPosition(innerClass, build);
         logger.debug("itfsw(数据Model链式构建插件):" + topLevelClass.getType().getShortName() + ".Builder增加build方法。");
 
         // hook

@@ -16,12 +16,10 @@
 
 package com.itfsw.mybatis.generator.plugins.utils;
 
+import com.itfsw.mybatis.generator.plugins.ModelColumnPlugin;
 import org.mybatis.generator.api.CommentGenerator;
 import org.mybatis.generator.api.IntrospectedTable;
-import org.mybatis.generator.api.dom.java.InnerClass;
-import org.mybatis.generator.api.dom.java.Interface;
-import org.mybatis.generator.api.dom.java.Method;
-import org.mybatis.generator.api.dom.java.TopLevelClass;
+import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.Element;
 import org.mybatis.generator.api.dom.xml.TextElement;
@@ -29,6 +27,8 @@ import org.mybatis.generator.api.dom.xml.XmlElement;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * ---------------------------------------------------------------------------
@@ -54,7 +54,41 @@ public class FormatTools {
      * @param method
      */
     public static void addMethodWithBestPosition(Interface interfacz, Method method) {
+        // import
+        Set<FullyQualifiedJavaType> importTypes = new TreeSet<>();
+        // 返回
+        if (method.getReturnType() != null) {
+            importTypes.add(method.getReturnType());
+            importTypes.addAll(method.getReturnType().getTypeArguments());
+        }
+        // 参数 比较特殊的是ModelColumn生成的Column
+        for (Parameter parameter : method.getParameters()) {
+            boolean flag = true;
+            for (String annotation : parameter.getAnnotations()) {
+                if (annotation.startsWith("@Param")) {
+                    importTypes.add(new FullyQualifiedJavaType("org.apache.ibatis.annotations.Param"));
+
+                    if (annotation.matches(".*selective.*") && parameter.getType().getShortName().equals(ModelColumnPlugin.ENUM_NAME)) {
+                        flag = false;
+                    }
+                }
+            }
+            if (flag) {
+                importTypes.add(parameter.getType());
+                importTypes.addAll(parameter.getType().getTypeArguments());
+            }
+        }
+        interfacz.addImportedTypes(importTypes);
         addMethodWithBestPosition(method, interfacz.getMethods());
+    }
+
+    /**
+     * 在最佳位置添加方法
+     * @param innerEnum
+     * @param method
+     */
+    public static void addMethodWithBestPosition(InnerEnum innerEnum, Method method) {
+        addMethodWithBestPosition(method, innerEnum.getMethods());
     }
 
     /**

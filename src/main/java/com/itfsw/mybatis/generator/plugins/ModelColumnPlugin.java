@@ -17,6 +17,7 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
+import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
@@ -110,22 +111,22 @@ public class ModelColumnPlugin extends BasePlugin {
         mValue.setReturnType(FullyQualifiedJavaType.getStringInstance());
         mValue.addBodyLine("return this.column;");
         commentGenerator.addGeneralMethodComment(mValue, introspectedTable);
-        innerEnum.addMethod(mValue);
+        FormatTools.addMethodWithBestPosition(innerEnum, mValue);
 
         Method mGetValue = new Method("getValue");
         mGetValue.setVisibility(JavaVisibility.PUBLIC);
         mGetValue.setReturnType(FullyQualifiedJavaType.getStringInstance());
         mGetValue.addBodyLine("return this.column;");
         commentGenerator.addGeneralMethodComment(mGetValue, introspectedTable);
-        innerEnum.addMethod(mGetValue);
+        FormatTools.addMethodWithBestPosition(innerEnum, mGetValue);
 
         Method mGetJavaProperty = JavaElementGeneratorTools.generateGetterMethod(javaPropertyField);
         commentGenerator.addGeneralMethodComment(mGetJavaProperty, introspectedTable);
-        innerEnum.addMethod(mGetJavaProperty);
+        FormatTools.addMethodWithBestPosition(innerEnum, mGetJavaProperty);
 
         Method mGetJdbcType = JavaElementGeneratorTools.generateGetterMethod(jdbcTypeField);
         commentGenerator.addGeneralMethodComment(mGetJdbcType, introspectedTable);
-        innerEnum.addMethod(mGetJdbcType);
+        FormatTools.addMethodWithBestPosition(innerEnum, mGetJdbcType);
 
         Method constructor = new Method(ENUM_NAME);
         constructor.setConstructor(true);
@@ -136,7 +137,7 @@ public class ModelColumnPlugin extends BasePlugin {
         constructor.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "javaProperty"));
         constructor.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "jdbcType"));
         commentGenerator.addGeneralMethodComment(constructor, introspectedTable);
-        innerEnum.addMethod(constructor);
+        FormatTools.addMethodWithBestPosition(innerEnum, constructor);
         logger.debug("itfsw(数据Model属性对应Column获取插件):" + topLevelClass.getType().getShortName() + ".Column增加构造方法和column属性。");
 
         // Enum枚举
@@ -163,14 +164,14 @@ public class ModelColumnPlugin extends BasePlugin {
         desc.setReturnType(FullyQualifiedJavaType.getStringInstance());
         desc.addBodyLine("return this.column + \" DESC\";");
         commentGenerator.addGeneralMethodComment(desc, introspectedTable);
-        innerEnum.addMethod(desc);
+        FormatTools.addMethodWithBestPosition(innerEnum, desc);
 
         Method asc = new Method("asc");
         asc.setVisibility(JavaVisibility.PUBLIC);
         asc.setReturnType(FullyQualifiedJavaType.getStringInstance());
         asc.addBodyLine("return this.column + \" ASC\";");
         commentGenerator.addGeneralMethodComment(asc, introspectedTable);
-        innerEnum.addMethod(asc);
+        FormatTools.addMethodWithBestPosition(innerEnum, asc);
         logger.debug("itfsw(数据Model属性对应Column获取插件):" + topLevelClass.getType().getShortName() + ".Column增加asc()和desc()方法。");
 
         return innerEnum;

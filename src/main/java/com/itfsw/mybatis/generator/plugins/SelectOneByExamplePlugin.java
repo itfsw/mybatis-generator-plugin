@@ -38,64 +38,73 @@ import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 public class SelectOneByExamplePlugin extends BasePlugin {
     public static final String METHOD_SELECT_ONE_BY_EXAMPLE = "selectOneByExample";  // 方法名
     public static final String METHOD_SELECT_ONE_BY_EXAMPLE_WITH_BLOBS = "selectOneByExampleWithBLOBs";  // 方法名
+    private XmlElement selectOneByExampleEle;
+    private XmlElement selectOneByExampleWithBLOBsEle;
 
     /**
      * Java Client Methods 生成
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     * @param method
      * @param interfaze
-     * @param topLevelClass
      * @param introspectedTable
      * @return
      */
     @Override
-    public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+    public boolean clientSelectByExampleWithBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         // 方法生成 selectOneByExample
-        Method method = JavaElementGeneratorTools.generateMethod(
+        Method selectOneMethod = JavaElementGeneratorTools.generateMethod(
+                METHOD_SELECT_ONE_BY_EXAMPLE_WITH_BLOBS,
+                JavaVisibility.DEFAULT,
+                JavaElementGeneratorTools.getModelTypeWithBLOBs(introspectedTable),
+                new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example")
+        );
+        commentGenerator.addGeneralMethodComment(selectOneMethod, introspectedTable);
+
+        // hook
+        if (PluginTools.getHook(ISelectOneByExamplePluginHook.class).clientSelectOneByExampleWithBLOBsMethodGenerated(selectOneMethod, interfaze, introspectedTable)) {
+            // interface 增加方法
+            FormatTools.addMethodWithBestPosition(interfaze, selectOneMethod);
+            logger.debug("itfsw(查询单条数据插件):" + interfaze.getType().getShortName() + "增加selectOneByExampleWithBLOBs方法。");
+        }
+        return super.clientSelectByExampleWithBLOBsMethodGenerated(method, interfaze, introspectedTable);
+    }
+
+    /**
+     * Java Client Methods 生成
+     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     * @param method
+     * @param interfaze
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public boolean clientSelectByExampleWithoutBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        // 方法生成 selectOneByExample
+        Method selectOneMethod = JavaElementGeneratorTools.generateMethod(
                 METHOD_SELECT_ONE_BY_EXAMPLE,
                 JavaVisibility.DEFAULT,
                 JavaElementGeneratorTools.getModelTypeWithoutBLOBs(introspectedTable),
                 new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example")
         );
-        commentGenerator.addGeneralMethodComment(method, introspectedTable);
+        commentGenerator.addGeneralMethodComment(selectOneMethod, introspectedTable);
 
         // hook
-        if (PluginTools.getHook(ISelectOneByExamplePluginHook.class).clientSelectOneByExampleWithoutBLOBsMethodGenerated(method, interfaze, introspectedTable)) {
+        if (PluginTools.getHook(ISelectOneByExamplePluginHook.class).clientSelectOneByExampleWithoutBLOBsMethodGenerated(selectOneMethod, interfaze, introspectedTable)) {
             // interface 增加方法
-            FormatTools.addMethodWithBestPosition(interfaze, method);
+            FormatTools.addMethodWithBestPosition(interfaze, selectOneMethod);
             logger.debug("itfsw(查询单条数据插件):" + interfaze.getType().getShortName() + "增加selectOneByExample方法。");
         }
-
-        // 方法生成 selectOneByExampleWithBLOBs !!! 注意这里的行为不以有没有生成Model 的 WithBLOBs类为基准
-        if (introspectedTable.hasBLOBColumns()) {
-            // 方法生成 selectOneByExample
-            Method method1 = JavaElementGeneratorTools.generateMethod(
-                    METHOD_SELECT_ONE_BY_EXAMPLE_WITH_BLOBS,
-                    JavaVisibility.DEFAULT,
-                    JavaElementGeneratorTools.getModelTypeWithBLOBs(introspectedTable),
-                    new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example")
-            );
-            commentGenerator.addGeneralMethodComment(method1, introspectedTable);
-
-            // hook
-            if (PluginTools.getHook(ISelectOneByExamplePluginHook.class).clientSelectOneByExampleWithBLOBsMethodGenerated(method1, interfaze, introspectedTable)) {
-                // interface 增加方法
-                FormatTools.addMethodWithBestPosition(interfaze, method1);
-                logger.debug("itfsw(查询单条数据插件):" + interfaze.getType().getShortName() + "增加selectOneByExampleWithBLOBs方法。");
-            }
-        }
-
-        return true;
+        return super.clientSelectByExampleWithoutBLOBsMethodGenerated(selectOneMethod, interfaze, introspectedTable);
     }
 
     /**
-     * SQL Map Methods 生成
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param document
+     * @param element
      * @param introspectedTable
      * @return
      */
     @Override
-    public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
+    public boolean sqlMapSelectByExampleWithoutBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
         // ------------------------------------ selectOneByExample ----------------------------------
         // 生成查询语句
         XmlElement selectOneElement = new XmlElement("select");
@@ -132,65 +141,88 @@ public class SelectOneByExamplePlugin extends BasePlugin {
 
         // 只查询一条
         selectOneElement.addElement(new TextElement("limit 1"));
+        this.selectOneByExampleEle = selectOneElement;
+        return super.sqlMapSelectByExampleWithoutBLOBsElementGenerated(element, introspectedTable);
+    }
 
-        // hook
-        if (PluginTools.getHook(ISelectOneByExamplePluginHook.class).sqlMapSelectOneByExampleWithoutBLOBsElementGenerated(document, selectOneElement, introspectedTable)) {
-            // 添加到根节点
-            FormatTools.addElementWithBestPosition(document.getRootElement(), selectOneElement);
-            logger.debug("itfsw(查询单条数据插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加selectOneByExample方法。");
+    /**
+     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     * @param element
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public boolean sqlMapSelectByExampleWithBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+        // 生成查询语句
+        XmlElement selectOneWithBLOBsElement = new XmlElement("select");
+        // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
+        commentGenerator.addComment(selectOneWithBLOBsElement);
+
+        // 添加ID
+        selectOneWithBLOBsElement.addAttribute(new Attribute("id", METHOD_SELECT_ONE_BY_EXAMPLE_WITH_BLOBS));
+        // 添加返回类型
+        selectOneWithBLOBsElement.addAttribute(new Attribute("resultMap", introspectedTable.getResultMapWithBLOBsId()));
+        // 添加参数类型
+        selectOneWithBLOBsElement.addAttribute(new Attribute("parameterType", introspectedTable.getExampleType()));
+        // 添加查询SQL
+        selectOneWithBLOBsElement.addElement(new TextElement("select"));
+
+        StringBuilder sb = new StringBuilder();
+        if (stringHasValue(introspectedTable.getSelectByExampleQueryId())) {
+            sb.append('\'');
+            sb.append(introspectedTable.getSelectByExampleQueryId());
+            sb.append("' as QUERYID,");
+            selectOneWithBLOBsElement.addElement(new TextElement(sb.toString()));
         }
 
-        // ------------------------------------ selectOneByExampleWithBLOBs ----------------------------------
-        // !!! 注意这里的行为不以有没有生成Model 的 WithBLOBs类为基准
-        if (introspectedTable.hasBLOBColumns()) {
-            // 生成查询语句
-            XmlElement selectOneWithBLOBsElement = new XmlElement("select");
-            // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
-            commentGenerator.addComment(selectOneWithBLOBsElement);
+        selectOneWithBLOBsElement.addElement(XmlElementGeneratorTools.getBaseColumnListElement(introspectedTable));
+        selectOneWithBLOBsElement.addElement(new TextElement(","));
+        selectOneWithBLOBsElement.addElement(XmlElementGeneratorTools.getBlobColumnListElement(introspectedTable));
 
-            // 添加ID
-            selectOneWithBLOBsElement.addAttribute(new Attribute("id", METHOD_SELECT_ONE_BY_EXAMPLE_WITH_BLOBS));
-            // 添加返回类型
-            selectOneWithBLOBsElement.addAttribute(new Attribute("resultMap", introspectedTable.getResultMapWithBLOBsId()));
-            // 添加参数类型
-            selectOneWithBLOBsElement.addAttribute(new Attribute("parameterType", introspectedTable.getExampleType()));
-            // 添加查询SQL
-            selectOneWithBLOBsElement.addElement(new TextElement("select"));
+        sb.setLength(0);
+        sb.append("from ");
+        sb.append(introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime());
+        selectOneWithBLOBsElement.addElement(new TextElement(sb.toString()));
+        selectOneWithBLOBsElement.addElement(XmlElementGeneratorTools.getExampleIncludeElement(introspectedTable));
 
-            sb.setLength(0);
-            if (stringHasValue(introspectedTable.getSelectByExampleQueryId())) {
-                sb.append('\'');
-                sb.append(introspectedTable.getSelectByExampleQueryId());
-                sb.append("' as QUERYID,");
-                selectOneWithBLOBsElement.addElement(new TextElement(sb.toString()));
-            }
+        XmlElement ifElement1 = new XmlElement("if");
+        ifElement1.addAttribute(new Attribute("test", "orderByClause != null"));  //$NON-NLS-2$
+        ifElement1.addElement(new TextElement("order by ${orderByClause}"));
+        selectOneWithBLOBsElement.addElement(ifElement1);
 
-            selectOneWithBLOBsElement.addElement(XmlElementGeneratorTools.getBaseColumnListElement(introspectedTable));
-            selectOneWithBLOBsElement.addElement(new TextElement(","));
-            selectOneWithBLOBsElement.addElement(XmlElementGeneratorTools.getBlobColumnListElement(introspectedTable));
+        // 只查询一条
+        selectOneWithBLOBsElement.addElement(new TextElement("limit 1"));
 
-            sb.setLength(0);
-            sb.append("from ");
-            sb.append(introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime());
-            selectOneWithBLOBsElement.addElement(new TextElement(sb.toString()));
-            selectOneWithBLOBsElement.addElement(XmlElementGeneratorTools.getExampleIncludeElement(introspectedTable));
+        this.selectOneByExampleWithBLOBsEle = selectOneWithBLOBsElement;
+        return super.sqlMapSelectByExampleWithBLOBsElementGenerated(element, introspectedTable);
+    }
 
-            XmlElement ifElement1 = new XmlElement("if");
-            ifElement1.addAttribute(new Attribute("test", "orderByClause != null"));  //$NON-NLS-2$
-            ifElement1.addElement(new TextElement("order by ${orderByClause}"));
-            selectOneWithBLOBsElement.addElement(ifElement1);
-
-            // 只查询一条
-            selectOneWithBLOBsElement.addElement(new TextElement("limit 1"));
-
+    /**
+     * SQL Map Methods 生成
+     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     * @param document
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
+        if (selectOneByExampleEle != null) {
             // hook
-            if (PluginTools.getHook(ISelectOneByExamplePluginHook.class).sqlMapSelectOneByExampleWithBLOBsElementGenerated(document, selectOneWithBLOBsElement, introspectedTable)) {
+            if (PluginTools.getHook(ISelectOneByExamplePluginHook.class).sqlMapSelectOneByExampleWithoutBLOBsElementGenerated(document, selectOneByExampleEle, introspectedTable)) {
                 // 添加到根节点
-                FormatTools.addElementWithBestPosition(document.getRootElement(), selectOneWithBLOBsElement);
+                FormatTools.addElementWithBestPosition(document.getRootElement(), selectOneByExampleEle);
+                logger.debug("itfsw(查询单条数据插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加selectOneByExample方法。");
+            }
+        }
+
+        if (selectOneByExampleWithBLOBsEle != null) {
+            // hook
+            if (PluginTools.getHook(ISelectOneByExamplePluginHook.class).sqlMapSelectOneByExampleWithBLOBsElementGenerated(document, selectOneByExampleWithBLOBsEle, introspectedTable)) {
+                // 添加到根节点
+                FormatTools.addElementWithBestPosition(document.getRootElement(), selectOneByExampleWithBLOBsEle);
                 logger.debug("itfsw(查询单条数据插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加selectOneByExampleWithBLOBs方法。");
             }
         }
-
 
         return true;
     }

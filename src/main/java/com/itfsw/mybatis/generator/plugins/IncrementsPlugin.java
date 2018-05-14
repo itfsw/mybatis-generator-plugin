@@ -177,11 +177,11 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
             mInc.addBodyLine("this.value = value;");
             mInc.addParameter(new Parameter(FullyQualifiedJavaType.getStringInstance(), "value"));
             commentGenerator.addGeneralMethodComment(mInc, introspectedTable);
-            eIncrements.addMethod(mInc);
+            FormatTools.addMethodWithBestPosition(eIncrements, mInc);
 
             Method mValue = JavaElementGeneratorTools.generateGetterMethod(fValue);
             commentGenerator.addGeneralMethodComment(mValue, introspectedTable);
-            eIncrements.addMethod(mValue);
+            FormatTools.addMethodWithBestPosition(eIncrements, mValue);
 
             builderClass.addInnerEnum(eIncrements);
             // 增加field
@@ -198,10 +198,10 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
             // getter&setter
             Method mGetter = JavaElementGeneratorTools.generateGetterMethod(fIncrements);
             commentGenerator.addGetterComment(mGetter, introspectedTable, null);
-            topLevelClass.addMethod(mGetter);
+            FormatTools.addMethodWithBestPosition(topLevelClass, mGetter);
             Method mSetter = JavaElementGeneratorTools.generateSetterMethod(fIncrements);
             commentGenerator.addSetterComment(mSetter, introspectedTable, null);
-            topLevelClass.addMethod(mSetter);
+            FormatTools.addMethodWithBestPosition(topLevelClass, mSetter);
             // 增加判断方法
             Method mHasIncsForColumn = JavaElementGeneratorTools.generateMethod(
                     IncrementsPlugin.METHOD_INC_CHECK,
