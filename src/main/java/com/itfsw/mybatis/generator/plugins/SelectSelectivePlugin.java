@@ -132,24 +132,25 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
 
     // ============================================== sqlMap 生成 ===================================================
 
+
     @Override
-    public boolean clientSelectByExampleWithBLOBsMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+    public boolean sqlMapSelectByExampleWithoutBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
         this.selectByExampleSelectiveEle = this.generateSelectSelectiveElement(METHOD_SELECT_BY_EXAMPLE_SELECTIVE, introspectedTable, false, true);
-        return super.clientSelectByExampleWithBLOBsMethodGenerated(method, topLevelClass, introspectedTable);
+        return super.sqlMapSelectByExampleWithoutBLOBsElementGenerated(element, introspectedTable);
     }
 
     @Override
-    public boolean clientSelectByExampleWithoutBLOBsMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+    public boolean sqlMapSelectByExampleWithBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
         if (!introspectedTable.hasBLOBColumns()) {
             this.selectByExampleSelectiveEle = this.generateSelectSelectiveElement(METHOD_SELECT_BY_EXAMPLE_SELECTIVE, introspectedTable, false, true);
         }
-        return super.clientSelectByExampleWithoutBLOBsMethodGenerated(method, topLevelClass, introspectedTable);
+        return super.sqlMapSelectByExampleWithBLOBsElementGenerated(element, introspectedTable);
     }
 
     @Override
-    public boolean clientSelectByPrimaryKeyMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+    public boolean sqlMapSelectByPrimaryKeyElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
         this.selectByPrimaryKeySelectiveEle = this.generateSelectSelectiveElement(METHOD_SELECT_BY_PRIMARY_KEY_SELECTIVE, introspectedTable, false, false);
-        return super.clientSelectByPrimaryKeyMethodGenerated(method, topLevelClass, introspectedTable);
+        return super.sqlMapSelectByPrimaryKeyElementGenerated(element, introspectedTable);
     }
 
     /**
