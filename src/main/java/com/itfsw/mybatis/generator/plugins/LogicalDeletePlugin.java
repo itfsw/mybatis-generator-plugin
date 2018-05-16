@@ -461,12 +461,6 @@ public class LogicalDeletePlugin extends BasePlugin {
                 } else {
                     logicalDeleteValue = this.logicalDeleteValue;
                 }
-                // TODO 过期
-                Field field = JavaElementGeneratorTools.generateStaticFinalField("DEL_FLAG_OFF", this.logicalDeleteColumn.getFullyQualifiedJavaType(), logicalDeleteValue);
-                field.addAnnotation("@Deprecated");
-                commentGenerator.addFieldComment(field, introspectedTable);
-                // 常量插入到第一位
-                fields.add(0, field);
 
                 Field logicalDeleteConstField = JavaElementGeneratorTools.generateStaticFinalField(this.logicalDeleteConstName, this.logicalDeleteColumn.getFullyQualifiedJavaType(), logicalDeleteValue);
                 commentGenerator.addFieldComment(logicalDeleteConstField, introspectedTable);
@@ -484,13 +478,6 @@ public class LogicalDeletePlugin extends BasePlugin {
                 } else {
                     logicalUnDeleteValue = this.logicalUnDeleteValue;
                 }
-
-                // TODO 过期
-                Field field1 = JavaElementGeneratorTools.generateStaticFinalField("DEL_FLAG_ON", this.logicalDeleteColumn.getFullyQualifiedJavaType(), logicalUnDeleteValue);
-                field1.addAnnotation("@Deprecated");
-                commentGenerator.addFieldComment(field1, introspectedTable);
-                // 常量插入到第一位
-                fields.add(0, field1);
 
                 Field logicalUnDeleteConstField = JavaElementGeneratorTools.generateStaticFinalField(this.logicalUnDeleteConstName, this.logicalDeleteColumn.getFullyQualifiedJavaType(), logicalUnDeleteValue);
                 commentGenerator.addFieldComment(logicalUnDeleteConstField, introspectedTable);
@@ -565,13 +552,6 @@ public class LogicalDeletePlugin extends BasePlugin {
                     method.addBodyLine(sb.toString());
 
                     FormatTools.addMethodWithBestPosition(innerClass, method);
-
-                    // TODO 过期方法
-                    Method mAndDeleted = new Method(method);
-                    mAndDeleted.setName("andDeleted");
-                    mAndDeleted.addAnnotation("@Deprecated");
-                    FormatTools.addMethodWithBestPosition(innerClass, mAndDeleted);
-                    logger.debug("itfsw(逻辑删除插件):" + topLevelClass.getType().getShortName() + "." + innerClass.getType().getShortName() + "增加andDeleted方法。");
                 }
             }
         }

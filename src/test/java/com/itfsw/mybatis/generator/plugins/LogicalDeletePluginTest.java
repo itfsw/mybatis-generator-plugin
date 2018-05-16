@@ -141,7 +141,7 @@ public class LogicalDeletePluginTest {
 
                 ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
                 ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
-                criteria.invoke("andDeleted", true);
+                criteria.invoke("andLogicalDeleted", true);
                 criteria.invoke("andIdEqualTo", 3l);
 
 
