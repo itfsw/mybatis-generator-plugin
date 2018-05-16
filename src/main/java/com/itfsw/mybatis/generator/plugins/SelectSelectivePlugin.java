@@ -43,7 +43,6 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
     public static final String ID_FOR_PROPERTY_BASED_RESULT_MAP = "BasePropertyResultMap";
     private XmlElement selectByExampleSelectiveEle;
     private XmlElement selectByPrimaryKeySelectiveEle;
-    private XmlElement basePropertyResultMapEle;
 
     /**
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
@@ -73,7 +72,6 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
         // bug:26,27
         this.selectByExampleSelectiveEle = null;
         this.selectByPrimaryKeySelectiveEle = null;
-        this.basePropertyResultMapEle = null;
     }
 
     // =========================================== client 方法生成 ===================================================
@@ -163,8 +161,19 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
     @Override
     public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
         // issues#16
-        if (this.basePropertyResultMapEle != null) {
-            document.getRootElement().addElement(0, this.basePropertyResultMapEle);
+        if (introspectedTable.isConstructorBased()) {
+            XmlElement resultMapEle = new XmlElement("resultMap");
+            resultMapEle.addAttribute(new Attribute("id", ID_FOR_PROPERTY_BASED_RESULT_MAP));
+            resultMapEle.addAttribute(new Attribute("type", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
+            commentGenerator.addComment(resultMapEle);
+
+            for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
+                resultMapEle.addElement(XmlElementGeneratorTools.generateResultMapResultElement("id", introspectedColumn));
+            }
+            for (IntrospectedColumn introspectedColumn : introspectedTable.getNonPrimaryKeyColumns()) {
+                resultMapEle.addElement(XmlElementGeneratorTools.generateResultMapResultElement("result", introspectedColumn));
+            }
+            document.getRootElement().addElement(0, resultMapEle);
         }
 
         // 1. selectByExampleSelective 方法
@@ -243,19 +252,6 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
         selectSelectiveEle.addAttribute(new Attribute("id", id));
         // issues#16
         if (introspectedTable.isConstructorBased()) {
-            XmlElement resultMapEle = new XmlElement("resultMap");
-            resultMapEle.addAttribute(new Attribute("id", ID_FOR_PROPERTY_BASED_RESULT_MAP));
-            resultMapEle.addAttribute(new Attribute("type", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
-            commentGenerator.addComment(resultMapEle);
-
-            for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
-                resultMapEle.addElement(XmlElementGeneratorTools.generateResultMapResultElement("id", introspectedColumn));
-            }
-            for (IntrospectedColumn introspectedColumn : introspectedTable.getNonPrimaryKeyColumns()) {
-                resultMapEle.addElement(XmlElementGeneratorTools.generateResultMapResultElement("result", introspectedColumn));
-            }
-            this.basePropertyResultMapEle = resultMapEle;
-
             selectSelectiveEle.addAttribute(new Attribute("resultMap", ID_FOR_PROPERTY_BASED_RESULT_MAP));
         } else if (introspectedTable.hasBLOBColumns()) {
             selectSelectiveEle.addAttribute(new Attribute("resultMap", introspectedTable.getResultMapWithBLOBsId()));
