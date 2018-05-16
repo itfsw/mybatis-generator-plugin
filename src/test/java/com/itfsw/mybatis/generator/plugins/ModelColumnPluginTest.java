@@ -16,16 +16,15 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.tools.AbstractShellCallback;
-import com.itfsw.mybatis.generator.plugins.tools.DBHelper;
-import com.itfsw.mybatis.generator.plugins.tools.MyBatisGeneratorTool;
-import com.itfsw.mybatis.generator.plugins.tools.ObjectUtil;
+import com.itfsw.mybatis.generator.plugins.tools.*;
+import org.apache.commons.beanutils.MethodUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.sql.SQLException;
 
 /**
@@ -41,7 +40,7 @@ public class ModelColumnPluginTest {
      * 初始化数据库
      */
     @BeforeClass
-    public static void init() throws SQLException, IOException, ClassNotFoundException {
+    public static void init() throws SQLException, IOException {
         DBHelper.createDB("scripts/ModelColumnPlugin/init.sql");
     }
 
@@ -49,7 +48,7 @@ public class ModelColumnPluginTest {
      * 测试生成的model
      */
     @Test
-    public void test() throws Exception {
+    public void testModel() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ModelColumnPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
@@ -78,6 +77,63 @@ public class ModelColumnPluginTest {
                 Assert.assertEquals(TbKeysColumnKey1.invoke("value"), "key_1");
                 ObjectUtil TbKeysColumnField1 = new ObjectUtil(loader, packagz + ".TbKeys$Column#field1");
                 Assert.assertEquals(TbKeysColumnField1.invoke("value"), "field_1");
+
+                // 5. excludes 方法
+                // 不排除
+                Object columns = Array.newInstance(TbColumnField1.getCls(), 0);
+                Object[] result = (Object[])(MethodUtils.invokeStaticMethod(Class.forName(packagz + ".Tb$Column"), "excludes", columns));
+                Assert.assertEquals(result.length, 5);
+                // 排除两个
+                columns = Array.newInstance(TbColumnField1.getCls(), 2);
+                Array.set(columns, 0, TbColumnField1.getObject());
+                Array.set(columns, 1, TbColumnTsIncF2.getObject());
+                result = (Object[])(MethodUtils.invokeStaticMethod(Class.forName(packagz + ".Tb$Column"), "excludes", columns));
+                Assert.assertEquals(result.length, 3);
+                for (Object obj : result){
+                    ObjectUtil column = new ObjectUtil(obj);
+                    if (column.invoke("value").equals("field_1") || column.invoke("value").equals("inc_f2")){
+                        Assert.assertTrue(false);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * 测试excludes
+     */
+    @Test
+    public void testExcludes() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ModelColumnPlugin/mybatis-generator-with-SeleciveEnhancedPlugin.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
+                tb.set("id", 121L);
+                tb.set("incF3", 10L);
+                tb.set("tsIncF2", 5L);
+                // selective
+                ObjectUtil TbColumnId = new ObjectUtil(loader, packagz + ".Tb$Column#id");
+                ObjectUtil TbColumnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
+                ObjectUtil TbColumnTsIncF2 = new ObjectUtil(loader, packagz + ".Tb$Column#tsIncF2");
+                Object columns = Array.newInstance(TbColumnField1.getCls(), 3);
+                Array.set(columns, 0, TbColumnId.getObject());
+                Array.set(columns, 1, TbColumnField1.getObject());
+                Array.set(columns, 2, TbColumnTsIncF2.getObject());
+
+                // sql(指定列)
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "insertSelective", tb.getObject(), columns);
+                Assert.assertEquals(sql, "insert into tb ( id , field_1 , inc_f2 ) values ( 121 , 'null' , 5 )");
+
+                // sql(排除列)
+                columns = MethodUtils.invokeStaticMethod(Class.forName(packagz + ".Tb$Column"), "excludes", columns);
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "insertSelective", tb.getObject(), columns);
+                Assert.assertEquals(sql, "insert into tb ( inc_f1 , inc_f3 ) values ( null , 10 )");
+
+                Object result = tbMapper.invoke("insertSelective", tb.getObject(), columns);
+                Assert.assertEquals(result, 1);
             }
         });
     }

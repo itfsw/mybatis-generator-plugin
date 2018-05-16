@@ -34,6 +34,7 @@ import org.mybatis.generator.internal.util.JavaBeansUtil;
  */
 public class ModelColumnPlugin extends BasePlugin {
     public static final String ENUM_NAME = "Column";  // 内部Enum名
+    public static final String METHOD_EXCLUDES = "excludes";   // 方法名
 
     /**
      * Model Methods 生成
@@ -173,6 +174,28 @@ public class ModelColumnPlugin extends BasePlugin {
         commentGenerator.addGeneralMethodComment(asc, introspectedTable);
         FormatTools.addMethodWithBestPosition(innerEnum, asc);
         logger.debug("itfsw(数据Model属性对应Column获取插件):" + topLevelClass.getType().getShortName() + ".Column增加asc()和desc()方法。");
+
+        // excludes
+        topLevelClass.addImportedType("java.util.Arrays");
+        topLevelClass.addImportedType(FullyQualifiedJavaType.getNewArrayListInstance());
+        Method mExcludes = JavaElementGeneratorTools.generateMethod(
+                METHOD_EXCLUDES,
+                JavaVisibility.PUBLIC,
+                new FullyQualifiedJavaType(ENUM_NAME + "[]"),
+                new Parameter(innerEnum.getType(), "excludes", true)
+        );
+        commentGenerator.addGeneralMethodComment(mExcludes, introspectedTable);
+        mExcludes.setStatic(true);
+        JavaElementGeneratorTools.generateMethodBody(
+                mExcludes,
+                "ArrayList<Column> columns = new ArrayList<>(Arrays.asList(Column.values()));",
+                "if (excludes != null && excludes.length > 0) {",
+                "columns.removeAll(new ArrayList<>(Arrays.asList(excludes)));",
+                "}",
+                "return columns.toArray(new Column[]{});"
+        );
+        FormatTools.addMethodWithBestPosition(innerEnum, mExcludes);
+        logger.debug("itfsw(数据Model属性对应Column获取插件):" + topLevelClass.getType().getShortName() + ".Column增加excludes方法。");
 
         return innerEnum;
     }
