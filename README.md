@@ -30,7 +30,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.2.3</version>
+  <version>1.2.4</version>
 </dependency>
 ```
 ---------------------------------------
