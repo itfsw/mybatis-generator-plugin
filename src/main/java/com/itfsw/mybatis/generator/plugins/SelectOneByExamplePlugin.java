@@ -41,6 +41,14 @@ public class SelectOneByExamplePlugin extends BasePlugin {
     private XmlElement selectOneByExampleEle;
     private XmlElement selectOneByExampleWithBLOBsEle;
 
+    @Override
+    public void initialized(IntrospectedTable introspectedTable) {
+        super.initialized(introspectedTable);
+        // bug:26,27
+        this.selectOneByExampleWithBLOBsEle = null;
+        this.selectOneByExampleEle = null;
+    }
+
     /**
      * Java Client Methods 生成
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html

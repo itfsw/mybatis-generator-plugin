@@ -20,10 +20,7 @@ import com.itfsw.mybatis.generator.plugins.utils.*;
 import com.itfsw.mybatis.generator.plugins.utils.hook.ISelectOneByExamplePluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
-import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
-import org.mybatis.generator.api.dom.java.Interface;
-import org.mybatis.generator.api.dom.java.Method;
-import org.mybatis.generator.api.dom.java.Parameter;
+import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.*;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 
@@ -44,6 +41,9 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
     public static final String METHOD_SELECT_BY_PRIMARY_KEY_SELECTIVE = "selectByPrimaryKeySelective";
     public static final String METHOD_SELECT_ONE_BY_EXAMPLE_SELECTIVE = "selectOneByExampleSelective";
     public static final String ID_FOR_PROPERTY_BASED_RESULT_MAP = "BasePropertyResultMap";
+    private XmlElement selectByExampleSelectiveEle;
+    private XmlElement selectByPrimaryKeySelectiveEle;
+    private XmlElement basePropertyResultMapEle;
 
     /**
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
@@ -60,6 +60,20 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
         }
 
         return super.validate(warnings);
+    }
+
+    /**
+     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     * @param introspectedTable
+     */
+    @Override
+    public void initialized(IntrospectedTable introspectedTable) {
+        super.initialized(introspectedTable);
+
+        // bug:26,27
+        this.selectByExampleSelectiveEle = null;
+        this.selectByPrimaryKeySelectiveEle = null;
+        this.basePropertyResultMapEle = null;
     }
 
     // =========================================== client 方法生成 ===================================================
@@ -121,18 +135,23 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
     // ============================================== sqlMap 生成 ===================================================
 
     @Override
-    public boolean sqlMapSelectByExampleWithoutBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
-        return super.sqlMapSelectByExampleWithoutBLOBsElementGenerated(element, introspectedTable);
+    public boolean clientSelectByExampleWithBLOBsMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        this.selectByExampleSelectiveEle = this.generateSelectSelectiveElement(METHOD_SELECT_BY_EXAMPLE_SELECTIVE, introspectedTable, false, true);
+        return super.clientSelectByExampleWithBLOBsMethodGenerated(method, topLevelClass, introspectedTable);
     }
 
     @Override
-    public boolean sqlMapSelectByExampleWithBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
-        return super.sqlMapSelectByExampleWithBLOBsElementGenerated(element, introspectedTable);
+    public boolean clientSelectByExampleWithoutBLOBsMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        if (!introspectedTable.hasBLOBColumns()) {
+            this.selectByExampleSelectiveEle = this.generateSelectSelectiveElement(METHOD_SELECT_BY_EXAMPLE_SELECTIVE, introspectedTable, false, true);
+        }
+        return super.clientSelectByExampleWithoutBLOBsMethodGenerated(method, topLevelClass, introspectedTable);
     }
 
     @Override
-    public boolean sqlMapSelectByPrimaryKeyElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
-        return super.sqlMapSelectByPrimaryKeyElementGenerated(element, introspectedTable);
+    public boolean clientSelectByPrimaryKeyMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        this.selectByPrimaryKeySelectiveEle = this.generateSelectSelectiveElement(METHOD_SELECT_BY_PRIMARY_KEY_SELECTIVE, introspectedTable, false, false);
+        return super.clientSelectByPrimaryKeyMethodGenerated(method, topLevelClass, introspectedTable);
     }
 
     /**
@@ -144,27 +163,19 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
     @Override
     public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
         // issues#16
-        if (introspectedTable.isConstructorBased()) {
-            XmlElement resultMapEle = new XmlElement("resultMap");
-            resultMapEle.addAttribute(new Attribute("id", ID_FOR_PROPERTY_BASED_RESULT_MAP));
-            resultMapEle.addAttribute(new Attribute("type", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
-            commentGenerator.addComment(resultMapEle);
-
-            for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
-                resultMapEle.addElement(XmlElementGeneratorTools.generateResultMapResultElement("id", introspectedColumn));
-            }
-            for (IntrospectedColumn introspectedColumn : introspectedTable.getNonPrimaryKeyColumns()) {
-                resultMapEle.addElement(XmlElementGeneratorTools.generateResultMapResultElement("result", introspectedColumn));
-            }
-
-            document.getRootElement().getElements().add(0, resultMapEle);
+        if (this.basePropertyResultMapEle != null) {
+            document.getRootElement().addElement(0, this.basePropertyResultMapEle);
         }
 
         // 1. selectByExampleSelective 方法
-        FormatTools.addElementWithBestPosition(document.getRootElement(), this.generateSelectSelectiveElement(METHOD_SELECT_BY_EXAMPLE_SELECTIVE, introspectedTable, false, true));
+        if (this.selectByExampleSelectiveEle != null) {
+            FormatTools.addElementWithBestPosition(document.getRootElement(), this.selectByExampleSelectiveEle);
+        }
 
         // 2. selectByPrimaryKeySelective
-        FormatTools.addElementWithBestPosition(document.getRootElement(), this.generateSelectSelectiveElement(METHOD_SELECT_BY_PRIMARY_KEY_SELECTIVE, introspectedTable, false, false));
+        if (this.selectByPrimaryKeySelectiveEle != null) {
+            FormatTools.addElementWithBestPosition(document.getRootElement(), this.selectByPrimaryKeySelectiveEle);
+        }
 
         return true;
     }
@@ -232,6 +243,19 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
         selectSelectiveEle.addAttribute(new Attribute("id", id));
         // issues#16
         if (introspectedTable.isConstructorBased()) {
+            XmlElement resultMapEle = new XmlElement("resultMap");
+            resultMapEle.addAttribute(new Attribute("id", ID_FOR_PROPERTY_BASED_RESULT_MAP));
+            resultMapEle.addAttribute(new Attribute("type", introspectedTable.getRules().calculateAllFieldsClass().getFullyQualifiedName()));
+            commentGenerator.addComment(resultMapEle);
+
+            for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
+                resultMapEle.addElement(XmlElementGeneratorTools.generateResultMapResultElement("id", introspectedColumn));
+            }
+            for (IntrospectedColumn introspectedColumn : introspectedTable.getNonPrimaryKeyColumns()) {
+                resultMapEle.addElement(XmlElementGeneratorTools.generateResultMapResultElement("result", introspectedColumn));
+            }
+            this.basePropertyResultMapEle = resultMapEle;
+
             selectSelectiveEle.addAttribute(new Attribute("resultMap", ID_FOR_PROPERTY_BASED_RESULT_MAP));
         } else if (introspectedTable.hasBLOBColumns()) {
             selectSelectiveEle.addAttribute(new Attribute("resultMap", introspectedTable.getResultMapWithBLOBsId()));
