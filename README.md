@@ -346,6 +346,8 @@ public class Test {
         this.tbMapper.batchInsert(list);
         // !!!下面按需插入指定列（类似于insertSelective），需要数据Model属性对应Column获取插件（ModelColumnPlugin）插件
         this.tbMapper.batchInsertSelective(list, Tb.Column.field1, Tb.Column.field2, Tb.Column.field3, Tb.Column.createTime);
+        // 或者排除某些列
+        this.tbMapper.batchInsertSelective(list, Tb.Column.excludes(Tb.Column.id, Tb.Column.delFlag));
     }
 }
 ```
@@ -427,6 +429,7 @@ public class Test {
 项目中我们有时需要获取数据Model对应数据库字段的名称，一般直接根据数据Model的属性就可以猜出数据库对应column的名字，可是有的时候当column使用了columnOverride或者columnRenamingRule时就需要去看数据库设计了，所以提供了这个插件获取model对应的数据库Column。  
 * 配合Example Criteria 增强插件（ExampleEnhancedPlugin）使用，这个插件还提供了asc()和desc()方法配合Example的orderBy方法效果更佳。
 * 配合批量插入插件（BatchInsertPlugin）使用，batchInsertSelective(@Param("list") List<XXX> list, @Param("selective") XXX.Column ... insertColumns)。  
+* 提供静态excludes方法来进行快速反选。  
 
 插件：
 ```xml
@@ -481,6 +484,9 @@ public class Test {
         this.tbMapper.batchInsert(list);
         // 下面按需插入指定列（类似于insertSelective）
         this.tbMapper.batchInsertSelective(list, Tb.Column.field1, Tb.Column.field2, Tb.Column.field3, Tb.Column.createTime);
+        
+        // 4. excludes 方法
+        this.tbMapper.batchInsertSelective(list, Tb.Column.excludes(Tb.Column.id, Tb.Column.delFlag));
     }
 }
 ```
@@ -607,6 +613,9 @@ public class Test {
                 .build(),
                 Tb.Column.field1
         );
+        
+        // 3. 排除某些列
+        this.tbMapper.insertSelective(tb, Tb.Column.excludes(Tb.Column.id, Tb.Column.delFlag));
     }
 }
 ```
@@ -1075,6 +1084,15 @@ public class Test {
             Tb.Column.field2
         );
         // 同理还有 selectByPrimaryKeySelective，selectOneByExampleSelective（SelectOneByExamplePlugin插件配合使用）方法
+        
+        // 当然可以使用excludes
+        this.tbMapper.selectByExampleSelective(
+            new TbExample()
+            .createCriteria()
+            .andField1GreaterThan(1)
+            .example(),
+            Tb.Column.excludes(Tb.Column.id, Tb.Column.delFlag)
+        );
     }
 }
 ```
