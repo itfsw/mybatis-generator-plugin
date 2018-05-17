@@ -23,9 +23,11 @@ import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.*;
 import org.mybatis.generator.codegen.mybatis3.ListUtilities;
+import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 import org.mybatis.generator.internal.util.StringUtility;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
@@ -42,13 +44,19 @@ public class UpsertPlugin extends BasePlugin {
     public static final String METHOD_UPSERT_WITH_BLOBS = "upsertWithBLOBs";  // 方法名
     public static final String METHOD_UPSERT_SELECTIVE = "upsertSelective";  // 方法名
 
+    public static final String METHOD_BATCH_UPSERT = "batchUpsert";  // 方法名
+    public static final String METHOD_BATCH_UPSERT_WITH_BLOBS = "batchUpsertWithBLOBs";  // 方法名
+    public static final String METHOD_BATCH_UPSERT_SELECTIVE = "batchUpsertSelective";  // 方法名
+
     public static final String METHOD_UPSERT_BY_EXAMPLE = "upsertByExample";   // 方法名
     public static final String METHOD_UPSERT_BY_EXAMPLE_WITH_BLOBS = "upsertByExampleWithBLOBs";   // 方法名
     public static final String METHOD_UPSERT_BY_EXAMPLE_SELECTIVE = "upsertByExampleSelective";   // 方法名
 
 
     public static final String PRO_ALLOW_MULTI_QUERIES = "allowMultiQueries";   // property allowMultiQueries
+    public static final String PRO_ALLOW_BATCH_UPSERT = "allowBatchUpsert";   // property allowBatch
     private boolean allowMultiQueries = false;  // 是否允许多sql提交
+    private boolean allowBatchUpsert = false;
 
     /**
      * {@inheritDoc}
@@ -69,6 +77,16 @@ public class UpsertPlugin extends BasePlugin {
         if (this.allowMultiQueries) {
             // 提示用户注意信息
             warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件您开启了allowMultiQueries支持，注意在jdbc url 配置中增加“allowMultiQueries=true”支持（不怎么建议使用该功能，开启多sql提交会增加sql注入的风险，请确保你所有sql都使用MyBatis书写，请不要使用statement进行sql提交）！");
+        }
+
+        // 是否允许批量
+        String allowBatchUpsert = properties.getProperty(PRO_ALLOW_BATCH_UPSERT);
+        this.allowBatchUpsert = allowBatchUpsert == null ? false : StringUtility.isTrue(allowBatchUpsert);
+
+        // 批量时依赖插件 ModelColumnPlugin
+        if (this.allowBatchUpsert && !PluginTools.checkDependencyPlugin(context, ModelColumnPlugin.class)) {
+            // 提示用户注意信息
+            warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件您开启了allowBatchUpsert支持，请配置依赖的插件" + ModelColumnPlugin.class.getTypeName() + "！");
         }
 
         return super.validate(warnings);
@@ -108,7 +126,7 @@ public class UpsertPlugin extends BasePlugin {
             commentGenerator.addGeneralMethodComment(mUpsertWithBLOBs, introspectedTable);
             // interface 增加方法
             FormatTools.addMethodWithBestPosition(interfaze, mUpsertWithBLOBs);
-            logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsert方法。");
+            logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertWithBLOBs方法。");
         }
 
         // ====================================== upsertSelective ======================================
@@ -155,7 +173,7 @@ public class UpsertPlugin extends BasePlugin {
                 commentGenerator.addGeneralMethodComment(mUpsertByExampleWithBLOBs, introspectedTable);
                 // interface 增加方法
                 FormatTools.addMethodWithBestPosition(interfaze, mUpsertByExampleWithBLOBs);
-                logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertByExample方法。");
+                logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertByExampleWithBLOBs方法。");
             }
 
             // ====================================== upsertByExampleSelective ======================================
@@ -173,6 +191,55 @@ public class UpsertPlugin extends BasePlugin {
                 FormatTools.addMethodWithBestPosition(interfaze, mUpsertByExampleSelective);
                 logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加upsertByExampleSelective方法。");
             }
+        }
+
+        if (this.allowBatchUpsert) {
+            // ====================================== batchUpsert ======================================
+            FullyQualifiedJavaType returnType = FullyQualifiedJavaType.getNewListInstance();
+            returnType.addTypeArgument(JavaElementGeneratorTools.getModelTypeWithoutBLOBs(introspectedTable));
+            Method mBatchUpsert = JavaElementGeneratorTools.generateMethod(
+                    METHOD_BATCH_UPSERT,
+                    JavaVisibility.DEFAULT,
+                    FullyQualifiedJavaType.getIntInstance(),
+                    new Parameter(returnType, "list", "@Param(\"list\")")
+            );
+            commentGenerator.addGeneralMethodComment(mBatchUpsert, introspectedTable);
+            // interface 增加方法
+            FormatTools.addMethodWithBestPosition(interfaze, mBatchUpsert);
+            logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加batchUpsert方法。");
+
+            // ====================================== batchUpsertWithBLOBs ======================================
+            // !!! 注意这里的行为不以有没有生成Model 的 WithBLOBs类为基准
+            if (introspectedTable.hasBLOBColumns()) {
+                returnType = FullyQualifiedJavaType.getNewListInstance();
+                returnType.addTypeArgument(JavaElementGeneratorTools.getModelTypeWithBLOBs(introspectedTable));
+                Method mBatchUpsertWithBLOBs = JavaElementGeneratorTools.generateMethod(
+                        METHOD_BATCH_UPSERT_WITH_BLOBS,
+                        JavaVisibility.DEFAULT,
+                        FullyQualifiedJavaType.getIntInstance(),
+                        new Parameter(returnType, "list", "@Param(\"list\")")
+                );
+                commentGenerator.addGeneralMethodComment(mBatchUpsertWithBLOBs, introspectedTable);
+                // interface 增加方法
+                FormatTools.addMethodWithBestPosition(interfaze, mBatchUpsertWithBLOBs);
+                logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加batchUpsertWithBLOBs方法。");
+            }
+
+            // ====================================== batchUpsertSelective ======================================
+            returnType = FullyQualifiedJavaType.getNewListInstance();
+            returnType.addTypeArgument(fullFieldModel);
+            FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(introspectedTable.getRules().calculateAllFieldsClass().getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
+            Method mBatchUpsertSelective = JavaElementGeneratorTools.generateMethod(
+                    METHOD_BATCH_UPSERT_SELECTIVE,
+                    JavaVisibility.DEFAULT,
+                    FullyQualifiedJavaType.getIntInstance(),
+                    new Parameter(returnType, "list", "@Param(\"list\")"),
+                    new Parameter(selectiveType, "selective", "@Param(\"selective\")", true)
+            );
+            commentGenerator.addGeneralMethodComment(mBatchUpsertSelective, introspectedTable);
+            // interface 增加方法
+            FormatTools.addMethodWithBestPosition(interfaze, mBatchUpsertSelective);
+            logger.debug("itfsw(存在即更新插件):" + interfaze.getType().getShortName() + "增加batchUpsertSelective方法。");
         }
 
         return super.clientGenerated(interfaze, topLevelClass, introspectedTable);
@@ -193,7 +260,145 @@ public class UpsertPlugin extends BasePlugin {
             this.generateXmlElement(document, introspectedTable, true);
         }
 
+        if (this.allowBatchUpsert) {
+            this.generateBatchXmlElementSelective(document, introspectedTable);
+            this.generateBatchXmlElement(document, introspectedTable, false);
+            if (introspectedTable.hasBLOBColumns()) {
+                this.generateBatchXmlElement(document, introspectedTable, true);
+            }
+        }
+
         return super.sqlMapDocumentGenerated(document, introspectedTable);
+    }
+
+    /**
+     * 批量
+     * @param document
+     * @param introspectedTable
+     */
+    private void generateBatchXmlElementSelective(Document document, IntrospectedTable introspectedTable) {
+        XmlElement insertEle = new XmlElement("insert");
+        insertEle.addAttribute(new Attribute("id", METHOD_BATCH_UPSERT_SELECTIVE));
+        // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
+        commentGenerator.addComment(insertEle);
+
+        // 参数类型
+        insertEle.addAttribute(new Attribute("parameterType", "map"));
+
+        // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
+        XmlElementGeneratorTools.useGeneratedKeys(insertEle, introspectedTable);
+
+        // insert
+        insertEle.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime() + " ("));
+
+        XmlElement foreachInsertColumns = new XmlElement("foreach");
+        foreachInsertColumns.addAttribute(new Attribute("collection", "selective"));
+        foreachInsertColumns.addAttribute(new Attribute("item", "column"));
+        foreachInsertColumns.addAttribute(new Attribute("separator", ","));
+        foreachInsertColumns.addElement(new TextElement("${column.value}"));
+
+        insertEle.addElement(foreachInsertColumns);
+
+        insertEle.addElement(new TextElement(")"));
+
+        // values
+        insertEle.addElement(new TextElement("values"));
+
+        // foreach values
+        XmlElement foreachValues = new XmlElement("foreach");
+        foreachValues.addAttribute(new Attribute("collection", "list"));
+        foreachValues.addAttribute(new Attribute("item", "item"));
+        foreachValues.addAttribute(new Attribute("separator", ","));
+
+        foreachValues.addElement(new TextElement("("));
+
+        // foreach 所有插入的列，比较是否存在
+        XmlElement foreachInsertColumnsCheck = new XmlElement("foreach");
+        foreachInsertColumnsCheck.addAttribute(new Attribute("collection", "selective"));
+        foreachInsertColumnsCheck.addAttribute(new Attribute("item", "column"));
+        foreachInsertColumnsCheck.addAttribute(new Attribute("separator", ","));
+
+        // 所有表字段
+        List<IntrospectedColumn> columns = ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns());
+        List<IntrospectedColumn> columns1 = ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns());
+        for (int i = 0; i < columns1.size(); i++) {
+            IntrospectedColumn introspectedColumn = columns.get(i);
+            XmlElement check = new XmlElement("if");
+            check.addAttribute(new Attribute("test", "'" + introspectedColumn.getActualColumnName() + "' == column.value"));
+            check.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, "item.")));
+
+            foreachInsertColumnsCheck.addElement(check);
+        }
+        foreachValues.addElement(foreachInsertColumnsCheck);
+
+        foreachValues.addElement(new TextElement(")"));
+
+        insertEle.addElement(foreachValues);
+
+        insertEle.addElement(new TextElement("on duplicate key update "));
+        // set
+        XmlElement foreachSetColumns = new XmlElement("foreach");
+        insertEle.addElement(foreachSetColumns);
+        foreachSetColumns.addAttribute(new Attribute("collection", "selective"));
+        foreachSetColumns.addAttribute(new Attribute("item", "column"));
+        foreachSetColumns.addAttribute(new Attribute("separator", ","));
+        foreachSetColumns.addElement(new TextElement("${column.value} = values(${column.value})"));
+
+        document.getRootElement().addElement(insertEle);
+        logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加batchUpsertSelective实现方法。");
+    }
+
+    /**
+     * 批量
+     * @param document
+     * @param introspectedTable
+     * @param withBLOBs
+     */
+    private void generateBatchXmlElement(Document document, IntrospectedTable introspectedTable, boolean withBLOBs) {
+        List<IntrospectedColumn> columns = ListUtilities.removeGeneratedAlwaysColumns(withBLOBs ? introspectedTable.getAllColumns() : introspectedTable.getNonBLOBColumns());
+        XmlElement insertEle = new XmlElement("insert");
+        insertEle.addAttribute(new Attribute("id", withBLOBs ? METHOD_BATCH_UPSERT_WITH_BLOBS : METHOD_BATCH_UPSERT));
+        // 添加注释(!!!必须添加注释，overwrite覆盖生成时，@see XmlFileMergerJaxp.isGeneratedNode会去判断注释中是否存在OLD_ELEMENT_TAGS中的一点，例子：@mbg.generated)
+        commentGenerator.addComment(insertEle);
+
+        // 参数类型
+        insertEle.addAttribute(new Attribute("parameterType", "map"));
+
+        // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
+        XmlElementGeneratorTools.useGeneratedKeys(insertEle, introspectedTable);
+
+        // insert
+        insertEle.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
+        for (Element element : XmlElementGeneratorTools.generateUpsertKeys(columns, null)) {
+            insertEle.addElement(element);
+        }
+        insertEle.addElement(new TextElement("values"));
+
+        // values
+        XmlElement foreachEle = new XmlElement("foreach");
+        insertEle.addElement(foreachEle);
+        foreachEle.addAttribute(new Attribute("collection", "list"));
+        foreachEle.addAttribute(new Attribute("item", "item"));
+        foreachEle.addAttribute(new Attribute("separator", ","));
+
+        for (Element element : XmlElementGeneratorTools.generateUpsertValues(columns, "item.", true)) {
+            foreachEle.addElement(element);
+        }
+        insertEle.addElement(new TextElement("on duplicate key update "));
+        // set
+        Iterator<IntrospectedColumn> columnIterator = columns.iterator();
+        while (columnIterator.hasNext()) {
+            IntrospectedColumn column = columnIterator.next();
+            insertEle.addElement(new TextElement(
+                    MyBatis3FormattingUtilities.getEscapedColumnName(column)
+                            + " = values(" + MyBatis3FormattingUtilities.getEscapedColumnName(column)
+                            + ")"
+                            + (columnIterator.hasNext() ? "," : "")
+            ));
+        }
+
+        document.getRootElement().addElement(insertEle);
+        logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加" + (withBLOBs ? "batchUpsertWithBLOBs" : "batchUpsert") + "实现方法。");
     }
 
     /**
@@ -315,7 +520,7 @@ public class UpsertPlugin extends BasePlugin {
         }
 
         document.getRootElement().addElement(insertEle);
-        logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsert实现方法。");
+        logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加" + (withBLOBs ? "upsertWithBLOBs" : "upsert") + "实现方法。");
 
         if (this.allowMultiQueries) {
             // ====================================== upsertByExample ======================================
@@ -352,7 +557,7 @@ public class UpsertPlugin extends BasePlugin {
             this.generateExistsClause(introspectedTable, updateEle, XmlElementGeneratorTools.generateUpsertValues(columns, "record.", false));
 
             document.getRootElement().addElement(updateEle);
-            logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加upsertByExample实现方法。");
+            logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加" + (withBLOBs ? "upsertByExampleWithBLOBs" : "upsertByExample") + "实现方法。");
         }
     }
 

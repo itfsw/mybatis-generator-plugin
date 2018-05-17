@@ -25,8 +25,11 @@ import org.mybatis.generator.exception.InvalidConfigurationException;
 import org.mybatis.generator.exception.XMLParserException;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ---------------------------------------------------------------------------
@@ -41,7 +44,7 @@ public class UpsertPluginTest {
      * 初始化
      */
     @BeforeClass
-    public static void init() throws Exception{
+    public static void init() throws Exception {
         DBHelper.createDB("scripts/UpsertPlugin/init.sql");
     }
 
@@ -418,6 +421,138 @@ public class UpsertPluginTest {
                 rs = DBHelper.execute(sqlSession, "select * from tb_with_inc_id where field1 = 'ts6'");
                 rs.first();
                 Assert.assertEquals(rs.getInt("field2"), 21);
+            }
+        });
+    }
+
+    /**
+     * 测试批量batchUpsert
+     */
+    @Test
+    public void testBatchUpsert() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator-with-allowBatchUpsert.xml");
+        tool.generate(() -> DBHelper.resetDB("scripts/UpsertPlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+                List<Object> params = new ArrayList<>();
+                params.add(new ObjectUtil(loader, packagz + ".Tb").set("id", 1L).set("field1", "ts1").getObject());
+                params.add(new ObjectUtil(loader, packagz + ".Tb").set("id", 6L).set("field1", "ts2").set("field2", 1).getObject());
+
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "batchUpsert", params);
+                Assert.assertEquals(sql, "insert into tb (id, field1, field2) values (1, 'ts1', null ) , (6, 'ts2', 1 ) on duplicate key update id = values(id), field1 = values(field1), field2 = values(field2)");
+                // 2. 执行sql
+                Object count = tbMapper.invoke("batchUpsert", params);
+                Assert.assertEquals(count, 3);
+
+                // 验证
+                ResultSet rs = DBHelper.execute(sqlSession, "select * from tb where id = 1");
+                rs.first();
+                Assert.assertEquals(rs.getString("field1"), "ts1");
+
+                rs = DBHelper.execute(sqlSession, "select * from tb where id = 6");
+                rs.first();
+                Assert.assertEquals(rs.getString("field1"), "ts2");
+            }
+        });
+    }
+
+    /**
+     * 测试批量batchUpsertWithBLOBs
+     */
+    @Test
+    public void testBatchUpsertWithBLOBs() throws Exception {
+        // 1. batchUpsert
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator-with-allowBatchUpsert.xml");
+        tool.generate(() -> DBHelper.resetDB("scripts/UpsertPlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
+                List<Object> params = new ArrayList<>();
+                params.add(new ObjectUtil(loader, packagz + ".TbBlobs").set("id", 1L).set("field1", "ts1").getObject());
+                params.add(new ObjectUtil(loader, packagz + ".TbBlobs").set("id", 6L).set("field1", "ts2").getObject());
+
+                String sql = SqlHelper.getFormatMapperSql(tbBlobsMapper.getObject(), "batchUpsert", params);
+                Assert.assertEquals(sql, "insert into tb_blobs (id, field1) values (1, 'ts1') , (6, 'ts2') on duplicate key update id = values(id), field1 = values(field1)");
+                // 2. 执行sql
+                Object count = tbBlobsMapper.invoke("batchUpsert", params);
+                Assert.assertEquals(count, 3);
+
+                // 验证
+                ResultSet rs = DBHelper.execute(sqlSession, "select * from tb_blobs where id = 1");
+                rs.first();
+                Assert.assertEquals(rs.getString("field1"), "ts1");
+
+                rs = DBHelper.execute(sqlSession, "select * from tb_blobs where id = 6");
+                rs.first();
+                Assert.assertEquals(rs.getString("field1"), "ts2");
+            }
+        });
+
+        // 2. batchUpsertWithBLOBs
+        tool.generate(() -> DBHelper.resetDB("scripts/UpsertPlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbBlobsMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbBlobsMapper")));
+                List<Object> params = new ArrayList<>();
+                params.add(new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs").set("id", 1L).set("field1", "ts1").set("field3", "ff1").getObject());
+                params.add(new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs").set("id", 6L).set("field1", "ts2").set("field3", "ff2").getObject());
+
+                String sql = SqlHelper.getFormatMapperSql(tbBlobsMapper.getObject(), "batchUpsertWithBLOBs", params);
+                Assert.assertEquals(sql, "insert into tb_blobs (id, field1, field2, field3) values (1, 'ts1', 'null', 'ff1') , (6, 'ts2', 'null', 'ff2') on duplicate key update id = values(id), field1 = values(field1), field2 = values(field2), field3 = values(field3)");
+                // 2. 执行sql
+                Object count = tbBlobsMapper.invoke("batchUpsertWithBLOBs", params);
+                Assert.assertEquals(count, 3);
+
+                // 验证
+                ResultSet rs = DBHelper.execute(sqlSession, "select * from tb_blobs where id = 1");
+                rs.first();
+                Assert.assertEquals(rs.getString("field1"), "ts1");
+                Assert.assertEquals(rs.getString("field3"), "ff1");
+
+                rs = DBHelper.execute(sqlSession, "select * from tb_blobs where id = 6");
+                rs.first();
+                Assert.assertEquals(rs.getString("field1"), "ts2");
+                Assert.assertEquals(rs.getString("field3"), "ff2");
+            }
+        });
+    }
+
+    /**
+     * 测试批量batchUpsertSelective
+     */
+    @Test
+    public void testBatchUpsertSelective() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/UpsertPlugin/mybatis-generator-with-allowBatchUpsert.xml");
+        tool.generate(() -> DBHelper.resetDB("scripts/UpsertPlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+                List<Object> params = new ArrayList<>();
+                params.add(new ObjectUtil(loader, packagz + ".Tb").set("id", 1L).set("field1", "ts1").getObject());
+                params.add(new ObjectUtil(loader, packagz + ".Tb").set("id", 6L).set("field1", "ts2").set("field2", 1).getObject());
+
+                ObjectUtil columnId = new ObjectUtil(loader, packagz + ".Tb$Column#id");
+                ObjectUtil columnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
+                Object columns = Array.newInstance(columnId.getCls(), 2);
+                Array.set(columns, 0, columnId.getObject());
+                Array.set(columns, 1, columnField1.getObject());
+
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "batchUpsertSelective", params, columns);
+                Assert.assertEquals(sql, "insert into tb ( id , field1 ) values ( 1 , 'ts1' ) , ( 6 , 'ts2' ) on duplicate key update id = values(id) , field1 = values(field1)");
+                // 2. 执行sql
+                Object count = tbMapper.invoke("batchUpsertSelective", params, columns);
+                Assert.assertEquals(count, 3);
+
+                // 验证
+                ResultSet rs = DBHelper.execute(sqlSession, "select * from tb where id = 1");
+                rs.first();
+                Assert.assertEquals(rs.getString("field1"), "ts1");
+
+                rs = DBHelper.execute(sqlSession, "select * from tb where id = 6");
+                rs.first();
+                Assert.assertEquals(rs.getString("field1"), "ts2");
+                Assert.assertNull(rs.getString("field2"));
             }
         });
     }

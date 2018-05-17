@@ -48,6 +48,9 @@ CREATE TABLE `tb_blobs` (
 -- ----------------------------
 -- Records of tb_blobs
 -- ----------------------------
+INSERT INTO `tb_blobs` VALUES ('1', 'fd1', null, 'KK1');
+INSERT INTO `tb_blobs` VALUES ('2', null, '2', null);
+INSERT INTO `tb_blobs` VALUES ('3', 'fd3', '3', 'KK3');
 
 -- ----------------------------
 -- Table structure for tb_keys

@@ -147,7 +147,7 @@ public class BatchInsertPluginTest {
     @Test
     public void testBatchInsert() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BatchInsertPlugin/mybatis-generator.xml");
-        tool.generate(new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/BatchInsertPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试sql
@@ -184,7 +184,7 @@ public class BatchInsertPluginTest {
     @Test
     public void testBatchInsertSelective() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BatchInsertPlugin/mybatis-generator.xml");
-        tool.generate(new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/BatchInsertPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试sql
