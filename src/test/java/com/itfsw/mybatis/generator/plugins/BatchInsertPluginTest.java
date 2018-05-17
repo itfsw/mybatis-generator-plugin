@@ -66,6 +66,11 @@ public class BatchInsertPluginTest {
 
         Assert.assertTrue(tool.getWarnings().size() == 2);
         Assert.assertEquals(tool.getWarnings().get(0), "itfsw:插件com.itfsw.mybatis.generator.plugins.BatchInsertPlugin插件需配合com.itfsw.mybatis.generator.plugins.ModelColumnPlugin插件使用！");
+
+        // 2. 普通提示
+        tool = MyBatisGeneratorTool.create("scripts/BatchInsertPlugin/mybatis-generator-with-allowMultiQueries.xml");
+        tool.generate();
+        Assert.assertEquals(tool.getWarnings().get(0), "itfsw:插件com.itfsw.mybatis.generator.plugins.BatchInsertPlugin插件您开启了allowMultiQueries支持，注意在jdbc url 配置中增加“allowMultiQueries=true”支持（不怎么建议使用该功能，开启多sql提交会增加sql注入的风险，请确保你所有sql都使用MyBatis书写，请不要使用statement进行sql提交）！");
     }
 
     /**
@@ -164,6 +169,11 @@ public class BatchInsertPluginTest {
                 // 2. 执行sql
                 Object count = tbMapper.invoke("batchInsert", params);
                 Assert.assertEquals(count, 2);
+
+                for (int i = 0; i < params.size(); i++) {
+                    ObjectUtil item = new ObjectUtil(params.get(i));
+                    Assert.assertEquals(item.get("id"), 1L + i);
+                }
             }
         });
     }
@@ -201,6 +211,52 @@ public class BatchInsertPluginTest {
                 // 2. 执行sql
                 Object count = tbBlobsMapper.invoke("batchInsertSelective", params, columns);
                 Assert.assertEquals(count, 2);
+            }
+        });
+    }
+
+    /**
+     * 测试开启 AllowMultiQueries 支持
+     */
+    @Test
+    public void testAllowMultiQueries() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BatchInsertPlugin/mybatis-generator-with-allowMultiQueries.xml");
+
+        // 1. 测试增强的selective
+        tool.generate(() -> DBHelper.resetDB("scripts/BatchInsertPlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+                List<Object> params = new ArrayList<>();
+                params.add(new ObjectUtil(loader, packagz + ".Tb").set("field1", "test").getObject());
+                params.add(new ObjectUtil(loader, packagz + ".Tb").set("field1", "test").set("field2", 1).getObject());
+
+                ObjectUtil columnField2 = new ObjectUtil(loader, packagz + ".Tb$Column#field2");
+                Object columns = Array.newInstance(columnField2.getCls(), 1);
+                Array.set(columns, 0, columnField2.getObject());
+
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "batchInsertSelective", params, columns);
+                Assert.assertEquals(sql, "insert into tb ( field2 ) values ( null ) , ( 1 )");
+                // 2. 执行sql
+                Object count = tbMapper.invoke("batchInsertSelective", params, columns);
+                Assert.assertEquals(count, 2);
+            }
+        });
+
+        // 2. 测试原生非空判断
+        tool.generate(() -> DBHelper.resetDB("scripts/BatchInsertPlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+                List<Object> params = new ArrayList<>();
+                params.add(new ObjectUtil(loader, packagz + ".Tb").set("field1", "test").getObject());
+                params.add(new ObjectUtil(loader, packagz + ".Tb").set("field1", "test").set("field2", 1).getObject());
+
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "batchInsertSelective", params, null);
+                Assert.assertEquals(sql, "insert into tb ( field1 ) values ( 'test' ) ; insert into tb ( field1, field2 ) values ( 'test', 1 )");
+                // 2. 执行sql
+                Object count = tbMapper.invoke("batchInsertSelective", params, null);
+                Assert.assertTrue((int) count > 0);
             }
         });
     }
