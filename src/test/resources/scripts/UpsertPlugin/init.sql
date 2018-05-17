@@ -24,7 +24,7 @@ CREATE TABLE `tb` (
   `field1` varchar(255) DEFAULT NULL COMMENT '注释2',
   `field2` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Records of tb
@@ -43,7 +43,7 @@ CREATE TABLE `tb_blobs` (
   `field2` longtext COMMENT '注释2',
   `field3` longtext,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Records of tb_blobs
@@ -62,7 +62,7 @@ CREATE TABLE `tb_keys` (
   `field1` varchar(255) DEFAULT NULL COMMENT '注释2',
   `field2` int(11) DEFAULT NULL,
   PRIMARY KEY (`key1`,`key2`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Records of tb_keys
@@ -80,7 +80,7 @@ CREATE TABLE `tb_single_blob` (
   `field1` longtext COMMENT '注释2',
   `field2` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Records of tb_single_blob
@@ -95,7 +95,7 @@ CREATE TABLE `tb_with_inc_id` (
   `field1` varchar(255) DEFAULT NULL COMMENT '注释2',
   `field2` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 -- ----------------------------
 -- Table structure for tb_with_inc_id
 -- ----------------------------
@@ -110,7 +110,7 @@ CREATE TABLE `tb_blobs_with_inc_id` (
   `field2` longtext COMMENT '注释3',
   `field3` longtext,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 -- ----------------------------
 -- Table structure for tb_blobs_with_inc_id
 -- ----------------------------

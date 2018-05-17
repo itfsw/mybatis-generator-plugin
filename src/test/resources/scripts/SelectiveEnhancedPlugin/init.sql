@@ -26,7 +26,7 @@ CREATE TABLE `tb` (
   `inc_f2` bigint(20) NOT NULL DEFAULT '0',
   `inc_f3` bigint(20) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Records of tb

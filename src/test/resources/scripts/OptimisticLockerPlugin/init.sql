@@ -26,7 +26,7 @@ CREATE TABLE `tb` (
   `inc_f2` bigint(20) DEFAULT '0',
   `inc_f3` bigint(20) DEFAULT '0',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Records of tb
@@ -49,7 +49,7 @@ CREATE TABLE `tb_blobs` (
   `inc_f2` bigint(20) DEFAULT '0',
   `inc_f3` bigint(20) DEFAULT '0',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Records of tb_blobs
@@ -72,7 +72,7 @@ CREATE TABLE `tb_keys` (
   `inc_f2` bigint(20) NOT NULL DEFAULT '0',
   `inc_f3` bigint(20) NOT NULL DEFAULT '0',
   PRIMARY KEY (`key1`,`key2`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Records of tb_keys
@@ -93,7 +93,7 @@ CREATE TABLE `tb_single_blob` (
   `inc_f2` bigint(20) NOT NULL DEFAULT '0',
   `inc_f3` bigint(20) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Records of tb_single_blob
@@ -112,7 +112,7 @@ CREATE TABLE `tb_key_word` (
   `inc_f1` bigint(20) NOT NULL DEFAULT '0',
   `update` bigint(20) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Records of tb_key_word
