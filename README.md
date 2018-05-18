@@ -30,7 +30,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.2.4</version>
+  <version>1.2.5</version>
 </dependency>
 ```
 ---------------------------------------
@@ -315,7 +315,13 @@ Mybatis Generator 插件默认把Model类和Example类都生成到一个包下�
 插件：
 ```xml
 <!-- 批量插入插件 -->
-<plugin type="com.itfsw.mybatis.generator.plugins.BatchInsertPlugin"/>
+<plugin type="com.itfsw.mybatis.generator.plugins.BatchInsertPlugin">
+    <!-- 
+    开启后可以实现官方插件根据属性是否为空决定是否插入该字段功能
+    ！需开启allowMultiQueries=true多条sql提交操作，所以不建议使用！插件默认不开启
+    -->
+    <property name="allowMultiQueries" value="false"/>
+</plugin>
 ```
 使用：  
 ```java
@@ -497,9 +503,14 @@ public class Test {
 <plugin type="com.itfsw.mybatis.generator.plugins.UpsertPlugin">
     <!-- 
     支持upsertByExample，upsertByExampleSelective操作
-    ！需开启allowMultiQueries=true多条sql提交操作，所以不建议使用！
+    ！需开启allowMultiQueries=true多条sql提交操作，所以不建议使用！插件默认不开启
     -->
-    <property name="allowMultiQueries" value="true"/>
+    <property name="allowMultiQueries" value="false"/>
+    <!-- 
+    开启批量功能，支持batchUpsert,batchUpsertWithBLOBs,batchUpserSelective 
+    ！这几个方法中无法支持IncrementsPlugin的方法！插件默认不开启
+    -->
+    <property name="allowBatchUpsert" value="fasle"/>
 </plugin>
 ```
 使用：  
