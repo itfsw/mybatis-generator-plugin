@@ -311,10 +311,7 @@ Mybatis Generator 插件默认把Model类和Example类都生成到一个包下�
 </plugin>
 ```
 ### 6. 批量插入插件
-提供了批量插入batchInsert和batchInsertSelective方法，因为方法使用了使用了JDBC的getGenereatedKeys方法返回插入主键，所以只能在MYSQL和SQLServer下使用。
-需配合数据Model属性对应Column获取插件（ModelColumnPlugin）插件使用，实现类似于insertSelective插入列！  
-PS:为了和Mybatis官方代码风格保持一致，1.0.5+版本把批量插入方法分开了，基于老版本1.0.5-版本生成的代码请继续使用“com.itfsw.mybatis.generator.plugins.BatchInsertOldPlugin”不影响使用  
-PS:继续PS，本来想继续保留老版本代码，不影响老版本已经生成代码使用的，但是始终没有绕过BindingException，只能把代码移入BatchInsertOldPlugin类~~~~~  
+提供了批量插入batchInsert和batchInsertSelective方法，需配合数据Model属性对应Column获取插件（ModelColumnPlugin）插件使用，实现类似于insertSelective插入列！  
 插件：
 ```xml
 <!-- 批量插入插件 -->
