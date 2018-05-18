@@ -537,6 +537,7 @@ public class Test {
         tb1.setField2("xx1");
         int k3 = this.tbMapper.upsertSelective(tb1);
 
+        // --------------------------------- allowMultiQueries=true ------------------------------
         // 4. 开启allowMultiQueries后增加upsertByExample，upsertByExampleSelective但强力建议不要使用（需保证团队没有使用statement提交sql,否则会存在sql注入风险）
         Tb tb2 = new Tb.Builder()
                 .field1(1)
@@ -568,6 +569,28 @@ public class Test {
                 .delFlag(Tb.DEL_FLAG_ON)
                 .build();
         int k6 = this.tbMapper.upsertWithBLOBs(tb);
+        
+        // --------------------------------- allowBatchUpsert=true ------------------------------
+        List<Tb> list = new ArrayList<>();
+        list.add(
+                new Tb.Builder()
+                .field1(0)
+                .field2("xx0")
+                .field3(0)
+                .field4(new Date())
+                .build()
+        );
+        list.add(
+                new Tb.Builder()
+                .field1(1)
+                .field2("xx1")
+                .field3(1)
+                .field4(new Date())
+                .build()
+        );
+        this.tbMapper.batchUpsert(list);    // 对于BLOBs 有batchUpsertWithBLOBs方法
+        this.tbMapper.batchUpsertSelective(list, Tb.Column.field1, Tb.Column.field2, Tb.Column.field3, Tb.Column.createTime);
+        this.tbMapper.batchUpsertSelective(list, Tb.Column.excludes(Tb.Column.id, Tb.Column.delFlag)); // 排除某些列
     }
 }
 ```
