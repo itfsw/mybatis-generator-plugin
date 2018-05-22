@@ -16,8 +16,8 @@
 * [数据Model属性对应Column获取插件（ModelColumnPlugin）](#8-数据model属性对应column获取插件)
 * [存在即更新插件（UpsertPlugin）](#9-存在即更新插件)
 * [Selective选择插入更新增强插件（SelectiveEnhancedPlugin）](#10-selective选择插入更新增强插件)
-* [Table增加前缀插件（TablePrefixPlugin）](#11-table增加前缀插件)
-* [Table重命名插件（TableRenamePlugin）](#12-table重命名插件)
+* [~~Table增加前缀插件（TablePrefixPlugin）~~](#11-table增加前缀插件)
+* [~~Table重命名插件（TableRenamePlugin）~~](#12-table重命名插件)
 * [自定义注释插件（CommentPlugin）](#13-自定义注释插件)
 * [增量插件（IncrementsPlugin）](#14-增量插件)
 * [查询结果选择性返回插件（SelectSelectivePlugin）](#15-查询结果选择性返回插件)
@@ -654,7 +654,12 @@ public class Test {
 项目中有时会遇到配置多数据源对应多业务的情况，这种情况下可能会出现不同数据源出现重复表名，造成异常冲突。
 该插件允许为表增加前缀，改变最终生成的Model、Mapper、Example类名以及xml名。  
 >warning: 使用[Table重命名插件](12-table重命名插件)可以实现相同功能！  
-
+>warning: 官方最新版本中已提供domainObjectRenamingRule支持，以后请尽量使用官方支持！  
+```xml
+<table tableName="tb">
+    <domainObjectRenamingRule searchString="^" replaceString="DB1" />
+</table>
+```
 插件：
 ```xml
 <xml>
@@ -698,6 +703,12 @@ public class Test {
 <property name="searchString" value="^"/>
 <property name="replaceString" value="DB1"/>
 ```
+>warning: 官方最新版本中已提供domainObjectRenamingRule支持，以后请尽量使用官方支持！  
+```xml
+<table tableName="tb">
+    <domainObjectRenamingRule searchString="^T" replaceString="" />
+</table>
+``` 
 
 插件：
 ```xml
