@@ -75,6 +75,7 @@ public class LogicalDeletePlugin extends BasePlugin {
      */
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
+        super.initialized(introspectedTable);
         // 1. 首先获取全局配置
         Properties properties = getProperties();
         String logicalDeleteColumn = properties.getProperty(PRO_LOGICAL_DELETE_COLUMN);

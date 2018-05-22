@@ -19,7 +19,9 @@ package com.itfsw.mybatis.generator.plugins.utils;
 import com.itfsw.mybatis.generator.plugins.CommentPlugin;
 import com.itfsw.mybatis.generator.plugins.utils.enhanced.TemplateCommentGenerator;
 import com.itfsw.mybatis.generator.plugins.utils.hook.HookAggregator;
+import com.itfsw.mybatis.generator.plugins.utils.hook.ITableConfigurationHook;
 import org.mybatis.generator.api.CommentGenerator;
+import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.config.Context;
 import org.mybatis.generator.config.PluginConfiguration;
@@ -96,5 +98,15 @@ public class BasePlugin extends PluginAdapter {
         }
 
         return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @param introspectedTable
+     */
+    @Override
+    public void initialized(IntrospectedTable introspectedTable) {
+        super.initialized(introspectedTable);
+        PluginTools.getHook(ITableConfigurationHook.class).tableConfiguration(introspectedTable);
     }
 }

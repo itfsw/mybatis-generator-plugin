@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
  * @time:2017/6/6 15:18
  * ---------------------------------------------------------------------------
  */
+@Deprecated
 public class TableRenamePlugin extends BasePlugin {
     public static final String PRO_SEARCH_STRING = "searchString";  // 查找 property
     public static final String PRO_REPLACE_STRING = "replaceString";  // 替换 property
@@ -94,6 +95,7 @@ public class TableRenamePlugin extends BasePlugin {
                 logger.error("itfsw:插件" + this.getClass().getTypeName() + "使用searchString、replaceString替换时异常！", e);
             }
         }
+        super.initialized(introspectedTable);
     }
 
     /**

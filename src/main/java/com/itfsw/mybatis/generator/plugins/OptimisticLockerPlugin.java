@@ -59,6 +59,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
 
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
+        super.initialized(introspectedTable);
         sqlMaps.put(introspectedTable, new ArrayList<>());
 
         // 读取并验证版本列

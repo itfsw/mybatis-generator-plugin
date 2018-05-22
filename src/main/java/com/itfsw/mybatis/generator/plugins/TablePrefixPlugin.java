@@ -31,6 +31,7 @@ import java.util.List;
  * @time:2017/5/18 13:54
  * ---------------------------------------------------------------------------
  */
+@Deprecated
 public class TablePrefixPlugin extends BasePlugin {
 
     public static final String PRO_PREFIX = "prefix";  // 前缀 property
@@ -78,5 +79,6 @@ public class TablePrefixPlugin extends BasePlugin {
                 logger.error("itfsw:插件" + this.getClass().getTypeName() + "使用prefix替换时异常！", e);
             }
         }
+        super.initialized(introspectedTable);
     }
 }

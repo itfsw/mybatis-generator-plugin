@@ -43,7 +43,7 @@ import java.util.List;
  * @time:2018/4/27 11:33
  * ---------------------------------------------------------------------------
  */
-public class HookAggregator implements IUpsertPluginHook, IModelBuilderPluginHook, IIncrementsPluginHook, IOptimisticLockerPluginHook, ISelectOneByExamplePluginHook {
+public class HookAggregator implements IUpsertPluginHook, IModelBuilderPluginHook, IIncrementsPluginHook, IOptimisticLockerPluginHook, ISelectOneByExamplePluginHook, ITableConfigurationHook {
     protected static final Logger logger = LoggerFactory.getLogger(BasePlugin.class); // 日志
     private final static HookAggregator instance = new HookAggregator();
     private Context context;
@@ -249,5 +249,14 @@ public class HookAggregator implements IUpsertPluginHook, IModelBuilderPluginHoo
             }
         }
         return true;
+    }
+
+    // ============================================= ITableConfigurationHook ==============================================
+
+    @Override
+    public void tableConfiguration(IntrospectedTable introspectedTable) {
+        if (!this.getPlugins(ITableConfigurationHook.class).isEmpty()) {
+           this.getPlugins(ITableConfigurationHook.class).get(0).tableConfiguration(introspectedTable);
+        }
     }
 }

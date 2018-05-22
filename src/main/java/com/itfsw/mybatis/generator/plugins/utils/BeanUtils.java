@@ -58,14 +58,15 @@ public class BeanUtils {
     /**
      * 执行无参方法
      * @param bean
+     * @param clazz
      * @param name
      * @return
      * @throws NoSuchMethodException
      * @throws InvocationTargetException
      * @throws IllegalAccessException
      */
-    public static Object invoke(final Object bean, final String name) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        Method method = bean.getClass().getDeclaredMethod(name);
+    public static Object invoke(final Object bean, Class clazz, final String name) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = clazz.getDeclaredMethod(name);
         method.setAccessible(true);
         return method.invoke(bean);
     }

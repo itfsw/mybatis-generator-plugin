@@ -61,6 +61,7 @@ public class ExampleTargetPlugin extends BasePlugin {
      */
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
+        super.initialized(introspectedTable);
         String exampleType = introspectedTable.getExampleType();
         // 修改包名
         Context context = getContext();
