@@ -96,6 +96,7 @@ public interface TbMapper {
 ```
 ### 2. MySQL分页插件
 对应表Example类增加了Mysql分页方法，limit(Integer rows)、limit(Integer offset, Integer rows)和page(Integer page, Integer pageSize)  
+>warning:分页从0开始，目前网上流行的大多数前端框架分页都是从0开始，插件保持这种方式；  
 插件：
 ```xml
 <!-- MySQL分页插件 -->
