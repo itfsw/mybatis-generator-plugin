@@ -22,6 +22,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mybatis.generator.api.GeneratedJavaFile;
+import org.mybatis.generator.api.GeneratedXmlFile;
 import org.mybatis.generator.api.MyBatisGenerator;
 import org.mybatis.generator.api.dom.java.Field;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
@@ -121,6 +122,89 @@ public class TableConfigurationPluginTest {
                 Assert.assertEquals(result.get("id"), 4L);
                 Assert.assertEquals(result.get("field1"), "ts1");
                 Assert.assertEquals(result.get("incrementF1"), 5L);
+            }
+        });
+    }
+
+    /**
+     * 测试clientSuffix
+     */
+    @Test
+    public void testClientSuffix() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/TableConfigurationPlugin/mybatis-generator-with-clientSuffix.xml");
+        MyBatisGenerator myBatisGenerator = tool.generate();
+
+        boolean find = false;
+        for (GeneratedJavaFile file : myBatisGenerator.getGeneratedJavaFiles()) {
+            String name = file.getCompilationUnit().getType().getShortName();
+            if (name.equals("TbDao")){
+                find = true;
+            }
+        }
+        Assert.assertTrue(find);
+
+        find = false;
+        for (GeneratedXmlFile file : myBatisGenerator.getGeneratedXmlFiles()) {
+            String name = file.getFileName();
+            if (name.equals("TbDao.xml")){
+                find = true;
+            }
+        }
+        Assert.assertTrue(find);
+
+        // 执行一条语句确认其可用
+        tool.generate(() -> DBHelper.resetDB("scripts/TableConfigurationPlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbDao = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbDao")));
+
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdLessThan", 4L);
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbDao.getObject(), "selectByExample", tbExample.getObject());
+                Assert.assertEquals(sql, "select id, field1, inc_f1, inc_f2, inc_f3 from tb WHERE ( id < '4' )");
+                // 执行
+                List list = (List) tbDao.invoke("selectByExample", tbExample.getObject());
+                Assert.assertEquals(list.size(), 3);
+            }
+        });
+    }
+
+
+    /**
+     * 测试exampleSuffix
+     */
+    @Test
+    public void testExampleSuffix() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/TableConfigurationPlugin/mybatis-generator-with-exampleSuffix.xml");
+        MyBatisGenerator myBatisGenerator = tool.generate();
+
+        boolean find = false;
+        for (GeneratedJavaFile file : myBatisGenerator.getGeneratedJavaFiles()) {
+            String name = file.getCompilationUnit().getType().getShortName();
+            if (name.equals("TbQuery")){
+                find = true;
+            }
+        }
+        Assert.assertTrue(find);
+        // 执行一条语句确认其可用
+        tool.generate(() -> DBHelper.resetDB("scripts/TableConfigurationPlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tbQuery = new ObjectUtil(loader, packagz + ".TbQuery");
+                ObjectUtil criteria = new ObjectUtil(tbQuery.invoke("createCriteria"));
+                criteria.invoke("andIdLessThan", 4L);
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbQuery.getObject());
+                Assert.assertEquals(sql, "select id, field1, inc_f1, inc_f2, inc_f3 from tb WHERE ( id < '4' )");
+                // 执行
+                List list = (List) tbMapper.invoke("selectByExample", tbQuery.getObject());
+                Assert.assertEquals(list.size(), 3);
             }
         });
     }

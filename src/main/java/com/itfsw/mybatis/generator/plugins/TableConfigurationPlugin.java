@@ -55,7 +55,6 @@ public class TableConfigurationPlugin extends BasePlugin implements ITableConfig
     public static final String PRO_COLUMN_REPLACE_DISABLE = "columnRenamingRule.disable";  // 替换 property
 
     public static final String PRO_CLIENT_SUFFIX = "clientSuffix";  // client 结尾
-    public static final String PRO_SQL_MAP_SUFFIX = "sqlMapSuffix";  // sqlMap 结尾
     public static final String PRO_EXAMPLE_SUFFIX = "exampleSuffix"; // example 结尾
     public static final String PRO_MODEL_SUFFIX = "modelSuffix"; // model 结尾
 
@@ -68,7 +67,6 @@ public class TableConfigurationPlugin extends BasePlugin implements ITableConfig
 
 
     private String clientSuffix;  // client 结尾
-    private String sqlMapSuffix;    // sqlMap 结尾
     private String exampleSuffix; // example 结尾
     private String modelSuffix; // model 结尾
 
@@ -88,7 +86,6 @@ public class TableConfigurationPlugin extends BasePlugin implements ITableConfig
 
         this.exampleSuffix = properties.getProperty(PRO_EXAMPLE_SUFFIX);
         this.clientSuffix = properties.getProperty(PRO_CLIENT_SUFFIX);
-        this.sqlMapSuffix = properties.getProperty(PRO_SQL_MAP_SUFFIX);
         this.modelSuffix = properties.getProperty(PRO_MODEL_SUFFIX);
 
         return super.validate(warnings);
@@ -168,18 +165,7 @@ public class TableConfigurationPlugin extends BasePlugin implements ITableConfig
                 }
                 introspectedTable.setMyBatis3FallbackSqlMapNamespace(sb.toString());
             }
-            // 2. sqlMap
-            if (!stringHasValue(tableConfiguration.getMapperName())
-                    && (this.sqlMapSuffix != null || this.clientSuffix != null)) {
-                StringBuilder sb = new StringBuilder();
-
-                sb.append(fullyQualifiedTable.getDomainObjectName());
-                sb.append(this.sqlMapSuffix != null ? this.sqlMapSuffix : this.clientSuffix);
-                sb.append(".xml");
-
-                introspectedTable.setMyBatis3XmlMapperFileName(sb.toString());
-            }
-            // 3. example
+            // 2. example
             if (this.exampleSuffix != null) {
                 StringBuilder sb = new StringBuilder();
                 sb.append(javaModelPackage);
@@ -188,7 +174,7 @@ public class TableConfigurationPlugin extends BasePlugin implements ITableConfig
                 sb.append(this.exampleSuffix);
                 introspectedTable.setExampleType(sb.toString());
             }
-            // 4. model
+            // 3. model
             if (this.modelSuffix != null) {
                 StringBuilder sb = new StringBuilder();
                 sb.append(javaModelPackage);
