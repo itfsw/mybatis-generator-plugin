@@ -3,7 +3,7 @@
 
     <groupId>com.itfsw</groupId>
     <artifactId>mybatis-generator-plugin</artifactId>
-    <version>1.2.6-SNAPSHOT</version>
+    <version>1.2.6</version>
     <packaging>jar</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
