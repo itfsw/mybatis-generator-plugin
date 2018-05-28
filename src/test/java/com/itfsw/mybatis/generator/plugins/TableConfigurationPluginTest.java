@@ -53,7 +53,9 @@ public class TableConfigurationPluginTest {
         MyBatisGenerator myBatisGenerator = tool.generate();
         for (GeneratedJavaFile file : myBatisGenerator.getGeneratedJavaFiles()){
             String name = file.getCompilationUnit().getType().getShortName();
-            Assert.assertTrue(name.matches("Testb.*"));
+            if (!(name.matches("Testb.*") || name.matches("TbBlobs.*"))){
+                Assert.assertTrue(false);
+            }
         }
         // 执行一条语句确认其可用
         tool.generate(() -> DBHelper.resetDB("scripts/TableConfigurationPlugin/init.sql"), new AbstractShellCallback() {
@@ -92,6 +94,15 @@ public class TableConfigurationPluginTest {
                     }
                 }
                 Assert.assertEquals(count, 3);
+            }
+            if (file.getFileName().equals("TbBlobs.java")){
+                int count = 0;
+                for (Field field : ((TopLevelClass)(file.getCompilationUnit())).getFields()){
+                    if (field.getName().startsWith("increment")){
+                        count++;
+                    }
+                }
+                Assert.assertEquals(count, 0);
             }
         }
 

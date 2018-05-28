@@ -52,5 +52,9 @@
         <table tableName="tb">
             <generatedKey column="id" sqlStatement="MySql" identity="true"/>
         </table>
+        <table tableName="tb_blobs">
+            <property name="domainObjectRenamingRule.disable" value="true"/>
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+        </table>
     </context>
 </generatorConfiguration>
