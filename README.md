@@ -657,7 +657,7 @@ public class Test {
 项目中有时会遇到配置多数据源对应多业务的情况，这种情况下可能会出现不同数据源出现重复表名，造成异常冲突。
 该插件允许为表增加前缀，改变最终生成的Model、Mapper、Example类名以及xml名。  
 >warning: 使用[Table重命名插件](12-table重命名插件)可以实现相同功能！  
->warning: 官方最新版本中已提供domainObjectRenamingRule支持(可以配合[表重命名配置插件](#18-表重命名配置插件)进行全局配置)，以后请尽量使用官方支持！  
+>warning: 官方最新版本中已提供domainObjectRenamingRule支持(可以配合[表重命名配置插件](#18-表重命名配置插件)进行全局配置)！  
 ```xml
 <table tableName="tb">
     <domainObjectRenamingRule searchString="^" replaceString="DB1" />
@@ -706,7 +706,7 @@ public class Test {
 <property name="searchString" value="^"/>
 <property name="replaceString" value="DB1"/>
 ```
->warning: 官方最新版本中已提供domainObjectRenamingRule支持(可以配合[表重命名配置插件](#18-表重命名配置插件)进行全局配置)，以后请尽量使用官方支持！  
+>warning: 官方最新版本中已提供domainObjectRenamingRule支持(可以配合[表重命名配置插件](#18-表重命名配置插件)进行全局配置)！  
 ```xml
 <table tableName="tb">
     <domainObjectRenamingRule searchString="^T" replaceString="" />
