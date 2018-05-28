@@ -24,8 +24,8 @@
     <!--导入属性配置 -->
     <context id="default" targetRuntime="MyBatis3">
         <!-- 插件 -->
-        <plugin type="com.itfsw.mybatis.generator.plugins.TableConfigurationPlugin">
-            <property name="exampleSuffix" value="Query"/>
+        <plugin type="com.itfsw.mybatis.generator.plugins.TableRenameConfigurationPlugin">
+            <property name="modelSuffix" value="Entity"/>
         </plugin>
 
         <!--jdbc的数据库连接 -->

@@ -24,8 +24,9 @@
     <!--导入属性配置 -->
     <context id="default" targetRuntime="MyBatis3">
         <!-- 插件 -->
-        <plugin type="com.itfsw.mybatis.generator.plugins.TableConfigurationPlugin">
-            <property name="clientSuffix" value="Dao"/>
+        <plugin type="com.itfsw.mybatis.generator.plugins.TableRenameConfigurationPlugin">
+            <property name="columnRenamingRule.searchString" value="^inc"/>
+            <property name="columnRenamingRule.replaceString" value="Increment"/>
         </plugin>
 
         <!--jdbc的数据库连接 -->
@@ -51,6 +52,9 @@
         <table tableName="tb">
             <generatedKey column="id" sqlStatement="MySql" identity="true"/>
         </table>
-        <table tableName="tb_keys"/>
+        <table tableName="tb_blobs">
+            <property name="columnRenamingRule.disable" value="true"/>
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+        </table>
     </context>
 </generatorConfiguration>

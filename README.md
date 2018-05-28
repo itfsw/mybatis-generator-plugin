@@ -23,6 +23,7 @@
 * [查询结果选择性返回插件（SelectSelectivePlugin）](#15-查询结果选择性返回插件)
 * [~~官方ConstructorBased配置BUG临时修正插件（ConstructorBasedBugFixPlugin）~~](#16-官方constructorbased配置bug临时修正插件)
 * [乐观锁插件（OptimisticLockerPlugin）](#17-乐观锁插件)
+* [表重命名配置插件（TableConfigurationPlugin）](#18-表重命名配置插件)
 
 ---------------------------------------
 Maven引用：  
@@ -654,7 +655,7 @@ public class Test {
 项目中有时会遇到配置多数据源对应多业务的情况，这种情况下可能会出现不同数据源出现重复表名，造成异常冲突。
 该插件允许为表增加前缀，改变最终生成的Model、Mapper、Example类名以及xml名。  
 >warning: 使用[Table重命名插件](12-table重命名插件)可以实现相同功能！  
->warning: 官方最新版本中已提供domainObjectRenamingRule支持，以后请尽量使用官方支持！  
+>warning: 官方最新版本中已提供domainObjectRenamingRule支持(可以配合[表重命名配置插件](#18-表重命名配置插件)进行全局配置)，以后请尽量使用官方支持！  
 ```xml
 <table tableName="tb">
     <domainObjectRenamingRule searchString="^" replaceString="DB1" />
@@ -703,7 +704,7 @@ public class Test {
 <property name="searchString" value="^"/>
 <property name="replaceString" value="DB1"/>
 ```
->warning: 官方最新版本中已提供domainObjectRenamingRule支持，以后请尽量使用官方支持！  
+>warning: 官方最新版本中已提供domainObjectRenamingRule支持(可以配合[表重命名配置插件](#18-表重命名配置插件)进行全局配置)，以后请尽量使用官方支持！  
 ```xml
 <table tableName="tb">
     <domainObjectRenamingRule searchString="^T" replaceString="" />
@@ -1215,4 +1216,24 @@ public class Test {
         // 对应生成的Sql: update tb set version = 1525773888559, field1 = 'ts1' where version = 100 and id = 102
     }
 }
+```
+### 18. 表重命名配置插件
+官方提供了domainObjectRenamingRule(官方最新版本已提供)、columnRenamingRule分别进行生成的表名称和对应表字段的重命名支持，但是它需要每个表单独进行配置，对于常用的如表附带前缀“t_”、字段前缀“f_”这种全局性替换会比较麻烦。   
+该插件提供了一种全局替换机制，当表没有单独指定domainObjectRenamingRule、columnRenamingRule时采用全局性配置。同时该插件会修复官方domainObjectRenamingRule的bug(没有进行正确的首字母大写)。      
+- 全局domainObjectRenamingRule  
+```xml
+<xml>
+    <!-- 表重命名配置插件 -->
+    <plugin type="com.itfsw.mybatis.generator.plugins.TableRenameConfigurationPlugin">
+        <property name="domainObjectRenamingRule.searchString" value="^T"/>
+        <property name="domainObjectRenamingRule.replaceString" value=""/>
+    </plugin>
+    
+    <table tableName="tb">
+        <!-- 这里可以单独表配置，覆盖全局配置 -->
+        <property name="customizedNextVersion" value="false"/>
+        <!-- 指定版本列 -->
+        <property name="versionColumn" value="version"/>
+    </table>
+</xml>
 ```

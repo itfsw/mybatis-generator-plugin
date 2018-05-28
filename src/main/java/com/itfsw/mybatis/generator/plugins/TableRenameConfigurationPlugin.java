@@ -46,7 +46,7 @@ import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
  * @time:2018/5/21 11:23
  * ---------------------------------------------------------------------------
  */
-public class TableConfigurationPlugin extends BasePlugin implements ITableConfigurationHook {
+public class TableRenameConfigurationPlugin extends BasePlugin implements ITableConfigurationHook {
     public static final String PRO_TABLE_SEARCH_STRING = "domainObjectRenamingRule.searchString";  // 查找 property
     public static final String PRO_TABLE_REPLACE_STRING = "domainObjectRenamingRule.replaceString";  // 替换 property
     public static final String PRO_TABLE_REPLACE_DISABLE = "domainObjectRenamingRule.disable";  // 替换 property
@@ -164,6 +164,13 @@ public class TableConfigurationPlugin extends BasePlugin implements ITableConfig
                     sb.append(this.clientSuffix);
                 }
                 introspectedTable.setMyBatis3FallbackSqlMapNamespace(sb.toString());
+                // xml file
+                sb.setLength(0);
+                sb.append(fullyQualifiedTable.getDomainObjectName());
+                sb.append(this.clientSuffix);
+                sb.append(".xml");
+
+                introspectedTable.setMyBatis3XmlMapperFileName(sb.toString());
             }
             // 2. example
             if (this.exampleSuffix != null) {

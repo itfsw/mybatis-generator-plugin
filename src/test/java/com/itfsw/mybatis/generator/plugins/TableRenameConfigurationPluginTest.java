@@ -37,10 +37,10 @@ import java.util.List;
  * @time:2018/5/22 13:22
  * ---------------------------------------------------------------------------
  */
-public class TableConfigurationPluginTest {
+public class TableRenameConfigurationPluginTest {
     @BeforeClass
     public static void init() throws Exception {
-        DBHelper.createDB("scripts/TableConfigurationPlugin/init.sql");
+        DBHelper.createDB("scripts/TableRenameConfigurationPlugin/init.sql");
     }
 
     /**
@@ -48,9 +48,19 @@ public class TableConfigurationPluginTest {
      */
     @Test
     public void testDomainObjectRenamingRule() throws Exception {
-        // 规则 ^T 替换成 Test
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/TableConfigurationPlugin/mybatis-generator-with-domainObjectRenamingRule.xml");
+        // 规则 ^T 替换成空，也就是去掉前缀
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/TableRenameConfigurationPlugin/mybatis-generator-with-domainObjectRenamingRule-relacePrefix.xml");
         MyBatisGenerator myBatisGenerator = tool.generate();
+        for (GeneratedJavaFile file : myBatisGenerator.getGeneratedJavaFiles()){
+            String name = file.getCompilationUnit().getType().getShortName();
+            if (!name.matches("B.*")){
+                Assert.assertTrue(false);
+            }
+        }
+
+        // 规则 ^T 替换成 Test
+        tool = MyBatisGeneratorTool.create("scripts/TableRenameConfigurationPlugin/mybatis-generator-with-domainObjectRenamingRule.xml");
+        myBatisGenerator = tool.generate();
         for (GeneratedJavaFile file : myBatisGenerator.getGeneratedJavaFiles()){
             String name = file.getCompilationUnit().getType().getShortName();
             if (!(name.matches("Testb.*") || name.matches("TbBlobs.*"))){
@@ -58,7 +68,7 @@ public class TableConfigurationPluginTest {
             }
         }
         // 执行一条语句确认其可用
-        tool.generate(() -> DBHelper.resetDB("scripts/TableConfigurationPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/TableRenameConfigurationPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TestbMapper")));
@@ -83,7 +93,7 @@ public class TableConfigurationPluginTest {
     @Test
     public void testColumnRenamingRule() throws Exception {
         // 规则 ^T 替换成 Test
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/TableConfigurationPlugin/mybatis-generator-with-columnRenamingRule.xml");
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/TableRenameConfigurationPlugin/mybatis-generator-with-columnRenamingRule.xml");
         MyBatisGenerator myBatisGenerator = tool.generate();
         for (GeneratedJavaFile file : myBatisGenerator.getGeneratedJavaFiles()){
             if (file.getFileName().equals("Tb.java")){
@@ -107,7 +117,7 @@ public class TableConfigurationPluginTest {
         }
 
         // 执行一条语句确认其可用
-        tool.generate(() -> DBHelper.resetDB("scripts/TableConfigurationPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/TableRenameConfigurationPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -142,7 +152,7 @@ public class TableConfigurationPluginTest {
      */
     @Test
     public void testClientSuffix() throws Exception {
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/TableConfigurationPlugin/mybatis-generator-with-clientSuffix.xml");
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/TableRenameConfigurationPlugin/mybatis-generator-with-clientSuffix.xml");
         MyBatisGenerator myBatisGenerator = tool.generate();
 
         boolean find = false;
@@ -164,7 +174,7 @@ public class TableConfigurationPluginTest {
         Assert.assertTrue(find);
 
         // 执行一条语句确认其可用
-        tool.generate(() -> DBHelper.resetDB("scripts/TableConfigurationPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/TableRenameConfigurationPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbDao = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbDao")));
@@ -188,7 +198,7 @@ public class TableConfigurationPluginTest {
      */
     @Test
     public void testExampleSuffix() throws Exception {
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/TableConfigurationPlugin/mybatis-generator-with-exampleSuffix.xml");
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/TableRenameConfigurationPlugin/mybatis-generator-with-exampleSuffix.xml");
         MyBatisGenerator myBatisGenerator = tool.generate();
 
         boolean find = false;
@@ -200,7 +210,7 @@ public class TableConfigurationPluginTest {
         }
         Assert.assertTrue(find);
         // 执行一条语句确认其可用
-        tool.generate(() -> DBHelper.resetDB("scripts/TableConfigurationPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/TableRenameConfigurationPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -224,7 +234,7 @@ public class TableConfigurationPluginTest {
      */
     @Test
     public void testModelSuffix() throws Exception {
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/TableConfigurationPlugin/mybatis-generator-with-modelSuffix.xml");
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/TableRenameConfigurationPlugin/mybatis-generator-with-modelSuffix.xml");
         MyBatisGenerator myBatisGenerator = tool.generate();
 
         boolean find = false;
@@ -236,7 +246,7 @@ public class TableConfigurationPluginTest {
         }
         Assert.assertTrue(find);
         // 执行一条语句确认其可用
-        tool.generate(() -> DBHelper.resetDB("scripts/TableConfigurationPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.resetDB("scripts/TableRenameConfigurationPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));

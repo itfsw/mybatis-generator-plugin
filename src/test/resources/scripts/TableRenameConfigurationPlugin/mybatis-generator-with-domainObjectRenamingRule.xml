@@ -24,10 +24,9 @@
     <!--导入属性配置 -->
     <context id="default" targetRuntime="MyBatis3">
         <!-- 插件 -->
-        <plugin type="com.itfsw.mybatis.generator.plugins.TableConfigurationPlugin">
-            <property name="searchString" value="^"/>
-            <property name="replaceString" value="DB1"/>
-            <property name="suffixForMapper" value="Dao"/>
+        <plugin type="com.itfsw.mybatis.generator.plugins.TableRenameConfigurationPlugin">
+            <property name="domainObjectRenamingRule.searchString" value="^T"/>
+            <property name="domainObjectRenamingRule.replaceString" value="Test"/>
         </plugin>
 
         <!--jdbc的数据库连接 -->
@@ -51,15 +50,11 @@
 
         <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 要自动生成的表 +++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
         <table tableName="tb">
-            <property name="incrementsColumns" value="inc_f1"/>
-
             <generatedKey column="id" sqlStatement="MySql" identity="true"/>
         </table>
-        <table tableName="tb_keys">
-            <property name="incrementsColumns" value=" inc_f1, inc_f2, inc_f3 "/>
-        </table>
         <table tableName="tb_blobs">
-            <property name="incrementsColumns" value="inc_f1,inc_f3"/>
+            <property name="domainObjectRenamingRule.disable" value="true"/>
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
         </table>
     </context>
 </generatorConfiguration>
