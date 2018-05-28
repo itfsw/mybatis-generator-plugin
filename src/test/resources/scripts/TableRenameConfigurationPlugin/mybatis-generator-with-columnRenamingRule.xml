@@ -25,8 +25,8 @@
     <context id="default" targetRuntime="MyBatis3">
         <!-- 插件 -->
         <plugin type="com.itfsw.mybatis.generator.plugins.TableRenameConfigurationPlugin">
-            <property name="columnRenamingRule.searchString" value="^inc"/>
-            <property name="columnRenamingRule.replaceString" value="Increment"/>
+            <property name="columnRenamingRule.searchString" value="^inc_"/>
+            <property name="columnRenamingRule.replaceString" value="Increment_"/>
         </plugin>
 
         <!--jdbc的数据库连接 -->

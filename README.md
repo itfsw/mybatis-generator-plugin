@@ -1219,7 +1219,8 @@ public class Test {
 ```
 ### 18. 表重命名配置插件
 官方提供了domainObjectRenamingRule(官方最新版本已提供)、columnRenamingRule分别进行生成的表名称和对应表字段的重命名支持，但是它需要每个表单独进行配置，对于常用的如表附带前缀“t_”、字段前缀“f_”这种全局性替换会比较麻烦。   
-该插件提供了一种全局替换机制，当表没有单独指定domainObjectRenamingRule、columnRenamingRule时采用全局性配置。同时该插件会修复官方domainObjectRenamingRule的bug(没有进行正确的首字母大写)。      
+该插件提供了一种全局替换机制，当表没有单独指定domainObjectRenamingRule、columnRenamingRule时采用全局性配置。同时该插件会修复官方domainObjectRenamingRule的bug(没有进行正确的首字母大写)。   
+同时插件提供clientSuffix、exampleSuffix、modelSuffix来修改对应生成的类和文件的结尾（之前issue中有用户希望能把Mapper替换成Dao）。       
 - 全局domainObjectRenamingRule  
 ```xml
 <xml>
@@ -1230,10 +1231,48 @@ public class Test {
     </plugin>
     
     <table tableName="tb">
-        <!-- 这里可以单独表配置，覆盖全局配置 -->
-        <property name="customizedNextVersion" value="false"/>
-        <!-- 指定版本列 -->
-        <property name="versionColumn" value="version"/>
+        <!-- 这里可以禁用全局domainObjectRenamingRule配置 -->
+        <property name="domainObjectRenamingRule.disable" value="true"/>
     </table>
+    
+    <table tableName="tb_ts1">
+        <!-- 当然你也可以使用官方domainObjectRenamingRule的配置来覆盖全局配置 -->
+        <domainObjectRenamingRule searchString="^Tb" replaceString="B"/>
+    </table>
+</xml>
+```
+- 全局columnRenamingRule  
+```xml
+<xml>
+    <!-- 表重命名配置插件 -->
+    <plugin type="com.itfsw.mybatis.generator.plugins.TableRenameConfigurationPlugin">
+        <!-- 需要注意，这里的正则和官方一样是比对替换都是原始表的column名称 -->
+        <property name="columnRenamingRule.searchString" value="^f_"/>
+        <property name="columnRenamingRule.replaceString" value="_"/>
+    </plugin>
+    
+    <table tableName="tb">
+        <!-- 这里可以禁用全局columnRenamingRule配置 -->
+        <property name="columnRenamingRule.disable" value="true"/>
+    </table>
+    
+    <table tableName="tb_ts1">
+        <!-- 当然你也可以使用官方domainObjectRenamingRule的配置来覆盖全局配置 -->
+        <columnRenamingRule searchString="^f_" replaceString="_"/>
+    </table>
+</xml>
+```
+- clientSuffix、exampleSuffix、modelSuffix  
+```xml
+<xml>
+    <!-- 表重命名配置插件 -->
+    <plugin type="com.itfsw.mybatis.generator.plugins.TableRenameConfigurationPlugin">
+        <!-- TbMapper --> TbDao, TbMapper.xml --> TbDao.xml -->
+        <property name="clientSuffix" value="Dao"/>
+        <!-- TbExmaple --> TbQuery -->
+        <property name="exampleSuffix" value="Query"/>
+        <!-- Tb --> TbEntity -->
+        <property name="modelSuffix" value="Entity"/>
+    </plugin>
 </xml>
 ```
