@@ -1269,11 +1269,11 @@ public class Test {
 <xml>
     <!-- 表重命名配置插件 -->
     <plugin type="com.itfsw.mybatis.generator.plugins.TableRenameConfigurationPlugin">
-        <!-- TbMapper --> TbDao, TbMapper.xml --> TbDao.xml -->
+        <!-- TbMapper -> TbDao, TbMapper.xml -> TbDao.xml -->
         <property name="clientSuffix" value="Dao"/>
-        <!-- TbExmaple --> TbQuery -->
+        <!-- TbExmaple -> TbQuery -->
         <property name="exampleSuffix" value="Query"/>
-        <!-- Tb --> TbEntity -->
+        <!-- Tb -> TbEntity -->
         <property name="modelSuffix" value="Entity"/>
     </plugin>
 </xml>
