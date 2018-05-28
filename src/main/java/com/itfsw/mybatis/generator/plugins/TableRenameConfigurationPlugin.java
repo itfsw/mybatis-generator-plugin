@@ -123,6 +123,17 @@ public class TableRenameConfigurationPlugin extends BasePlugin implements ITable
                 BeanUtils.invoke(introspectedTable, IntrospectedTable.class, "calculateModelAttributes");
                 BeanUtils.invoke(introspectedTable, IntrospectedTable.class, "calculateXmlAttributes");
             }
+            // TODO 官方bug临时修复
+            if (tableConfiguration.getDomainObjectRenamingRule() != null) {
+                String domainObjectName = fullyQualifiedTable.getDomainObjectName();
+                // 首字母大写
+                BeanUtils.setProperty(fullyQualifiedTable, "domainObjectName", getCamelCaseString(domainObjectName, true));
+
+                // 重新初始化一下属性
+                BeanUtils.invoke(introspectedTable, IntrospectedTable.class, "calculateJavaClientAttributes");
+                BeanUtils.invoke(introspectedTable, IntrospectedTable.class, "calculateModelAttributes");
+                BeanUtils.invoke(introspectedTable, IntrospectedTable.class, "calculateXmlAttributes");
+            }
             // --------------------- column 重命名 ---------------------------
             if (tableConfiguration.getColumnRenamingRule() == null
                     && this.columnSearchString != null && !this.columnReplaceDisable) {
