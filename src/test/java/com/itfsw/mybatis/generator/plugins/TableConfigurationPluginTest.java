@@ -172,7 +172,6 @@ public class TableConfigurationPluginTest {
         });
     }
 
-
     /**
      * 测试exampleSuffix
      */
@@ -205,6 +204,53 @@ public class TableConfigurationPluginTest {
                 // 执行
                 List list = (List) tbMapper.invoke("selectByExample", tbQuery.getObject());
                 Assert.assertEquals(list.size(), 3);
+            }
+        });
+    }
+
+    /**
+     * 测试modelSuffix
+     */
+    @Test
+    public void testModelSuffix() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/TableConfigurationPlugin/mybatis-generator-with-modelSuffix.xml");
+        MyBatisGenerator myBatisGenerator = tool.generate();
+
+        boolean find = false;
+        for (GeneratedJavaFile file : myBatisGenerator.getGeneratedJavaFiles()) {
+            String name = file.getCompilationUnit().getType().getShortName();
+            if (name.equals("TbEntity")){
+                find = true;
+            }
+        }
+        Assert.assertTrue(find);
+        // 执行一条语句确认其可用
+        tool.generate(() -> DBHelper.resetDB("scripts/TableConfigurationPlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdEqualTo", 4L);
+
+                ObjectUtil tb = new ObjectUtil(loader, packagz + ".TbEntity");
+                tb.set("id", 4L);
+                tb.set("field1", "ts1");
+                tb.set("incF1", 5L);
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateByExample", tb.getObject(), tbExample.getObject());
+                Assert.assertEquals(sql, "update tb set id = 4, field1 = 'ts1', inc_f1 = 5, inc_f2 = null, inc_f3 = null WHERE ( id = '4' )");
+                // 执行
+                int count = (int) tbMapper.invoke("updateByExample", tb.getObject(), tbExample.getObject());
+                Assert.assertEquals(count, 1);
+                // 执行结果查询
+                List list = (List) tbMapper.invoke("selectByExample", tbExample.getObject());
+                ObjectUtil result = new ObjectUtil(list.get(0));
+                Assert.assertEquals(result.get("id"), 4L);
+                Assert.assertEquals(result.get("field1"), "ts1");
+                Assert.assertEquals(result.get("incF1"), 5L);
             }
         });
     }
