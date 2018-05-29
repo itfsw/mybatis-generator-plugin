@@ -23,7 +23,7 @@
 * [查询结果选择性返回插件（SelectSelectivePlugin）](#15-查询结果选择性返回插件)
 * [~~官方ConstructorBased配置BUG临时修正插件（ConstructorBasedBugFixPlugin）~~](#16-官方constructorbased配置bug临时修正插件)
 * [乐观锁插件（OptimisticLockerPlugin）](#17-乐观锁插件)
-* [表重命名配置插件（TableConfigurationPlugin）](#18-表重命名配置插件)
+* [表重命名配置插件（TableRenameConfigurationPlugin）](#18-表重命名配置插件)
 
 ---------------------------------------
 Maven引用：  
