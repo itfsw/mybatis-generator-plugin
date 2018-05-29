@@ -324,7 +324,7 @@ public class UpsertPlugin extends BasePlugin {
         for (int i = 0; i < columns1.size(); i++) {
             IntrospectedColumn introspectedColumn = columns.get(i);
             XmlElement check = new XmlElement("if");
-            check.addAttribute(new Attribute("test", "'" + introspectedColumn.getActualColumnName() + "' == column.value"));
+            check.addAttribute(new Attribute("test", "'" + introspectedColumn.getActualColumnName() + "'.toString() == column.value"));
             check.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, "item.")));
 
             foreachInsertColumnsCheck.addElement(check);
