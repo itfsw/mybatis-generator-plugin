@@ -231,7 +231,7 @@ public class BatchInsertPlugin extends BasePlugin {
         foreachInsertColumns.addAttribute(new Attribute("collection", "selective"));
         foreachInsertColumns.addAttribute(new Attribute("item", "column"));
         foreachInsertColumns.addAttribute(new Attribute("separator", ","));
-        foreachInsertColumns.addElement(new TextElement("${column.value}"));
+        foreachInsertColumns.addElement(new TextElement("${column.escapedColumnName}"));
 
         eles.add(foreachInsertColumns);
 

@@ -295,7 +295,7 @@ public class UpsertPlugin extends BasePlugin {
         foreachInsertColumns.addAttribute(new Attribute("collection", "selective"));
         foreachInsertColumns.addAttribute(new Attribute("item", "column"));
         foreachInsertColumns.addAttribute(new Attribute("separator", ","));
-        foreachInsertColumns.addElement(new TextElement("${column.value}"));
+        foreachInsertColumns.addElement(new TextElement("${column.escapedColumnName}"));
 
         insertEle.addElement(foreachInsertColumns);
 
@@ -342,7 +342,7 @@ public class UpsertPlugin extends BasePlugin {
         foreachSetColumns.addAttribute(new Attribute("collection", "selective"));
         foreachSetColumns.addAttribute(new Attribute("item", "column"));
         foreachSetColumns.addAttribute(new Attribute("separator", ","));
-        foreachSetColumns.addElement(new TextElement("${column.value} = values(${column.value})"));
+        foreachSetColumns.addElement(new TextElement("${column.escapedColumnName} = values(${column.escapedColumnName})"));
 
         document.getRootElement().addElement(insertEle);
         logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加batchUpsertSelective实现方法。");

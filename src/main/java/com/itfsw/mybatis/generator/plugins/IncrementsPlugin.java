@@ -329,7 +329,7 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
                     sb.append("column.value");
 
                     when.addAttribute(new Attribute("test", sb.toString()));
-                    when.addElement(new TextElement("${column.value} = ${column.value} ${record." + FIELD_INC_MAP + "."
+                    when.addElement(new TextElement("${column.escapedColumnName} = ${column.escapedColumnName} ${record." + FIELD_INC_MAP + "."
                             + introspectedColumn.getActualColumnName()
                             + ".value} #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
                     choose.addElement(when);
@@ -338,13 +338,13 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
 
             if (versionColumn == null) {
                 XmlElement otherwise = new XmlElement("otherwise");
-                otherwise.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+                otherwise.addElement(new TextElement("${column.escapedColumnName} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
                 choose.addElement(otherwise);
             } else {
                 XmlElement when = new XmlElement("when");
                 when.addAttribute(new Attribute("test", "column.value != '" + versionColumn.getActualColumnName() + "'.toString()"));
 
-                when.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+                when.addElement(new TextElement("${column.escapedColumnName} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
 
                 choose.addElement(when);
             }

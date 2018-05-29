@@ -336,7 +336,7 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
         keysEle.addAttribute(new Attribute("collection", "selective"));
         keysEle.addAttribute(new Attribute("item", "column"));
         keysEle.addAttribute(new Attribute("separator", ","));
-        keysEle.addElement(new TextElement("${column.value}"));
+        keysEle.addElement(new TextElement("${column.escapedColumnName}"));
 
         XmlElement otherwiseEle = new XmlElement("otherwise");
         chooseEle.addElement(otherwiseEle);

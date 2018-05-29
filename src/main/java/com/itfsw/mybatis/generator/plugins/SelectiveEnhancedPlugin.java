@@ -397,7 +397,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         insertForeachEle.addAttribute(new Attribute("open", "("));
         insertForeachEle.addAttribute(new Attribute("separator", ","));
         insertForeachEle.addAttribute(new Attribute("close", ")"));
-        insertForeachEle.addElement(new TextElement("${column.value}"));
+        insertForeachEle.addElement(new TextElement("${column.escapedColumnName}"));
         insertWhenEle.addElement(insertForeachEle);
 
         XmlElement insertOtherwiseEle = new XmlElement("otherwise");
@@ -483,13 +483,13 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         Element incrementEle = PluginTools.getHook(IIncrementsPluginHook.class).incrementSetsWithSelectiveEnhancedPluginElementGenerated(versionColumn);
         // 普通情况
         if (incrementEle == null && versionColumn == null) {
-            setForeachEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+            setForeachEle.addElement(new TextElement("${column.escapedColumnName} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
         } else if (incrementEle != null) {
             setForeachEle.addElement(incrementEle);
         } else if (versionColumn != null) {
             XmlElement ifEle = new XmlElement("if");
             ifEle.addAttribute(new Attribute("test", "column.value != '" + versionColumn.getActualColumnName() + "'.toString()"));
-            ifEle.addElement(new TextElement("${column.value} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+            ifEle.addElement(new TextElement("${column.escapedColumnName} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
 
             setForeachEle.addElement(ifEle);
         }
