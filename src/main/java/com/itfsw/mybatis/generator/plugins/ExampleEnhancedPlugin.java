@@ -52,6 +52,7 @@ public class ExampleEnhancedPlugin extends BasePlugin {
                 addFactoryMethodToCriteria(topLevelClass, innerClass, introspectedTable);
                 // andIf
                 addAndIfMethodToCriteria(topLevelClass, innerClass, introspectedTable);
+            } else if ("GeneratedCriteria".equals(innerClass.getType().getShortName())) {
                 // column 方法
                 if (this.enableColumnOperate) {
                     addColumnMethodToCriteria(topLevelClass, innerClass, introspectedTable);
