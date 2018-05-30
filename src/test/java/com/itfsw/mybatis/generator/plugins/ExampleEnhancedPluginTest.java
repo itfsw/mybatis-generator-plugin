@@ -23,11 +23,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import java.lang.reflect.*;
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * ---------------------------------------------------------------------------
@@ -42,7 +40,7 @@ public class ExampleEnhancedPluginTest {
      * 初始化数据库
      */
     @BeforeClass
-    public static void init() throws SQLException, IOException, ClassNotFoundException {
+    public static void init() throws SQLException, IOException {
         DBHelper.createDB("scripts/ExampleEnhancedPlugin/init.sql");
     }
 
@@ -62,7 +60,7 @@ public class ExampleEnhancedPluginTest {
 
                 // 调用example方法能正常返回
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExampleCriteria.invoke("example"));
-                Assert.assertEquals(sql, "select id, field1 from tb");
+                Assert.assertEquals(sql, "select id, field1, field2 from tb");
             }
         });
     }
@@ -85,7 +83,7 @@ public class ExampleEnhancedPluginTest {
                 tbExample.invoke("orderBy", order);  // 可变参数方法直接设置order by
 
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
-                Assert.assertEquals(sql, "select id, field1 from tb order by id desc , field1 asc");
+                Assert.assertEquals(sql, "select id, field1, field2 from tb order by id desc , field1 asc");
             }
         });
     }
@@ -98,37 +96,109 @@ public class ExampleEnhancedPluginTest {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ExampleEnhancedPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
-            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) {
-                try {
-                    ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
 
-                    // 1. andIf true
-                    ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
-                    ObjectUtil tbExampleCriteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
 
-                    // 代理实现接口
-                    Object criteriaAdd = Proxy.newProxyInstance(loader, new Class[]{
-                            loader.loadClass(packagz + ".TbExample$Criteria$ICriteriaAdd")
-                    }, new TestInvocationHandler());
-                    Method method = tbExampleCriteria.getMethods("andIf").get(0);
-                    method.invoke(tbExampleCriteria.getObject(), true, criteriaAdd);
+                // 1. andIf true
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil tbExampleCriteria = new ObjectUtil(tbExample.invoke("createCriteria"));
 
-                    String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
-                    Assert.assertEquals(sql, "select id, field1 from tb WHERE ( id = '5' )");
+                // 代理实现接口
+                Object criteriaAdd = Proxy.newProxyInstance(loader, new Class[]{
+                        loader.loadClass(packagz + ".TbExample$Criteria$ICriteriaAdd")
+                }, new TestInvocationHandler());
+                Method method = tbExampleCriteria.getMethods("andIf").get(0);
+                method.invoke(tbExampleCriteria.getObject(), true, criteriaAdd);
 
-                    // 2. andIf false
-                    ObjectUtil tbExample1 = new ObjectUtil(loader, packagz + ".TbExample");
-                    ObjectUtil tbExampleCriteria1 = new ObjectUtil(tbExample1.invoke("createCriteria"));
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
+                Assert.assertEquals(sql, "select id, field1, field2 from tb WHERE ( id = '5' )");
 
-                    method = tbExampleCriteria1.getMethods("andIf").get(0);
-                    method.invoke(tbExampleCriteria1.getObject(), false, criteriaAdd);
+                // 2. andIf false
+                ObjectUtil tbExample1 = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil tbExampleCriteria1 = new ObjectUtil(tbExample1.invoke("createCriteria"));
 
-                    sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample1.getObject());
-                    Assert.assertEquals(sql, "select id, field1 from tb");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Assert.assertTrue(false);
-                }
+                method = tbExampleCriteria1.getMethods("andIf").get(0);
+                method.invoke(tbExampleCriteria1.getObject(), false, criteriaAdd);
+
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample1.getObject());
+                Assert.assertEquals(sql, "select id, field1, field2 from tb");
+            }
+        });
+    }
+
+    /**
+     * 测试配置ModelColumnPlugin插件
+     */
+    @Test
+    public void testWithModelColumnPlugin() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ExampleEnhancedPlugin/mybatis-generator-with-ModelColumnPlugin.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil columnField2 = new ObjectUtil(loader, packagz + ".Tb$Column#field2");
+
+                // 1. EqualTo
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdEqualToColumn", columnField2.getObject());
+
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
+                Assert.assertEquals(sql, "select id, field1, field2 from tb WHERE ( id = field2 )");
+                List list = (List) tbMapper.invoke("selectByExample", tbExample.getObject());
+                Assert.assertEquals(list.size(), 1);
+
+                // 2. NotEqualTo
+                tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdNotEqualToColumn", columnField2.getObject());
+
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
+                Assert.assertEquals(sql, "select id, field1, field2 from tb WHERE ( id <> field2 )");
+                list = (List) tbMapper.invoke("selectByExample", tbExample.getObject());
+                Assert.assertEquals(list.size(), 9);
+
+                // 3. GreaterThan
+                tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdGreaterThanColumn", columnField2.getObject());
+
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
+                Assert.assertEquals(sql, "select id, field1, field2 from tb WHERE ( id > field2 )");
+                list = (List) tbMapper.invoke("selectByExample", tbExample.getObject());
+                Assert.assertEquals(list.size(), 4);
+
+                // 4. GreaterThanOrEqualTo
+                tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdGreaterThanOrEqualToColumn", columnField2.getObject());
+
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
+                Assert.assertEquals(sql, "select id, field1, field2 from tb WHERE ( id >= field2 )");
+                list = (List) tbMapper.invoke("selectByExample", tbExample.getObject());
+                Assert.assertEquals(list.size(), 5);
+
+                // 5. LessThan
+                tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdLessThanColumn", columnField2.getObject());
+
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
+                Assert.assertEquals(sql, "select id, field1, field2 from tb WHERE ( id < field2 )");
+                list = (List) tbMapper.invoke("selectByExample", tbExample.getObject());
+                Assert.assertEquals(list.size(), 5);
+
+                // 6. LessThanOrEqualTo
+                tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdLessThanOrEqualToColumn", columnField2.getObject());
+
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
+                Assert.assertEquals(sql, "select id, field1, field2 from tb WHERE ( id <= field2 )");
+                list = (List) tbMapper.invoke("selectByExample", tbExample.getObject());
+                Assert.assertEquals(list.size(), 6);
             }
         });
     }

@@ -3,12 +3,17 @@ package com.itfsw.mybatis.generator.plugins;
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
+import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
 import com.itfsw.mybatis.generator.plugins.utils.enhanced.InnerInterface;
 import com.itfsw.mybatis.generator.plugins.utils.enhanced.InnerInterfaceWrapperToInnerClass;
+import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
+import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 
 import java.util.List;
+
+import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 
 /**
  * ---------------------------------------------------------------------------
@@ -19,6 +24,17 @@ import java.util.List;
  * ---------------------------------------------------------------------------
  */
 public class ExampleEnhancedPlugin extends BasePlugin {
+    private boolean enableColumnOperate = false;    // 是否启用column的操作
+
+    /**
+     * {@inheritDoc}
+     * @param introspectedTable
+     */
+    @Override
+    public void initialized(IntrospectedTable introspectedTable) {
+        super.initialized(introspectedTable);
+        this.enableColumnOperate = PluginTools.checkDependencyPlugin(context, ModelColumnPlugin.class);
+    }
 
     /**
      * ModelExample Methods 生成
@@ -36,6 +52,10 @@ public class ExampleEnhancedPlugin extends BasePlugin {
                 addFactoryMethodToCriteria(topLevelClass, innerClass, introspectedTable);
                 // andIf
                 addAndIfMethodToCriteria(topLevelClass, innerClass, introspectedTable);
+                // column 方法
+                if (this.enableColumnOperate) {
+                    addColumnMethodToCriteria(topLevelClass, innerClass, introspectedTable);
+                }
             }
         }
 
@@ -51,6 +71,88 @@ public class ExampleEnhancedPlugin extends BasePlugin {
         addOrderByMethodToExample(topLevelClass, introspectedTable);
 
         return true;
+    }
+
+    /**
+     * 添加列操作方法
+     * @param topLevelClass
+     * @param innerClass
+     * @param introspectedTable
+     */
+    private void addColumnMethodToCriteria(TopLevelClass topLevelClass, InnerClass innerClass, IntrospectedTable introspectedTable) {
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getNonBLOBColumns()) {
+            topLevelClass.addImportedType(introspectedColumn.getFullyQualifiedJavaType());
+            // !!!!! Column import比较特殊引入的是外部类
+            topLevelClass.addImportedType(introspectedTable.getRules().calculateAllFieldsClass());
+            // EqualTo
+            FormatTools.addMethodWithBestPosition(innerClass, this.generateSingleValueMethod(introspectedTable, introspectedColumn, "EqualTo", "="));
+            // NotEqualTo
+            FormatTools.addMethodWithBestPosition(innerClass, this.generateSingleValueMethod(introspectedTable, introspectedColumn, "NotEqualTo", "<>"));
+            // GreaterThan
+            FormatTools.addMethodWithBestPosition(innerClass, this.generateSingleValueMethod(introspectedTable, introspectedColumn, "GreaterThan", ">"));
+            // GreaterThanOrEqualTo
+            FormatTools.addMethodWithBestPosition(innerClass, this.generateSingleValueMethod(introspectedTable, introspectedColumn, "GreaterThanOrEqualTo", ">="));
+            // LessThan
+            FormatTools.addMethodWithBestPosition(innerClass, this.generateSingleValueMethod(introspectedTable, introspectedColumn, "LessThan", "<"));
+            // LessThanOrEqualTo
+            FormatTools.addMethodWithBestPosition(innerClass, this.generateSingleValueMethod(introspectedTable, introspectedColumn, "LessThanOrEqualTo", "<="));
+        }
+    }
+
+    /**
+     * 生成column操作的具体方法
+     * @param introspectedTable
+     * @param introspectedColumn
+     * @param nameFragment
+     * @param operator
+     * @return
+     */
+    private Method generateSingleValueMethod(IntrospectedTable introspectedTable, IntrospectedColumn introspectedColumn, String nameFragment, String operator) {
+        // 方法名
+        StringBuilder sb = new StringBuilder();
+        sb.append(introspectedColumn.getJavaProperty());
+        sb.setCharAt(0, Character.toUpperCase(sb.charAt(0)));
+        sb.insert(0, "and");
+        sb.append(nameFragment);
+        sb.append("Column");
+
+        Method method = JavaElementGeneratorTools.generateMethod(
+                sb.toString(),
+                JavaVisibility.PUBLIC,
+                FullyQualifiedJavaType.getCriteriaInstance(),
+                new Parameter(
+                        new FullyQualifiedJavaType(introspectedTable.getRules().calculateAllFieldsClass().getShortName() + "." + ModelColumnPlugin.ENUM_NAME),
+                        "column"
+                )
+        );
+        commentGenerator.addGeneralMethodComment(method, introspectedTable);
+
+        // 方法体
+        sb.setLength(0);
+        if (stringHasValue(introspectedColumn.getTypeHandler())) {
+            sb.append("add");
+            sb.append(introspectedColumn.getJavaProperty());
+            sb.setCharAt(3, Character.toUpperCase(sb.charAt(3)));
+            sb.append("Criterion(");
+        } else {
+            sb.append("addCriterion(");
+        }
+        sb.append("new StringBuilder(\"");
+        sb.append(MyBatis3FormattingUtilities.getAliasedActualColumnName(introspectedColumn));
+        sb.append(" ");
+        sb.append(operator);
+        sb.append(" \").append(");
+        sb.append("column.");
+        sb.append(ModelColumnPlugin.METHOD_GET_ESCAPED_COLUMN_NAME);
+        sb.append("()).toString());");
+
+        JavaElementGeneratorTools.generateMethodBody(
+                method,
+                sb.toString(),
+                "return (Criteria) this;"
+        );
+
+        return method;
     }
 
     /**

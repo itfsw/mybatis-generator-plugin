@@ -245,11 +245,7 @@ public class ModelColumnPlugin extends BasePlugin {
         JavaElementGeneratorTools.generateMethodBody(
                 mGetEscapedColumnName,
                 "if (this.isColumnNameDelimited) {",
-                "StringBuilder sb = new StringBuilder();",
-                "sb.append(" + CONST_BEGINNING_DELIMITER + ");",
-                "sb.append(this.column);",
-                "sb.append(" + CONST_ENDING_DELIMITER + ");",
-                "return sb.toString();",
+                "return new StringBuilder().append(" + CONST_BEGINNING_DELIMITER + ").append(this.column).append(" + CONST_ENDING_DELIMITER + ").toString();",
                 "} else {",
                 "return this.column;",
                 "}"
