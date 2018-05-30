@@ -22,6 +22,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.lang.reflect.Array;
+import java.util.List;
 
 /**
  * ---------------------------------------------------------------------------
@@ -61,6 +62,17 @@ public class BugFixedTest {
                 Assert.assertEquals(sql, "insert into tb ( id , field1 , `table` ) values ( 121 , 'inc_001' , 'tb' )");
                 Object result = tbMapper.invoke("insertSelective", tb.getObject(), columns);
                 Assert.assertEquals(result, 1);
+
+                // 执行查询
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdLessThan", 160l);
+                tbExample.set("orderByClause", TbColumnTable.invoke("asc"));
+
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns);
+                Assert.assertEquals(sql, "select id , field1 , `table` from tb Test WHERE ( Test.id < '160' ) order by `table` ASC");
+                ObjectUtil result1 = new ObjectUtil(((List)tbMapper.invoke("selectByExampleSelective", tbExample.getObject(), columns)).get(0));
+                Assert.assertEquals(result1.get("table"), "tb");
             }
         });
     }

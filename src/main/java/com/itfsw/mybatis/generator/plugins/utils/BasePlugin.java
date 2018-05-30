@@ -107,6 +107,9 @@ public class BasePlugin extends PluginAdapter {
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
         super.initialized(introspectedTable);
+        if (StringUtility.stringHasValue(introspectedTable.getTableConfiguration().getAlias())){
+            warnings.add("itfsw:插件" + this.getClass().getTypeName() + "请不要配置alias属性，这个属性官方支持也很混乱，导致插件支持会存在问题！");
+        }
         PluginTools.getHook(ITableConfigurationHook.class).tableConfiguration(introspectedTable);
     }
 }

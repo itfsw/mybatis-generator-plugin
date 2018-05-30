@@ -37,11 +37,9 @@ public class ModelColumnPlugin extends BasePlugin {
     public static final String ENUM_NAME = "Column";  // 内部Enum名
     public static final String METHOD_EXCLUDES = "excludes";   // 方法名
     public static final String METHOD_GET_ESCAPED_COLUMN_NAME = "getEscapedColumnName";    // 方法名
-    public static final String METHOD_GET_ALIASED_ESCAPED_COLUMN_NAME = "getAliasedEscapedColumnName";    // 方法名
 
     public static final String CONST_BEGINNING_DELIMITER = "BEGINNING_DELIMITER";   // const
     public static final String CONST_ENDING_DELIMITER = "ENDING_DELIMITER";   // const
-    public static final String CONST_TABLE_ALIAS = "TABLE_ALIAS";   // const
 
     /**
      * Model Methods 生成
@@ -203,14 +201,14 @@ public class ModelColumnPlugin extends BasePlugin {
         Method desc = new Method("desc");
         desc.setVisibility(JavaVisibility.PUBLIC);
         desc.setReturnType(FullyQualifiedJavaType.getStringInstance());
-        desc.addBodyLine("return this.column + \" DESC\";");
+        desc.addBodyLine("return this." + METHOD_GET_ESCAPED_COLUMN_NAME + "() + \" DESC\";");
         commentGenerator.addGeneralMethodComment(desc, introspectedTable);
         FormatTools.addMethodWithBestPosition(innerEnum, desc);
 
         Method asc = new Method("asc");
         asc.setVisibility(JavaVisibility.PUBLIC);
         asc.setReturnType(FullyQualifiedJavaType.getStringInstance());
-        asc.addBodyLine("return this.column + \" ASC\";");
+        asc.addBodyLine("return this." + METHOD_GET_ESCAPED_COLUMN_NAME + "() + \" ASC\";");
         commentGenerator.addGeneralMethodComment(asc, introspectedTable);
         FormatTools.addMethodWithBestPosition(innerEnum, asc);
         logger.debug("itfsw(数据Model属性对应Column获取插件):" + topLevelClass.getType().getShortName() + ".Column增加asc()和desc()方法。");
@@ -258,51 +256,6 @@ public class ModelColumnPlugin extends BasePlugin {
         );
         FormatTools.addMethodWithBestPosition(innerEnum, mGetEscapedColumnName);
         logger.debug("itfsw(数据Model属性对应Column获取插件):" + topLevelClass.getType().getShortName() + ".Column增加getEscapedColumnName方法。");
-
-        // getAliasedEscapedColumnName
-        if (StringUtility.stringHasValue(introspectedTable.getTableConfiguration().getAlias())) {
-            // 生成常量
-            Field tableAliasField = JavaElementGeneratorTools.generateField(
-                    CONST_TABLE_ALIAS,
-                    JavaVisibility.PRIVATE,
-                    FullyQualifiedJavaType.getStringInstance(),
-                    "\"" + StringUtility.escapeStringForJava(introspectedTable.getTableConfiguration().getAlias()) + "\""
-            );
-            tableAliasField.setStatic(true);
-            tableAliasField.setFinal(true);
-            commentGenerator.addFieldComment(tableAliasField, introspectedTable);
-            innerEnum.addField(tableAliasField);
-
-            Method mGetAliasedEscapedColumnName = JavaElementGeneratorTools.generateMethod(
-                    METHOD_GET_ALIASED_ESCAPED_COLUMN_NAME,
-                    JavaVisibility.PUBLIC,
-                    FullyQualifiedJavaType.getStringInstance()
-            );
-            commentGenerator.addGeneralMethodComment(mGetAliasedEscapedColumnName, introspectedTable);
-            JavaElementGeneratorTools.generateMethodBody(
-                    mGetAliasedEscapedColumnName,
-                    "StringBuilder sb = new StringBuilder();",
-                    "sb.append(" + CONST_TABLE_ALIAS + ");",
-                    "sb.append('.');",
-                    "sb.append(this.getEscapedColumnName());",
-                    "return sb.toString();"
-            );
-            FormatTools.addMethodWithBestPosition(innerEnum, mGetAliasedEscapedColumnName);
-            logger.debug("itfsw(数据Model属性对应Column获取插件):" + topLevelClass.getType().getShortName() + ".Column增加getAliasedEscapedColumnName方法。");
-        } else {
-            Method mGetAliasedEscapedColumnName = JavaElementGeneratorTools.generateMethod(
-                    METHOD_GET_ALIASED_ESCAPED_COLUMN_NAME,
-                    JavaVisibility.PUBLIC,
-                    FullyQualifiedJavaType.getStringInstance()
-            );
-            commentGenerator.addGeneralMethodComment(mGetAliasedEscapedColumnName, introspectedTable);
-            JavaElementGeneratorTools.generateMethodBody(
-                    mGetAliasedEscapedColumnName,
-                    "return this." + METHOD_GET_ESCAPED_COLUMN_NAME + "();"
-            );
-            FormatTools.addMethodWithBestPosition(innerEnum, mGetAliasedEscapedColumnName);
-            logger.debug("itfsw(数据Model属性对应Column获取插件):" + topLevelClass.getType().getShortName() + ".Column增加getAliasedEscapedColumnName方法。");
-        }
 
         return innerEnum;
     }

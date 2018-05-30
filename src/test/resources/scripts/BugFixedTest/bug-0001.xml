@@ -28,6 +28,7 @@
         
         <!-- 插件 -->
         <plugin type="com.itfsw.mybatis.generator.plugins.SelectiveEnhancedPlugin"/>
+        <plugin type="com.itfsw.mybatis.generator.plugins.SelectSelectivePlugin"/>
         <plugin type="com.itfsw.mybatis.generator.plugins.ModelColumnPlugin"/>
 
         <!--jdbc的数据库连接 -->
