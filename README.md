@@ -226,7 +226,8 @@ public class Test {
 * Criteria的快速返回example()方法。  
 * Criteria链式调用增强，以前如果有按条件增加的查询语句会打乱链式查询构建，现在有了andIf(boolean ifAdd, CriteriaAdd add)方法可一直使用链式调用下去。
 * Example增强了setOrderByClause方法，新增orderBy(String orderByClause)方法直接返回example，增强链式调用，可以一路.下去了。
-* 继续增强orderBy(String orderByClause)方法，增加orderBy(String ... orderByClauses)方法，配合数据Model属性对应Column获取插件（ModelColumnPlugin）使用效果更佳。   
+* 继续增强orderBy(String orderByClause)方法，增加orderBy(String ... orderByClauses)方法，配合数据Model属性对应Column获取插件（ModelColumnPlugin）使用效果更佳。 
+* 增加基于column的操作，当配置了[数据Model属性对应Column获取插件（ModelColumnPlugin）](#8-数据model属性对应column获取插件)插件时，提供column之间的比对操作。 
 插件：
 ```xml
 <!-- Example Criteria 增强插件 -->
@@ -299,6 +300,19 @@ public class Test {
                 .orderBy("field1 DESC")
                 // 这个配合数据Model属性对应Column获取插件（ModelColumnPlugin）使用
                 .orderBy(Tb.Column.field1.asc(), Tb.Column.field3.desc())
+        );
+        
+        // -----------------------------------column-----------------------------------
+        this.tbMapper.selectByExample(
+                new TbExample()
+                .createCriteria()
+                .andField1EqualToColumn(Tb.Column.field2)   // where field1 = field2
+                .andField1NotEqualToColumn(Tb.Column.field2)    // where field1 <> field2
+                .andField1GreaterThanColumn(Tb.Column.field2)   // where field1 > field2
+                .andField1GreaterThanOrEqualToColumn(Tb.Column.field2)  // where field1 >= field2
+                .andField1LessThanColumn(Tb.Column.field2)  // where field1 < field2
+                .andField1LessThanOrEqualToColumn(Tb.Column.field2) // where field1 <= field2
+                .example()
         );
     }
 }

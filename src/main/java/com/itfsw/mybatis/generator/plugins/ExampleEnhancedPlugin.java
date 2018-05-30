@@ -80,10 +80,10 @@ public class ExampleEnhancedPlugin extends BasePlugin {
      * @param introspectedTable
      */
     private void addColumnMethodToCriteria(TopLevelClass topLevelClass, InnerClass innerClass, IntrospectedTable introspectedTable) {
+        // !!!!! Column import比较特殊引入的是外部类
+        topLevelClass.addImportedType(introspectedTable.getRules().calculateAllFieldsClass());
         for (IntrospectedColumn introspectedColumn : introspectedTable.getNonBLOBColumns()) {
             topLevelClass.addImportedType(introspectedColumn.getFullyQualifiedJavaType());
-            // !!!!! Column import比较特殊引入的是外部类
-            topLevelClass.addImportedType(introspectedTable.getRules().calculateAllFieldsClass());
             // EqualTo
             FormatTools.addMethodWithBestPosition(innerClass, this.generateSingleValueMethod(introspectedTable, introspectedColumn, "EqualTo", "="));
             // NotEqualTo
