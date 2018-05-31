@@ -348,7 +348,7 @@ public class Test {
         // 构建插入数据
         List<Tb> list = new ArrayList<>();
         list.add(
-                new Tb.Builder()
+                Tb.builder()
                 .field1(0)
                 .field2("xx0")
                 .field3(0)
@@ -356,7 +356,7 @@ public class Test {
                 .build()
         );
         list.add(
-                new Tb.Builder()
+                Tb.builder()
                 .field1(1)
                 .field2("xx1")
                 .field3(1)
@@ -434,7 +434,7 @@ public class Test {
         );
         
         // 4. 逻辑删除和未删除常量
-        Tb tb = new Tb.Builder()
+        Tb tb = Tb.builder()
                 .delFlag(Tb.IS_DELETED)   // 删除
                 .delFlag(Tb.NOT_DELETED)    // 未删除
                 .build()
@@ -486,7 +486,7 @@ public class Test {
         // 3. 配合批量插入插件（BatchInsertPlugin）使用实现按需插入指定列
         List<Tb> list = new ArrayList<>();
         list.add(
-                new Tb.Builder()
+                Tb.builder()
                 .field1(0)
                 .field2("xx0")
                 .field3(0)
@@ -494,7 +494,7 @@ public class Test {
                 .build()
         );
         list.add(
-                new Tb.Builder()
+                Tb.builder()
                 .field1(1)
                 .field2("xx1")
                 .field3(1)
@@ -536,7 +536,7 @@ public class Test {
 public class Test {
     public static void main(String[] args) {
         // 1. 未入库数据入库，执行insert
-        Tb tb = new Tb.Builder()
+        Tb tb = Tb.builder()
                 .field1(1)
                 .field2("xx0")
                 .delFlag(Tb.DEL_FLAG_ON)
@@ -547,7 +547,7 @@ public class Test {
         int k1 = this.tbMapper.upsert(tb);
 
         // 3. 类似insertSelective实现选择入库
-        Tb tb1 = new Tb.Builder()
+        Tb tb1 = Tb.builder()
                 .field1(1)
                 .field2("xx0")
                 .build();
@@ -557,7 +557,7 @@ public class Test {
 
         // --------------------------------- allowMultiQueries=true ------------------------------
         // 4. 开启allowMultiQueries后增加upsertByExample，upsertByExampleSelective但强力建议不要使用（需保证团队没有使用statement提交sql,否则会存在sql注入风险）
-        Tb tb2 = new Tb.Builder()
+        Tb tb2 = Tb.builder()
                 .field1(1)
                 .field2("xx0")
                 .field3(1003)
@@ -581,17 +581,17 @@ public class Test {
         // upsertByExampleSelective 用法类似
         
         // 当Model WithBLOBs 存在时上述方法增加对应的 WithBLOBs 方法，举例如下：
-        TbWithBLOBs tb3 = new Tb.Builder()
-                .field1(1)
-                .field2("xx0")
-                .delFlag(Tb.DEL_FLAG_ON)
-                .build();
+        TbWithBLOBs tb3 = Tb.builder()
+                            .field1(1)
+                            .field2("xx0")
+                            .delFlag(Tb.DEL_FLAG_ON)
+                            .build();
         int k6 = this.tbMapper.upsertWithBLOBs(tb);
         
         // --------------------------------- allowBatchUpsert=true ------------------------------
         List<Tb> list = new ArrayList<>();
         list.add(
-                new Tb.Builder()
+                Tb.builder()
                 .field1(0)
                 .field2("xx0")
                 .field3(0)
@@ -599,7 +599,7 @@ public class Test {
                 .build()
         );
         list.add(
-                new Tb.Builder()
+                Tb.builder()
                 .field1(1)
                 .field2("xx1")
                 .field3(1)
@@ -627,7 +627,7 @@ public class Test {
     public static void main(String[] args) {
         // ------------------------------ 新版本（SelectiveEnhancedPlugin）--------------------------------
         // 1. 指定插入或更新字段
-        Tb tb = new Tb.Builder()
+        Tb tb = Tb.builder()
                 .field1(1)
                 .field2("xx2")
                 .field3(1)
@@ -656,7 +656,7 @@ public class Test {
 
         // 2. 更新某些字段为null
         this.tbMapper.updateByPrimaryKeySelective(
-                new Tb.Builder()
+                Tb.builder()
                 .id(1l)
                 .field1(null)   // 方便展示，不用设也可以
                 .build(),
@@ -1104,7 +1104,7 @@ Mybatis Generator是原生支持自定义注释的（commentGenerator配置type�
 public class Test {
     public static void main(String[] args) {
         // 在构建更新对象时，配置了增量支持的字段会增加传入增量枚举的方法
-        Tb tb = new Tb.Builder()
+        Tb tb = Tb.builder()
                 .id(102)
                 .field1(1, Tb.Builder.Inc.INC)  // 字段1 统计增加1
                 .field2(2, Tb.Builder.Inc.DEC)  // 字段2 统计减去2
@@ -1214,21 +1214,21 @@ public class Test {
         // ============================= 使用默认版本号生成策略 ===========================
         this.tbMapper.updateWithVersionByPrimaryKey(
                 100,    // 版本号
-                new Tb.Builder()
-                    .id(102)
-                    .field1("ts1")
-                    .build()
+                Tb.builder()
+                  .id(102)
+                  .field1("ts1")
+                  .build()
         );
         // 对应生成的Sql: update tb set version = version + 1, field1 = 'ts1' where version = 100 and id = 102
         
         // ============================= 使用自定义版本号生成策略 ===========================
         this.tbMapper.updateWithVersionByPrimaryKey(
                 100,    // 版本号
-                new Tb.Builder()
-                    .id(102)
-                    .field1("ts1")
-                    .nextVersion(System.currentTimeMillis())    // 传入nextVersion
-                    .build()
+                Tb.builder()
+                  .id(102)
+                  .field1("ts1")
+                  .nextVersion(System.currentTimeMillis())    // 传入nextVersion
+                  .build()
         );
         // 对应生成的Sql: update tb set version = 1525773888559, field1 = 'ts1' where version = 100 and id = 102
     }
