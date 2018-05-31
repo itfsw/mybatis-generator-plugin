@@ -52,11 +52,15 @@ public class XmlElementGeneratorTools {
      * @return the selectKey element
      */
     public static Element getSelectKey(IntrospectedColumn introspectedColumn, GeneratedKey generatedKey) {
+        return getSelectKey(introspectedColumn, generatedKey, null);
+    }
+
+    public static Element getSelectKey(IntrospectedColumn introspectedColumn, GeneratedKey generatedKey, String prefix) {
         String identityColumnType = introspectedColumn.getFullyQualifiedJavaType().getFullyQualifiedName();
 
         XmlElement answer = new XmlElement("selectKey");
         answer.addAttribute(new Attribute("resultType", identityColumnType));
-        answer.addAttribute(new Attribute("keyProperty", introspectedColumn.getJavaProperty()));
+        answer.addAttribute(new Attribute("keyProperty", (prefix == null ? "" : prefix) + introspectedColumn.getJavaProperty()));
         answer.addAttribute(new Attribute("order", generatedKey.getMyBatis3Order()));
 
         answer.addElement(new TextElement(generatedKey.getRuntimeSqlStatement()));

@@ -169,11 +169,9 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
             // warning has already been reported
             if (introspectedColumn != null) {
                 if (gk.isJdbcStandard()) {
-                    answer.addAttribute(new Attribute("useGeneratedKeys", "true"));
-                    answer.addAttribute(new Attribute("keyProperty", introspectedColumn.getJavaProperty()));
-                    answer.addAttribute(new Attribute("keyColumn", introspectedColumn.getActualColumnName()));
+                    XmlElementGeneratorTools.useGeneratedKeys(answer, introspectedTable, "record.");
                 } else {
-                    answer.addElement(XmlElementGeneratorTools.getSelectKey(introspectedColumn, gk));
+                    answer.addElement(XmlElementGeneratorTools.getSelectKey(introspectedColumn, gk, "record."));
                 }
             }
         }

@@ -76,4 +76,35 @@ public class BugFixedTest {
             }
         });
     }
+
+    /**
+     * insertSelective 因为集成SelectiveEnhancedPlugin，传入参数变成map,自增ID返回要修正
+     * @throws Exception
+     */
+    @Test
+    public void bug0002() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/bug-0002.xml");
+        tool.generate(() -> DBHelper.createDB("scripts/BugFixedTest/bug-0002.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
+                tb.set("field1", "ts1");
+
+                // selective
+                ObjectUtil TbColumnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
+                Object columns = Array.newInstance(TbColumnField1.getCls(), 1);
+                Array.set(columns, 0, TbColumnField1.getObject());
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "insertSelective", tb.getObject(), columns);
+                Assert.assertEquals(sql, "insert into tb ( field1 ) values ( 'ts1' )");
+                Object result = tbMapper.invoke("insertSelective", tb.getObject(), columns);
+                Assert.assertEquals(result, 1);
+                // 自增ID
+                Assert.assertEquals(tb.get("id"), 1L);
+            }
+        });
+    }
 }
