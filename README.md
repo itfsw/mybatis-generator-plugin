@@ -393,9 +393,9 @@ public class Test {
         <!-- 逻辑删除-未删除值 -->
         <property name="logicalUnDeleteValue" value="0"/>
         <!-- 逻辑删除常量名称，不配置默认为 IS_DELETED -->
-        <property name="logicalDeleteValue" value="DEL"/>
+        <property name="logicalDeleteValue" value="IS_DELETED"/>
         <!-- 逻辑删除常量（未删除）名称，不配置默认为 NOT_DELETED -->
-        <property name="logicalUnDeleteValue" value="UN_DEL"/>
+        <property name="logicalUnDeleteValue" value="NOT_DELETED"/>
     </plugin>
     
     <table tableName="tb">
