@@ -393,9 +393,9 @@ public class Test {
         <!-- 逻辑删除-未删除值 -->
         <property name="logicalUnDeleteValue" value="0"/>
         <!-- 逻辑删除常量名称，不配置默认为 IS_DELETED -->
-        <property name="logicalDeleteValue" value="IS_DELETED"/>
+        <property name="logicalDeleteConstName" value="IS_DELETED"/>
         <!-- 逻辑删除常量（未删除）名称，不配置默认为 NOT_DELETED -->
-        <property name="logicalUnDeleteValue" value="NOT_DELETED"/>
+        <property name="logicalUnDeleteConstName" value="NOT_DELETED"/>
     </plugin>
     
     <table tableName="tb">
@@ -1177,13 +1177,13 @@ public class Test {
 <xml>
     <!-- 乐观锁插件 -->
     <plugin type="com.itfsw.mybatis.generator.plugins.OptimisticLockerPlugin">
-        <!-- 是否启用自定义nextVersion, 默认不启用使用(使用sql的 set column = column + 1) -->
-        <property name="customizedNextVersion" value="true"/>
+        <!-- 是否启用自定义nextVersion，默认不启用(插件会默认使用sql的 set column = column + 1) -->
+        <property name="customizedNextVersion" value="false"/>
     </plugin>
     
     <table tableName="tb">
         <!-- 这里可以单独表配置，覆盖全局配置 -->
-        <property name="customizedNextVersion" value="false"/>
+        <property name="customizedNextVersion" value="true"/>
         <!-- 指定版本列 -->
         <property name="versionColumn" value="version"/>
     </table>
