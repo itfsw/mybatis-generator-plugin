@@ -13,8 +13,6 @@ import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 
 import java.util.List;
 
-import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
-
 /**
  * ---------------------------------------------------------------------------
  * Example 增强插件
@@ -130,14 +128,7 @@ public class ExampleEnhancedPlugin extends BasePlugin {
 
         // 方法体
         sb.setLength(0);
-        if (stringHasValue(introspectedColumn.getTypeHandler())) {
-            sb.append("add");
-            sb.append(introspectedColumn.getJavaProperty());
-            sb.setCharAt(3, Character.toUpperCase(sb.charAt(3)));
-            sb.append("Criterion(");
-        } else {
-            sb.append("addCriterion(");
-        }
+        sb.append("addCriterion(");
         sb.append("new StringBuilder(\"");
         sb.append(MyBatis3FormattingUtilities.getAliasedActualColumnName(introspectedColumn));
         sb.append(" ");

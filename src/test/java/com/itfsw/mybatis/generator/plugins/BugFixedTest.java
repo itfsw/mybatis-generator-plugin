@@ -109,6 +109,21 @@ public class BugFixedTest {
     }
 
     /**
+     * typeHandler 导致的问题
+     */
+    @Test
+    public void issues36() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/issues-36.xml");
+        tool.generate(() -> DBHelper.createDB("scripts/BugFixedTest/issues-36.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // Example 编译报错
+                new ObjectUtil(loader, packagz + ".TbExample");
+            }
+        });
+    }
+
+    /**
      * 乐观锁插件好像变量作用域问题导致，前一个表的配置会影响后一个表配置
      */
     @Test
