@@ -71,7 +71,7 @@ public class BugFixedTest {
 
                 sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns);
                 Assert.assertEquals(sql, "select id , field1 , `table` from tb Test WHERE ( Test.id < '160' ) order by `table` ASC");
-                ObjectUtil result1 = new ObjectUtil(((List)tbMapper.invoke("selectByExampleSelective", tbExample.getObject(), columns)).get(0));
+                ObjectUtil result1 = new ObjectUtil(((List) tbMapper.invoke("selectByExampleSelective", tbExample.getObject(), columns)).get(0));
                 Assert.assertEquals(result1.get("table"), "tb");
             }
         });
@@ -104,6 +104,26 @@ public class BugFixedTest {
                 Assert.assertEquals(result, 1);
                 // 自增ID
                 Assert.assertEquals(tb.get("id"), 1L);
+            }
+        });
+    }
+
+    /**
+     * 乐观锁插件好像变量作用域问题导致，前一个表的配置会影响后一个表配置
+     */
+    @Test
+    public void issues39() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/issues-39.xml");
+        tool.generate(() -> DBHelper.createDB("scripts/BugFixedTest/issues-39.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+                // 第一个生成对应方法
+                Assert.assertEquals(tbMapper.getMethods(OptimisticLockerPlugin.METHOD_DELETE_WITH_VERSION_BY_EXAMPLE).size(), 1);
+
+                ObjectUtil tb1Mapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".Tb1Mapper")));
+                // 第一个生成对应方法
+                Assert.assertEquals(tb1Mapper.getMethods(OptimisticLockerPlugin.METHOD_DELETE_WITH_VERSION_BY_EXAMPLE).size(), 0);
             }
         });
     }

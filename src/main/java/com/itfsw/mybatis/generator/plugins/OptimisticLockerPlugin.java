@@ -69,6 +69,8 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
             if (this.versionColumn == null) {
                 warnings.add("itfsw(乐观锁插件):表" + introspectedTable.getFullyQualifiedTable() + "配置的版本列(" + introspectedTable.getTableConfigurationProperty(PRO_VERSION_COLUMN) + ")没有找到！");
             }
+        } else {
+            this.versionColumn = null;
         }
 
         // 自定义nextVersion
