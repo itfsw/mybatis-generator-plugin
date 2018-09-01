@@ -31,10 +31,13 @@ import java.util.List;
  * ---------------------------------------------------------------------------
  * 增加分页方法
  * ---------------------------------------------------------------------------
+ * @deprecated  SupportAnnotationLimitPlugin 中已经加强了注解分页查询
+ * @see com.itfsw.mybatis.generator.plugins.SupportAnnotationLimitPlugin
  * @author: hewei
  * @time:2016/12/29 18:14
  * ---------------------------------------------------------------------------
  */
+@Deprecated
 public class LimitPlugin extends BasePlugin {
     /**
      * {@inheritDoc}
