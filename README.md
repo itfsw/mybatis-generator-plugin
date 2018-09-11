@@ -65,6 +65,60 @@ MyBatis Generator 参考配置（插件依赖应该配置在mybatis-generator-ma
 </plugin>
 ```
 ---------------------------------------
+gradle集成[[issues#41]](https://github.com/itfsw/mybatis-generator-plugin/issues/41)），感谢[masa-kunikata](https://github.com/masa-kunikata)提供的脚本。
+```gradle
+// https://gist.github.com/masa-kunikata/daaf0f51a8ab9b808f61805407e1654c
+buildscript {
+    repositories {
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+    dependencies {
+        classpath "gradle.plugin.com.arenagod.gradle:mybatis-generator-plugin:1.4"
+    }
+}
+
+apply plugin: 'java-library'
+apply plugin: "com.arenagod.gradle.MybatisGenerator"
+apply plugin: 'eclipse'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+
+def mybatisGeneratorCore = 'org.mybatis.generator:mybatis-generator-core:1.3.7'
+def itfswMybatisGeneratorPlugin = 'com.itfsw:mybatis-generator-plugin:1.2.10'
+
+mybatisGenerator {
+  verbose = false
+  configFile = "config/mybatisGenerator/generatorConfig.xml"
+
+  dependencies {
+    mybatisGenerator project(':')
+    mybatisGenerator itfswMybatisGeneratorPlugin
+    mybatisGenerator mybatisGeneratorCore
+  }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile mybatisGeneratorCore
+    compile itfswMybatisGeneratorPlugin
+    testCompile 'junit:junit:4.12'
+}
+
+def defaultEncoding = 'UTF-8'
+
+compileJava {
+    options.encoding = defaultEncoding
+}
+compileTestJava {
+    options.encoding = defaultEncoding
+}
+```
+---------------------------------------
 ### 1. 查询单条数据插件
 对应表Mapper接口增加了方法  
 插件：
