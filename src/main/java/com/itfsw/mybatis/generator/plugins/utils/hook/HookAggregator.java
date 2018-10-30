@@ -43,7 +43,14 @@ import java.util.List;
  * @time:2018/4/27 11:33
  * ---------------------------------------------------------------------------
  */
-public class HookAggregator implements IUpsertPluginHook, IModelBuilderPluginHook, IIncrementsPluginHook, IOptimisticLockerPluginHook, ISelectOneByExamplePluginHook, ITableConfigurationHook {
+public class HookAggregator implements IUpsertPluginHook,
+        IModelBuilderPluginHook,
+        IIncrementsPluginHook,
+        IOptimisticLockerPluginHook,
+        ISelectOneByExamplePluginHook,
+        ITableConfigurationHook,
+        ILogicalDeletePluginHook {
+
     protected static final Logger logger = LoggerFactory.getLogger(BasePlugin.class); // 日志
     private final static HookAggregator instance = new HookAggregator();
     private Context context;
@@ -256,7 +263,49 @@ public class HookAggregator implements IUpsertPluginHook, IModelBuilderPluginHoo
     @Override
     public void tableConfiguration(IntrospectedTable introspectedTable) {
         if (!this.getPlugins(ITableConfigurationHook.class).isEmpty()) {
-           this.getPlugins(ITableConfigurationHook.class).get(0).tableConfiguration(introspectedTable);
+            this.getPlugins(ITableConfigurationHook.class).get(0).tableConfiguration(introspectedTable);
         }
+    }
+
+    // ============================================= ILogicalDeletePluginHook ==============================================
+
+    @Override
+    public boolean clientLogicalDeleteByExampleMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        for (ILogicalDeletePluginHook plugin : this.getPlugins(ILogicalDeletePluginHook.class)) {
+            if (!plugin.clientLogicalDeleteByExampleMethodGenerated(method, interfaze, introspectedTable)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean clientLogicalDeleteByPrimaryKeyMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        for (ILogicalDeletePluginHook plugin : this.getPlugins(ILogicalDeletePluginHook.class)) {
+            if (!plugin.clientLogicalDeleteByPrimaryKeyMethodGenerated(method, interfaze, introspectedTable)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean sqlMapLogicalDeleteByExampleElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+        for (ILogicalDeletePluginHook plugin : this.getPlugins(ILogicalDeletePluginHook.class)) {
+            if (!plugin.sqlMapLogicalDeleteByExampleElementGenerated(element, introspectedTable)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean sqlMapLogicalDeleteByPrimaryKeyElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+        for (ILogicalDeletePluginHook plugin : this.getPlugins(ILogicalDeletePluginHook.class)) {
+            if (!plugin.sqlMapLogicalDeleteByPrimaryKeyElementGenerated(element, introspectedTable)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

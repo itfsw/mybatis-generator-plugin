@@ -17,6 +17,7 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.*;
+import com.itfsw.mybatis.generator.plugins.utils.hook.ILogicalDeletePluginHook;
 import com.itfsw.mybatis.generator.plugins.utils.hook.IModelBuilderPluginHook;
 import com.itfsw.mybatis.generator.plugins.utils.hook.IOptimisticLockerPluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
@@ -38,9 +39,11 @@ import java.util.*;
  * @time:2018/4/26 10:24
  * ---------------------------------------------------------------------------
  */
-public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderPluginHook {
+public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderPluginHook, ILogicalDeletePluginHook {
     public static final String METHOD_DELETE_WITH_VERSION_BY_EXAMPLE = "deleteWithVersionByExample";  // 方法名
     public static final String METHOD_DELETE_WITH_VERSION_BY_PRIMARY_KEY = "deleteWithVersionByPrimaryKey";  // 方法名
+    public static final String METHOD_LOGICAL_DELETE_WITH_VERSION_BY_EXAMPLE = "logicalDeleteWithVersionByExample";  // 方法名
+    public static final String METHOD_LOGICAL_DELETE_WITH_VERSION_BY_PRIMARY_KEY = "logicalDeleteWithVersionByPrimaryKey";  // 方法名
     public static final String METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_SELECTIVE = "updateWithVersionByExampleSelective";  // 方法名
     public static final String METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_WITH_BLOBS = "updateWithVersionByExampleWithBLOBs";  // 方法名
     public static final String METHOD_UPDATE_WITH_VERSION_BY_EXAMPLE_WITHOUT_BLOBS = "updateWithVersionByExample";  // 方法名
@@ -111,6 +114,28 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
             );
         }
         return super.clientDeleteByPrimaryKeyMethodGenerated(method, interfaze, introspectedTable);
+    }
+
+    @Override
+    public boolean clientLogicalDeleteByExampleMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        if (this.versionColumn != null) {
+            FormatTools.addMethodWithBestPosition(
+                    interfaze,
+                    this.replaceDeleteExampleMethod(introspectedTable, method, interfaze, METHOD_LOGICAL_DELETE_WITH_VERSION_BY_EXAMPLE)
+            );
+        }
+        return true;
+    }
+
+    @Override
+    public boolean clientLogicalDeleteByPrimaryKeyMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        if (this.versionColumn != null) {
+            FormatTools.addMethodWithBestPosition(
+                    interfaze,
+                    this.replaceDeleteExampleMethod(introspectedTable, method, interfaze, METHOD_LOGICAL_DELETE_WITH_VERSION_BY_PRIMARY_KEY)
+            );
+        }
+        return true;
     }
 
     @Override
@@ -420,6 +445,15 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
         return super.sqlMapExampleWhereClauseElementGenerated(element, introspectedTable);
     }
 
+    @Override
+    public boolean sqlMapLogicalDeleteByExampleElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+        return true;
+    }
+
+    @Override
+    public boolean sqlMapLogicalDeleteByPrimaryKeyElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+        return true;
+    }
 
     // =================================================== 一些生成方法 ========================================
 
