@@ -29,28 +29,6 @@ CREATE TABLE `tb` (
 -- ----------------------------
 -- Records of tb
 -- ----------------------------
-INSERT INTO `tb` VALUES ('1', 'fd1', null);
-INSERT INTO `tb` VALUES ('2', null, '2');
-INSERT INTO `tb` VALUES ('3', 'fd3', '3');
-
--- ----------------------------
--- Table structure for tb_blobs
--- ----------------------------
-DROP TABLE IF EXISTS `tb_blobs`;
-CREATE TABLE `tb_blobs` (
-  `id` bigint(20) NOT NULL COMMENT '注释1',
-  `field1` varchar(255) DEFAULT NULL,
-  `field2` longtext COMMENT '注释2',
-  `field3` longtext,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
--- ----------------------------
--- Records of tb_blobs
--- ----------------------------
-INSERT INTO `tb_blobs` VALUES ('1', 'fd1', null, 'KK1');
-INSERT INTO `tb_blobs` VALUES ('2', null, '2', null);
-INSERT INTO `tb_blobs` VALUES ('3', 'fd3', '3', 'KK3');
 
 -- ----------------------------
 -- Table structure for tb_keys
@@ -67,21 +45,37 @@ CREATE TABLE `tb_keys` (
 -- ----------------------------
 -- Records of tb_keys
 -- ----------------------------
-INSERT INTO `tb_keys` VALUES ('1', '2', 'fd1', null);
-INSERT INTO `tb_keys` VALUES ('2', '3', null, '2');
-INSERT INTO `tb_keys` VALUES ('3', '4', 'fd2', '3');
 
 -- ----------------------------
--- Table structure for tb_single_blob
+-- Table structure for tb_key_blob
 -- ----------------------------
-DROP TABLE IF EXISTS `tb_single_blob`;
-CREATE TABLE `tb_single_blob` (
+DROP TABLE IF EXISTS `tb_key_blob`;
+CREATE TABLE `tb_key_blob` (
   `id` bigint(20) NOT NULL COMMENT '注释1',
+  `key1` varchar(20) NOT NULL,
   `field1` longtext COMMENT '注释2',
-  `field2` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  `field2` longtext,
+  PRIMARY KEY (`id`,`key1`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- ----------------------------
--- Records of tb_single_blob
+-- Records of tb_key_blob
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for tb_lombok
+-- ----------------------------
+DROP TABLE IF EXISTS `tb_lombok`;
+CREATE TABLE `tb_lombok` (
+  `id` bigint(20) NOT NULL COMMENT '注释1',
+  `key1` varchar(20) NOT NULL,
+  `field1` varchar(10) COMMENT '注释2',
+  `is_find` tinyint(1),
+  `field3` longtext,
+  `field4` longtext,
+  PRIMARY KEY (`id`,`key1`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Records of tb_lombok
 -- ----------------------------

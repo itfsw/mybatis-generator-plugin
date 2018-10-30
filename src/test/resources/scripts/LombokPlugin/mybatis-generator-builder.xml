@@ -25,8 +25,6 @@
         <!-- 插件 -->
         <plugin type="com.itfsw.mybatis.generator.plugins.LombokPlugin">
             <property name="@Builder" value="true"/>
-            <property name="@AllArgsConstructor" value="true"/>
-            <property name="@NoArgsConstructor" value="true"/>
         </plugin>
 
         <!--jdbc的数据库连接 -->
@@ -45,7 +43,6 @@
 
         <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 要自动生成的表 +++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
         <table tableName="tb"/>
-        <table tableName="tb_keys"/>
-        <table tableName="tb_key_blob"/>
+        <table tableName="tb_lombok"/>
     </context>
 </generatorConfiguration>

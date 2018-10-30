@@ -23,18 +23,16 @@
     <!--导入属性配置 -->
     <context id="default" targetRuntime="MyBatis3">
         <!-- 插件 -->
-        <plugin type="com.itfsw.mybatis.generator.plugins.LombokPlugin">
-            <property name="@Builder" value="true"/>
-            <property name="@AllArgsConstructor" value="true"/>
-            <property name="@NoArgsConstructor" value="true"/>
-        </plugin>
+        <plugin type="com.itfsw.mybatis.generator.plugins.LombokPlugin"/>
 
         <!--jdbc的数据库连接 -->
         <jdbcConnection driverClass="${driver}" connectionURL="${url}" userId="${username}" password="${password}"/>
         <!-- Model模型生成器,用来生成含有主键key的类，记录类 以及查询Example类
             targetPackage     指定生成的model生成所在的包名
             targetProject     指定在该项目下所在的路径  -->
-        <javaModelGenerator targetPackage="" targetProject=""/>
+        <javaModelGenerator targetPackage="" targetProject="">
+            <property name="constructorBased" value="true"/>
+        </javaModelGenerator>
         <!--Mapper映射文件生成所在的目录 为每一个数据库的表生成对应的SqlMap文件 -->
         <sqlMapGenerator targetPackage="" targetProject=""/>
         <!-- 客户端代码，生成易于使用的针对Model对象和XML配置文件 的代码
@@ -45,7 +43,6 @@
 
         <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 要自动生成的表 +++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
         <table tableName="tb"/>
-        <table tableName="tb_keys"/>
         <table tableName="tb_key_blob"/>
     </context>
 </generatorConfiguration>
