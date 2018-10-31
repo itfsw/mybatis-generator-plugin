@@ -16,10 +16,8 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
-import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
-import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
-import com.itfsw.mybatis.generator.plugins.utils.XmlElementGeneratorTools;
+import com.itfsw.mybatis.generator.plugins.utils.*;
+import com.itfsw.mybatis.generator.plugins.utils.hook.ILogicalDeletePluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
@@ -168,6 +166,8 @@ public class LogicalDeletePlugin extends BasePlugin {
             // interface 增加方法
             FormatTools.addMethodWithBestPosition(interfaze, mLogicalDeleteByExample);
             logger.debug("itfsw(逻辑删除插件):" + interfaze.getType().getShortName() + "增加方法logicalDeleteByExample。");
+            // hook
+            PluginTools.getHook(ILogicalDeletePluginHook.class).clientLogicalDeleteByExampleMethodGenerated(mLogicalDeleteByExample, interfaze, introspectedTable);
 
             // 2. 判断是否有主键，生成主键删除方法
             if (introspectedTable.hasPrimaryKeyColumns()) {
@@ -232,6 +232,8 @@ public class LogicalDeletePlugin extends BasePlugin {
                 interfaze.addImportedTypes(importedTypes);
                 FormatTools.addMethodWithBestPosition(interfaze, mLogicalDeleteByPrimaryKey);
                 logger.debug("itfsw(逻辑删除插件):" + interfaze.getType().getShortName() + "增加方法logicalDeleteByPrimaryKey。");
+                // hook
+                PluginTools.getHook(ILogicalDeletePluginHook.class).clientLogicalDeleteByPrimaryKeyMethodGenerated(mLogicalDeleteByPrimaryKey, interfaze, introspectedTable);
 
                 // 增强selectByPrimaryKey
                 mSelectByPrimaryKey.addParameter(new Parameter(
@@ -279,7 +281,8 @@ public class LogicalDeletePlugin extends BasePlugin {
                     || JDBCType.LONGVARCHAR == type
                     || JDBCType.NCHAR == type
                     || JDBCType.NVARCHAR == type
-                    || JDBCType.VARCHAR == type) {
+                    || JDBCType.VARCHAR == type
+                    || JDBCType.BIGINT == type) {
                 sb.append("'");
                 sb.append(this.logicalDeleteValue);
                 sb.append("'");
@@ -292,6 +295,8 @@ public class LogicalDeletePlugin extends BasePlugin {
             logicalDeleteByExample.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
             document.getRootElement().addElement(logicalDeleteByExample);
             logger.debug("itfsw(逻辑删除插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加方法logicalDeleteByExample的实现。");
+            // hook
+            PluginTools.getHook(ILogicalDeletePluginHook.class).sqlMapLogicalDeleteByExampleElementGenerated(document, logicalDeleteByExample, this.logicalDeleteColumn, this.logicalDeleteValue, introspectedTable);
 
             // 2. 判断是否有主键，生成主键删除方法
             if (introspectedTable.hasPrimaryKeyColumns()) {
@@ -330,7 +335,8 @@ public class LogicalDeletePlugin extends BasePlugin {
                         || JDBCType.LONGVARCHAR == type1
                         || JDBCType.NCHAR == type1
                         || JDBCType.NVARCHAR == type1
-                        || JDBCType.VARCHAR == type1) {
+                        || JDBCType.VARCHAR == type1
+                        || JDBCType.BIGINT == type1) {
                     sb1.append("'");
                     sb1.append(this.logicalDeleteValue);
                     sb1.append("'");
@@ -344,6 +350,8 @@ public class LogicalDeletePlugin extends BasePlugin {
 
                 document.getRootElement().addElement(logicalDeleteByPrimaryKey);
                 logger.debug("itfsw(逻辑删除插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加方法logicalDeleteByPrimaryKey的实现。");
+                // hook
+                PluginTools.getHook(ILogicalDeletePluginHook.class).sqlMapLogicalDeleteByPrimaryKeyElementGenerated(document, logicalDeleteByPrimaryKey, this.logicalDeleteColumn, this.logicalDeleteValue, introspectedTable);
 
 
                 // 3. 增强selectByPrimaryKey

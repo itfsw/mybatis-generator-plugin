@@ -29,6 +29,7 @@ import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 import org.mybatis.generator.internal.util.JavaBeansUtil;
 import org.mybatis.generator.internal.util.StringUtility;
 
+import java.sql.JDBCType;
 import java.util.*;
 
 /**
@@ -119,10 +120,23 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
     @Override
     public boolean clientLogicalDeleteByExampleMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            FormatTools.addMethodWithBestPosition(
-                    interfaze,
-                    this.replaceDeleteExampleMethod(introspectedTable, method, interfaze, METHOD_LOGICAL_DELETE_WITH_VERSION_BY_EXAMPLE)
-            );
+            if (this.customizedNextVersion) {
+                Method newMethod = JavaElementGeneratorTools.generateMethod(
+                        METHOD_LOGICAL_DELETE_WITH_VERSION_BY_EXAMPLE,
+                        JavaVisibility.DEFAULT,
+                        FullyQualifiedJavaType.getIntInstance(),
+                        new Parameter(this.versionColumn.getFullyQualifiedJavaType(), "version", "@Param(\"version\")"),
+                        new Parameter(this.versionColumn.getFullyQualifiedJavaType(), "nextVersion", "@Param(\"nextVersion\")"),
+                        new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")")
+                );
+                commentGenerator.addGeneralMethodComment(newMethod, introspectedTable);
+                FormatTools.addMethodWithBestPosition(interfaze, newMethod);
+            } else {
+                FormatTools.addMethodWithBestPosition(
+                        interfaze,
+                        this.replaceDeleteExampleMethod(introspectedTable, method, interfaze, METHOD_LOGICAL_DELETE_WITH_VERSION_BY_EXAMPLE)
+                );
+            }
         }
         return true;
     }
@@ -130,10 +144,23 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
     @Override
     public boolean clientLogicalDeleteByPrimaryKeyMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         if (this.versionColumn != null) {
-            FormatTools.addMethodWithBestPosition(
-                    interfaze,
-                    this.replaceDeleteExampleMethod(introspectedTable, method, interfaze, METHOD_LOGICAL_DELETE_WITH_VERSION_BY_PRIMARY_KEY)
-            );
+            if (this.customizedNextVersion) {
+                Method newMethod = JavaElementGeneratorTools.generateMethod(
+                        METHOD_LOGICAL_DELETE_WITH_VERSION_BY_PRIMARY_KEY,
+                        JavaVisibility.DEFAULT,
+                        FullyQualifiedJavaType.getIntInstance(),
+                        new Parameter(this.versionColumn.getFullyQualifiedJavaType(), "version", "@Param(\"version\")"),
+                        new Parameter(this.versionColumn.getFullyQualifiedJavaType(), "nextVersion", "@Param(\"nextVersion\")"),
+                        new Parameter(method.getParameters().get(0).getType(), method.getParameters().get(0).getName(), "@Param(\"key\")")
+                );
+                commentGenerator.addGeneralMethodComment(newMethod, introspectedTable);
+                FormatTools.addMethodWithBestPosition(interfaze, newMethod);
+            } else {
+                FormatTools.addMethodWithBestPosition(
+                        interfaze,
+                        this.replaceDeletePrimaryKeyMethod(introspectedTable, method, interfaze, METHOD_LOGICAL_DELETE_WITH_VERSION_BY_PRIMARY_KEY)
+                );
+            }
         }
         return true;
     }
@@ -446,12 +473,30 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
     }
 
     @Override
-    public boolean sqlMapLogicalDeleteByExampleElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+    public boolean sqlMapLogicalDeleteByExampleElementGenerated(Document document, XmlElement element, IntrospectedColumn logicalDeleteColumn, String logicalDeleteValue, IntrospectedTable introspectedTable) {
+        if (this.versionColumn != null) {
+            FormatTools.addElementWithBestPosition(document.getRootElement(), this.generateSqlMapLogicalDelete(
+                    introspectedTable,
+                    METHOD_LOGICAL_DELETE_WITH_VERSION_BY_EXAMPLE,
+                    logicalDeleteColumn,
+                    logicalDeleteValue,
+                    true
+            ));
+        }
         return true;
     }
 
     @Override
-    public boolean sqlMapLogicalDeleteByPrimaryKeyElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+    public boolean sqlMapLogicalDeleteByPrimaryKeyElementGenerated(Document document, XmlElement element, IntrospectedColumn logicalDeleteColumn, String logicalDeleteValue, IntrospectedTable introspectedTable) {
+        if (this.versionColumn != null) {
+            FormatTools.addElementWithBestPosition(document.getRootElement(), this.generateSqlMapLogicalDelete(
+                    introspectedTable,
+                    METHOD_LOGICAL_DELETE_WITH_VERSION_BY_PRIMARY_KEY,
+                    logicalDeleteColumn,
+                    logicalDeleteValue,
+                    false
+            ));
+        }
         return true;
     }
 
@@ -563,7 +608,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
         FormatTools.replaceGeneralMethodComment(commentGenerator, withVersionMethod, introspectedTable);
 
         Parameter versionParam = new Parameter(this.versionColumn.getFullyQualifiedJavaType(), "version", "@Param(\"version\")");
-        Parameter keyParam = new Parameter(method.getParameters().get(0).getType(), "key", "@Param(\"key\")");
+        Parameter keyParam = new Parameter(method.getParameters().get(0).getType(), method.getParameters().get(0).getName(), "@Param(\"key\")");
 
         withVersionMethod.getParameters().clear();
         withVersionMethod.addParameter(versionParam);
@@ -731,6 +776,83 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
             updateEle.addElement(ifElement);
         } else {
             updateEle = this.replacePrimaryKeyXmlElement(introspectedTable, updateEle, id, true);
+        }
+
+        return updateEle;
+    }
+
+    /**
+     * 生成LogicalDelete sql map
+     * @param introspectedTable
+     * @param id
+     * @param logicalDeleteColumn
+     * @param logicalDeleteValue
+     * @param byExample
+     * @return
+     */
+    private XmlElement generateSqlMapLogicalDelete(IntrospectedTable introspectedTable, String id, IntrospectedColumn logicalDeleteColumn, String logicalDeleteValue, boolean byExample) {
+        XmlElement updateEle = new XmlElement("update");
+
+        updateEle.addAttribute(new Attribute("id", id));
+        updateEle.addAttribute(new Attribute("parameterType", "map"));
+        commentGenerator.addComment(updateEle);
+
+        updateEle.addElement(new TextElement("update " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
+
+        StringBuilder sb = new StringBuilder("set ");
+        // 版本自增
+        if (this.customizedNextVersion) {
+            sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(this.versionColumn));
+            sb.append(" = ");
+            sb.append("#{nextVersion,jdbcType=");
+            sb.append(this.versionColumn.getJdbcTypeName());
+            if (StringUtility.stringHasValue(this.versionColumn.getTypeHandler())) {
+                sb.append(",typeHandler=");
+                sb.append(this.versionColumn.getTypeHandler());
+            }
+            sb.append("}");
+        } else {
+            sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(this.versionColumn));
+            sb.append(" = ");
+            sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(this.versionColumn));
+            sb.append(" + 1");
+        }
+        sb.append(",");
+
+        // 逻辑删除 set
+        sb.append(logicalDeleteColumn.getActualColumnName());
+        sb.append(" = ");
+        // 判断字段类型
+        JDBCType type = JDBCType.valueOf(logicalDeleteColumn.getJdbcType());
+        if (logicalDeleteValue == null || "NULL".equalsIgnoreCase(logicalDeleteValue)) {
+            sb.append("NULL");
+        } else if (JDBCType.CHAR == type
+                || JDBCType.LONGNVARCHAR == type
+                || JDBCType.LONGVARCHAR == type
+                || JDBCType.NCHAR == type
+                || JDBCType.NVARCHAR == type
+                || JDBCType.VARCHAR == type
+                || JDBCType.BIGINT == type) {
+            sb.append("'");
+            sb.append(logicalDeleteValue);
+            sb.append("'");
+        } else {
+            sb.append(logicalDeleteValue);
+        }
+        updateEle.addElement(new TextElement(sb.toString()));
+
+        // 更新条件
+        if (byExample) {
+            XmlElement ifElement = new XmlElement("if");
+            ifElement.addAttribute(new Attribute("test", "_parameter != null"));
+
+            XmlElement includeElement = new XmlElement("include");
+            includeElement.addAttribute(new Attribute("refid", SQL_UPDATE_BY_EXAMPLE_WITH_VERSION_WHERE_CLAUSE));
+            ifElement.addElement(includeElement);
+
+            updateEle.addElement(ifElement);
+        } else {
+            updateEle = this.replacePrimaryKeyXmlElement(introspectedTable, updateEle, id, false);
         }
 
         return updateEle;

@@ -290,9 +290,9 @@ public class HookAggregator implements IUpsertPluginHook,
     }
 
     @Override
-    public boolean sqlMapLogicalDeleteByExampleElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+    public boolean sqlMapLogicalDeleteByExampleElementGenerated(Document document, XmlElement element, IntrospectedColumn logicalDeleteColumn, String logicalDeleteValue, IntrospectedTable introspectedTable) {
         for (ILogicalDeletePluginHook plugin : this.getPlugins(ILogicalDeletePluginHook.class)) {
-            if (!plugin.sqlMapLogicalDeleteByExampleElementGenerated(element, introspectedTable)) {
+            if (!plugin.sqlMapLogicalDeleteByExampleElementGenerated(document, element, logicalDeleteColumn, logicalDeleteValue, introspectedTable)) {
                 return false;
             }
         }
@@ -300,9 +300,9 @@ public class HookAggregator implements IUpsertPluginHook,
     }
 
     @Override
-    public boolean sqlMapLogicalDeleteByPrimaryKeyElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+    public boolean sqlMapLogicalDeleteByPrimaryKeyElementGenerated(Document document, XmlElement element, IntrospectedColumn logicalDeleteColumn, String logicalDeleteValue, IntrospectedTable introspectedTable) {
         for (ILogicalDeletePluginHook plugin : this.getPlugins(ILogicalDeletePluginHook.class)) {
-            if (!plugin.sqlMapLogicalDeleteByPrimaryKeyElementGenerated(element, introspectedTable)) {
+            if (!plugin.sqlMapLogicalDeleteByPrimaryKeyElementGenerated(document, element, logicalDeleteColumn, logicalDeleteValue, introspectedTable)) {
                 return false;
             }
         }

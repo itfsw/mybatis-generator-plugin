@@ -16,9 +16,11 @@
 
 package com.itfsw.mybatis.generator.plugins.utils.hook;
 
+import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.Interface;
 import org.mybatis.generator.api.dom.java.Method;
+import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 
 /**
@@ -50,17 +52,23 @@ public interface ILogicalDeletePluginHook {
 
     /**
      * logicalDeleteByExample
+     * @param document
      * @param element
+     * @param logicalDeleteColumn
+     * @param logicalDeleteValue
      * @param introspectedTable
      * @return
      */
-    boolean sqlMapLogicalDeleteByExampleElementGenerated(XmlElement element, IntrospectedTable introspectedTable);
+    boolean sqlMapLogicalDeleteByExampleElementGenerated(Document document, XmlElement element, IntrospectedColumn logicalDeleteColumn, String logicalDeleteValue, IntrospectedTable introspectedTable);
 
     /**
      * logicalDeleteByPrimaryKey
+     * @param document
      * @param element
+     * @param logicalDeleteColumn
+     * @param logicalDeleteValue
      * @param introspectedTable
      * @return
      */
-    boolean sqlMapLogicalDeleteByPrimaryKeyElementGenerated(XmlElement element, IntrospectedTable introspectedTable);
+    boolean sqlMapLogicalDeleteByPrimaryKeyElementGenerated(Document document, XmlElement element, IntrospectedColumn logicalDeleteColumn, String logicalDeleteValue, IntrospectedTable introspectedTable);
 }

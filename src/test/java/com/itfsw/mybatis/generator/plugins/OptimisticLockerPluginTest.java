@@ -335,6 +335,45 @@ public class OptimisticLockerPluginTest {
     }
 
     /**
+     * 测试整合LogicalDelete插件
+     */
+    @Test
+    public void testWithLogicalDeletePlugin() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator-with-LogicalDeletePlugin.xml");
+
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdEqualTo", 1L);
+
+                // 验证sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), OptimisticLockerPlugin.METHOD_LOGICAL_DELETE_WITH_VERSION_BY_EXAMPLE, 0L, tbExample.getObject());
+                Assert.assertEquals(sql, "update tb set inc_f1 = inc_f1 + 1,inc_f2 = '9L' WHERE inc_f1 = 0 and ( ( id = '1' ) )");
+                // 验证执行
+                Object result = tbMapper.invoke(OptimisticLockerPlugin.METHOD_LOGICAL_DELETE_WITH_VERSION_BY_EXAMPLE, 0L, tbExample.getObject());
+                Assert.assertEquals(result, 1);
+                ResultSet rs = DBHelper.execute(sqlSession.getConnection(), "select * from tb where id = 1");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 1);
+                Assert.assertEquals(rs.getInt("inc_f2"), 9);
+            }
+        });
+
+        tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator-with-LogicalDeletePlugin-customizedNextVersion.xml");
+
+        tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+
+            }
+        });
+    }
+
+    /**
      * 测试 updateWithVersionByExampleWithBLOBs
      */
     @Test
