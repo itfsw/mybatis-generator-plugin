@@ -29,7 +29,6 @@ import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 import org.mybatis.generator.internal.util.JavaBeansUtil;
 import org.mybatis.generator.internal.util.StringUtility;
 
-import java.sql.JDBCType;
 import java.util.*;
 
 /**
@@ -822,23 +821,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
         // 逻辑删除 set
         sb.append(logicalDeleteColumn.getActualColumnName());
         sb.append(" = ");
-        // 判断字段类型
-        JDBCType type = JDBCType.valueOf(logicalDeleteColumn.getJdbcType());
-        if (logicalDeleteValue == null || "NULL".equalsIgnoreCase(logicalDeleteValue)) {
-            sb.append("NULL");
-        } else if (JDBCType.CHAR == type
-                || JDBCType.LONGNVARCHAR == type
-                || JDBCType.LONGVARCHAR == type
-                || JDBCType.NCHAR == type
-                || JDBCType.NVARCHAR == type
-                || JDBCType.VARCHAR == type
-                || JDBCType.BIGINT == type) {
-            sb.append("'");
-            sb.append(logicalDeleteValue);
-            sb.append("'");
-        } else {
-            sb.append(logicalDeleteValue);
-        }
+        sb.append(XmlElementGeneratorTools.generateLogicalDeleteColumnValue(logicalDeleteColumn, logicalDeleteValue));
         updateEle.addElement(new TextElement(sb.toString()));
 
         // 更新条件

@@ -64,7 +64,7 @@
         <table tableName="tb_keys">
             <property name="versionColumn" value="inc_f1"/>
             <property name="logicalDeleteColumn" value="inc_f2"/>
-            
+
             <property name="customizedNextVersion" value="true"/>
         </table>
     </context>

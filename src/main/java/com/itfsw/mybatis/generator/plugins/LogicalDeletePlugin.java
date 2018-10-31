@@ -100,14 +100,12 @@ public class LogicalDeletePlugin extends BasePlugin {
                         || JDBCType.BIT == type
                         || JDBCType.BOOLEAN == type
                         || JDBCType.CHAR == type
-                        || JDBCType.DECIMAL == type
                         || JDBCType.DOUBLE == type
                         || JDBCType.FLOAT == type
                         || JDBCType.INTEGER == type
                         || JDBCType.LONGNVARCHAR == type
                         || JDBCType.LONGVARCHAR == type
                         || JDBCType.NCHAR == type
-                        || JDBCType.NUMERIC == type
                         || JDBCType.NVARCHAR == type
                         || JDBCType.SMALLINT == type
                         || JDBCType.TINYINT == type
@@ -271,24 +269,7 @@ public class LogicalDeletePlugin extends BasePlugin {
             // 更新逻辑删除字段
             sb.append(this.logicalDeleteColumn.getActualColumnName());
             sb.append(" = ");
-
-            // 判断字段类型
-            JDBCType type = JDBCType.valueOf(this.logicalDeleteColumn.getJdbcType());
-            if (this.logicalDeleteValue == null || "NULL".equalsIgnoreCase(this.logicalDeleteValue)) {
-                sb.append("NULL");
-            } else if (JDBCType.CHAR == type
-                    || JDBCType.LONGNVARCHAR == type
-                    || JDBCType.LONGVARCHAR == type
-                    || JDBCType.NCHAR == type
-                    || JDBCType.NVARCHAR == type
-                    || JDBCType.VARCHAR == type
-                    || JDBCType.BIGINT == type) {
-                sb.append("'");
-                sb.append(this.logicalDeleteValue);
-                sb.append("'");
-            } else {
-                sb.append(this.logicalDeleteValue);
-            }
+            sb.append(XmlElementGeneratorTools.generateLogicalDeleteColumnValue(this.logicalDeleteColumn, this.logicalDeleteValue));
 
             logicalDeleteByExample.addElement(new TextElement(sb.toString()));
 
@@ -325,24 +306,7 @@ public class LogicalDeletePlugin extends BasePlugin {
                 // 更新逻辑删除字段
                 sb1.append(this.logicalDeleteColumn.getActualColumnName());
                 sb1.append(" = ");
-
-                // 判断字段类型
-                JDBCType type1 = JDBCType.valueOf(this.logicalDeleteColumn.getJdbcType());
-                if (this.logicalDeleteValue == null || "NULL".equalsIgnoreCase(this.logicalDeleteValue)) {
-                    sb1.append("NULL");
-                } else if (JDBCType.CHAR == type1
-                        || JDBCType.LONGNVARCHAR == type1
-                        || JDBCType.LONGVARCHAR == type1
-                        || JDBCType.NCHAR == type1
-                        || JDBCType.NVARCHAR == type1
-                        || JDBCType.VARCHAR == type1
-                        || JDBCType.BIGINT == type1) {
-                    sb1.append("'");
-                    sb1.append(this.logicalDeleteValue);
-                    sb1.append("'");
-                } else {
-                    sb1.append(this.logicalDeleteValue);
-                }
+                sb1.append(XmlElementGeneratorTools.generateLogicalDeleteColumnValue(this.logicalDeleteColumn, this.logicalDeleteValue));
 
                 logicalDeleteByPrimaryKey.addElement(new TextElement(sb1.toString()));
 
@@ -401,10 +365,10 @@ public class LogicalDeletePlugin extends BasePlugin {
                 XmlElement chooseEle = new XmlElement("choose");
                 XmlElement whenEle = new XmlElement("when");
                 whenEle.addAttribute(new Attribute("test", PARAMETER_LOGICAL_DELETED));
-                whenEle.addElement(new TextElement("'" + this.logicalDeleteValue + "'"));
+                whenEle.addElement(new TextElement(XmlElementGeneratorTools.generateLogicalDeleteColumnValue(this.logicalDeleteColumn, this.logicalDeleteValue)));
                 chooseEle.addElement(whenEle);
                 XmlElement otherwiseEle = new XmlElement("otherwise");
-                otherwiseEle.addElement(new TextElement("'" + this.logicalUnDeleteValue + "'"));
+                otherwiseEle.addElement(new TextElement(XmlElementGeneratorTools.generateLogicalDeleteColumnValue(this.logicalDeleteColumn, this.logicalUnDeleteValue)));
                 chooseEle.addElement(otherwiseEle);
                 selectByPrimaryKey.addElement(chooseEle);
 

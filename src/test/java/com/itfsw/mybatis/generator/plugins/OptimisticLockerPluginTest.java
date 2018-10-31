@@ -344,6 +344,7 @@ public class OptimisticLockerPluginTest {
         tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // ----------------------------------------  logicalDeleteWithVersionByExample ---------------------------------------
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
 
                 ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
@@ -352,7 +353,7 @@ public class OptimisticLockerPluginTest {
 
                 // 验证sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), OptimisticLockerPlugin.METHOD_LOGICAL_DELETE_WITH_VERSION_BY_EXAMPLE, 0L, tbExample.getObject());
-                Assert.assertEquals(sql, "update tb set inc_f1 = inc_f1 + 1,inc_f2 = '9L' WHERE inc_f1 = 0 and ( ( id = '1' ) )");
+                Assert.assertEquals(sql, "update tb set inc_f1 = inc_f1 + 1,inc_f2 = 9 WHERE inc_f1 = 0 and ( ( id = '1' ) )");
                 // 验证执行
                 Object result = tbMapper.invoke(OptimisticLockerPlugin.METHOD_LOGICAL_DELETE_WITH_VERSION_BY_EXAMPLE, 0L, tbExample.getObject());
                 Assert.assertEquals(result, 1);
@@ -360,15 +361,71 @@ public class OptimisticLockerPluginTest {
                 rs.first();
                 Assert.assertEquals(rs.getInt("inc_f1"), 1);
                 Assert.assertEquals(rs.getInt("inc_f2"), 9);
+
+                // ----------------------------------------  logicalDeleteWithVersionByPrimaryKey ---------------------------------------
+                // 验证sql
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), OptimisticLockerPlugin.METHOD_LOGICAL_DELETE_WITH_VERSION_BY_PRIMARY_KEY, 1L, 2L);
+                Assert.assertEquals(sql, "update tb set inc_f1 = inc_f1 + 1,inc_f2 = 9 where inc_f1 = 1 and id = 2");
+                // 验证执行
+                result = tbMapper.invoke(OptimisticLockerPlugin.METHOD_LOGICAL_DELETE_WITH_VERSION_BY_PRIMARY_KEY, 1L, 2L);
+                Assert.assertEquals(result, 1);
+                rs = DBHelper.execute(sqlSession.getConnection(), "select * from tb where id = 2");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 2);
+                Assert.assertEquals(rs.getInt("inc_f2"), 9);
             }
         });
 
+        // 自定义nextVersion
         tool = MyBatisGeneratorTool.create("scripts/OptimisticLockerPlugin/mybatis-generator-with-LogicalDeletePlugin-customizedNextVersion.xml");
-
         tool.generate(() -> DBHelper.resetDB("scripts/OptimisticLockerPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // ----------------------------------------  logicalDeleteWithVersionByExample ---------------------------------------
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
 
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdEqualTo", 1L);
+
+                // 验证sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), OptimisticLockerPlugin.METHOD_LOGICAL_DELETE_WITH_VERSION_BY_EXAMPLE, 0L, 100L, tbExample.getObject());
+                Assert.assertEquals(sql, "update tb set inc_f1 = 100,inc_f2 = 9 WHERE inc_f1 = 0 and ( ( id = '1' ) )");
+                // 验证执行
+                Object result = tbMapper.invoke(OptimisticLockerPlugin.METHOD_LOGICAL_DELETE_WITH_VERSION_BY_EXAMPLE, 0L, 100L, tbExample.getObject());
+                Assert.assertEquals(result, 1);
+                ResultSet rs = DBHelper.execute(sqlSession.getConnection(), "select * from tb where id = 1");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 100);
+                Assert.assertEquals(rs.getInt("inc_f2"), 9);
+
+                // ----------------------------------------  logicalDeleteWithVersionByPrimaryKey ---------------------------------------
+                // 验证sql
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), OptimisticLockerPlugin.METHOD_LOGICAL_DELETE_WITH_VERSION_BY_PRIMARY_KEY, 1L, 200L, 2L);
+                Assert.assertEquals(sql, "update tb set inc_f1 = 200,inc_f2 = 9 where inc_f1 = 1 and id = 2");
+                // 验证执行
+                result = tbMapper.invoke(OptimisticLockerPlugin.METHOD_LOGICAL_DELETE_WITH_VERSION_BY_PRIMARY_KEY, 1L, 200L, 2L);
+                Assert.assertEquals(result, 1);
+                rs = DBHelper.execute(sqlSession.getConnection(), "select * from tb where id = 2");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 200);
+                Assert.assertEquals(rs.getInt("inc_f2"), 9);
+
+                // ------------------------------------ Key -----------------------------------
+                ObjectUtil tbKeysMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbKeysMapper")));
+                ObjectUtil tbKeysKey = new ObjectUtil(loader, packagz + ".TbKeysKey");
+                tbKeysKey.set("key1", 2L);
+                tbKeysKey.set("key2", "k2");
+
+                sql = SqlHelper.getFormatMapperSql(tbKeysMapper.getObject(), OptimisticLockerPlugin.METHOD_LOGICAL_DELETE_WITH_VERSION_BY_PRIMARY_KEY, 3L, 200L, tbKeysKey.getObject());
+                Assert.assertEquals(sql, "update tb_keys set inc_f1 = 200,inc_f2 = 9 where inc_f1 = 3 and key1 = 2 and key2 = 'k2'");
+                // 验证执行
+                result = tbKeysMapper.invoke(OptimisticLockerPlugin.METHOD_LOGICAL_DELETE_WITH_VERSION_BY_PRIMARY_KEY, 3L, 200L, tbKeysKey.getObject());
+                Assert.assertEquals(result, 1);
+                rs = DBHelper.execute(sqlSession.getConnection(), "select * from tb_keys where key1 = 2 and key2 = 'k2'");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 200);
+                Assert.assertEquals(rs.getInt("inc_f2"), 9);
             }
         });
     }

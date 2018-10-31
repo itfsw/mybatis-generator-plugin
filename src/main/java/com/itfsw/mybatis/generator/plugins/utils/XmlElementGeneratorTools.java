@@ -557,4 +557,29 @@ public class XmlElementGeneratorTools {
         }
         return resultElement;
     }
+
+    /**
+     * 生成逻辑删除列的删除值
+     * @param logicalDeleteColumn
+     * @param value
+     * @return
+     */
+    public static String generateLogicalDeleteColumnValue(IntrospectedColumn logicalDeleteColumn, String value) {
+        StringBuilder sb = new StringBuilder();
+        // 判断字段类型
+        if (value == null || "NULL".equalsIgnoreCase(value)) {
+            sb.append("NULL");
+        } else if (logicalDeleteColumn.isStringColumn()) {
+            sb.append("'");
+            sb.append(value);
+            sb.append("'");
+        } else if (logicalDeleteColumn.getFullyQualifiedJavaType().getFullyQualifiedName().equals(Long.class.getName())){
+            sb.append(value.replaceAll("L|l", ""));
+        } else if (logicalDeleteColumn.getFullyQualifiedJavaType().getFullyQualifiedName().equals(Float.class.getName())){
+            sb.append(value.replaceAll("F|f", ""));
+        } else {
+            sb.append(value);
+        }
+        return sb.toString();
+    }
 }
