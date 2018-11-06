@@ -24,6 +24,7 @@
 * [~~官方ConstructorBased配置BUG临时修正插件（ConstructorBasedBugFixPlugin）~~](#16-官方constructorbased配置bug临时修正插件)
 * [乐观锁插件（OptimisticLockerPlugin）](#17-乐观锁插件)
 * [表重命名配置插件（TableRenameConfigurationPlugin）](#18-表重命名配置插件)
+* [Lombok插件（LombokPlugin）](#19-Lombok插件)
 
 ---------------------------------------
 Maven引用：  
@@ -1358,6 +1359,28 @@ public class Test {
         <property name="exampleSuffix" value="Query"/>
         <!-- Tb -> TbEntity -->
         <property name="modelSuffix" value="Entity"/>
+    </plugin>
+</xml>
+```
+### 19. Lombok插件
+使用Lombok的使用可以减少很多重复代码的书写，目前项目中已大量使用。
+但Lombok的@Builder对于类的继承支持很不好，最近发现新版(>=1.18.2)已经提供了对@SuperBuilder的支持，所以新增该插件方便简写代码。
+>warning: 目前很多IDE工具对@SuperBuilder支持不是很好，虽不影响正常使用，但是开发时很不友好，暂时可以使用ModelBuilderPlugin代替该功能。  
+
+>warning1: @Builder注解在Lombok 版本 >= 1.18.2 的情况下才能开启，对于存在继承关系的model会自动替换成@SuperBuilder注解。  
+
+>warning2: 配合插件IncrementsPlugin 并且 @Builder开启的情况下，因为@SuperBuilder的一些限制，
+插件模拟Lombok插件生成了一些附加代码可能在某些编译器上会提示错误，请忽略（Lombok = 1.18.2 已测试）。
+
+```xml
+<xml>
+    <!-- Lombok插件 -->
+    <plugin type="com.itfsw.mybatis.generator.plugins.LombokPlugin">
+        <!-- @Builder 必须在 Lombok 版本 >= 1.18.2 的情况下 -->
+        <property name="@Builder" value="false"/>
+        <!-- @NoArgsConstructor 和 @AllArgsConstructor 使用规则和Lombok一致 -->
+        <property name="@AllArgsConstructor" value="false"/>
+        <property name="@NoArgsConstructor" value="false"/>
     </plugin>
 </xml>
 ```
