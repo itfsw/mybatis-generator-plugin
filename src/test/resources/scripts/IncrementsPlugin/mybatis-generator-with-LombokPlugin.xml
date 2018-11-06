@@ -57,7 +57,7 @@
             <property name="incrementsColumns" value="inc_f1, field2"/>
         </table>
         <table tableName="tb_lombok">
-            <property name="incrementsColumns" value="inc_f1"/>
+            <property name="incrementsColumns" value="inc_f1,id"/>
         </table>
     </context>
 </generatorConfiguration>

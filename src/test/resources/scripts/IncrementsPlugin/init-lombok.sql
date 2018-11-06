@@ -61,7 +61,7 @@ CREATE TABLE `tb_lombok` (
   `id` bigint(20) NOT NULL COMMENT '注释1',
   `key1` varchar(20) NOT NULL,
   `field1` varchar(10) COMMENT '注释2',
-  `inc_f1` tinyint(1),
+  `inc_f1` smallint(3),
   `field3` longtext,
   `field4` longtext,
   PRIMARY KEY (`id`,`key1`)

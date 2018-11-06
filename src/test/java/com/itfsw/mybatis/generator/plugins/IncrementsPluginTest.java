@@ -602,15 +602,69 @@ public class IncrementsPluginTest {
                 tbBuilder = new ObjectUtil(tbBuilder.invoke("id", 1L));
                 tbBuilder.invoke("field1", "ts1");
                 ObjectUtil tb = new ObjectUtil(tbBuilder.invoke("build"));
-                Assert.assertEquals(tb.invoke("toString"), "Tb(id=1, field1=ts1, field2=null)");
+                Assert.assertEquals(tb.invoke("toString"), "Tb(id=1, field1=ts1, field2=null, incrementsColumnsInfoMap={})");
                 // super
                 ObjectUtil tbLombokWithBLOBsBuilder = new ObjectUtil(loader.loadClass(packagz + ".TbLombokWithBLOBs").getMethod("builder").invoke(null));
                 tbLombokWithBLOBsBuilder.invoke("field3", "ts3");
-                Assert.assertEquals(tbLombokWithBLOBsBuilder.invoke("toString"), "TbLombokWithBLOBs.TbLombokWithBLOBsBuilder(super=TbLombok.TbLombokBuilder(super=TbLombokKey.TbLombokKeyBuilder(id=null, key1=null), field1=null, incF1=null), field3=ts3, field4=null)");
+                Assert.assertEquals(tbLombokWithBLOBsBuilder.invoke("toString"), "TbLombokWithBLOBs.TbLombokWithBLOBsBuilder(super=TbLombok.TbLombokBuilder(super=TbLombokKey.TbLombokKeyBuilder(id=null, key1=null, incrementsColumnsInfoMap={}), field1=null, incF1=null), field3=ts3, field4=null)");
                 tbLombokWithBLOBsBuilder.invoke("field1", "ts1");
-                Assert.assertEquals(tbLombokWithBLOBsBuilder.invoke("toString"), "TbLombokWithBLOBs.TbLombokWithBLOBsBuilder(super=TbLombok.TbLombokBuilder(super=TbLombokKey.TbLombokKeyBuilder(id=null, key1=null), field1=ts1, incF1=null), field3=ts3, field4=null)");
+                Assert.assertEquals(tbLombokWithBLOBsBuilder.invoke("toString"), "TbLombokWithBLOBs.TbLombokWithBLOBsBuilder(super=TbLombok.TbLombokBuilder(super=TbLombokKey.TbLombokKeyBuilder(id=null, key1=null, incrementsColumnsInfoMap={}), field1=ts1, incF1=null), field3=ts3, field4=null)");
                 tbLombokWithBLOBsBuilder.invoke("id", 100L);
-                Assert.assertEquals(tbLombokWithBLOBsBuilder.invoke("toString"), "TbLombokWithBLOBs.TbLombokWithBLOBsBuilder(super=TbLombok.TbLombokBuilder(super=TbLombokKey.TbLombokKeyBuilder(id=100, key1=null), field1=ts1, incF1=null), field3=ts3, field4=null)");
+                Assert.assertEquals(tbLombokWithBLOBsBuilder.invoke("toString"), "TbLombokWithBLOBs.TbLombokWithBLOBsBuilder(super=TbLombok.TbLombokBuilder(super=TbLombokKey.TbLombokKeyBuilder(id=100, key1=null, incrementsColumnsInfoMap={}), field1=ts1, incF1=null), field3=ts3, field4=null)");
+
+                // ------------------------------------- 测试 sql 执行 ----------------------------------------
+                // 1. 测试updateByExample、updateByExampleSelective
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                criteria.invoke("andIdEqualTo", 3l);
+
+                tbBuilder = new ObjectUtil(loader.loadClass(packagz + ".Tb").getMethod("builder").invoke(null));
+                ObjectUtil tbBuilderInc = new ObjectUtil(loader, packagz + ".Tb$TbBuilder$Inc#INC");
+                tbBuilder.invoke("field2", 100, tbBuilderInc.getObject());
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateByExample", tbBuilder.invoke("build"), tbExample.getObject());
+                Assert.assertEquals(sql, "update tb set id = null, field1 = 'null', field2 = field2 + 100 WHERE ( id = '3' )");
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateByExampleSelective", tbBuilder.invoke("build"), tbExample.getObject());
+                Assert.assertEquals(sql, "update tb SET field2 = field2 + 100 WHERE ( id = '3' )");
+                // 执行
+                // inc_f1 增加100
+                Object result = tbMapper.invoke("updateByExampleSelective", tbBuilder.invoke("build"), tbExample.getObject());
+                Assert.assertEquals(result, 1);
+                ResultSet rs = DBHelper.execute(sqlSession.getConnection(), "select field2 from tb where id = 3");
+                rs.first();
+                Assert.assertEquals(rs.getInt("field2"), 103);
+
+                // 2. 测试有SuperBuilder的情况
+                ObjectUtil tbLombokMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbLombokMapper")));
+
+                ObjectUtil tbLombokExample = new ObjectUtil(loader, packagz + ".TbLombokExample");
+                criteria = new ObjectUtil(tbLombokExample.invoke("createCriteria"));
+                criteria.invoke("andKey1EqualTo", "key1");
+
+
+                tbLombokWithBLOBsBuilder = new ObjectUtil(loader.loadClass(packagz + ".TbLombokWithBLOBs").getMethod("builder").invoke(null));
+                tbLombokWithBLOBsBuilder.invoke("field3", "f3");
+                ObjectUtil tbLombokKeyBuilderIncINC = new ObjectUtil(loader, packagz + ".TbLombokKey$TbLombokKeyBuilder$Inc#INC");
+                tbLombokWithBLOBsBuilder.invoke("incF1", (short)1, tbLombokKeyBuilderIncINC.getObject());
+                tbLombokWithBLOBsBuilder.invoke("field1", "ts33");
+                ObjectUtil tbLombokKeyBuilderIncDEC = new ObjectUtil(loader, packagz + ".TbLombokKey$TbLombokKeyBuilder$Inc#DEC");
+                tbLombokWithBLOBsBuilder.invoke("id", 100L, tbLombokKeyBuilderIncDEC.getObject());
+                tbLombokWithBLOBsBuilder.invoke("key1", "key100");
+
+                // sql
+                sql = SqlHelper.getFormatMapperSql(tbLombokMapper.getObject(), "updateByExampleSelective", tbLombokWithBLOBsBuilder.invoke("build"), tbLombokExample.getObject());
+                Assert.assertEquals(sql, "update tb_lombok SET id = id - 100 , key1 = 'key100', field1 = 'ts33', inc_f1 = inc_f1 + 1 , field3 = 'f3' WHERE ( key1 = 'key1' )");
+                // 执行
+                result = tbLombokMapper.invoke("updateByExampleSelective",  tbLombokWithBLOBsBuilder.invoke("build"), tbLombokExample.getObject());
+                Assert.assertEquals(result, 1);
+                rs = DBHelper.execute(sqlSession.getConnection(), "select * from tb_lombok where key1 = 'key100'");
+                rs.first();
+                Assert.assertEquals(rs.getInt("inc_f1"), 1);
+                Assert.assertEquals(rs.getInt("id"), -99);
+
             }
         });
     }
