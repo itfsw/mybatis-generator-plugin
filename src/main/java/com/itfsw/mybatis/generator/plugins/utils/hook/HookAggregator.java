@@ -49,6 +49,7 @@ public class HookAggregator implements IUpsertPluginHook,
         IOptimisticLockerPluginHook,
         ISelectOneByExamplePluginHook,
         ITableConfigurationHook,
+        ILombokPluginHook,
         ILogicalDeletePluginHook {
 
     protected static final Logger logger = LoggerFactory.getLogger(BasePlugin.class); // 日志
@@ -308,4 +309,38 @@ public class HookAggregator implements IUpsertPluginHook,
         }
         return true;
     }
+
+    // ============================================= ILombokPluginHook ==============================================
+
+
+    @Override
+    public boolean modelBaseRecordBuilderClassGenerated(TopLevelClass topLevelClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
+        for (ILombokPluginHook plugin : this.getPlugins(ILombokPluginHook.class)) {
+            if (!plugin.modelBaseRecordBuilderClassGenerated(topLevelClass, columns, introspectedTable)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean modelPrimaryKeyBuilderClassGenerated(TopLevelClass topLevelClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
+        for (ILombokPluginHook plugin : this.getPlugins(ILombokPluginHook.class)) {
+            if (!plugin.modelPrimaryKeyBuilderClassGenerated(topLevelClass, columns, introspectedTable)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean modelRecordWithBLOBsBuilderClassGenerated(TopLevelClass topLevelClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
+        for (ILombokPluginHook plugin : this.getPlugins(ILombokPluginHook.class)) {
+            if (!plugin.modelRecordWithBLOBsBuilderClassGenerated(topLevelClass, columns, introspectedTable)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 }

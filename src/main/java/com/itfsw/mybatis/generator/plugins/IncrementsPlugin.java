@@ -17,7 +17,9 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.*;
+import com.itfsw.mybatis.generator.plugins.utils.enhanced.SpecTypeArgumentsFullyQualifiedJavaType;
 import com.itfsw.mybatis.generator.plugins.utils.hook.IIncrementsPluginHook;
+import com.itfsw.mybatis.generator.plugins.utils.hook.ILombokPluginHook;
 import com.itfsw.mybatis.generator.plugins.utils.hook.IModelBuilderPluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
@@ -40,7 +42,7 @@ import java.util.List;
  * @time:2017/6/19 15:20
  * ---------------------------------------------------------------------------
  */
-public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginHook, IIncrementsPluginHook {
+public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginHook, IIncrementsPluginHook, ILombokPluginHook {
     public static final String PRO_INCREMENTS_COLUMNS = "incrementsColumns";  // incrementsColumns property
     public static final String FIELD_INC_MAP = "incrementsColumnsInfoMap";    // 为了防止和用户数据库字段冲突，特殊命名
     public static final String METHOD_INC_CHECK = "hasIncsForColumn";   // inc 检查方法名称
@@ -55,8 +57,8 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
     public boolean validate(List<String> warnings) {
 
         // 插件使用前提是使用了ModelBuilderPlugin插件
-        if (!PluginTools.checkDependencyPlugin(getContext(), ModelBuilderPlugin.class)) {
-            warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件需配合com.itfsw.mybatis.generator.plugins.ModelBuilderPlugin插件使用！");
+        if (!(PluginTools.checkDependencyPlugin(getContext(), ModelBuilderPlugin.class) || PluginTools.checkDependencyPlugin(getContext(), LombokPlugin.class))) {
+            warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件需配合" + ModelBuilderPlugin.class.getTypeName() + "或者" + LombokPlugin.class.getTypeName() + "插件使用！");
             return false;
         }
 
@@ -143,6 +145,173 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
     public boolean sqlMapUpdateByPrimaryKeyWithoutBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
         generatedWithoutSelective(element, introspectedTable, false);
         return super.sqlMapUpdateByPrimaryKeyWithoutBLOBsElementGenerated(element, introspectedTable);
+    }
+
+    // =============================================== ILombokPluginHook ===================================================
+
+    @Override
+    public boolean modelBaseRecordBuilderClassGenerated(TopLevelClass topLevelClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
+        return this.lombokBuilderClassGenerated(topLevelClass, columns, introspectedTable);
+    }
+
+    @Override
+    public boolean modelPrimaryKeyBuilderClassGenerated(TopLevelClass topLevelClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
+        return this.lombokBuilderClassGenerated(topLevelClass, columns, introspectedTable);
+    }
+
+    @Override
+    public boolean modelRecordWithBLOBsBuilderClassGenerated(TopLevelClass topLevelClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
+        return this.lombokBuilderClassGenerated(topLevelClass, columns, introspectedTable);
+    }
+
+    /**
+     * Lombok Builder 生成
+     * @param topLevelClass
+     * @param columns
+     * @param introspectedTable
+     * @return
+     */
+    private boolean lombokBuilderClassGenerated(TopLevelClass topLevelClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
+        if (incTools.support()) {
+            boolean find = false;
+            for (IntrospectedColumn column : columns) {
+                if (incTools.supportColumn(column)) {
+                    find = true;
+                    break;
+                }
+            }
+            if (find) {
+                // ----------------------------------- topLevelClass 方法 --------------------------------
+                FullyQualifiedJavaType builderType = new FullyQualifiedJavaType(topLevelClass.getType().getShortName() + "." + topLevelClass.getType().getShortName() + "Builder");
+                builderType.addTypeArgument(new SpecTypeArgumentsFullyQualifiedJavaType("<?, ?>"));
+
+                // 增加构造函数
+                Method constructor = new Method(topLevelClass.getType().getShortName());
+                commentGenerator.addGeneralMethodComment(constructor, introspectedTable);
+                constructor.setVisibility(JavaVisibility.PROTECTED);
+                constructor.setConstructor(true);
+                constructor.addParameter(new Parameter(builderType, "builder"));
+                // 是否调用父类构造函数
+                if (topLevelClass.getSuperClass() != null) {
+                    constructor.addBodyLine("super(builder);");
+                }
+                for (IntrospectedColumn column : columns) {
+                    Field field = JavaBeansUtil.getJavaBeansField(column, context, introspectedTable);
+                    constructor.addBodyLine("this." + field.getName() + " = builder." + field.getName() + ";");
+                }
+                FormatTools.addMethodWithBestPosition(topLevelClass, constructor);
+
+                // 增加静态builder方法实现和lombok一样
+                Method builderMethod = JavaElementGeneratorTools.generateMethod(
+                        "builder",
+                        JavaVisibility.PUBLIC,
+                        builderType
+                );
+                commentGenerator.addGeneralMethodComment(builderMethod, introspectedTable);
+                builderMethod.setStatic(true);
+                builderMethod.addBodyLine("return new " + topLevelClass.getType().getShortName() + "." + topLevelClass.getType().getShortName() + "BuilderImpl();");
+                FormatTools.addMethodWithBestPosition(topLevelClass, builderMethod);
+
+                // ------------------------------ builderImpl Class ----------------------------------
+                InnerClass builderImplCls = new InnerClass(topLevelClass.getType().getShortName() + "BuilderImpl");
+                commentGenerator.addClassComment(builderImplCls, introspectedTable);
+                FullyQualifiedJavaType builderType1 = new FullyQualifiedJavaType(topLevelClass.getType().getShortName() + "." + topLevelClass.getType().getShortName() + "Builder");
+                builderType1.addTypeArgument(new SpecTypeArgumentsFullyQualifiedJavaType(
+                        "<" + topLevelClass.getType().getShortName() + ", " + topLevelClass.getType().getShortName() + "." + topLevelClass.getType().getShortName() + "BuilderImpl" + ">"
+                ));
+                builderImplCls.setSuperClass(builderType1);
+                builderImplCls.setVisibility(JavaVisibility.PRIVATE);
+                builderImplCls.setFinal(true);
+                builderImplCls.setStatic(true);
+
+                topLevelClass.addInnerClass(builderImplCls);
+
+                // self 方法
+                Method selfMethod = JavaElementGeneratorTools.generateMethod(
+                        "self",
+                        JavaVisibility.PROTECTED,
+                        new FullyQualifiedJavaType(topLevelClass.getType().getShortName() + "." + topLevelClass.getType().getShortName() + "BuilderImpl")
+                );
+                commentGenerator.addGeneralMethodComment(selfMethod, introspectedTable);
+                selfMethod.addBodyLine("return this;");
+                FormatTools.addMethodWithBestPosition(builderImplCls, selfMethod);
+
+                // build 方法
+                Method buildMethod = JavaElementGeneratorTools.generateMethod(
+                        "build",
+                        JavaVisibility.PUBLIC,
+                        topLevelClass.getType()
+                );
+                commentGenerator.addGeneralMethodComment(buildMethod, introspectedTable);
+                buildMethod.addBodyLine("return new " + topLevelClass.getType().getShortName() + "(this);");
+                FormatTools.addMethodWithBestPosition(builderImplCls, buildMethod);
+
+                // ------------------------------ builder Class ----------------------------------
+                InnerClass builderCls = new InnerClass(topLevelClass.getType().getShortName() + "Builder");
+                commentGenerator.addClassComment(builderCls, introspectedTable);
+                builderCls.setVisibility(JavaVisibility.PUBLIC);
+                builderCls.setStatic(true);
+                builderCls.setAbstract(true);
+
+                builderCls.getType().addTypeArgument(
+                        new SpecTypeArgumentsFullyQualifiedJavaType("<C extends " + topLevelClass.getType().getShortName()
+                                + ", B extends " + topLevelClass.getType().getShortName()
+                                + "." + topLevelClass.getType().getShortName() + "Builder<C, B>>")
+                );
+
+                if (topLevelClass.getSuperClass() != null){
+                    FullyQualifiedJavaType superBuilderCls = new FullyQualifiedJavaType(topLevelClass.getSuperClass().getShortName() + "Builder");
+                    superBuilderCls.addTypeArgument(new SpecTypeArgumentsFullyQualifiedJavaType("<C, B>"));
+                    builderCls.setSuperClass(superBuilderCls);
+                }
+
+                // 类注解
+                topLevelClass.addImportedType(LombokPlugin.EnumLombokAnnotations.SETTER.getClazz());
+                builderCls.addAnnotation(LombokPlugin.EnumLombokAnnotations.SETTER.getAnnotation());
+                topLevelClass.addImportedType(LombokPlugin.EnumLombokAnnotations.ACCESSORS_FLUENT_TRUE.getClazz());
+                builderCls.addAnnotation(LombokPlugin.EnumLombokAnnotations.ACCESSORS_FLUENT_TRUE.getAnnotation());
+                if (topLevelClass.getSuperClass() != null){
+                    topLevelClass.addImportedType(LombokPlugin.EnumLombokAnnotations.TO_STRING_CALL_SUPER.getClazz());
+                    builderCls.addAnnotation(LombokPlugin.EnumLombokAnnotations.TO_STRING_CALL_SUPER.getAnnotation());
+                } else {
+                    topLevelClass.addImportedType(LombokPlugin.EnumLombokAnnotations.TO_STRING.getClazz());
+                    builderCls.addAnnotation(LombokPlugin.EnumLombokAnnotations.TO_STRING.getAnnotation());
+                }
+
+
+                for (IntrospectedColumn introspectedColumn : columns) {
+                    Field field = JavaBeansUtil.getJavaBeansField(introspectedColumn, context, introspectedTable);
+                    field.getJavaDocLines().clear();
+                    commentGenerator.addFieldComment(field, introspectedTable);
+
+                    builderCls.addField(field);
+                }
+
+                // self 方法
+                Method selfMethod1 = JavaElementGeneratorTools.generateMethod(
+                        "self",
+                        JavaVisibility.PROTECTED,
+                        new FullyQualifiedJavaType("B")
+                );
+                commentGenerator.addGeneralMethodComment(selfMethod1, introspectedTable);
+                FormatTools.addMethodWithBestPosition(builderCls, selfMethod1);
+
+                // build 方法
+                Method buildMethod1 = JavaElementGeneratorTools.generateMethod(
+                        "build",
+                        JavaVisibility.PUBLIC,
+                        new FullyQualifiedJavaType("C")
+                );
+                commentGenerator.addGeneralMethodComment(buildMethod1, introspectedTable);
+                FormatTools.addMethodWithBestPosition(builderCls, buildMethod1);
+
+
+                topLevelClass.addInnerClass(builderCls);
+
+                return false;
+            }
+        }
+        return true;
     }
 
     // =============================================== IModelBuilderPluginHook ===================================================

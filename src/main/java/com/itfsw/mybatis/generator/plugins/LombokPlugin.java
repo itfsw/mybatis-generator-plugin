@@ -17,6 +17,9 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
+import com.itfsw.mybatis.generator.plugins.utils.IntrospectedTableTools;
+import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
+import com.itfsw.mybatis.generator.plugins.utils.hook.ILombokPluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.Method;
@@ -79,7 +82,8 @@ public class LombokPlugin extends BasePlugin {
         }
 
         // @Builder
-        if (this.hasBuilder) {
+        List<IntrospectedColumn> columns = IntrospectedTableTools.getModelBaseRecordClomns(introspectedTable);
+        if (this.hasBuilder && PluginTools.getHook(ILombokPluginHook.class).modelBaseRecordBuilderClassGenerated(topLevelClass, columns, introspectedTable)) {
             // 有子类或者父类
             if (introspectedTable.getRules().generateRecordWithBLOBsClass() || introspectedTable.getRules().generatePrimaryKeyClass() || topLevelClass.getSuperClass() != null) {
                 this.addAnnotations(topLevelClass, EnumLombokAnnotations.SUPER_BUILDER);
@@ -114,7 +118,8 @@ public class LombokPlugin extends BasePlugin {
         }
 
         // @Builder
-        if (this.hasBuilder) {
+        List<IntrospectedColumn> columns = introspectedTable.getPrimaryKeyColumns();
+        if (this.hasBuilder && PluginTools.getHook(ILombokPluginHook.class).modelPrimaryKeyBuilderClassGenerated(topLevelClass, columns, introspectedTable)) {
             // 有子类或者父类
             if (introspectedTable.getRules().generateRecordWithBLOBsClass() || introspectedTable.getRules().generateBaseRecordClass() || topLevelClass.getSuperClass() != null) {
                 this.addAnnotations(topLevelClass, EnumLombokAnnotations.SUPER_BUILDER);
@@ -149,7 +154,8 @@ public class LombokPlugin extends BasePlugin {
         }
 
         // @Builder
-        if (this.hasBuilder) {
+        List<IntrospectedColumn> columns = introspectedTable.getBLOBColumns();
+        if (this.hasBuilder && PluginTools.getHook(ILombokPluginHook.class).modelRecordWithBLOBsBuilderClassGenerated(topLevelClass, columns, introspectedTable)) {
             // 有子类或者父类
             if (introspectedTable.getRules().generateBaseRecordClass() || introspectedTable.getRules().generatePrimaryKeyClass() || topLevelClass.getSuperClass() != null) {
                 this.addAnnotations(topLevelClass, EnumLombokAnnotations.SUPER_BUILDER);
@@ -216,6 +222,9 @@ public class LombokPlugin extends BasePlugin {
         ALL_ARGS_CONSTRUCTOR("@AllArgsConstructor", "lombok.AllArgsConstructor"),
         NO_ARGS_CONSTRUCTOR("@NoArgsConstructor", "lombok.NoArgsConstructor"),
         EQUALS_AND_HASH_CODE_CALL_SUPER("@EqualsAndHashCode(callSuper = true)", "lombok.EqualsAndHashCode"),
+        SETTER("@Setter", "lombok.Setter"),
+        ACCESSORS_FLUENT_TRUE("@Accessors(fluent = true)", "lombok.experimental.Accessors"),
+        TO_STRING("@ToString", "lombok.ToString"),
         TO_STRING_CALL_SUPER("@ToString(callSuper = true)", "lombok.ToString");
 
         private final String annotation;

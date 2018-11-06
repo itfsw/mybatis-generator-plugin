@@ -54,7 +54,7 @@ public class IncrementsPluginTest {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator-without-model-builder-plugin.xml");
         tool.generate();
 
-        Assert.assertEquals(tool.getWarnings().get(0), "itfsw:插件com.itfsw.mybatis.generator.plugins.IncrementsPlugin插件需配合com.itfsw.mybatis.generator.plugins.ModelBuilderPlugin插件使用！");
+        Assert.assertEquals(tool.getWarnings().get(0), "itfsw:插件com.itfsw.mybatis.generator.plugins.IncrementsPlugin插件需配合com.itfsw.mybatis.generator.plugins.ModelBuilderPlugin或者com.itfsw.mybatis.generator.plugins.LombokPlugin插件使用！");
     }
 
     /**
@@ -63,7 +63,7 @@ public class IncrementsPluginTest {
     @Test
     public void testModelBuilderMethod() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator.xml");
-        tool.generate(() -> DBHelper.resetDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试生成的方法
@@ -112,7 +112,7 @@ public class IncrementsPluginTest {
     @Test
     public void testSqlAndExecute() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator.xml");
-        tool.generate(() -> DBHelper.resetDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
 
@@ -214,7 +214,7 @@ public class IncrementsPluginTest {
     @Test
     public void testWithSelectiveEnhancedPlugin() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator-with-selective-enhanced-plugin.xml");
-        tool.generate(() -> DBHelper.resetDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试updateByExampleSelective
@@ -307,7 +307,7 @@ public class IncrementsPluginTest {
     @Test
     public void testWithUpsertPlugin() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator-with-upsert-plugin.xml");
-        tool.generate(() -> DBHelper.resetDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -399,7 +399,7 @@ public class IncrementsPluginTest {
     @Test
     public void testWithAutoDelimitKeywords() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator-with-autoDelimitKeywords.xml");
-        tool.generate(() -> DBHelper.resetDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试updateByExample、updateByExampleSelective
@@ -433,7 +433,7 @@ public class IncrementsPluginTest {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator-with-upsert-and-selective-enhanced-plugin.xml");
 
         // upsertSelective 基于原生非空判断
-        tool.generate(() -> DBHelper.resetDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -459,7 +459,7 @@ public class IncrementsPluginTest {
         });
 
         // upsertByExampleSelective 基于原生非空判断
-        tool.generate(() -> DBHelper.resetDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试updateByExampleSelective
@@ -499,7 +499,7 @@ public class IncrementsPluginTest {
         });
 
         // upsertSelective 基于指定字段
-        tool.generate(() -> DBHelper.resetDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
@@ -536,7 +536,7 @@ public class IncrementsPluginTest {
         });
 
         // upsertByExampleSelective 基于指定字段
-        tool.generate(() -> DBHelper.resetDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
+        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试updateByExampleSelective
@@ -582,6 +582,35 @@ public class IncrementsPluginTest {
                 rs = DBHelper.execute(sqlSession.getConnection(), "select inc_f1 from tb where id = 11");
                 rs.first();
                 Assert.assertEquals(rs.getInt("inc_f1"), 50);
+            }
+        });
+    }
+
+    /**
+     * 测试同时整合 LombokPlugin
+     */
+    @Test
+    public void testWithLombokPlugin() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/IncrementsPlugin/mybatis-generator-with-LombokPlugin.xml");
+
+        tool.generate(() -> DBHelper.createDB("scripts/IncrementsPlugin/init-lombok.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // ------------------------------------- builder ----------------------------------------
+                // normal builder
+                ObjectUtil tbBuilder = new ObjectUtil(loader.loadClass(packagz + ".Tb").getMethod("builder").invoke(null));
+                tbBuilder = new ObjectUtil(tbBuilder.invoke("id", 1L));
+                tbBuilder.invoke("field1", "ts1");
+                ObjectUtil tb = new ObjectUtil(tbBuilder.invoke("build"));
+                Assert.assertEquals(tb.invoke("toString"), "Tb(id=1, field1=ts1, field2=null)");
+                // super
+                ObjectUtil tbLombokWithBLOBsBuilder = new ObjectUtil(loader.loadClass(packagz + ".TbLombokWithBLOBs").getMethod("builder").invoke(null));
+                tbLombokWithBLOBsBuilder.invoke("field3", "ts3");
+                Assert.assertEquals(tbLombokWithBLOBsBuilder.invoke("toString"), "TbLombokWithBLOBs.TbLombokWithBLOBsBuilder(super=TbLombok.TbLombokBuilder(super=TbLombokKey.TbLombokKeyBuilder(id=null, key1=null), field1=null, incF1=null), field3=ts3, field4=null)");
+                tbLombokWithBLOBsBuilder.invoke("field1", "ts1");
+                Assert.assertEquals(tbLombokWithBLOBsBuilder.invoke("toString"), "TbLombokWithBLOBs.TbLombokWithBLOBsBuilder(super=TbLombok.TbLombokBuilder(super=TbLombokKey.TbLombokKeyBuilder(id=null, key1=null), field1=ts1, incF1=null), field3=ts3, field4=null)");
+                tbLombokWithBLOBsBuilder.invoke("id", 100L);
+                Assert.assertEquals(tbLombokWithBLOBsBuilder.invoke("toString"), "TbLombokWithBLOBs.TbLombokWithBLOBsBuilder(super=TbLombok.TbLombokBuilder(super=TbLombokKey.TbLombokKeyBuilder(id=100, key1=null), field1=ts1, incF1=null), field3=ts3, field4=null)");
             }
         });
     }

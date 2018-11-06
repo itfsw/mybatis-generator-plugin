@@ -49,11 +49,16 @@ public class PluginTools {
     /**
      * 检查插件依赖
      * @param context 上下文
-     * @param plugin  插件
+     * @param plugins 插件
      * @return
      */
-    public static boolean checkDependencyPlugin(Context context, Class plugin) {
-        return getPluginIndex(context, plugin) >= 0;
+    public static boolean checkDependencyPlugin(Context context, Class... plugins) {
+        for (Class plugin : plugins) {
+            if (getPluginIndex(context, plugin) < 0) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

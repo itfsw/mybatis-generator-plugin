@@ -28,12 +28,12 @@ import org.mybatis.generator.internal.util.StringUtility;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.List;
 
 /**
  * ---------------------------------------------------------------------------
  * IntrospectedTable 的一些拓展增强
  * ---------------------------------------------------------------------------
- *
  * @author: hewei
  * @time:2017/6/13 13:48
  * ---------------------------------------------------------------------------
@@ -42,7 +42,6 @@ public class IntrospectedTableTools {
 
     /**
      * 设置DomainObjectName和MapperName
-     *
      * @param introspectedTable
      * @param context
      * @param domainObjectName
@@ -84,7 +83,6 @@ public class IntrospectedTableTools {
 
     /**
      * 安全获取column 通过正则获取的name可能包含beginningDelimiter&&endingDelimiter
-     *
      * @param introspectedTable
      * @param columnName
      * @return
@@ -103,5 +101,50 @@ public class IntrospectedTableTools {
         }
 
         return introspectedTable.getColumn(columnName);
+    }
+
+    /**
+     * 获取生成model baseRecord的列
+     * @param introspectedTable
+     * @return
+     */
+    public static List<IntrospectedColumn> getModelBaseRecordClomns(IntrospectedTable introspectedTable) {
+        List<IntrospectedColumn> introspectedColumns;
+        if (includePrimaryKeyColumns(introspectedTable)) {
+            if (includeBLOBColumns(introspectedTable)) {
+                introspectedColumns = introspectedTable.getAllColumns();
+            } else {
+                introspectedColumns = introspectedTable.getNonBLOBColumns();
+            }
+        } else {
+            if (includeBLOBColumns(introspectedTable)) {
+                introspectedColumns = introspectedTable
+                        .getNonPrimaryKeyColumns();
+            } else {
+                introspectedColumns = introspectedTable.getBaseColumns();
+            }
+        }
+
+        return introspectedColumns;
+    }
+
+    /**
+     * 是否有primaryKey 列
+     * @param introspectedTable
+     * @return
+     */
+    public static boolean includePrimaryKeyColumns(IntrospectedTable introspectedTable) {
+        return !introspectedTable.getRules().generatePrimaryKeyClass()
+                && introspectedTable.hasPrimaryKeyColumns();
+    }
+
+    /**
+     * 是否有 blob 列
+     * @param introspectedTable
+     * @return
+     */
+    public static boolean includeBLOBColumns(IntrospectedTable introspectedTable) {
+        return !introspectedTable.getRules().generateRecordWithBLOBsClass()
+                && introspectedTable.hasBLOBColumns();
     }
 }

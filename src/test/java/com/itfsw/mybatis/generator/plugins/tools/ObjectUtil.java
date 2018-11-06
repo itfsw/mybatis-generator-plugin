@@ -151,6 +151,7 @@ public class ObjectUtil {
                 }
 
                 if (flag) {
+                    method.setAccessible(true);
                     return method.invoke(this.object, args);
                 }
             }
