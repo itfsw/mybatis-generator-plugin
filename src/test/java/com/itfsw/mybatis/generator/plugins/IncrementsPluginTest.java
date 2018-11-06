@@ -154,7 +154,7 @@ public class IncrementsPluginTest {
                 // 2. 测试updateByPrimaryKey、updateByPrimaryKeySelective
                 ObjectUtil tbKeysMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbKeysMapper")));
 
-                ObjectUtil tbKeysBuilderInc = new ObjectUtil(loader, packagz + ".TbKeys$Builder$Inc#INC");
+                ObjectUtil tbKeysBuilderInc = new ObjectUtil(loader, packagz + ".TbKeysKey$Builder$Inc#INC");
 
                 ObjectUtil tbKeysBuilder = new ObjectUtil(loader, packagz + ".TbKeys$Builder");
                 tbKeysBuilder.invoke("key1", 1l);
@@ -268,7 +268,7 @@ public class IncrementsPluginTest {
                 // 2. 测试updateByPrimaryKeySelective
                 ObjectUtil tbKeysMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbKeysMapper")));
 
-                ObjectUtil tbKeysBuilderInc = new ObjectUtil(loader, packagz + ".TbKeys$Builder$Inc#INC");
+                ObjectUtil tbKeysBuilderInc = new ObjectUtil(loader, packagz + ".TbKeysKey$Builder$Inc#INC");
 
                 ObjectUtil tbKeysBuilder = new ObjectUtil(loader, packagz + ".TbKeys$Builder");
                 tbKeysBuilder.invoke("key1", 1l);
