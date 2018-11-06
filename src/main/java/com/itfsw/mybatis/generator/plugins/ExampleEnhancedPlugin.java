@@ -22,6 +22,8 @@ import java.util.List;
  * ---------------------------------------------------------------------------
  */
 public class ExampleEnhancedPlugin extends BasePlugin {
+    public static final String METHOD_NEW_AND_CREATE_CRITERIA = "newAndCreateCriteria";   // newAndCreateCriteria 方法
+
     private boolean enableColumnOperate = false;    // 是否启用column的操作
 
     /**
@@ -67,9 +69,32 @@ public class ExampleEnhancedPlugin extends BasePlugin {
         }
 
         // orderBy方法
-        addOrderByMethodToExample(topLevelClass, introspectedTable);
+        this.addOrderByMethodToExample(topLevelClass, introspectedTable);
+
+        // createCriteria 静态方法
+        this.addStaticCreateCriteriaMethodToExample(topLevelClass, introspectedTable);
 
         return true;
+    }
+
+    /**
+     * 添加 createCriteria 静态方法
+     * @param topLevelClass
+     * @param introspectedTable
+     */
+    private void addStaticCreateCriteriaMethodToExample(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        Method createCriteriaMethod = JavaElementGeneratorTools.generateMethod(
+                METHOD_NEW_AND_CREATE_CRITERIA,
+                JavaVisibility.PUBLIC,
+                FullyQualifiedJavaType.getCriteriaInstance()
+        );
+        commentGenerator.addGeneralMethodComment(createCriteriaMethod, introspectedTable);
+
+        createCriteriaMethod.setStatic(true);
+        createCriteriaMethod.addBodyLine(topLevelClass.getType().getShortName() + " example = new " + topLevelClass.getType().getShortName() + "();");
+        createCriteriaMethod.addBodyLine("return example.createCriteria();");
+
+        FormatTools.addMethodWithBestPosition(topLevelClass, createCriteriaMethod);
     }
 
     /**

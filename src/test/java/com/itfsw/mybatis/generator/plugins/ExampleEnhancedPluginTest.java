@@ -89,6 +89,27 @@ public class ExampleEnhancedPluginTest {
     }
 
     /**
+     * 测试静态 createCriteria
+     * @throws Exception
+     */
+    @Test
+    public void testStaticCreateCriteria() throws Exception{
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ExampleEnhancedPlugin/mybatis-generator.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tbExampleCriteria = new ObjectUtil(loader.loadClass(packagz + ".TbExample").getMethod(ExampleEnhancedPlugin.METHOD_NEW_AND_CREATE_CRITERIA).invoke(null));
+
+                // 调用example方法能正常返回
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExampleCriteria.invoke("example"));
+                Assert.assertEquals(sql, "select id, field1, field2 from tb");
+            }
+        });
+    }
+
+    /**
      * 测试andIf方法
      */
     @Test

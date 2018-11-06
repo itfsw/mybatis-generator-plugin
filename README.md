@@ -282,6 +282,7 @@ public class Test {
 * Example增强了setOrderByClause方法，新增orderBy(String orderByClause)方法直接返回example，增强链式调用，可以一路.下去了。
 * 继续增强orderBy(String orderByClause)方法，增加orderBy(String ... orderByClauses)方法，配合数据Model属性对应Column获取插件（ModelColumnPlugin）使用效果更佳。 
 * 增加基于column的操作，当配置了[数据Model属性对应Column获取插件（ModelColumnPlugin）](#8-数据model属性对应column获取插件)插件时，提供column之间的比对操作。  
+* 增加createCriteria静态方法newAndCreateCriteria简写example的创建。
 
 插件：
 ```xml
@@ -367,6 +368,19 @@ public class Test {
                 .andField1GreaterThanOrEqualToColumn(Tb.Column.field2)  // where field1 >= field2
                 .andField1LessThanColumn(Tb.Column.field2)  // where field1 < field2
                 .andField1LessThanOrEqualToColumn(Tb.Column.field2) // where field1 <= field2
+                .example()
+        );
+        
+        // ---------------------------- static createCriteria  -----------------------
+        // simple
+        this.tbMapper.selectByExample(
+                new TbExample()
+                .createCriteria()
+                .example()
+        );
+        // new
+        this.tbMapper.selectByExample(
+                TbExample.newAndCreateCriteria()
                 .example()
         );
     }
