@@ -25,6 +25,7 @@
 * [乐观锁插件（OptimisticLockerPlugin）](#17-乐观锁插件)
 * [表重命名配置插件（TableRenameConfigurationPlugin）](#18-表重命名配置插件)
 * [Lombok插件（LombokPlugin）](#19-Lombok插件)
+* [数据ModelCloneable插件（ModelCloneablePlugin）](#20-数据ModelCloneable插件)
 
 ---------------------------------------
 Maven引用：  
@@ -32,7 +33,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.2.11</version>
+  <version>1.2.12</version>
 </dependency>
 ```
 ---------------------------------------
@@ -87,7 +88,7 @@ targetCompatibility = 1.8
 
 
 def mybatisGeneratorCore = 'org.mybatis.generator:mybatis-generator-core:1.3.7'
-def itfswMybatisGeneratorPlugin = 'com.itfsw:mybatis-generator-plugin:1.2.10'
+def itfswMybatisGeneratorPlugin = 'com.itfsw:mybatis-generator-plugin:1.2.12'
 
 mybatisGenerator {
   verbose = false
@@ -1382,5 +1383,14 @@ public class Test {
         <property name="@AllArgsConstructor" value="false"/>
         <property name="@NoArgsConstructor" value="false"/>
     </plugin>
+</xml>
+```
+### 19. 数据ModelCloneable插件
+数据Model实现Cloneable接口。
+
+```xml
+<xml>
+    <!-- 数据ModelCloneable插件 -->
+    <plugin type="com.itfsw.mybatis.generator.plugins.ModelCloneablePlugin"/>
 </xml>
 ```
