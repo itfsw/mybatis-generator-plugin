@@ -42,7 +42,7 @@ MyBatis Generator 参考配置（插件依赖应该配置在mybatis-generator-ma
 <plugin>
     <groupId>org.mybatis.generator</groupId>
     <artifactId>mybatis-generator-maven-plugin</artifactId>
-    <version>1.3.6</version>
+    <version>1.3.7</version>
     <configuration>
         <!-- 配置文件 -->
         <configurationFile>src/main/resources/mybatis-generator.xml</configurationFile>
