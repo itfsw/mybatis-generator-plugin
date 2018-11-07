@@ -46,6 +46,7 @@ import java.util.List;
 public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginHook, IIncrementsPluginHook, ILombokPluginHook {
     public static final String PRO_INCREMENTS_COLUMNS = "incrementsColumns";  // incrementsColumns property
     public static final String FIELD_INC_MAP = "incrementsColumnsInfoMap";    // 为了防止和用户数据库字段冲突，特殊命名
+    public static final String METHOD_GET_INC_MAP = "incrementsColumnsInfoMap"; // 获取inc map
     public static final String METHOD_INC_CHECK = "hasIncsForColumn";   // inc 检查方法名称
 
     private List<IntrospectedColumn> incColumns;   // 表启用增量操作的字段
@@ -316,7 +317,7 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
                     builderCls.addField(fIncrements);
 
                     // Builder 构造函数增加 自增Map
-                    constructor.addBodyLine("this." + IncrementsPlugin.FIELD_INC_MAP + " = builder." + IncrementsPlugin.FIELD_INC_MAP + ";");
+                    constructor.addBodyLine("this." + IncrementsPlugin.FIELD_INC_MAP + ".putAll(builder." + IncrementsPlugin.FIELD_INC_MAP + ");");
                 }
 
                 FullyQualifiedJavaType builderType2 = new FullyQualifiedJavaType(topLevelClass.getType().getShortName() + "." + topLevelClass.getType().getShortName() + "Builder");
@@ -473,8 +474,8 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
             ));
             TextElement spec = new TextElement(
                     MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn)
-                            + " ${" + (prefix != null ? prefix : "")
-                            + IncrementsPlugin.FIELD_INC_MAP + "." + MyBatis3FormattingUtilities.escapeStringForMyBatis3(introspectedColumn.getActualColumnName()) + ".value} "
+                            + " ${" + (prefix != null ? prefix : "_parameter.")
+                            + IncrementsPlugin.METHOD_GET_INC_MAP + "()." + MyBatis3FormattingUtilities.escapeStringForMyBatis3(introspectedColumn.getActualColumnName()) + ".value} "
                             + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix));
             when.addElement(spec);
             choose.addElement(when);
@@ -519,7 +520,7 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
                     sb.append("column.value");
 
                     when.addAttribute(new Attribute("test", sb.toString()));
-                    when.addElement(new TextElement("${column.escapedColumnName} = ${column.escapedColumnName} ${record." + FIELD_INC_MAP + "."
+                    when.addElement(new TextElement("${column.escapedColumnName} = ${column.escapedColumnName} ${record." + METHOD_GET_INC_MAP + "()."
                             + introspectedColumn.getActualColumnName()
                             + ".value} #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
                     choose.addElement(when);
@@ -561,18 +562,24 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
                 new FullyQualifiedJavaType("Map<String, " + this.getIncEnum(builderCls, introspectedTable).getFullyQualifiedName() + ">"),
                 "new HashMap<String, " + this.getIncEnum(builderCls, introspectedTable).getFullyQualifiedName() + ">()"
         );
+        fIncrements.setFinal(true);
         commentGenerator.addFieldComment(fIncrements, introspectedTable);
         topLevelClass.addField(fIncrements);
         topLevelClass.addImportedType("java.util.Map");
         topLevelClass.addImportedType("java.util.HashMap");
-        // getter&setter
-        if (!withLombok) {
-            Method mGetter = JavaElementGeneratorTools.generateGetterMethod(fIncrements);
-            commentGenerator.addGetterComment(mGetter, introspectedTable, null);
-            FormatTools.addMethodWithBestPosition(topLevelClass, mGetter);
-            Method mSetter = JavaElementGeneratorTools.generateSetterMethod(fIncrements);
-            commentGenerator.addSetterComment(mSetter, introspectedTable, null);
-            FormatTools.addMethodWithBestPosition(topLevelClass, mSetter);
+        // inc map 获取方法
+        if (withLombok) {
+            topLevelClass.addImportedType(LombokPlugin.EnumLombokAnnotations.ACCESSORS_FLUENT_TRUE.getClazz());
+            fIncrements.addAnnotation(LombokPlugin.EnumLombokAnnotations.ACCESSORS_FLUENT_TRUE.getAnnotation());
+        } else {
+            Method getIncMapMethod = JavaElementGeneratorTools.generateMethod(
+                    METHOD_GET_INC_MAP,
+                    JavaVisibility.PUBLIC,
+                    fIncrements.getType()
+            );
+            commentGenerator.addGeneralMethodComment(getIncMapMethod, introspectedTable);
+            getIncMapMethod.addBodyLine("return this." + FIELD_INC_MAP + ";");
+            FormatTools.addMethodWithBestPosition(topLevelClass, getIncMapMethod);
         }
         // 增加判断方法
         Method mHasIncsForColumn = JavaElementGeneratorTools.generateMethod(
