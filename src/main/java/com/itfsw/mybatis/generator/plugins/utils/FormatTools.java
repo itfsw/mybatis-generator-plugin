@@ -215,7 +215,7 @@ public class FormatTools {
         boolean flag = false;
         while (elementIterator.hasNext()) {
             Element ele = elementIterator.next();
-            if (ele instanceof TextElement && ((TextElement) ele).getContent().matches("<!--")) {
+            if (ele instanceof TextElement && ((TextElement) ele).getContent().matches(".*<!--.*")) {
                 flag = true;
             }
 
@@ -223,7 +223,7 @@ public class FormatTools {
                 elementIterator.remove();
             }
 
-            if (ele instanceof TextElement && ((TextElement) ele).getContent().matches("-->")) {
+            if (ele instanceof TextElement && ((TextElement) ele).getContent().matches(".*-->.*")) {
                 flag = false;
             }
         }

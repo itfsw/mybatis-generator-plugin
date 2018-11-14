@@ -331,8 +331,6 @@ public class LogicalDeletePlugin extends BasePlugin {
 
                 selectByPrimaryKey.addAttribute(new Attribute("parameterType", "map"));
 
-                context.getCommentGenerator().addComment(selectByPrimaryKey);
-
                 sb = new StringBuilder();
                 sb.append("select ");
 
