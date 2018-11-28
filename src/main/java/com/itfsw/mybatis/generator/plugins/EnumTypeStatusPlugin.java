@@ -26,7 +26,7 @@ import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.internal.util.StringUtility;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -57,48 +57,57 @@ public class EnumTypeStatusPlugin extends BasePlugin {
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
         super.initialized(introspectedTable);
-        this.enumColumns = new HashMap<>();
+        this.enumColumns = new LinkedHashMap<>();
 
-        String enumColumns = introspectedTable.getTableConfigurationProperty(EnumTypeStatusPlugin.PRO_ENUM_COLUMNS);
+        // 获取全局配置
+        String enumColumns = this.getProperties().getProperty(EnumTypeStatusPlugin.PRO_ENUM_COLUMNS);
+        // 如果有局部配置，则附加上去
+        String tableEnumColumns = introspectedTable.getTableConfigurationProperty(EnumTypeStatusPlugin.PRO_ENUM_COLUMNS);
+        if (tableEnumColumns != null) {
+            enumColumns = enumColumns == null ? "" : (enumColumns + ",");
+
+            enumColumns += introspectedTable.getTableConfigurationProperty(EnumTypeStatusPlugin.PRO_ENUM_COLUMNS);
+        }
+
         if (StringUtility.stringHasValue(enumColumns)) {
             // 切分
             String[] enumColumnsStrs = enumColumns.split(",");
             for (String enumColumnsStr : enumColumnsStrs) {
                 IntrospectedColumn column = IntrospectedTableTools.safeGetColumn(introspectedTable, enumColumnsStr);
-                String remarks = column.getRemarks();
-                String javaType = column.getFullyQualifiedJavaType().getFullyQualifiedName();
+                if (column != null) {
+                    String remarks = column.getRemarks();
+                    String javaType = column.getFullyQualifiedJavaType().getFullyQualifiedName();
 
-                if (column == null) {
-                    warnings.add("itfsw:插件" + EnumTypeStatusPlugin.class.getTypeName() + "没有找到column为" + enumColumnsStr.trim() + "的字段！");
-                } else if (!StringUtility.stringHasValue(remarks) || !remarks.matches(REMARKS_PATTERN)) {
-                    warnings.add("itfsw:插件" + EnumTypeStatusPlugin.class.getTypeName() + "没有找到column为" + enumColumnsStr.trim() + "对应格式的注释的字段！");
-                } else if (!(Short.class.getTypeName().equals(javaType)
-                        || Integer.class.getTypeName().equals(javaType)
-                        || Long.class.getTypeName().equals(javaType)
-                        || String.class.getTypeName().equals(javaType))) {
-                    warnings.add("itfsw:插件" + EnumTypeStatusPlugin.class.getTypeName() + "找到column为" + enumColumnsStr.trim() + "对应Java类型不是Short、Integer、Long、String！");
-                } else {
-                    // 提取信息
-                    Pattern pattern = Pattern.compile(NEED_PATTERN);
-                    Matcher matcher = pattern.matcher(remarks);
-                    List<EnumItemInfo> itemInfos = new ArrayList<>();
-                    if (matcher.find() && matcher.groupCount() == 2) {
-                        String enumInfoStr = matcher.group(1);
-                        // 根据逗号切分
-                        String[] enumInfoStrs = enumInfoStr.split(",");
+                    if (!StringUtility.stringHasValue(remarks) || !remarks.matches(REMARKS_PATTERN)) {
+                        warnings.add("itfsw:插件" + EnumTypeStatusPlugin.class.getTypeName() + "没有找到column为" + enumColumnsStr.trim() + "对应格式的注释的字段！");
+                    } else if (!(Short.class.getTypeName().equals(javaType)
+                            || Integer.class.getTypeName().equals(javaType)
+                            || Long.class.getTypeName().equals(javaType)
+                            || String.class.getTypeName().equals(javaType))) {
+                        warnings.add("itfsw:插件" + EnumTypeStatusPlugin.class.getTypeName() + "找到column为" + enumColumnsStr.trim() + "对应Java类型不是Short、Integer、Long、String！");
+                    } else {
+                        // 提取信息
+                        Pattern pattern = Pattern.compile(NEED_PATTERN);
+                        Matcher matcher = pattern.matcher(remarks);
+                        List<EnumItemInfo> itemInfos = new ArrayList<>();
+                        if (matcher.find() && matcher.groupCount() == 2) {
+                            String enumInfoStr = matcher.group(1);
+                            // 根据逗号切分
+                            String[] enumInfoStrs = enumInfoStr.split(",");
 
-                        // 提取每个节点信息
-                        for (String enumInfo : enumInfoStrs) {
-                            pattern = Pattern.compile(ITEM_PATTERN);
-                            matcher = pattern.matcher(enumInfo.trim());
-                            if (matcher.find() && matcher.groupCount() == 3) {
-                                itemInfos.add(new EnumItemInfo(column, matcher.group(1), matcher.group(3), matcher.group(2)));
+                            // 提取每个节点信息
+                            for (String enumInfo : enumInfoStrs) {
+                                pattern = Pattern.compile(ITEM_PATTERN);
+                                matcher = pattern.matcher(enumInfo.trim());
+                                if (matcher.find() && matcher.groupCount() == 3) {
+                                    itemInfos.add(new EnumItemInfo(column, matcher.group(1), matcher.group(3), matcher.group(2)));
+                                }
                             }
                         }
-                    }
 
-                    if (itemInfos.size() > 0) {
-                        this.enumColumns.put(column, itemInfos);
+                        if (itemInfos.size() > 0) {
+                            this.enumColumns.put(column, itemInfos);
+                        }
                     }
                 }
             }
@@ -136,8 +145,7 @@ public class EnumTypeStatusPlugin extends BasePlugin {
 
                     // 生成枚举
                     for (EnumItemInfo item : enumItemInfos) {
-                        // TODO 没有增加枚举注释的方法，hack
-                        innerEnum.addEnumConstant(item.getComment() + item.getName() + "(" + item.getValue() + ")");
+                        innerEnum.addEnumConstant(item.getName() + "(" + item.getValue() + ", " + item.getComment() + ")");
                     }
 
                     // 生成属性和构造函数
@@ -147,10 +155,18 @@ public class EnumTypeStatusPlugin extends BasePlugin {
                     commentGenerator.addFieldComment(fValue, introspectedTable);
                     innerEnum.addField(fValue);
 
+                    Field fName = new Field("name", FullyQualifiedJavaType.getStringInstance());
+                    fName.setVisibility(JavaVisibility.PRIVATE);
+                    fName.setFinal(true);
+                    commentGenerator.addFieldComment(fName, introspectedTable);
+                    innerEnum.addField(fName);
+
                     Method mInc = new Method(enumName);
                     mInc.setConstructor(true);
                     mInc.addBodyLine("this.value = value;");
-                    mInc.addParameter(new Parameter(field.getType(), "value"));
+                    mInc.addBodyLine("this.name = name;");
+                    mInc.addParameter(new Parameter(fValue.getType(), "value"));
+                    mInc.addParameter(new Parameter(fName.getType(), "name"));
                     commentGenerator.addGeneralMethodComment(mInc, introspectedTable);
                     FormatTools.addMethodWithBestPosition(innerEnum, mInc);
 
@@ -163,6 +179,11 @@ public class EnumTypeStatusPlugin extends BasePlugin {
                     mValue1.setName("value");
                     commentGenerator.addGeneralMethodComment(mValue1, introspectedTable);
                     FormatTools.addMethodWithBestPosition(innerEnum, mValue1);
+
+                    // 获取name的方法
+                    Method mName = JavaElementGeneratorTools.generateGetterMethod(fName);
+                    commentGenerator.addGeneralMethodComment(mName, introspectedTable);
+                    FormatTools.addMethodWithBestPosition(innerEnum, mName);
 
                     topLevelClass.addInnerEnum(innerEnum);
                 }
@@ -216,7 +237,7 @@ public class EnumTypeStatusPlugin extends BasePlugin {
          * @author hewei
          */
         public String getComment() {
-            return "// " + comment + "\r\n        ";
+            return "\"" + comment + "\"";
         }
 
         /**
