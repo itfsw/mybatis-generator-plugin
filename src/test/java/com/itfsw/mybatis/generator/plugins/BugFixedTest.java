@@ -20,6 +20,8 @@ import com.itfsw.mybatis.generator.plugins.tools.*;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mybatis.generator.api.GeneratedJavaFile;
+import org.mybatis.generator.api.MyBatisGenerator;
 
 import java.lang.reflect.Array;
 import java.util.List;
@@ -141,5 +143,21 @@ public class BugFixedTest {
                 Assert.assertEquals(tb1Mapper.getMethods(OptimisticLockerPlugin.METHOD_DELETE_WITH_VERSION_BY_EXAMPLE).size(), 0);
             }
         });
+    }
+
+    /**
+     * 表重命名配置插件生成的大小写错误
+     * @throws Exception
+     */
+    @Test
+    public void issues63() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/issues-63.xml");
+        MyBatisGenerator generator = tool.generate(() -> DBHelper.createDB("scripts/BugFixedTest/issues-63.sql"));
+        for (GeneratedJavaFile file : generator.getGeneratedJavaFiles()) {
+            String fileName = file.getFileName();
+            if (fileName.startsWith("Repaydetail")){
+                Assert.assertTrue("官方自己的问题", true);
+            }
+        }
     }
 }

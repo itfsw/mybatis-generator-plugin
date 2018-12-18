@@ -111,6 +111,21 @@ public class MyBatisGeneratorTool {
     }
 
     /**
+     * 执行MyBatisGenerator
+     * @param before
+     * @return
+     * @throws SQLException
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public MyBatisGenerator generate(IBeforeCallback before) throws Exception {
+        before.run();
+        MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, new DefaultShellCallback(true), warnings);
+        myBatisGenerator.generate(null, null, null, false);
+        return myBatisGenerator;
+    }
+
+    /**
      * 执行MyBatisGenerator(不生成文件)
      * @return
      * @throws SQLException
