@@ -50,9 +50,10 @@ public class HookAggregator implements IUpsertPluginHook,
         ISelectOneByExamplePluginHook,
         ITableConfigurationHook,
         ILombokPluginHook,
-        ILogicalDeletePluginHook {
+        ILogicalDeletePluginHook,
+        ISelectSelectivePluginHook {
 
-    protected static final Logger logger = LoggerFactory.getLogger(BasePlugin.class); // 日志
+    protected static final Logger logger = LoggerFactory.getLogger(BasePlugin.class);
     private final static HookAggregator instance = new HookAggregator();
     private Context context;
 
@@ -343,4 +344,15 @@ public class HookAggregator implements IUpsertPluginHook,
         return true;
     }
 
+    // ============================================= ISelectSelectivePluginHook ==============================================
+
+    @Override
+    public boolean sqlMapSelectByExampleSelectiveElementGenerated(Document document, XmlElement element, IntrospectedTable introspectedTable) {
+        for (ISelectSelectivePluginHook plugin : this.getPlugins(ISelectSelectivePluginHook.class)) {
+            if (!plugin.sqlMapSelectByExampleSelectiveElementGenerated(document, element, introspectedTable)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

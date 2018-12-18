@@ -25,6 +25,7 @@ import org.mybatis.generator.exception.InvalidConfigurationException;
 import org.mybatis.generator.exception.XMLParserException;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -92,6 +93,41 @@ public class LimitPluginTest {
                 list = (List) tbMapper.invoke("selectByExample", tbExample.getObject());
                 Assert.assertEquals(list.size(), 3);
                 Assert.assertEquals(new ObjectUtil(list.get(0)).get("id"), 7l);
+            }
+        });
+    }
+
+    /**
+     * 整合SelectSelectivePlugin
+     * @throws Exception
+     */
+    @Test
+    public void testWithSelectSelectivePlugin() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LimitPlugin/mybatis-generator-with-SelectSelectivePlugin.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 测试limit 方法
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                tbExample.invoke("limit", 5);
+
+                ObjectUtil columnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
+                // java 动态参数不能有两个会冲突，最后一个封装成Array!!!必须使用反射创建指定类型数组，不然调用invoke对了可变参数会检查类型！
+                Object columns = Array.newInstance(columnField1.getCls(), 1);
+                Array.set(columns, 0, columnField1.getObject());
+
+                // 调用limit(5)方法
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns);
+                Assert.assertEquals(sql, "select field1 from tb limit 5");
+                // 调用limit(1, 5)方法
+                tbExample.invoke("limit", 1, 5);
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns);
+                Assert.assertEquals(sql, "select field1 from tb limit 1, 5");
+                // 执行一次看结果
+                List list = (List) tbMapper.invoke("selectByExampleSelective", tbExample.getObject(), columns);
+                Assert.assertEquals(list.size(), 5);
             }
         });
     }

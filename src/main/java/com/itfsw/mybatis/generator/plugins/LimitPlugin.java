@@ -19,9 +19,11 @@ package com.itfsw.mybatis.generator.plugins;
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
+import com.itfsw.mybatis.generator.plugins.utils.hook.ISelectSelectivePluginHook;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.Attribute;
+import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 
@@ -35,7 +37,7 @@ import java.util.List;
  * @time:2016/12/29 18:14
  * ---------------------------------------------------------------------------
  */
-public class LimitPlugin extends BasePlugin {
+public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHook {
     /**
      * {@inheritDoc}
      */
@@ -169,7 +171,7 @@ public class LimitPlugin extends BasePlugin {
      */
     @Override
     public boolean sqlMapSelectByExampleWithoutBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
-        this.generateLimitElement(element, introspectedTable);
+        this.generateLimitElement(element);
         return true;
     }
 
@@ -182,16 +184,23 @@ public class LimitPlugin extends BasePlugin {
      */
     @Override
     public boolean sqlMapSelectByExampleWithBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
-        this.generateLimitElement(element, introspectedTable);
+        this.generateLimitElement(element);
         return true;
+    }
+
+    // ============================================ ISelectSelectivePluginHook ==========================================
+
+    @Override
+    public boolean sqlMapSelectByExampleSelectiveElementGenerated(Document document, XmlElement element, IntrospectedTable introspectedTable) {
+        this.generateLimitElementWithExample(element);
+        return false;
     }
 
     /**
      * 生成limit节点
      * @param element
-     * @param introspectedTable
      */
-    public void generateLimitElement(XmlElement element, IntrospectedTable introspectedTable) {
+    private void generateLimitElement(XmlElement element) {
         XmlElement ifLimitNotNullElement = new XmlElement("if");
         ifLimitNotNullElement.addAttribute(new Attribute("test", "rows != null"));
 
@@ -206,7 +215,26 @@ public class LimitPlugin extends BasePlugin {
         ifLimitNotNullElement.addElement(ifOffsetNullElement);
 
         element.addElement(ifLimitNotNullElement);
+    }
 
-        logger.debug("itfsw(MySQL分页插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "selectByExample方法增加分页条件。");
+    /**
+     * 生成limit节点
+     * @param element
+     */
+    private void generateLimitElementWithExample(XmlElement element) {
+        XmlElement ifLimitNotNullElement = new XmlElement("if");
+        ifLimitNotNullElement.addAttribute(new Attribute("test", "example.rows != null"));
+
+        XmlElement ifOffsetNotNullElement = new XmlElement("if");
+        ifOffsetNotNullElement.addAttribute(new Attribute("test", "example.offset != null"));
+        ifOffsetNotNullElement.addElement(new TextElement("limit ${example.offset}, ${example.rows}"));
+        ifLimitNotNullElement.addElement(ifOffsetNotNullElement);
+
+        XmlElement ifOffsetNullElement = new XmlElement("if");
+        ifOffsetNullElement.addAttribute(new Attribute("test", "example.offset == null"));
+        ifOffsetNullElement.addElement(new TextElement("limit ${example.rows}"));
+        ifLimitNotNullElement.addElement(ifOffsetNullElement);
+
+        element.addElement(ifLimitNotNullElement);
     }
 }

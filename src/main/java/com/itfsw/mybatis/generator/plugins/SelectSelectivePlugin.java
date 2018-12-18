@@ -18,6 +18,7 @@ package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.*;
 import com.itfsw.mybatis.generator.plugins.utils.hook.ISelectOneByExamplePluginHook;
+import com.itfsw.mybatis.generator.plugins.utils.hook.ISelectSelectivePluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
@@ -180,6 +181,7 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
         // 1. selectByExampleSelective 方法
         if (this.selectByExampleSelectiveEle != null) {
             FormatTools.addElementWithBestPosition(document.getRootElement(), this.selectByExampleSelectiveEle);
+            PluginTools.getHook(ISelectSelectivePluginHook.class).sqlMapSelectByExampleSelectiveElementGenerated(document, this.selectByExampleSelectiveEle, introspectedTable);
         }
 
         // 2. selectByPrimaryKeySelective
