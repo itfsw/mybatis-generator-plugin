@@ -103,6 +103,7 @@
             <artifactId>tools</artifactId>
             <version>1.8</version>
             <scope>system</scope>
+            <optional>true</optional>
             <!-- jdk path -->
             <systemPath>${env.JAVA_HOME}/lib/tools.jar</systemPath>
         </dependency>
