@@ -10,6 +10,7 @@ import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
+import org.mybatis.generator.internal.util.StringUtility;
 
 import java.util.List;
 
@@ -22,9 +23,14 @@ import java.util.List;
  * ---------------------------------------------------------------------------
  */
 public class ExampleEnhancedPlugin extends BasePlugin {
-    public static final String METHOD_NEW_AND_CREATE_CRITERIA = "newAndCreateCriteria";   // newAndCreateCriteria 方法
-
-    private boolean enableColumnOperate = false;    // 是否启用column的操作
+    // newAndCreateCriteria 方法
+    public static final String METHOD_NEW_AND_CREATE_CRITERIA = "newAndCreateCriteria";
+    // 逻辑删除列-Key
+    public static final String PRO_ENABLE_AND_IF = "enableAndIf";
+    // 是否启用column的操作
+    private boolean enableColumnOperate = false;
+    // 是否启用了过期的andIf
+    private boolean enableAndIf;
 
     /**
      * {@inheritDoc}
@@ -34,6 +40,8 @@ public class ExampleEnhancedPlugin extends BasePlugin {
     public void initialized(IntrospectedTable introspectedTable) {
         super.initialized(introspectedTable);
         this.enableColumnOperate = PluginTools.checkDependencyPlugin(context, ModelColumnPlugin.class);
+        String enableAndIf = properties.getProperty(PRO_ENABLE_AND_IF);
+        this.enableAndIf = enableAndIf == null ? true : StringUtility.isTrue(enableAndIf);
     }
 
     /**
@@ -46,12 +54,17 @@ public class ExampleEnhancedPlugin extends BasePlugin {
     @Override
     public boolean modelExampleClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         List<InnerClass> innerClasses = topLevelClass.getInnerClasses();
-        for (InnerClass innerClass : innerClasses) {
+        for (int i = 0; i < innerClasses.size(); i++) {
+            InnerClass innerClass = innerClasses.get(i);
             if ("Criteria".equals(innerClass.getType().getShortName())) {
                 // 工厂方法
                 addFactoryMethodToCriteria(topLevelClass, innerClass, introspectedTable);
                 // andIf
-                addAndIfMethodToCriteria(topLevelClass, innerClass, introspectedTable);
+                if (this.enableAndIf) {
+                    addAndIfMethodToCriteria(topLevelClass, innerClass, introspectedTable);
+                }
+                // when
+                addWhenToCriteria(topLevelClass, innerClass, introspectedTable);
             } else if ("GeneratedCriteria".equals(innerClass.getType().getShortName())) {
                 // column 方法
                 if (this.enableColumnOperate) {
@@ -62,10 +75,12 @@ public class ExampleEnhancedPlugin extends BasePlugin {
 
         List<Method> methods = topLevelClass.getMethods();
         for (Method method : methods) {
-            if (!"createCriteriaInternal".equals(method.getName()))
+            if (!"createCriteriaInternal".equals(method.getName())) {
                 continue;
-            method.getBodyLines().set(0, "Criteria criteria = new Criteria(this);");
-            logger.debug("itfsw(Example增强插件):" + topLevelClass.getType().getShortName() + "修改createCriteriaInternal方法，修改构造Criteria时传入Example对象");
+            } else {
+                method.getBodyLines().set(0, "Criteria criteria = new Criteria(this);");
+                logger.debug("itfsw(Example增强插件):" + topLevelClass.getType().getShortName() + "修改createCriteriaInternal方法，修改构造Criteria时传入Example对象");
+            }
         }
 
         // orderBy方法
@@ -73,6 +88,9 @@ public class ExampleEnhancedPlugin extends BasePlugin {
 
         // createCriteria 静态方法
         this.addStaticCreateCriteriaMethodToExample(topLevelClass, introspectedTable);
+
+        // when
+        addWhenToExample(topLevelClass, introspectedTable);
 
         return true;
     }
@@ -215,6 +233,88 @@ public class ExampleEnhancedPlugin extends BasePlugin {
         logger.debug("itfsw(Example增强插件):" + topLevelClass.getType().getShortName() + "." + innerClass.getType().getShortName() + "增加工厂方法example");
     }
 
+    /**
+     * 增强Criteria的链式调用(when)
+     * @param topLevelClass
+     * @param innerClass
+     * @param introspectedTable
+     */
+    private void addWhenToCriteria(TopLevelClass topLevelClass, InnerClass innerClass, IntrospectedTable introspectedTable) {
+        this.addWhenToClass(topLevelClass, innerClass, introspectedTable, "criteria");
+    }
+
+    /**
+     * 增强Example的链式调用(when)
+     * @param topLevelClass
+     * @param introspectedTable
+     */
+    private void addWhenToExample(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        this.addWhenToClass(topLevelClass, topLevelClass, introspectedTable, "example");
+    }
+
+    /**
+     * 增强链式调用(when)
+     * @param topLevelClass
+     * @param clazz
+     * @param introspectedTable
+     */
+    private void addWhenToClass(TopLevelClass topLevelClass, InnerClass clazz, IntrospectedTable introspectedTable, String type) {
+        // 添加接口When
+        InnerInterface whenInterface = new InnerInterface("I" + FormatTools.upFirstChar(type) + "When");
+        whenInterface.setVisibility(JavaVisibility.PUBLIC);
+
+        // ICriteriaAdd增加接口add
+        Method addMethod = JavaElementGeneratorTools.generateMethod(
+                type,
+                JavaVisibility.DEFAULT,
+                null,
+                new Parameter(clazz.getType(), type)
+        );
+        commentGenerator.addGeneralMethodComment(addMethod, introspectedTable);
+        whenInterface.addMethod(addMethod);
+
+        InnerClass innerClassWrapper = new InnerInterfaceWrapperToInnerClass(whenInterface);
+        // 添加注释
+        commentGenerator.addClassComment(innerClassWrapper, introspectedTable);
+        topLevelClass.addInnerClass(innerClassWrapper);
+
+        // 添加when方法
+        Method whenMethod = JavaElementGeneratorTools.generateMethod(
+                "when",
+                JavaVisibility.PUBLIC,
+                clazz.getType(),
+                new Parameter(FullyQualifiedJavaType.getBooleanPrimitiveInstance(), "condition"),
+                new Parameter(whenInterface.getType(), "then")
+        );
+        commentGenerator.addGeneralMethodComment(whenMethod, introspectedTable);
+        whenMethod = JavaElementGeneratorTools.generateMethodBody(
+                whenMethod,
+                "if (condition) {",
+                "then." + type + "(this);",
+                "}",
+                "return this;"
+        );
+        FormatTools.addMethodWithBestPosition(clazz, whenMethod);
+        Method whenOtherwiseMethod = JavaElementGeneratorTools.generateMethod(
+                "when",
+                JavaVisibility.PUBLIC,
+                clazz.getType(),
+                new Parameter(FullyQualifiedJavaType.getBooleanPrimitiveInstance(), "condition"),
+                new Parameter(whenInterface.getType(), "then"),
+                new Parameter(whenInterface.getType(), "otherwise")
+        );
+        commentGenerator.addGeneralMethodComment(whenOtherwiseMethod, introspectedTable);
+        whenOtherwiseMethod = JavaElementGeneratorTools.generateMethodBody(
+                whenOtherwiseMethod,
+                "if (condition) {",
+                "then." + type + "(this);",
+                "} else {",
+                "otherwise." + type + "(this);",
+                "}",
+                "return this;"
+        );
+        FormatTools.addMethodWithBestPosition(clazz, whenOtherwiseMethod);
+    }
 
     /**
      * 增强Criteria的链式调用，添加andIf(boolean addIf, CriteriaAdd add)方法，实现链式调用中按条件增加查询语句
@@ -222,10 +322,12 @@ public class ExampleEnhancedPlugin extends BasePlugin {
      * @param innerClass
      * @param introspectedTable
      */
+    @Deprecated
     private void addAndIfMethodToCriteria(TopLevelClass topLevelClass, InnerClass innerClass, IntrospectedTable introspectedTable) {
         // 添加接口CriteriaAdd
         InnerInterface criteriaAddInterface = new InnerInterface("ICriteriaAdd");
         criteriaAddInterface.setVisibility(JavaVisibility.PUBLIC);
+        criteriaAddInterface.addAnnotation("@Deprecated");
         logger.debug("itfsw(Example增强插件):" + topLevelClass.getType().getShortName() + "." + innerClass.getType().getShortName() + "增加接口ICriteriaAdd");
 
         // ICriteriaAdd增加接口add
@@ -252,6 +354,7 @@ public class ExampleEnhancedPlugin extends BasePlugin {
                 new Parameter(FullyQualifiedJavaType.getBooleanPrimitiveInstance(), "ifAdd"),
                 new Parameter(criteriaAddInterface.getType(), "add")
         );
+        andIfMethod.addAnnotation("@Deprecated");
         commentGenerator.addGeneralMethodComment(andIfMethod, introspectedTable);
         andIfMethod = JavaElementGeneratorTools.generateMethodBody(
                 andIfMethod,

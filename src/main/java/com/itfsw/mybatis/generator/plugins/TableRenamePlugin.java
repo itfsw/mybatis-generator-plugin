@@ -17,6 +17,7 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
+import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
 import com.itfsw.mybatis.generator.plugins.utils.IntrospectedTableTools;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.config.TableConfiguration;
@@ -88,7 +89,7 @@ public class TableRenamePlugin extends BasePlugin {
             Matcher matcher = pattern.matcher(domainObjectName);
             domainObjectName = matcher.replaceAll(replaceString);
             // 命名规范化 首字母大写
-            domainObjectName = upFirstWord(domainObjectName);
+            domainObjectName = FormatTools.upFirstChar(domainObjectName);
             try {
                 IntrospectedTableTools.setDomainObjectName(introspectedTable, getContext(), domainObjectName);
             } catch (Exception e) {
@@ -96,14 +97,5 @@ public class TableRenamePlugin extends BasePlugin {
             }
         }
         super.initialized(introspectedTable);
-    }
-
-    /**
-     * 字符串首字母大写
-     * @param str
-     * @return
-     */
-    private String upFirstWord(String str) {
-        return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 }

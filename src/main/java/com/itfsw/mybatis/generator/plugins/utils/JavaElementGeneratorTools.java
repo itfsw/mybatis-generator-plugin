@@ -109,7 +109,7 @@ public class JavaElementGeneratorTools {
      */
     public static Method generateSetterMethod(Field field) {
         Method method = generateMethod(
-                "set" + field.getName().substring(0, 1).toUpperCase() + field.getName().substring(1),
+                "set" + FormatTools.upFirstChar(field.getName()),
                 JavaVisibility.PUBLIC,
                 null,
                 new Parameter(field.getType(), field.getName())
@@ -124,7 +124,7 @@ public class JavaElementGeneratorTools {
      */
     public static Method generateGetterMethod(Field field) {
         Method method = generateMethod(
-                "get" + field.getName().substring(0, 1).toUpperCase() + field.getName().substring(1),
+                "get" + FormatTools.upFirstChar(field.getName()),
                 JavaVisibility.PUBLIC,
                 field.getType()
         );

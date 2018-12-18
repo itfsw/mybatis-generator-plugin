@@ -235,4 +235,13 @@ public class FormatTools {
             element.addElement(0, tmpEle.getElements().get(i));
         }
     }
+
+    /**
+     * 首字母大写
+     * @param str
+     * @return
+     */
+    public static String upFirstChar(String str) {
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
 }

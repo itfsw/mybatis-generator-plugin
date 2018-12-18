@@ -36,7 +36,7 @@ import java.util.Properties;
  */
 public class ExampleTargetPlugin extends BasePlugin {
     public static final String PRO_TARGET_PACKAGE = "targetPackage";  // 配置targetPackage名
-    private static String targetPackage;   // 目标包
+    private String targetPackage;   // 目标包
 
     /**
      * {@inheritDoc}

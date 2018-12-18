@@ -49,6 +49,7 @@ public class InnerInterface extends Interface{
      * @param compilationUnit the compilation unit
      * @return the formatted content
      */
+    @Override
     public String getFormattedContent(int indentLevel, CompilationUnit compilationUnit) {
         StringBuilder sb = new StringBuilder();
 
@@ -58,7 +59,7 @@ public class InnerInterface extends Interface{
         }
 
         if (stringHasValue(getType().getPackageName())) {
-            sb.append("package "); //$NON-NLS-1$
+            sb.append("package "); 
             sb.append(getType().getPackageName());
             sb.append(';');
             newLine(sb);
@@ -66,7 +67,7 @@ public class InnerInterface extends Interface{
         }
 
         for (String staticImport : getStaticImports()) {
-            sb.append("import static "); //$NON-NLS-1$
+            sb.append("import static "); 
             sb.append(staticImport);
             sb.append(';');
             newLine(sb);
@@ -94,19 +95,19 @@ public class InnerInterface extends Interface{
         sb.append(getVisibility().getValue());
 
         if (isFinal()) {
-            sb.append("final "); //$NON-NLS-1$
+            sb.append("final "); 
         }
 
-        sb.append("interface "); //$NON-NLS-1$
+        sb.append("interface "); 
         sb.append(getType().getShortName());
 
         if (getSuperInterfaceTypes().size() > 0) {
-            sb.append(" extends "); //$NON-NLS-1$
+            sb.append(" extends "); 
 
             boolean comma = false;
             for (FullyQualifiedJavaType fqjt : getSuperInterfaceTypes()) {
                 if (comma) {
-                    sb.append(", "); //$NON-NLS-1$
+                    sb.append(", "); 
                 } else {
                     comma = true;
                 }
@@ -115,7 +116,7 @@ public class InnerInterface extends Interface{
             }
         }
 
-        sb.append(" {"); //$NON-NLS-1$
+        sb.append(" {"); 
         indentLevel++;
 
         Iterator<Method> mtdIter = getMethods().iterator();
