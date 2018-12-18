@@ -19,7 +19,9 @@ package com.itfsw.mybatis.generator.plugins;
 import com.itfsw.mybatis.generator.plugins.tools.AbstractShellCallback;
 import com.itfsw.mybatis.generator.plugins.tools.DBHelper;
 import com.itfsw.mybatis.generator.plugins.tools.MyBatisGeneratorTool;
+import com.itfsw.mybatis.generator.plugins.tools.ObjectUtil;
 import org.apache.ibatis.session.SqlSession;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -44,6 +46,25 @@ public class EnumTypeStatusPluginTest {
     }
 
     /**
+     * 测试配置异常
+     */
+    @Test
+    public void testWarnings() throws Exception {
+        // 1. 注释格式不对
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/EnumTypeStatusPlugin/mybatis-generator-with-wrong-comment.xml");
+        tool.generate();
+
+        Assert.assertEquals(tool.getWarnings().get(0), "itfsw:插件" + EnumTypeStatusPlugin.class.getTypeName() + "没有找到column为field2对应格式的注释的字段！");
+
+
+        // 2. 不支持的类型
+        tool = MyBatisGeneratorTool.create("scripts/EnumTypeStatusPlugin/mybatis-generator-with-unsupport-type.xml");
+        tool.generate();
+
+        Assert.assertEquals(tool.getWarnings().get(0), "itfsw:插件" + EnumTypeStatusPlugin.class.getTypeName() + "找到column为field2对应Java类型不是Short、Integer、Long、String！");
+    }
+
+    /**
      * 测试生成的enum
      * @throws Exception
      */
@@ -53,7 +74,48 @@ public class EnumTypeStatusPluginTest {
         tool.generate(new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 测试标准注释
+                ObjectUtil enumField2Success = new ObjectUtil(loader, packagz + ".Tb$Field2#SUCCESS");
+                Assert.assertEquals(enumField2Success.invoke("value"), (short)0);
+                Assert.assertEquals(enumField2Success.invoke("getValue"), (short)0);
+                Assert.assertEquals(enumField2Success.invoke("getName"), "禁用");
 
+                ObjectUtil enumField2FailType = new ObjectUtil(loader, packagz + ".Tb$Field2#FAIL_TYPE");
+                Assert.assertEquals(enumField2FailType.invoke("value"), (short)1);
+                Assert.assertEquals(enumField2FailType.invoke("getValue"), (short)1);
+                Assert.assertEquals(enumField2FailType.invoke("getName"), "启用");
+
+                // 2. 字符串类型的
+                ObjectUtil enumField3StrSuccess = new ObjectUtil(loader, packagz + ".Tb$Field3Str#SUCCESS");
+                Assert.assertEquals(enumField3StrSuccess.invoke("value"), "成都");
+                Assert.assertEquals(enumField3StrSuccess.invoke("getValue"), "成都");
+                Assert.assertEquals(enumField3StrSuccess.invoke("getName"), "禁用");
+
+                // 3. 全局支持
+                ObjectUtil enumStatusSuccess = new ObjectUtil(loader, packagz + ".Tb$Status#SUCCESS");
+                Assert.assertEquals(enumStatusSuccess.invoke("value"), (short)0);
+                Assert.assertEquals(enumStatusSuccess.invoke("getValue"), (short)0);
+                Assert.assertEquals(enumStatusSuccess.invoke("getName"), "禁用");
+
+                // 4. 特殊格式的注释
+                ObjectUtil enumTypeSuccess = new ObjectUtil(loader, packagz + ".Tb$Type#SUCCESS");
+                Assert.assertEquals(enumTypeSuccess.invoke("value"), 0L);
+                Assert.assertEquals(enumTypeSuccess.invoke("getValue"), 0L);
+                Assert.assertEquals(enumTypeSuccess.invoke("getName"), "禁用");
+                ObjectUtil enumTypeFailType = new ObjectUtil(loader, packagz + ".Tb$Type#FAIL_TYPE");
+                Assert.assertEquals(enumTypeFailType.invoke("value"), 1L);
+                Assert.assertEquals(enumTypeFailType.invoke("getValue"), 1L);
+                Assert.assertEquals(enumTypeFailType.invoke("getName"), "启用");
+
+                // 5. 有换行的
+                ObjectUtil enumBreakLineSuccess = new ObjectUtil(loader, packagz + ".Tb$BreakLine#SUCCESS");
+                Assert.assertEquals(enumBreakLineSuccess.invoke("value"), 0L);
+                Assert.assertEquals(enumBreakLineSuccess.invoke("getValue"), 0L);
+                Assert.assertEquals(enumBreakLineSuccess.invoke("getName"), "禁用");
+                ObjectUtil enumBreakLineFailType = new ObjectUtil(loader, packagz + ".Tb$BreakLine#FAIL_TYPE");
+                Assert.assertEquals(enumBreakLineFailType.invoke("value"), 1L);
+                Assert.assertEquals(enumBreakLineFailType.invoke("getValue"), 1L);
+                Assert.assertEquals(enumBreakLineFailType.invoke("getName"), "启用");
             }
         });
     }

@@ -45,9 +45,9 @@ public class EnumTypeStatusPlugin extends BasePlugin {
      * 需要生成Enum的Column
      */
     public final static String PRO_ENUM_COLUMNS = "enumColumns";
-    public final static String REMARKS_PATTERN = ".*\\[(\\w+\\([\\u4e00-\\u9fa5_a-zA-Z0-9]+\\):[\\u4e00-\\u9fa5_a-zA-Z0-9]+\\,?\\s*)+\\].*";
-    public final static String NEED_PATTERN = "\\[((\\w+\\([\\u4e00-\\u9fa5_a-zA-Z0-9]+\\):[\\u4e00-\\u9fa5_a-zA-Z0-9]+\\,?\\s*)+)\\]";
-    public final static String ITEM_PATTERN = "(\\w+)\\(([\\u4e00-\\u9fa5_a-zA-Z0-9]+)\\):([\\u4e00-\\u9fa5_a-zA-Z0-9]+)";
+    public final static String REMARKS_PATTERN = ".*\\s*\\[\\s*(\\w+\\s*\\(\\s*[\\u4e00-\\u9fa5_a-zA-Z0-9]+\\s*\\)\\s*:\\s*[\\u4e00-\\u9fa5_a-zA-Z0-9]+\\s*\\,?\\s*)+\\s*\\]\\s*.*";
+    public final static String NEED_PATTERN = "\\[\\s*((\\w+\\s*\\(\\s*[\\u4e00-\\u9fa5_a-zA-Z0-9]+\\s*\\)\\s*:\\s*[\\u4e00-\\u9fa5_a-zA-Z0-9]+\\s*\\,?\\s*)+)\\s*\\]";
+    public final static String ITEM_PATTERN = "(\\w+)\\s*\\(\\s*([\\u4e00-\\u9fa5_a-zA-Z0-9]+)\\s*\\)\\s*:\\s*([\\u4e00-\\u9fa5_a-zA-Z0-9]+)";
     private Map<IntrospectedColumn, List<EnumItemInfo>> enumColumns;
 
     /**
@@ -237,7 +237,7 @@ public class EnumTypeStatusPlugin extends BasePlugin {
          * @author hewei
          */
         public String getComment() {
-            return "\"" + comment + "\"";
+            return "\"" + comment.trim() + "\"";
         }
 
         /**

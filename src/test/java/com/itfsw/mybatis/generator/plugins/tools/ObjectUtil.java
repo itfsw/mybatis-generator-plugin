@@ -40,7 +40,7 @@ public class ObjectUtil {
      * @param loader
      * @param cls
      */
-    public ObjectUtil(ClassLoader loader, String cls) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+    public ObjectUtil(ClassLoader loader, String cls) throws ClassNotFoundException, IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
         if (cls.indexOf("#") == -1) {
             this.cls = loader.loadClass(cls);
             this.object = this.cls.newInstance();
@@ -51,12 +51,11 @@ public class ObjectUtil {
                 Object[] constants = this.cls.getEnumConstants();
                 for (Object object : constants) {
                     ObjectUtil eObject = new ObjectUtil(object);
-                    if (strs[1].equals(eObject.get("name"))) {
+                    if (strs[1].equals(eObject.invoke("name"))) {
                         this.object = object;
                         break;
                     }
                 }
-                System.out.println("");
             } else {
                 throw new ClassNotFoundException("没有找到对应枚举" + strs[0]);
             }
