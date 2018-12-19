@@ -251,7 +251,7 @@ public class ExampleEnhancedPluginTest {
                 method.invoke(tbExample4.getObject(), true, exampleThen);
 
                 sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample4.getObject());
-                Assert.assertEquals(sql, "select id, field1, field2 from tb order by field1");
+                Assert.assertEquals(sql, "select id, field1, field2 from tb WHERE ( field1 = 'f3' )");
 
                 // 2. when false
                 ObjectUtil tbExample5 = new ObjectUtil(loader, packagz + ".TbExample");
@@ -284,7 +284,7 @@ public class ExampleEnhancedPluginTest {
                 }
                 method.invoke(tbExample6.getObject(), true, exampleThen, exampleOtherwise);
                 sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample6.getObject());
-                Assert.assertEquals(sql, "select id, field1, field2 from tb order by field1");
+                Assert.assertEquals(sql, "select id, field1, field2 from tb WHERE ( field1 = 'f3' )");
 
                 ObjectUtil tbExample7 = new ObjectUtil(loader, packagz + ".TbExample");
 
@@ -297,7 +297,7 @@ public class ExampleEnhancedPluginTest {
                 }
                 method.invoke(tbExample7.getObject(), false, exampleThen, exampleOtherwise);
                 sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample7.getObject());
-                Assert.assertEquals(sql, "select id, field1, field2 from tb order by field2");
+                Assert.assertEquals(sql, "select id, field1, field2 from tb WHERE ( field1 = 'f2' )");
             }
         });
     }
@@ -433,10 +433,13 @@ public class ExampleEnhancedPluginTest {
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             if (method.getName().equals("example")) {
                 ObjectUtil tbExample = new ObjectUtil(args[0]);
+                // !!!! 不要使用orderBy 动态代理后对于可变参数判断有问题
                 if (type == 0) {
-                    tbExample.invoke("orderBy", "field1");
+                    ObjectUtil criteria = new ObjectUtil(tbExample.invoke("or"));
+                    criteria.invoke("andField1EqualTo", "f3");
                 } else {
-                    tbExample.invoke("orderBy", "field2");
+                    ObjectUtil criteria = new ObjectUtil(tbExample.invoke("or"));
+                    criteria.invoke("andField1EqualTo", "f2");
                 }
                 return tbExample.getObject();
             }
