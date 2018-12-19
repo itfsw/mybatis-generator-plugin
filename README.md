@@ -1448,7 +1448,7 @@ CREATE TABLE `tb` (
                                            login_success(0):登录成功,
                                            login_fail(1):登录失败
                                          ]',
-  `other_type` varchar(20) COMMENT '具体注释的写法是比较宽泛的，只要匹配上面正则就行
+  `user_type` varchar(20) COMMENT '具体注释的写法是比较宽泛的，只要匹配上面正则就行
    [    success (   我是具体值  )    : 我是值的描述_我可以是中英文数字和下划线_xxx_123, fail_xx_3
     (1  ) :  失败] 后面也可以跟注释'                                       
 );
@@ -1499,14 +1499,14 @@ public class Tb {
         }
     }
 
-    public enum OtherType {
+    public enum UserType {
         SUCCESS("我是具体值", "我是值的描述_我可以是中英文数字和下划线_xxx_123"),
         FAIL_XX_3("1", "失败");
 
         private final String value;
         private final String name;
 
-        OtherType(String value, String name) {
+        UserType(String value, String name) {
             this.value = value;
             this.name = name;
         }
