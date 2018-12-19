@@ -26,6 +26,7 @@
 * [表重命名配置插件（TableRenameConfigurationPlugin）](#18-表重命名配置插件)
 * [Lombok插件（LombokPlugin）](#19-Lombok插件)
 * [数据ModelCloneable插件（ModelCloneablePlugin）](#20-数据ModelCloneable插件)
+* [状态枚举生成插件（EnumTypeStatusPlugin）](#21-状态枚举生成插件)
 
 ---------------------------------------
 Maven引用：  
@@ -33,7 +34,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.2.12</version>
+  <version>1.2.14</version>
 </dependency>
 ```
 ---------------------------------------
@@ -88,7 +89,7 @@ targetCompatibility = 1.8
 
 
 def mybatisGeneratorCore = 'org.mybatis.generator:mybatis-generator-core:1.3.7'
-def itfswMybatisGeneratorPlugin = 'com.itfsw:mybatis-generator-plugin:1.2.12'
+def itfswMybatisGeneratorPlugin = 'com.itfsw:mybatis-generator-plugin:1.2.14'
 
 mybatisGenerator {
   verbose = false
@@ -280,16 +281,19 @@ public class Test {
 ```
 ### 4. Example 增强插件(example,andIf,orderBy)
 * Criteria的快速返回example()方法。  
-* Criteria链式调用增强，以前如果有按条件增加的查询语句会打乱链式查询构建，现在有了andIf(boolean ifAdd, CriteriaAdd add)方法可一直使用链式调用下去。
-* Example增强了setOrderByClause方法，新增orderBy(String orderByClause)方法直接返回example，增强链式调用，可以一路.下去了。
-* 继续增强orderBy(String orderByClause)方法，增加orderBy(String ... orderByClauses)方法，配合数据Model属性对应Column获取插件（ModelColumnPlugin）使用效果更佳。 
+* ~~Criteria链式调用增强，以前如果有按条件增加的查询语句会打乱链式查询构建，现在有了andIf(boolean ifAdd, CriteriaAdd add)方法可一直使用链式调用下去。~~
+* Example增强了setOrderByClause方法，新增orderBy(String orderByClause)、orderBy(String ... orderByClauses)方法直接返回example，增强链式调用，配合数据Model属性对应Column获取插件（ModelColumnPlugin）使用效果更佳。 
 * 增加基于column的操作，当配置了[数据Model属性对应Column获取插件（ModelColumnPlugin）](#8-数据model属性对应column获取插件)插件时，提供column之间的比对操作。  
 * 增加createCriteria静态方法newAndCreateCriteria简写example的创建。
+* 增加when方法（Example和Criteria都有），方便根据不同条件附加对应操作。
 
 插件：
 ```xml
 <!-- Example Criteria 增强插件 -->
-<plugin type="com.itfsw.mybatis.generator.plugins.ExampleEnhancedPlugin"/>
+<plugin type="com.itfsw.mybatis.generator.plugins.ExampleEnhancedPlugin">
+    <!-- 是否支持已经过时的andIf方法（推荐使用when代替），默认支持 -->
+    <property name="enableAndIf" value="true"/>
+</plugin>
 ```
 使用：  
 ```java
@@ -305,7 +309,7 @@ public class Test {
                 .example()
         );
         
-        // -----------------------------------andIf-----------------------------------
+        // ----------------- andIf （@Deprecated 尽量使用when代替）  ---------------------
         // Criteria增强了链式调用，现在一些按条件增加的查询条件不会打乱链式调用了
         // old
         TbExample oldEx = new TbExample();
@@ -340,6 +344,25 @@ public class Test {
                         .andField4EqualTo(new Date())
                 )
                 .example()
+        );
+        
+        // -----------------------------------when-----------------------------------
+        this.tbMapper.selectByExample(
+                TbExample.newAndCreateCriteria()
+                // 如果随机数大于1，附加Field3查询条件
+                .when(Math.random() > 1, new TbExample.ICriteriaWhen() {
+                    @Override
+                    public void criteria(TbExample.Criteria criteria) {
+                        criteria.andField3EqualTo(2);
+                    }
+                })
+                // 当然最简洁的写法是采用java8的Lambda表达式，当然你的项目是Java8+
+                .when(Math.random() > 1, criteria -> criteria.andField3EqualTo(2))
+                // 也支持 if else 这种写法
+                .when(Math.random() > 1, criteria -> criteria.andField3EqualTo(2), criteria -> criteria.andField3EqualTo(3))
+                .example()
+                // example上也支持 when 方法
+                .when(true, example -> example.orderBy("field1 DESC"))
         );
         
         // -----------------------------------orderBy-----------------------------------
@@ -1393,4 +1416,109 @@ public class Test {
     <!-- 数据ModelCloneable插件 -->
     <plugin type="com.itfsw.mybatis.generator.plugins.ModelCloneablePlugin"/>
 </xml>
+```
+### 21. 状态枚举生成插件
+数据库中经常会定义一些状态字段，该工具可根据约定的注释格式生成对应的枚举类，方便使用。
+```xml
+<xml>
+    <!-- 状态枚举生成插件 -->
+    <plugin type="com.itfsw.mybatis.generator.plugins.EnumTypeStatusPlugin">
+        <!-- 这里可以定义全局需要检查生成枚举类的列名 -->
+        <property name="enumColumns" value="type, status"/>
+    </plugin>
+    <table tableName="tb">
+        <!-- 也可以为单独某个table增加配置 -->
+        <property name="enumColumns" value="user_type"/>
+    </table>
+</xml>
+```
+>warning: 约定的注释检查规则的正则表达式如下
+```java
+public class EnumTypeStatusPlugin {
+    public final static String REMARKS_PATTERN = ".*\\s*\\[\\s*(\\w+\\s*\\(\\s*[\\u4e00-\\u9fa5_a-zA-Z0-9]+\\s*\\)\\s*:\\s*[\\u4e00-\\u9fa5_a-zA-Z0-9]+\\s*\\,?\\s*)+\\s*\\]\\s*.*";
+}
+
+```
+使用
+```sql
+CREATE TABLE `tb` (
+  `type` smallint(3) COMMENT '注释[success(0):成功, fail(1):失败]',
+  `status` bigint(3) COMMENT '换行的注释
+                                         [
+                                           login_success(0):登录成功,
+                                           login_fail(1):登录失败
+                                         ]',
+  `other_type` varchar(20) COMMENT '具体注释的写法是比较宽泛的，只要匹配上面正则就行
+   [    success (   我是具体值  )    : 我是值的描述_我可以是中英文数字和下划线_xxx_123, fail_xx_3
+    (1  ) :  失败] 后面也可以跟注释'                                       
+);
+```
+```java
+public class Tb {
+    public enum Type {
+        SUCCESS((short)0, "成功"),
+        FAIL((short)1, "失败");
+        
+        private final Short value;
+        private final String name;
+        
+        Type(Short value, String name) {
+            this.value = value;
+            this.name = name;
+        }
+        public Short getValue() {
+            return this.value;
+        }
+        public Short value() {
+            return this.value;
+        }
+        public String getName() {
+            return this.name;
+        }
+    }
+
+    public enum Status {
+        LOGIN_SUCCESS(0L, "登录成功"),
+        LOGIN_FAIL(1L, "登录失败");
+
+        private final Long value;
+        private final String name;
+
+        Status(Long value, String name) {
+            this.value = value;
+            this.name = name;
+        }
+        public Long getValue() {
+            return this.value;
+        }
+        public Long value() {
+            return this.value;
+        }
+        public String getName() {
+            return this.name;
+        }
+    }
+
+    public enum OtherType {
+        SUCCESS("我是具体值", "我是值的描述_我可以是中英文数字和下划线_xxx_123"),
+        FAIL_XX_3("1", "失败");
+
+        private final String value;
+        private final String name;
+
+        OtherType(String value, String name) {
+            this.value = value;
+            this.name = name;
+        }
+        public String getValue() {
+            return this.value;
+        }
+        public String value() {
+            return this.value;
+        }
+        public String getName() {
+            return this.name;
+        }
+    }
+}
 ```
