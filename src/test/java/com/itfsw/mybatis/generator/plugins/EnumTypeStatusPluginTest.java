@@ -61,7 +61,7 @@ public class EnumTypeStatusPluginTest {
         tool = MyBatisGeneratorTool.create("scripts/EnumTypeStatusPlugin/mybatis-generator-with-unsupport-type.xml");
         tool.generate();
 
-        Assert.assertEquals(tool.getWarnings().get(0), "itfsw:插件" + EnumTypeStatusPlugin.class.getTypeName() + "找到column为field2对应Java类型不是Short、Integer、Long、String！");
+        Assert.assertEquals(tool.getWarnings().get(0), "itfsw:插件" + EnumTypeStatusPlugin.class.getTypeName() + "找到column为field2对应Java类型不在支持范围内！");
     }
 
     /**
