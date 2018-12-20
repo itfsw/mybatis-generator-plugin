@@ -226,4 +226,40 @@ public class LogicalDeletePluginTest {
             }
         });
     }
+
+    /**
+     * 测试基于注释生成的逻辑删除枚举
+     * @throws Exception
+     */
+    @Test
+    public void testWithRemarkEnum() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LogicalDeletePlugin/mybatis-generator-with-remarks-enum.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception{
+                // 验证是否已经按要求生成了枚举
+                ObjectUtil enumDelFlagEnable = new ObjectUtil(loader, packagz + ".TbRemark$DelFlag#ENABLE");
+                Assert.assertEquals(enumDelFlagEnable.invoke("value"), (short)1);
+                Assert.assertEquals(enumDelFlagEnable.invoke("getValue"), (short)1);
+                Assert.assertEquals(enumDelFlagEnable.invoke("getName"), "启用");
+
+                // 验证andLogicalDeleted方法
+                ObjectUtil tbRemark = new ObjectUtil(loader, packagz + ".TbRemark");
+                tbRemark.invoke("andLogicalDeleted", true);
+                Assert.assertEquals(tbRemark.get("delFlag"), (short)0);
+                tbRemark.invoke("andLogicalDeleted", false);
+                Assert.assertEquals(tbRemark.get("delFlag"), (short)1);
+
+                // 验证sql执行
+                ObjectUtil tbRemarkMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbRemarkMapper")));
+                ObjectUtil tbRemarkExample = new ObjectUtil(loader, packagz + ".TbRemarkExample");
+                ObjectUtil criteria = new ObjectUtil(tbRemarkExample.invoke("createCriteria"));
+                criteria.invoke("andLogicalDeleted", true);
+                String sql = SqlHelper.getFormatMapperSql(tbRemarkMapper.getObject(), "selectByExample", tbRemarkExample.getObject());
+                Assert.assertEquals(sql, "select id, del_flag from tb_remark WHERE ( del_flag = '0' )");
+                Object result = tbRemarkMapper.invoke("selectByExample", tbRemarkExample.getObject());
+                Assert.assertEquals(((List)result).size(), 1);
+            }
+        });
+    }
 }

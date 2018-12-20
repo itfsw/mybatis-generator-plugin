@@ -27,8 +27,8 @@ import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 import org.mybatis.generator.internal.util.JavaBeansUtil;
+import org.mybatis.generator.internal.util.StringUtility;
 
-import java.sql.JDBCType;
 import java.util.*;
 
 import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
@@ -42,28 +42,70 @@ import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
  * ---------------------------------------------------------------------------
  */
 public class LogicalDeletePlugin extends BasePlugin {
-    public static final String METHOD_LOGICAL_DELETE_BY_EXAMPLE = "logicalDeleteByExample";  // 方法名
-    public static final String METHOD_LOGICAL_DELETE_BY_PRIMARY_KEY = "logicalDeleteByPrimaryKey";  // 方法名
+    public static final String METHOD_LOGICAL_DELETE_BY_EXAMPLE = "logicalDeleteByExample";
+    public static final String METHOD_LOGICAL_DELETE_BY_PRIMARY_KEY = "logicalDeleteByPrimaryKey";
 
-    public static final String PRO_LOGICAL_DELETE_COLUMN = "logicalDeleteColumn";  // 逻辑删除列-Key
-    public static final String PRO_LOGICAL_DELETE_VALUE = "logicalDeleteValue";  // 逻辑删除值-Key
-    public static final String PRO_LOGICAL_UN_DELETE_VALUE = "logicalUnDeleteValue";  // 逻辑删除未删除值-Key
+    public static final String PRO_LOGICAL_DELETE_COLUMN = "logicalDeleteColumn";
+    public static final String PRO_LOGICAL_DELETE_VALUE = "logicalDeleteValue";
+    public static final String PRO_LOGICAL_UN_DELETE_VALUE = "logicalUnDeleteValue";
 
-    public static final String PRO_LOGICAL_DELETE_CONST_NAME = "logicalDeleteConstName"; // 逻辑删除常量
-    public static final String PRO_LOGICAL_UN_DELETE_CONST_NAME = "logicalUnDeleteConstName"; // 逻辑删除常量
-    public static final String DEFAULT_LOGICAL_DELETE_CONST_NAME = "IS_DELETED";  // 逻辑删除标志位常量名称
-    public static final String DEFAULT_LOGICAL_UN_DELETE_CONST_NAME = "NOT_DELETED";  // 逻辑删除标志位常量名称(未删除)
+    /**
+     * 是否支持不推荐的常量配置方式
+     */
+    public static final String PRO_ENABLE_LOGICAL_DELETE_CONST = "enableLogicalDeleteConst";
+    /**
+     * 逻辑删除常量
+     */
+    public static final String PRO_LOGICAL_DELETE_CONST_NAME = "logicalDeleteConstName";
+    public static final String PRO_LOGICAL_UN_DELETE_CONST_NAME = "logicalUnDeleteConstName";
 
-    public static final String METHOD_LOGICAL_DELETED = "andLogicalDeleted"; // 逻辑删除查询方法
-    public static final String PARAMETER_LOGICAL_DELETED = METHOD_LOGICAL_DELETED;  // 增强selectByPrimaryKey是参数名称
+    /**
+     * 逻辑删除标志位名称(默认)
+     */
+    public static final String DEFAULT_LOGICAL_DELETE_NAME = "IS_DELETED";
+    public static final String DEFAULT_LOGICAL_UN_DELETE_NAME = "NOT_DELETED";
 
-    public static final String METHOD_SELECT_BY_PRIMARY_KEY_WITH_LOGICAL_DELETE = "selectByPrimaryKeyWithLogicalDelete";  // selectByPrimaryKey 的逻辑删除增强
+    /**
+     * 逻辑删除查询方法
+     */
+    public static final String METHOD_LOGICAL_DELETED = "andLogicalDeleted";
+    /**
+     * 增强selectByPrimaryKey是参数名称
+     */
+    public static final String PARAMETER_LOGICAL_DELETED = METHOD_LOGICAL_DELETED;
+    /**
+     * selectByPrimaryKey 的逻辑删除增强
+     */
+    public static final String METHOD_SELECT_BY_PRIMARY_KEY_WITH_LOGICAL_DELETE = "selectByPrimaryKeyWithLogicalDelete";
 
-    private IntrospectedColumn logicalDeleteColumn; // 逻辑删除列
-    private String logicalDeleteValue;  // 逻辑删除值
-    private String logicalUnDeleteValue;    // 逻辑删除值（未删除）
-    private String logicalDeleteConstName;  // 逻辑删除常量
-    private String logicalUnDeleteConstName;    // 逻辑删除常量（未删除）
+    /**
+     * 逻辑删除列
+     */
+    private IntrospectedColumn logicalDeleteColumn;
+    /**
+     * 逻辑删除值
+     */
+    private String logicalDeleteValue;
+    /**
+     * 逻辑删除值（未删除）
+     */
+    private String logicalUnDeleteValue;
+    /**
+     * 逻辑删除常量
+     */
+    private String logicalDeleteConstName;
+    /**
+     * 逻辑删除常量（未删除）
+     */
+    private String logicalUnDeleteConstName;
+    /**
+     * 是否支持常量类型
+     */
+    private Boolean enableLogicalDeleteConst;
+    /**
+     * 逻辑删除枚举
+     */
+    private InnerEnum logicalDeleteEnum;
 
     /**
      * 初始化阶段
@@ -74,69 +116,76 @@ public class LogicalDeletePlugin extends BasePlugin {
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
         super.initialized(introspectedTable);
-        // 1. 首先获取全局配置
+        // 1. 获取配置的逻辑删除列
         Properties properties = getProperties();
         String logicalDeleteColumn = properties.getProperty(PRO_LOGICAL_DELETE_COLUMN);
-        this.logicalDeleteValue = properties.getProperty(PRO_LOGICAL_DELETE_VALUE);
-        this.logicalUnDeleteValue = properties.getProperty(PRO_LOGICAL_UN_DELETE_VALUE);
-        // 2. 获取表单独配置，如果有则覆盖全局配置
         if (introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_COLUMN) != null) {
             logicalDeleteColumn = introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_COLUMN);
         }
-        if (introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_VALUE) != null) {
-            this.logicalDeleteValue = introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_VALUE);
-        }
-        if (introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_UN_DELETE_VALUE) != null) {
-            this.logicalUnDeleteValue = introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_UN_DELETE_VALUE);
-        }
-        // 3. 判断该表是否存在逻辑删除列
-        this.logicalDeleteColumn = null;
-        List<IntrospectedColumn> columns = introspectedTable.getAllColumns();
-        for (IntrospectedColumn column : columns) {
-            if (column.getActualColumnName().equalsIgnoreCase(logicalDeleteColumn)) {
-                // 判断字段类型
-                JDBCType type = JDBCType.valueOf(column.getJdbcType());
-                if (JDBCType.BIGINT == type
-                        || JDBCType.BIT == type
-                        || JDBCType.BOOLEAN == type
-                        || JDBCType.CHAR == type
-                        || JDBCType.DOUBLE == type
-                        || JDBCType.FLOAT == type
-                        || JDBCType.INTEGER == type
-                        || JDBCType.LONGNVARCHAR == type
-                        || JDBCType.LONGVARCHAR == type
-                        || JDBCType.NCHAR == type
-                        || JDBCType.NVARCHAR == type
-                        || JDBCType.SMALLINT == type
-                        || JDBCType.TINYINT == type
-                        || JDBCType.VARCHAR == type) {
-                    this.logicalDeleteColumn = column;
-                } else {
-                    warnings.add("itfsw(逻辑删除插件):" + introspectedTable.getFullyQualifiedTable() + "逻辑删除列(" + introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_COLUMN) + ")的类型不在支持范围（请使用数字列，字符串列，布尔列）！");
-                }
-            }
-        }
-
+        this.logicalDeleteColumn = IntrospectedTableTools.safeGetColumn(introspectedTable, logicalDeleteColumn);
+        // 判断如果表单独配置了逻辑删除列，但是却没有找到对应列进行提示
         if (introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_COLUMN) != null && this.logicalDeleteColumn == null) {
             warnings.add("itfsw(逻辑删除插件):" + introspectedTable.getFullyQualifiedTable() + "没有找到您配置的逻辑删除列(" + introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_COLUMN) + ")！");
         }
 
-        // 4. 判断逻辑删除值是否配置了
-        if (this.logicalDeleteColumn != null && (this.logicalDeleteValue == null || this.logicalUnDeleteValue == null)) {
-            warnings.add("itfsw(逻辑删除插件):" + introspectedTable.getFullyQualifiedTable() + "没有找到您配置的逻辑删除值，请全局或者局部配置logicalDeleteValue和logicalUnDeleteValue值！");
+        // 2. 优先借助 EnumTypeStatusPlugin 插件，去注解里面解析枚举
+        if (this.logicalDeleteColumn != null) {
+            EnumTypeStatusPlugin.EnumInfo enumInfo = null;
+            try {
+                enumInfo = new EnumTypeStatusPlugin.EnumInfo(this.logicalDeleteColumn);
+                // 解析注释
+                enumInfo.parseRemarks(this.logicalDeleteColumn.getRemarks());
+            } catch (EnumTypeStatusPlugin.EnumInfo.NotSupportTypeException e) {
+                this.logicalDeleteColumn = null;
+                warnings.add("itfsw(逻辑删除插件):" + introspectedTable.getFullyQualifiedTable() + "逻辑删除列(" + introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_COLUMN) + ")的类型不在支持范围（请使用数字列，字符串列，布尔列）！");
+            } catch (EnumTypeStatusPlugin.EnumInfo.CannotParseException e) {
+                // 这个异常不管，没有配置是正常的
+            } finally {
+
+                if (enumInfo != null) {
+                    // 这个是注释里配置了枚举
+                    if (enumInfo.hasItems() && enumInfo.getItems().size() >= 2) {
+                        this.logicalUnDeleteValue = enumInfo.getItems().get(0).getOriginalValue();
+                        this.logicalDeleteValue = enumInfo.getItems().get(1).getOriginalValue();
+                        this.logicalDeleteEnum = enumInfo.generateEnum(commentGenerator, introspectedTable);
+                    } else {
+                        // 没有在注释里配置读取xml中配置的
+                        this.logicalDeleteValue = properties.getProperty(PRO_LOGICAL_DELETE_VALUE);
+                        this.logicalUnDeleteValue = properties.getProperty(PRO_LOGICAL_UN_DELETE_VALUE);
+                        if (introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_VALUE) != null) {
+                            this.logicalDeleteValue = introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_VALUE);
+                        }
+                        if (introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_UN_DELETE_VALUE) != null) {
+                            this.logicalUnDeleteValue = introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_UN_DELETE_VALUE);
+                        }
+                        // 3. 判断逻辑删除值是否配置了
+                        if (this.logicalDeleteValue == null || this.logicalUnDeleteValue == null) {
+                            this.logicalDeleteColumn = null;
+                            warnings.add("itfsw(逻辑删除插件):" + introspectedTable.getFullyQualifiedTable() + "没有找到您配置的逻辑删除值，请全局或者局部配置logicalDeleteValue和logicalUnDeleteValue值！");
+                        } else {
+                            enumInfo.addItem(DEFAULT_LOGICAL_UN_DELETE_NAME, "未删除", this.logicalUnDeleteValue);
+                            enumInfo.addItem(DEFAULT_LOGICAL_DELETE_NAME, "已删除", this.logicalDeleteValue);
+                            this.logicalDeleteEnum = enumInfo.generateEnum(commentGenerator, introspectedTable);
+                        }
+                    }
+                }
+            }
         }
 
-        // 5. 获取逻辑删除常量值
-        this.logicalDeleteConstName = properties.getProperty(PRO_LOGICAL_DELETE_CONST_NAME) != null ? properties.getProperty(PRO_LOGICAL_DELETE_CONST_NAME).toUpperCase() : DEFAULT_LOGICAL_DELETE_CONST_NAME;
-        this.logicalUnDeleteConstName = properties.getProperty(PRO_LOGICAL_UN_DELETE_CONST_NAME) != null ? properties.getProperty(PRO_LOGICAL_UN_DELETE_CONST_NAME).toUpperCase() : DEFAULT_LOGICAL_UN_DELETE_CONST_NAME;
-
-        // 6. 防止增强的selectByPrimaryKey中逻辑删除键冲突
+        // 4. 防止增强的selectByPrimaryKey中逻辑删除键冲突
         if (this.logicalDeleteColumn != null) {
             Field logicalDeleteField = JavaBeansUtil.getJavaBeansField(this.logicalDeleteColumn, context, introspectedTable);
             if (logicalDeleteField.getName().equals(PARAMETER_LOGICAL_DELETED)) {
                 this.logicalDeleteColumn = null;
                 warnings.add("itfsw(逻辑删除插件):" + introspectedTable.getFullyQualifiedTable() + "配置的逻辑删除列和插件保留关键字(" + PARAMETER_LOGICAL_DELETED + ")冲突！");
             }
+        }
+
+        // 5. 获取逻辑删除常量值
+        this.enableLogicalDeleteConst = properties.getProperty(PRO_ENABLE_LOGICAL_DELETE_CONST) == null ? true : StringUtility.isTrue(properties.getProperty(PRO_ENABLE_LOGICAL_DELETE_CONST));
+        if (this.enableLogicalDeleteConst) {
+            this.logicalDeleteConstName = properties.getProperty(PRO_LOGICAL_DELETE_CONST_NAME) != null ? properties.getProperty(PRO_LOGICAL_DELETE_CONST_NAME).toUpperCase() : DEFAULT_LOGICAL_DELETE_NAME;
+            this.logicalUnDeleteConstName = properties.getProperty(PRO_LOGICAL_UN_DELETE_CONST_NAME) != null ? properties.getProperty(PRO_LOGICAL_UN_DELETE_CONST_NAME).toUpperCase() : DEFAULT_LOGICAL_UN_DELETE_NAME;
         }
     }
 
@@ -259,7 +308,7 @@ public class LogicalDeletePlugin extends BasePlugin {
             // 1. 逻辑删除ByExample
             XmlElement logicalDeleteByExample = new XmlElement("update");
             logicalDeleteByExample.addAttribute(new Attribute("id", METHOD_LOGICAL_DELETE_BY_EXAMPLE));
-            logicalDeleteByExample.addAttribute(new Attribute("parameterType", "map"));  //$NON-NLS-2$
+            logicalDeleteByExample.addAttribute(new Attribute("parameterType", "map"));
             commentGenerator.addComment(logicalDeleteByExample);
 
             StringBuilder sb = new StringBuilder();
@@ -378,83 +427,21 @@ public class LogicalDeletePlugin extends BasePlugin {
 
     /**
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     * @param field
      * @param topLevelClass
+     * @param introspectedColumn
      * @param introspectedTable
+     * @param modelClassType
      * @return
      */
     @Override
-    public boolean modelPrimaryKeyClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        this.generateModelMethodsAndFields(topLevelClass, introspectedTable);
-        return super.modelPrimaryKeyClassGenerated(topLevelClass, introspectedTable);
-    }
-
-    /**
-     * Model 生成
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
-     */
-    @Override
-    public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        this.generateModelMethodsAndFields(topLevelClass, introspectedTable);
-        return super.modelBaseRecordClassGenerated(topLevelClass, introspectedTable);
-    }
-
-    /**
-     * 生成Model 逻辑删除相关方法和常量
-     * !!! bugfix：逻辑删除列作为复合主键的一部分的情况
-     * @param topLevelClass
-     * @param introspectedTable
-     */
-    private void generateModelMethodsAndFields(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+    public boolean modelFieldGenerated(Field field, TopLevelClass topLevelClass, IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable, ModelClassType modelClassType) {
         if (this.logicalDeleteColumn != null) {
-            // 常量和逻辑删除方法跟随 逻辑删除列走
-            boolean flag = false;
-            for (Field field : topLevelClass.getFields()) {
-                if (this.logicalDeleteColumn.getJavaProperty().equals(field.getName())) {
-                    flag = true;
-                    break;
-                }
-            }
-
-            if (flag) {
-                ArrayList<Field> fields = (ArrayList<Field>) topLevelClass.getFields();
-
-                // 添加删除标志位常量
-                String logicalDeleteValue;
-                if (this.logicalDeleteValue == null || "NULL".equalsIgnoreCase(this.logicalDeleteValue)) {
-                    logicalDeleteValue = "null";
-                } else if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getShortNameWithoutTypeArguments().equalsIgnoreCase("String")) {
-                    logicalDeleteValue = "\"" + this.logicalDeleteValue + "\"";
-                } else if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getShortNameWithoutTypeArguments().equalsIgnoreCase("Boolean")) {
-                    logicalDeleteValue = (this.logicalDeleteValue.equals("1") || this.logicalDeleteValue.equalsIgnoreCase("true")) ? "true" : "false";
-                } else {
-                    logicalDeleteValue = this.logicalDeleteValue;
-                }
-
-                Field logicalDeleteConstField = JavaElementGeneratorTools.generateStaticFinalField(this.logicalDeleteConstName, this.logicalDeleteColumn.getFullyQualifiedJavaType(), logicalDeleteValue);
-                commentGenerator.addFieldComment(logicalDeleteConstField, introspectedTable);
-                fields.add(0, logicalDeleteConstField);
-
-
-                // 添加删除标志位常量 DEL_FLAG_ON
-                String logicalUnDeleteValue;
-                if (this.logicalUnDeleteValue == null || "NULL".equalsIgnoreCase(this.logicalUnDeleteValue)) {
-                    logicalUnDeleteValue = "null";
-                } else if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getShortNameWithoutTypeArguments().equalsIgnoreCase("String")) {
-                    logicalUnDeleteValue = "\"" + this.logicalUnDeleteValue + "\"";
-                } else if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getShortNameWithoutTypeArguments().equalsIgnoreCase("Boolean")) {
-                    logicalUnDeleteValue = (this.logicalUnDeleteValue.equals("1") || this.logicalUnDeleteValue.equalsIgnoreCase("true")) ? "true" : "false";
-                } else {
-                    logicalUnDeleteValue = this.logicalUnDeleteValue;
-                }
-
-                Field logicalUnDeleteConstField = JavaElementGeneratorTools.generateStaticFinalField(this.logicalUnDeleteConstName, this.logicalDeleteColumn.getFullyQualifiedJavaType(), logicalUnDeleteValue);
-                commentGenerator.addFieldComment(logicalUnDeleteConstField, introspectedTable);
-                fields.add(0, logicalUnDeleteConstField);
-
-                // ================================================= andLogicalDeleted =============================================
+            // 常量、枚举和逻辑删除方法跟随 逻辑删除列走
+            if (this.logicalDeleteColumn.getJavaProperty().equals(field.getName())) {
+                // 1. 添加枚举
+                topLevelClass.addInnerEnum(this.logicalDeleteEnum);
+                // 2. andLogicalDeleted 方法
                 Method mAndLogicalDeleted = JavaElementGeneratorTools.generateMethod(
                         METHOD_LOGICAL_DELETED,
                         JavaVisibility.PUBLIC,
@@ -463,10 +450,34 @@ public class LogicalDeletePlugin extends BasePlugin {
                 );
                 commentGenerator.addGeneralMethodComment(mAndLogicalDeleted, introspectedTable);
                 Method logicalDeleteSetter = JavaBeansUtil.getJavaBeansSetter(this.logicalDeleteColumn, context, introspectedTable);
-                mAndLogicalDeleted.addBodyLine(logicalDeleteSetter.getName() + "(deleted ? " + this.logicalDeleteConstName + " : " + this.logicalUnDeleteConstName + ");");
+                mAndLogicalDeleted.addBodyLine(logicalDeleteSetter.getName() + "(deleted ? " + this.getEnumConstantValue(true) + " : " + this.getEnumConstantValue(false) + ");");
                 FormatTools.addMethodWithBestPosition(topLevelClass, mAndLogicalDeleted);
+
+                // 3. 添加逻辑删除常量
+                if (this.enableLogicalDeleteConst) {
+                    Field logicalUnDeleteConstField = JavaElementGeneratorTools.generateStaticFinalField(
+                            this.logicalUnDeleteConstName,
+                            this.logicalDeleteColumn.getFullyQualifiedJavaType(),
+                            this.getEnumConstantValue(false)
+                    );
+                    logicalUnDeleteConstField.addAnnotation("@Deprecated");
+                    commentGenerator.addFieldComment(logicalUnDeleteConstField, introspectedTable);
+                    Field logicalDeleteConstField = JavaElementGeneratorTools.generateStaticFinalField(
+                            this.logicalDeleteConstName,
+                            this.logicalDeleteColumn.getFullyQualifiedJavaType(),
+                            this.getEnumConstantValue(true)
+                    );
+                    logicalDeleteConstField.addAnnotation("@Deprecated");
+                    commentGenerator.addFieldComment(logicalDeleteConstField, introspectedTable);
+
+                    // 常量放在字段开头
+                    ArrayList<Field> fields = (ArrayList<Field>) topLevelClass.getFields();
+                    fields.add(logicalUnDeleteConstField);
+                    fields.add(logicalDeleteConstField);
+                }
             }
         }
+        return super.modelFieldGenerated(field, topLevelClass, introspectedColumn, introspectedTable, modelClassType);
     }
 
     /**
@@ -480,8 +491,7 @@ public class LogicalDeletePlugin extends BasePlugin {
     public boolean modelExampleClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         if (this.logicalDeleteColumn != null) {
             // 引入 Model类
-            FullyQualifiedJavaType model = introspectedTable.getRules().calculateAllFieldsClass();
-            topLevelClass.addImportedType(model);
+            topLevelClass.addImportedType(this.getColumnInModelType());
 
             List<InnerClass> innerClasses = topLevelClass.getInnerClasses();
             for (InnerClass innerClass : innerClasses) {
@@ -496,7 +506,7 @@ public class LogicalDeletePlugin extends BasePlugin {
                     StringBuffer sb = new StringBuffer();
                     sb.append("return deleted ? ");
 
-                    String modelName = model.getShortName();
+                    String modelName = this.getColumnInModelType().getShortName();
 
                     // 调用EqualTo方法
                     StringBuilder equalToMethodName = new StringBuilder();
@@ -505,7 +515,7 @@ public class LogicalDeletePlugin extends BasePlugin {
                     equalToMethodName.insert(0, "and");
                     equalToMethodName.append("EqualTo");
                     sb.append(equalToMethodName);
-                    sb.append("(" + modelName + "." + this.logicalDeleteConstName + ")");
+                    sb.append("(" + modelName + "." + this.getEnumConstantValue(true) + ")");
 
                     sb.append(" : ");
 
@@ -516,7 +526,7 @@ public class LogicalDeletePlugin extends BasePlugin {
                     notEqualToMethodName.insert(0, "and");
                     notEqualToMethodName.append("NotEqualTo");
                     sb.append(notEqualToMethodName);
-                    sb.append("(" + modelName + "." + this.logicalDeleteConstName + ")");
+                    sb.append("(" + modelName + "." + this.getEnumConstantValue(true) + ")");
 
                     sb.append(";");
 
@@ -526,6 +536,62 @@ public class LogicalDeletePlugin extends BasePlugin {
                 }
             }
         }
-        return true;
+        return super.modelExampleClassGenerated(topLevelClass, introspectedTable);
+    }
+
+    /**
+     * 获取逻辑删除枚举
+     * @param delete
+     * @return
+     */
+    private String getEnumConstantValue(boolean delete) {
+        if (this.logicalDeleteEnum != null) {
+            String enumConstant = this.logicalDeleteEnum.getEnumConstants().get(delete ? 1 : 0);
+            enumConstant = enumConstant.split("\\(")[0];
+            return this.logicalDeleteEnum.getType().getShortName() + "." + enumConstant + ".value()";
+        }
+        return null;
+    }
+
+    /**
+     * 获取逻辑删除列所在model(modelExampleClassGenerated执行顺序在前面！！！！！和官网上不一样，没办法只有自己去找）
+     * @return
+     */
+    private FullyQualifiedJavaType getColumnInModelType() {
+        if (this.logicalDeleteColumn != null) {
+            IntrospectedTable introspectedTable = this.logicalDeleteColumn.getIntrospectedTable();
+
+            // primaryKey
+            for (IntrospectedColumn column : introspectedTable.getPrimaryKeyColumns()) {
+                if (column.getActualColumnName().equals(this.logicalDeleteColumn.getActualColumnName())) {
+                    if (introspectedTable.getRules().generatePrimaryKeyClass()) {
+                        return new FullyQualifiedJavaType(introspectedTable.getPrimaryKeyType());
+                    } else {
+                        return new FullyQualifiedJavaType(introspectedTable.getBaseRecordType());
+                    }
+                }
+            }
+
+            // base record
+            for (IntrospectedColumn column : introspectedTable.getBaseColumns()) {
+                if (column.getActualColumnName().equals(this.logicalDeleteColumn.getActualColumnName())) {
+                    if (introspectedTable.getRules().generateBaseRecordClass()) {
+                        return new FullyQualifiedJavaType(introspectedTable.getBaseRecordType());
+                    }
+                }
+            }
+
+            // blob record
+            for (IntrospectedColumn column : introspectedTable.getBLOBColumns()) {
+                if (column.getActualColumnName().equals(this.logicalDeleteColumn.getActualColumnName())) {
+                    if (introspectedTable.getRules().generateRecordWithBLOBsClass()) {
+                        return new FullyQualifiedJavaType(introspectedTable.getRecordWithBLOBsType());
+                    } else {
+                        return new FullyQualifiedJavaType(introspectedTable.getBaseRecordType());
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

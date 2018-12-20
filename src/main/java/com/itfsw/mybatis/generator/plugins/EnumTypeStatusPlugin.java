@@ -77,44 +77,17 @@ public class EnumTypeStatusPlugin extends BasePlugin {
             for (String enumColumnsStr : enumColumnsStrs) {
                 IntrospectedColumn column = IntrospectedTableTools.safeGetColumn(introspectedTable, enumColumnsStr);
                 if (column != null) {
-                    String remarks = column.getRemarks();
-                    String javaType = column.getFullyQualifiedJavaType().getFullyQualifiedName();
-
-                    if (!StringUtility.stringHasValue(remarks) || !remarks.matches(REMARKS_PATTERN)) {
-                        warnings.add("itfsw:插件" + EnumTypeStatusPlugin.class.getTypeName() + "没有找到column为" + enumColumnsStr.trim() + "对应格式的注释的字段！");
-                    } else if (!(Short.class.getTypeName().equals(javaType)
-                            || Integer.class.getTypeName().equals(javaType)
-                            || Long.class.getTypeName().equals(javaType)
-                            || Boolean.class.getTypeName().equals(javaType)
-                            || Double.class.getTypeName().equals(javaType)
-                            || Float.class.getTypeName().equals(javaType)
-                            || BigDecimal.class.getTypeName().equals(javaType)
-                            || Byte.class.getTypeName().equals(javaType)
-                            || String.class.getTypeName().equals(javaType))) {
-                        warnings.add("itfsw:插件" + EnumTypeStatusPlugin.class.getTypeName() + "找到column为" + enumColumnsStr.trim() + "对应Java类型不在支持范围内！");
-                    } else {
-                        // 提取信息
-                        Pattern pattern = Pattern.compile(NEED_PATTERN);
-                        Matcher matcher = pattern.matcher(remarks);
+                    try {
                         EnumInfo enumInfo = new EnumInfo(column);
-                        if (matcher.find() && matcher.groupCount() == 2) {
-                            String enumInfoStr = matcher.group(1);
-                            // 根据逗号切分
-                            String[] enumInfoStrs = enumInfoStr.split(",");
-
-                            // 提取每个节点信息
-                            for (String enumInfoItemStr : enumInfoStrs) {
-                                pattern = Pattern.compile(ITEM_PATTERN);
-                                matcher = pattern.matcher(enumInfoItemStr.trim());
-                                if (matcher.find() && matcher.groupCount() == 3) {
-                                    enumInfo.addItem(matcher.group(1), matcher.group(3), matcher.group(2));
-                                }
-                            }
-                        }
-
+                        // 解析注释
+                        enumInfo.parseRemarks(column.getRemarks());
                         if (enumInfo.hasItems()) {
                             this.enumColumns.put(column.getJavaProperty(), enumInfo);
                         }
+                    } catch (EnumInfo.CannotParseException e) {
+                        warnings.add("itfsw:插件" + EnumTypeStatusPlugin.class.getTypeName() + "没有找到column为" + enumColumnsStr.trim() + "对应格式的注释的字段！");
+                    } catch (EnumInfo.NotSupportTypeException e) {
+                        warnings.add("itfsw:插件" + EnumTypeStatusPlugin.class.getTypeName() + "找到column为" + enumColumnsStr.trim() + "对应Java类型不在支持范围内！");
                     }
                 }
             }
@@ -166,8 +139,21 @@ public class EnumTypeStatusPlugin extends BasePlugin {
         private List<EnumItemInfo> items = new ArrayList<>();
         private IntrospectedColumn column;
 
-        public EnumInfo(IntrospectedColumn column) {
-            this.column = column;
+        public EnumInfo(IntrospectedColumn column) throws NotSupportTypeException, CannotParseException {
+            String javaType = column.getFullyQualifiedJavaType().getFullyQualifiedName();
+            if (!(Short.class.getTypeName().equals(javaType)
+                    || Integer.class.getTypeName().equals(javaType)
+                    || Long.class.getTypeName().equals(javaType)
+                    || Boolean.class.getTypeName().equals(javaType)
+                    || Double.class.getTypeName().equals(javaType)
+                    || Float.class.getTypeName().equals(javaType)
+                    || BigDecimal.class.getTypeName().equals(javaType)
+                    || Byte.class.getTypeName().equals(javaType)
+                    || String.class.getTypeName().equals(javaType))) {
+                throw new NotSupportTypeException();
+            } else {
+                this.column = column;
+            }
         }
 
         /**
@@ -175,6 +161,7 @@ public class EnumTypeStatusPlugin extends BasePlugin {
          * @param name
          * @param comment
          * @param value
+         * @return
          */
         public void addItem(String name, String comment, String value) {
             items.add(new EnumItemInfo(this.column, name, comment, value));
@@ -186,6 +173,49 @@ public class EnumTypeStatusPlugin extends BasePlugin {
          */
         public boolean hasItems() {
             return items.size() > 0;
+        }
+
+        /**
+         * 解析注释
+         * @param remarks
+         */
+        public void parseRemarks(String remarks) throws CannotParseException {
+            if (!StringUtility.stringHasValue(remarks) || !remarks.matches(REMARKS_PATTERN)) {
+                throw new CannotParseException();
+            } else {
+                // 提取信息
+                Pattern pattern = Pattern.compile(NEED_PATTERN);
+                Matcher matcher = pattern.matcher(remarks);
+                if (matcher.find() && matcher.groupCount() == 2) {
+                    String enumInfoStr = matcher.group(1);
+                    // 根据逗号切分
+                    String[] enumInfoStrs = enumInfoStr.split(",");
+
+                    // 提取每个节点信息
+                    for (String enumInfoItemStr : enumInfoStrs) {
+                        pattern = Pattern.compile(ITEM_PATTERN);
+                        matcher = pattern.matcher(enumInfoItemStr.trim());
+                        if (matcher.find() && matcher.groupCount() == 3) {
+                            this.addItem(matcher.group(1), matcher.group(3), matcher.group(2));
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
+         * Getter method for property <tt>items</tt>.
+         * @return property value of items
+         * @author hewei
+         */
+        public List<EnumItemInfo> getItems() {
+            return items;
+        }
+
+        public class NotSupportTypeException extends Exception {
+        }
+
+        public class CannotParseException extends Exception {
         }
 
         public InnerEnum generateEnum(CommentGenerator commentGenerator, IntrospectedTable introspectedTable) {
@@ -242,7 +272,7 @@ public class EnumTypeStatusPlugin extends BasePlugin {
         }
 
 
-        private class EnumItemInfo {
+        public class EnumItemInfo {
             private IntrospectedColumn column;
             private String name;
             private String comment;
@@ -285,6 +315,15 @@ public class EnumTypeStatusPlugin extends BasePlugin {
                 } else {
                     return "new " + javaType + "(\"" + value + "\")";
                 }
+            }
+
+            /**
+             * Getter method for property <tt>value</tt>.
+             * @return property value of value
+             * @author hewei
+             */
+            public String getOriginalValue() {
+                return value;
             }
         }
     }
