@@ -93,11 +93,11 @@ public class LogicalDeletePlugin extends BasePlugin {
     /**
      * 逻辑删除常量
      */
-    private String logicalDeleteConstName;
+    private String logicalDeleteConstName = DEFAULT_LOGICAL_DELETE_NAME;
     /**
      * 逻辑删除常量（未删除）
      */
-    private String logicalUnDeleteConstName;
+    private String logicalUnDeleteConstName = DEFAULT_LOGICAL_UN_DELETE_NAME;
     /**
      * 是否支持常量类型
      */
@@ -128,7 +128,18 @@ public class LogicalDeletePlugin extends BasePlugin {
             warnings.add("itfsw(逻辑删除插件):" + introspectedTable.getFullyQualifiedTable() + "没有找到您配置的逻辑删除列(" + introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_COLUMN) + ")！");
         }
 
-        // 2. 优先借助 EnumTypeStatusPlugin 插件，去注解里面解析枚举
+        // 2. 获取逻辑删除常量值
+        this.enableLogicalDeleteConst = properties.getProperty(PRO_ENABLE_LOGICAL_DELETE_CONST) == null ? true : StringUtility.isTrue(properties.getProperty(PRO_ENABLE_LOGICAL_DELETE_CONST));
+        if (this.enableLogicalDeleteConst) {
+            if (properties.getProperty(PRO_LOGICAL_DELETE_CONST_NAME) != null) {
+                this.logicalDeleteConstName = properties.getProperty(PRO_LOGICAL_DELETE_CONST_NAME).toUpperCase();
+            }
+            if (properties.getProperty(PRO_LOGICAL_UN_DELETE_CONST_NAME) != null) {
+                this.logicalUnDeleteConstName = properties.getProperty(PRO_LOGICAL_UN_DELETE_CONST_NAME).toUpperCase();
+            }
+        }
+
+        // 3. 优先借助 EnumTypeStatusPlugin 插件，去注解里面解析枚举
         if (this.logicalDeleteColumn != null) {
             EnumTypeStatusPlugin.EnumInfo enumInfo = null;
             try {
@@ -146,7 +157,9 @@ public class LogicalDeletePlugin extends BasePlugin {
                     // 这个是注释里配置了枚举
                     if (enumInfo.hasItems() && enumInfo.getItems().size() >= 2) {
                         this.logicalUnDeleteValue = enumInfo.getItems().get(0).getOriginalValue();
+                        this.logicalUnDeleteConstName = enumInfo.getItems().get(0).getName();
                         this.logicalDeleteValue = enumInfo.getItems().get(1).getOriginalValue();
+                        this.logicalDeleteConstName = enumInfo.getItems().get(1).getName();
                         this.logicalDeleteEnum = enumInfo.generateEnum(commentGenerator, introspectedTable);
                     } else {
                         // 没有在注释里配置读取xml中配置的
@@ -158,13 +171,13 @@ public class LogicalDeletePlugin extends BasePlugin {
                         if (introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_UN_DELETE_VALUE) != null) {
                             this.logicalUnDeleteValue = introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_UN_DELETE_VALUE);
                         }
-                        // 3. 判断逻辑删除值是否配置了
+                        // 4. 判断逻辑删除值是否配置了
                         if (this.logicalDeleteValue == null || this.logicalUnDeleteValue == null) {
                             this.logicalDeleteColumn = null;
                             warnings.add("itfsw(逻辑删除插件):" + introspectedTable.getFullyQualifiedTable() + "没有找到您配置的逻辑删除值，请全局或者局部配置logicalDeleteValue和logicalUnDeleteValue值！");
                         } else {
-                            enumInfo.addItem(DEFAULT_LOGICAL_UN_DELETE_NAME, "未删除", this.logicalUnDeleteValue);
-                            enumInfo.addItem(DEFAULT_LOGICAL_DELETE_NAME, "已删除", this.logicalDeleteValue);
+                            enumInfo.addItem(this.logicalUnDeleteConstName, "未删除", this.logicalUnDeleteValue);
+                            enumInfo.addItem(this.logicalDeleteConstName, "已删除", this.logicalDeleteValue);
                             this.logicalDeleteEnum = enumInfo.generateEnum(commentGenerator, introspectedTable);
                         }
                     }
@@ -172,20 +185,13 @@ public class LogicalDeletePlugin extends BasePlugin {
             }
         }
 
-        // 4. 防止增强的selectByPrimaryKey中逻辑删除键冲突
+        // 5. 防止增强的selectByPrimaryKey中逻辑删除键冲突
         if (this.logicalDeleteColumn != null) {
             Field logicalDeleteField = JavaBeansUtil.getJavaBeansField(this.logicalDeleteColumn, context, introspectedTable);
             if (logicalDeleteField.getName().equals(PARAMETER_LOGICAL_DELETED)) {
                 this.logicalDeleteColumn = null;
                 warnings.add("itfsw(逻辑删除插件):" + introspectedTable.getFullyQualifiedTable() + "配置的逻辑删除列和插件保留关键字(" + PARAMETER_LOGICAL_DELETED + ")冲突！");
             }
-        }
-
-        // 5. 获取逻辑删除常量值
-        this.enableLogicalDeleteConst = properties.getProperty(PRO_ENABLE_LOGICAL_DELETE_CONST) == null ? true : StringUtility.isTrue(properties.getProperty(PRO_ENABLE_LOGICAL_DELETE_CONST));
-        if (this.enableLogicalDeleteConst) {
-            this.logicalDeleteConstName = properties.getProperty(PRO_LOGICAL_DELETE_CONST_NAME) != null ? properties.getProperty(PRO_LOGICAL_DELETE_CONST_NAME).toUpperCase() : DEFAULT_LOGICAL_DELETE_NAME;
-            this.logicalUnDeleteConstName = properties.getProperty(PRO_LOGICAL_UN_DELETE_CONST_NAME) != null ? properties.getProperty(PRO_LOGICAL_UN_DELETE_CONST_NAME).toUpperCase() : DEFAULT_LOGICAL_UN_DELETE_NAME;
         }
     }
 
@@ -460,14 +466,12 @@ public class LogicalDeletePlugin extends BasePlugin {
                             this.logicalDeleteColumn.getFullyQualifiedJavaType(),
                             this.getEnumConstantValue(false)
                     );
-                    logicalUnDeleteConstField.addAnnotation("@Deprecated");
                     commentGenerator.addFieldComment(logicalUnDeleteConstField, introspectedTable);
                     Field logicalDeleteConstField = JavaElementGeneratorTools.generateStaticFinalField(
                             this.logicalDeleteConstName,
                             this.logicalDeleteColumn.getFullyQualifiedJavaType(),
                             this.getEnumConstantValue(true)
                     );
-                    logicalDeleteConstField.addAnnotation("@Deprecated");
                     commentGenerator.addFieldComment(logicalDeleteConstField, introspectedTable);
 
                     // 常量放在字段开头

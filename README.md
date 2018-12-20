@@ -472,6 +472,9 @@ public class Test {
 - 查询构造工具中增加逻辑删除条件andLogicalDeleted(boolean)；
 - 数据Model增加逻辑删除条件andLogicalDeleted(boolean)；
 - 增加逻辑删除常量IS_DELETED（已删除 默认值）、NOT_DELETED（未删除 默认值）（[[issues#11]](https://github.com/itfsw/mybatis-generator-plugin/issues/11)）；
+- 增加逻辑删除枚举，通过注解覆盖逻辑删除配置，具体使用参照[状态枚举生成插件（EnumTypeStatusPlugin）](#21-状态枚举生成插件)。
+
+>warning: 使用注解生成逻辑删除枚举时，枚举数量必须大于等于2，且第一个代表未删除，第二个代表删除。同时不必配置enumColumns选项，逻辑删除插件使用logicalDeleteColumn覆盖该配置。
  
 插件：
 ```xml
@@ -485,6 +488,9 @@ public class Test {
         <property name="logicalDeleteValue" value="9"/>
         <!-- 逻辑删除-未删除值 -->
         <property name="logicalUnDeleteValue" value="0"/>
+        
+        <!-- 是否生成逻辑删除常量(只有开启时 logicalDeleteConstName、logicalUnDeleteConstName 才生效) -->
+        <property name="enableLogicalDeleteConst" value="true"/>
         <!-- 逻辑删除常量名称，不配置默认为 IS_DELETED -->
         <property name="logicalDeleteConstName" value="IS_DELETED"/>
         <!-- 逻辑删除常量（未删除）名称，不配置默认为 NOT_DELETED -->
@@ -536,9 +542,58 @@ public class Test {
         // 5. selectByPrimaryKeyWithLogicalDelete V1.0.18 版本增加
         // 因为之前觉得既然拿到了主键这种查询没有必要，但是实际使用中可能存在根据主键判断是否逻辑删除的情况，这种场景还是有用的
         this.tbMapper.selectByPrimaryKeyWithLogicalDelete(1, true);
+        
+        // 6. 使用逻辑删除枚举
+        Tb tb = Tb.builder()
+                .delFlag(Tb.DelFlag.IS_DELETED)   // 删除
+                .delFlag(Tb.DelFlag.NOT_DELETED)    // 未删除
+                .build()
+                .andLogicalDeleted(true);   // 也可以在这里使用true|false设置逻辑删除
     }
 }
 ```
+通过注解覆盖逻辑删除配置
+```sql
+CREATE TABLE `tb` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '注释1',
+  `del_flag` smallint(3) COMMENT '注释[enable(1):第一项必须是代表未删除, disable(0):第二项必须是代表已删除, other(2):当然还可以附加其他状态]',
+  PRIMARY KEY (`id`)
+);
+```
+```java
+/**
+ * 生成的Tb会根据注释覆盖逻辑删除配置
+ */
+public class Tb {
+    public static final Short ENABLE = DelFlag.ENABLE.value();
+    public static final Short DISABLE = DelFlag.DISABLE.value();
+    
+    public enum DelFlag {
+        ENABLE(new Short("1"), "第一项必须是代表未删除"),
+        DISABLE(new Short("0"), "第二项必须是代表已删除"),
+        OTHER(new Short("2"), "当然还可以附加其他状态");
+        
+        private final Short value;
+        private final String name;
+        
+        DelFlag(Short value, String name) {
+            this.value = value;
+            this.name = name;
+        }
+        
+        public Short getValue() {
+            return this.value;
+        }
+        public Short value() {
+            return this.value;
+        }
+        public String getName() {
+            return this.name;
+        }
+    }
+}
+```
+
 ### 8. 数据Model属性对应Column获取插件
 项目中我们有时需要获取数据Model对应数据库字段的名称，一般直接根据数据Model的属性就可以猜出数据库对应column的名字，可是有的时候当column使用了columnOverride或者columnRenamingRule时就需要去看数据库设计了，所以提供了这个插件获取model对应的数据库Column。  
 * 配合Example Criteria 增强插件（ExampleEnhancedPlugin）使用，这个插件还提供了asc()和desc()方法配合Example的orderBy方法效果更佳。
