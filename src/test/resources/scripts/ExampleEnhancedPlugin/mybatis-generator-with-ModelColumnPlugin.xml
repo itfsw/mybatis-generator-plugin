@@ -49,5 +49,6 @@
         <table tableName="tb">
             <generatedKey column="id" sqlStatement="MySql" identity="true"/>
         </table>
+        <table tableName="tb_all"/>
     </context>
 </generatorConfiguration>
