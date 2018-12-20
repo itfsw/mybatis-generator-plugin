@@ -52,16 +52,12 @@ public abstract class AbstractShellCallback implements ShellCallback {
      */
     @Override
     public void refreshProject(String project) {
-        SqlSession sqlSession = null;
-        try {
-            // 编译项目
-            sqlSession = tool.compile();
+        // 编译项目
+        try (SqlSession sqlSession = tool.compile()){
             reloadProject(sqlSession, tool.getTargetClassLoader(), tool.getTargetPackage());
         } catch (Exception e) {
             e.printStackTrace();
             Assert.assertTrue(false);
-        } finally {
-            sqlSession.close();
         }
     }
 

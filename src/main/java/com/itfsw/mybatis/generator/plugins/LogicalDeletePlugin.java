@@ -176,6 +176,15 @@ public class LogicalDeletePlugin extends BasePlugin {
                             this.logicalDeleteColumn = null;
                             warnings.add("itfsw(逻辑删除插件):" + introspectedTable.getFullyQualifiedTable() + "没有找到您配置的逻辑删除值，请全局或者局部配置logicalDeleteValue和logicalUnDeleteValue值！");
                         } else {
+                            // 兼容处理以前一些老用户配置的Long 和 Float配置问题
+                            if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getFullyQualifiedName().equals(Long.class.getName())){
+                                this.logicalUnDeleteValue = this.logicalUnDeleteValue.replaceAll("L|l", "");
+                                this.logicalDeleteValue = this.logicalDeleteValue.replaceAll("L|l", "");
+                            } else if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getFullyQualifiedName().equals(Float.class.getName())){
+                                this.logicalUnDeleteValue = this.logicalUnDeleteValue.replaceAll("F|f", "");
+                                this.logicalDeleteValue = this.logicalDeleteValue.replaceAll("F|f", "");
+                            }
+
                             enumInfo.addItem(this.logicalUnDeleteConstName, "未删除", this.logicalUnDeleteValue);
                             enumInfo.addItem(this.logicalDeleteConstName, "已删除", this.logicalDeleteValue);
                             this.logicalDeleteEnum = enumInfo.generateEnum(commentGenerator, introspectedTable);
