@@ -177,10 +177,10 @@ public class LogicalDeletePlugin extends BasePlugin {
                             warnings.add("itfsw(逻辑删除插件):" + introspectedTable.getFullyQualifiedTable() + "没有找到您配置的逻辑删除值，请全局或者局部配置logicalDeleteValue和logicalUnDeleteValue值！");
                         } else {
                             // 兼容处理以前一些老用户配置的Long 和 Float配置问题
-                            if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getFullyQualifiedName().equals(Long.class.getName())){
+                            if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getFullyQualifiedName().equals(Long.class.getName())) {
                                 this.logicalUnDeleteValue = this.logicalUnDeleteValue.replaceAll("L|l", "");
                                 this.logicalDeleteValue = this.logicalDeleteValue.replaceAll("L|l", "");
-                            } else if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getFullyQualifiedName().equals(Float.class.getName())){
+                            } else if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getFullyQualifiedName().equals(Float.class.getName())) {
                                 this.logicalUnDeleteValue = this.logicalUnDeleteValue.replaceAll("F|f", "");
                                 this.logicalDeleteValue = this.logicalDeleteValue.replaceAll("F|f", "");
                             }
@@ -485,8 +485,8 @@ public class LogicalDeletePlugin extends BasePlugin {
 
                     // 常量放在字段开头
                     ArrayList<Field> fields = (ArrayList<Field>) topLevelClass.getFields();
-                    fields.add(logicalUnDeleteConstField);
-                    fields.add(logicalDeleteConstField);
+                    fields.add(0, logicalUnDeleteConstField);
+                    fields.add(0, logicalDeleteConstField);
                 }
             }
         }
