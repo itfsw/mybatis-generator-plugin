@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright (c) 2017.
+  ~ Copyright (c) 2019.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -25,12 +25,10 @@
     <context id="default" targetRuntime="MyBatis3">
         <!-- 插件 -->
         <!-- 注释插件 -->
-        <plugin type="com.itfsw.mybatis.generator.plugins.CommentPlugin">
-            <property name="template" value="src/test/resources/scripts/ComentPlugin/test-comment.ftl"/>
-        </plugin>
+        <plugin type="com.itfsw.mybatis.generator.plugins.CommentPlugin"/>
 
         <commentGenerator>
-            <property name="addRemarkComments" value="true"/>
+            <property name="suppressAllComments" value="true"/>
         </commentGenerator>
         <!--jdbc的数据库连接 -->
         <jdbcConnection driverClass="${driver}" connectionURL="${url}" userId="${username}" password="${password}" />

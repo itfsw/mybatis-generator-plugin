@@ -51,7 +51,7 @@ public class CommentPluginTest {
      */
     @BeforeClass
     public static void init() throws Exception {
-        DBHelper.createDB("scripts/ComentPlugin/init.sql");
+        DBHelper.createDB("scripts/CommentPlugin/init.sql");
     }
 
     /**
@@ -59,7 +59,7 @@ public class CommentPluginTest {
      */
     @Test
     public void testGenerateWithoutTemplate() throws Exception {
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ComentPlugin/mybatis-generator-without-template.xml");
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/CommentPlugin/mybatis-generator-without-template.xml");
         MyBatisGenerator myBatisGenerator = tool.generate();
         // 是否在使用系统默认模板
         int count = 0;
@@ -76,7 +76,7 @@ public class CommentPluginTest {
      */
     @Test
     public void testGenerateWithTemplate() throws Exception {
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ComentPlugin/mybatis-generator.xml");
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/CommentPlugin/mybatis-generator.xml");
         MyBatisGenerator myBatisGenerator = tool.generate();
 
         // java中的注释
@@ -104,5 +104,32 @@ public class CommentPluginTest {
         List<Element> els = ((XmlElement) (doc.getRootElement().getElements().get(0))).getElements();
         String comment = ((TextElement) els.get(0)).getContent();
         Assert.assertEquals(comment, "addComment:BaseResultMap");
+    }
+
+    /**
+     * 测试配置了模板参数转换
+     */
+    @Test
+    public void testGenerateWithOutComment() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/CommentPlugin/mybatis-generator-without-comment.xml");
+        MyBatisGenerator myBatisGenerator = tool.generate();
+
+        // java中的注释
+        for (GeneratedJavaFile file : myBatisGenerator.getGeneratedJavaFiles()) {
+            if (file.getFileName().equals("Tb.java")) {
+                TopLevelClass topLevelClass = (TopLevelClass) file.getCompilationUnit();
+                // addJavaFileComment
+                Assert.assertEquals(topLevelClass.getFileCommentLines().size(), 0);
+                // addFieldComment
+                Field id = topLevelClass.getFields().get(0);
+                Assert.assertEquals(id.getJavaDocLines().size(), 0);
+                // addGeneralMethodComment
+                Method cons = topLevelClass.getMethods().get(0);
+                Assert.assertEquals(cons.getJavaDocLines().size(), 0);
+                // addSetterComment
+                Method setter = topLevelClass.getMethods().get(5);
+                Assert.assertEquals(setter.getJavaDocLines().size(), 0);
+            }
+        }
     }
 }
