@@ -112,7 +112,7 @@
         <dependency>
             <groupId>jdk.tools</groupId>
             <artifactId>jdk.tools</artifactId>
-            <version>LATEST</version>
+            <version>1.8</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
