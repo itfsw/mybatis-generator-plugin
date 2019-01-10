@@ -97,15 +97,23 @@
             <version>[1.18.2,)</version>
             <scope>test</scope>
         </dependency>
-        <!-- lombok dependency -->
+        <!-- lombok 的测试用例依赖tools.jar, 但直接使用以下方式配置会导致gradle报错
+        解决办法：把tools.jar 安装进本地仓库！！
+        mvn install:install-file -DgroupId=jdk.tools -DartifactId=jdk.tools -Dpackaging=jar -Dversion=1.8 -Dfile=tools.jar
         <dependency>
             <groupId>com.sun</groupId>
             <artifactId>tools</artifactId>
             <version>1.8</version>
             <scope>system</scope>
             <optional>true</optional>
-            <!-- jdk path -->
             <systemPath>${env.JAVA_HOME}/lib/tools.jar</systemPath>
+        </dependency>
+        -->
+        <dependency>
+            <groupId>jdk.tools</groupId>
+            <artifactId>jdk.tools</artifactId>
+            <version>LATEST</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
