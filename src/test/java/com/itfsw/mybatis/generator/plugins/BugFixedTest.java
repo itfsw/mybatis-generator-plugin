@@ -24,6 +24,7 @@ import org.mybatis.generator.api.GeneratedJavaFile;
 import org.mybatis.generator.api.MyBatisGenerator;
 
 import java.lang.reflect.Array;
+import java.sql.ResultSet;
 import java.util.List;
 
 /**
@@ -155,9 +156,63 @@ public class BugFixedTest {
         MyBatisGenerator generator = tool.generate(() -> DBHelper.createDB("scripts/BugFixedTest/issues-63.sql"));
         for (GeneratedJavaFile file : generator.getGeneratedJavaFiles()) {
             String fileName = file.getFileName();
-            if (fileName.startsWith("Repaydetail")){
+            if (fileName.startsWith("Repaydetail")) {
                 Assert.assertTrue("官方自己的问题", true);
             }
+        }
+    }
+
+    /**
+     * 乐观锁插件配合SelectiveEnhancedPlugin多生成了selective参数的问题
+     * https://github.com/itfsw/mybatis-generator-plugin/issues/69
+     * @throws Exception
+     */
+    @Test
+    public void issues69() throws Exception {
+        for (int i = 0; i < 2; i++) {
+            MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/issues-69-" + i + ".xml");
+            tool.generate(() -> DBHelper.createDB("scripts/BugFixedTest/issues-69.sql"), new AbstractShellCallback() {
+                @Override
+                public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                    ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                    ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                    ObjectUtil criteria = new ObjectUtil(tbExample.invoke("createCriteria"));
+                    criteria.invoke("andIdEqualTo", 1l);
+
+                    ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
+                    tb.set("id", 1L);
+                    tb.set("version", 152L);
+                    tb.set("incF2", 10L);
+                    tb.set("incF3", 5L);
+
+                    // selective
+                    ObjectUtil TbColumnId = new ObjectUtil(loader, packagz + ".Tb$Column#id");
+                    ObjectUtil TbColumnVersion = new ObjectUtil(loader, packagz + ".Tb$Column#version");
+                    ObjectUtil TbColumnIncF2 = new ObjectUtil(loader, packagz + ".Tb$Column#incF2");
+                    Object columns = Array.newInstance(TbColumnId.getCls(), 3);
+                    Array.set(columns, 0, TbColumnId.getObject());
+                    Array.set(columns, 1, TbColumnVersion.getObject());
+                    Array.set(columns, 2, TbColumnIncF2.getObject());
+
+                    // sql
+                    String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateWithVersionByExampleSelective", 100L, tb.getObject(), tbExample.getObject(), columns);
+                    Assert.assertEquals(sql, "update tb SET version = version + 1, id = 1 , inc_f2 = 10 WHERE version = 100 and ( ( id = '1' ) )");
+
+                    // 执行一次，因为版本号100不存在所以应该返回0
+                    Object result = tbMapper.invoke("updateWithVersionByExampleSelective", 100L, tb.getObject(), tbExample.getObject(), columns);
+                    Assert.assertEquals(result, 0);
+
+                    // id = 1 的版本号应该是0
+                    result = tbMapper.invoke("updateWithVersionByExampleSelective", 0L, tb.getObject(), tbExample.getObject(), columns);
+                    Assert.assertEquals(result, 1);
+
+                    // 执行完成后版本号应该加1
+                    ResultSet rs = DBHelper.execute(sqlSession.getConnection(), "select * from tb where id = 1");
+                    rs.first();
+                    Assert.assertEquals(rs.getInt("version"), 1);
+                }
+            });
         }
     }
 }

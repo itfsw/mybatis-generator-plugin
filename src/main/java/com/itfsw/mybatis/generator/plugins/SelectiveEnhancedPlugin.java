@@ -352,19 +352,28 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
 
     @Override
     public boolean clientUpdateWithVersionByExampleSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
-        // column枚举,找出全字段对应的Model
-        FullyQualifiedJavaType fullFieldModel = introspectedTable.getRules().calculateAllFieldsClass();
-        FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
-        method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
+        // issue#69 OptimisticLockerPlugin 插件updateWithVersionByExampleSelective方法的生成是基于updateByExampleSelective的，
+        // 这个方法在配置了SelectiveEnhancedPlugin时可能已经被先配置的SelectiveEnhancedPlugin改变了
+        if (!"selective".equals(method.getParameters().get(method.getParameters().size() - 1).getName())) {
+            // column枚举,找出全字段对应的Model
+            FullyQualifiedJavaType fullFieldModel = introspectedTable.getRules().calculateAllFieldsClass();
+            FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
+            method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
+        }
+
         return true;
     }
 
     @Override
     public boolean clientUpdateWithVersionByPrimaryKeySelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
-        // column枚举,找出全字段对应的Model
-        FullyQualifiedJavaType fullFieldModel = introspectedTable.getRules().calculateAllFieldsClass();
-        FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
-        method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
+        // issue#69 OptimisticLockerPlugin 插件updateWithVersionByExampleSelective方法的生成是基于updateByExampleSelective的，
+        // 这个方法在配置了SelectiveEnhancedPlugin时可能已经被先配置的SelectiveEnhancedPlugin改变了
+        if (!"selective".equals(method.getParameters().get(method.getParameters().size() - 1).getName())) {
+            // column枚举,找出全字段对应的Model
+            FullyQualifiedJavaType fullFieldModel = introspectedTable.getRules().calculateAllFieldsClass();
+            FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
+            method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
+        }
         return true;
     }
 
