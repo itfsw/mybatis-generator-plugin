@@ -26,6 +26,7 @@ import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
+import org.mybatis.generator.internal.util.StringUtility;
 
 import java.util.List;
 
@@ -39,6 +40,13 @@ import java.util.List;
  */
 public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHook {
     /**
+     * 分页开始页码
+     */
+    public final static String PRO_START_PAGE = "startPage";
+    private final static int DEFAULT_START_PAGE = 0;
+    private int startPage;
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -50,6 +58,23 @@ public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHoo
             return false;
         }
         return super.validate(warnings);
+    }
+
+    /**
+     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     * @param introspectedTable
+     */
+    @Override
+    public void initialized(IntrospectedTable introspectedTable) {
+        super.initialized(introspectedTable);
+
+        // 获取配置
+        String startPage = this.getProperties().getProperty(LimitPlugin.PRO_START_PAGE);
+        if (StringUtility.stringHasValue(startPage)) {
+            this.startPage = Integer.valueOf(startPage);
+        } else {
+            this.startPage = DEFAULT_START_PAGE;
+        }
     }
 
     /**
@@ -142,7 +167,7 @@ public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHoo
         commentGenerator.addGeneralMethodComment(setPage, introspectedTable);
         setPage = JavaElementGeneratorTools.generateMethodBody(
                 setPage,
-                "this.offset = page * pageSize;",
+                "this.offset = " + (this.startPage == 0 ? "page" : "(page - " + this.startPage + ")") + " * pageSize;",
                 "this.rows = pageSize;",
                 "return this;"
         );

@@ -98,6 +98,31 @@ public class LimitPluginTest {
     }
 
     /**
+     * 测试startPage
+     */
+    @Test
+    public void testWithStartPage() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LimitPlugin/mybatis-generator-with-startPage.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 测试limit 方法
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+
+                // 2. 测试page 方法
+                tbExample.invoke("page", 2, 3);
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
+                Assert.assertEquals(sql, "select id, field1 from tb limit 3, 3");
+                // 执行
+                List list = (List) tbMapper.invoke("selectByExample", tbExample.getObject());
+                Assert.assertEquals(list.size(), 3);
+                Assert.assertEquals(new ObjectUtil(list.get(0)).get("id"), 4l);
+            }
+        });
+    }
+
+    /**
      * 整合SelectSelectivePlugin
      * @throws Exception
      */
