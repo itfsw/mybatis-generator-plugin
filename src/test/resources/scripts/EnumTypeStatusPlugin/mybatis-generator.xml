@@ -24,9 +24,7 @@
     <!--导入属性配置 -->
     <context id="default" targetRuntime="MyBatis3">
         <!-- 插件 -->
-        <plugin type="com.itfsw.mybatis.generator.plugins.EnumTypeStatusPlugin">
-            <property name="enumColumns" value="type, status"/>
-        </plugin>
+        <plugin type="com.itfsw.mybatis.generator.plugins.EnumTypeStatusPlugin"/>
 
         <commentGenerator>
             <property name="addRemarkComments" value="true"/>
@@ -51,8 +49,6 @@
         <javaClientGenerator targetPackage="" targetProject="" type="XMLMAPPER"/>
 
         <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 要自动生成的表 +++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
-        <table tableName="tb">
-            <property name="enumColumns" value="field2, field3_str, break_line"/>
-        </table>
+        <table tableName="tb"/>
     </context>
 </generatorConfiguration>

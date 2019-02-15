@@ -44,6 +44,11 @@ import java.util.regex.Pattern;
  */
 public class EnumTypeStatusPlugin extends BasePlugin {
     /**
+     * 自动扫描
+     */
+    public final static String PRO_AUTO_SCAN = "autoScan";
+
+    /**
      * 需要生成Enum的Column
      */
     public final static String PRO_ENUM_COLUMNS = "enumColumns";
@@ -60,35 +65,53 @@ public class EnumTypeStatusPlugin extends BasePlugin {
     public void initialized(IntrospectedTable introspectedTable) {
         super.initialized(introspectedTable);
         this.enumColumns = new LinkedHashMap<>();
+        String autoScan = this.getProperties().getProperty(PRO_AUTO_SCAN);
+        // 是否开启了自动扫描
+        if (StringUtility.stringHasValue(autoScan) && !StringUtility.isTrue(autoScan)) {
+            // 获取全局配置
+            String enumColumns = this.getProperties().getProperty(EnumTypeStatusPlugin.PRO_ENUM_COLUMNS);
+            // 如果有局部配置，则附加上去
+            String tableEnumColumns = introspectedTable.getTableConfigurationProperty(EnumTypeStatusPlugin.PRO_ENUM_COLUMNS);
+            if (tableEnumColumns != null) {
+                enumColumns = enumColumns == null ? "" : (enumColumns + ",");
 
-        // 获取全局配置
-        String enumColumns = this.getProperties().getProperty(EnumTypeStatusPlugin.PRO_ENUM_COLUMNS);
-        // 如果有局部配置，则附加上去
-        String tableEnumColumns = introspectedTable.getTableConfigurationProperty(EnumTypeStatusPlugin.PRO_ENUM_COLUMNS);
-        if (tableEnumColumns != null) {
-            enumColumns = enumColumns == null ? "" : (enumColumns + ",");
+                enumColumns += introspectedTable.getTableConfigurationProperty(EnumTypeStatusPlugin.PRO_ENUM_COLUMNS);
+            }
 
-            enumColumns += introspectedTable.getTableConfigurationProperty(EnumTypeStatusPlugin.PRO_ENUM_COLUMNS);
-        }
-
-        if (StringUtility.stringHasValue(enumColumns)) {
-            // 切分
-            String[] enumColumnsStrs = enumColumns.split(",");
-            for (String enumColumnsStr : enumColumnsStrs) {
-                IntrospectedColumn column = IntrospectedTableTools.safeGetColumn(introspectedTable, enumColumnsStr);
-                if (column != null) {
-                    try {
-                        EnumInfo enumInfo = new EnumInfo(column);
-                        // 解析注释
-                        enumInfo.parseRemarks(column.getRemarks());
-                        if (enumInfo.hasItems()) {
-                            this.enumColumns.put(column.getJavaProperty(), enumInfo);
+            if (StringUtility.stringHasValue(enumColumns)) {
+                // 切分
+                String[] enumColumnsStrs = enumColumns.split(",");
+                for (String enumColumnsStr : enumColumnsStrs) {
+                    IntrospectedColumn column = IntrospectedTableTools.safeGetColumn(introspectedTable, enumColumnsStr);
+                    if (column != null) {
+                        try {
+                            EnumInfo enumInfo = new EnumInfo(column);
+                            // 解析注释
+                            enumInfo.parseRemarks(column.getRemarks());
+                            if (enumInfo.hasItems()) {
+                                this.enumColumns.put(column.getJavaProperty(), enumInfo);
+                            }
+                        } catch (EnumInfo.CannotParseException e) {
+                            warnings.add("itfsw:插件" + EnumTypeStatusPlugin.class.getTypeName() + "没有找到column为" + enumColumnsStr.trim() + "对应格式的注释的字段！");
+                        } catch (EnumInfo.NotSupportTypeException e) {
+                            warnings.add("itfsw:插件" + EnumTypeStatusPlugin.class.getTypeName() + "找到column为" + enumColumnsStr.trim() + "对应Java类型不在支持范围内！");
                         }
-                    } catch (EnumInfo.CannotParseException e) {
-                        warnings.add("itfsw:插件" + EnumTypeStatusPlugin.class.getTypeName() + "没有找到column为" + enumColumnsStr.trim() + "对应格式的注释的字段！");
-                    } catch (EnumInfo.NotSupportTypeException e) {
-                        warnings.add("itfsw:插件" + EnumTypeStatusPlugin.class.getTypeName() + "找到column为" + enumColumnsStr.trim() + "对应Java类型不在支持范围内！");
                     }
+                }
+            }
+        } else {
+            for (IntrospectedColumn column : introspectedTable.getAllColumns()) {
+                try {
+                    EnumInfo enumInfo = new EnumInfo(column);
+                    // 解析注释
+                    enumInfo.parseRemarks(column.getRemarks());
+                    if (enumInfo.hasItems()) {
+                        this.enumColumns.put(column.getJavaProperty(), enumInfo);
+                    }
+                } catch (EnumInfo.NotSupportTypeException e) {
+                    warnings.add("itfsw:插件" + EnumTypeStatusPlugin.class.getTypeName() + "找到column为" + column.getActualColumnName() + "对应Java类型不在支持范围内！");
+                } catch (Exception e) {
+                    // nothing
                 }
             }
         }

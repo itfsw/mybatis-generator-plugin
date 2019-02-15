@@ -22,6 +22,7 @@ DROP TABLE IF EXISTS `tb`;
 CREATE TABLE `tb` (
   `field1` varchar(255) DEFAULT NULL COMMENT '注释2',
   `field2` smallint(3) COMMENT '注释[success(0):禁用, fail_type(1):启用]',
+  `field3` smallint(3) COMMENT '注释[success(0):禁用, fail_type(1):启用]',
   `field3_str` varchar(255) COMMENT '注释111[success(成都):禁用, type(成都11):启用]',
   `status` smallint(3) COMMENT '注释[success(0):禁用, fail(1):启用]',
   `type` bigint(20) COMMENT '注释       [    success (   0   )           :  禁用    ,   fail_type (  1  )  :  启用  ]  阿斯顿覅就就',

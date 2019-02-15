@@ -69,20 +69,20 @@ public class EnumTypeStatusPluginTest {
      * @throws Exception
      */
     @Test
-    public void testEnum() throws Exception{
+    public void testEnum() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/EnumTypeStatusPlugin/mybatis-generator.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
                 // 1. 测试标准注释
                 ObjectUtil enumField2Success = new ObjectUtil(loader, packagz + ".Tb$Field2#SUCCESS");
-                Assert.assertEquals(enumField2Success.invoke("value"), (short)0);
-                Assert.assertEquals(enumField2Success.invoke("getValue"), (short)0);
+                Assert.assertEquals(enumField2Success.invoke("value"), (short) 0);
+                Assert.assertEquals(enumField2Success.invoke("getValue"), (short) 0);
                 Assert.assertEquals(enumField2Success.invoke("getName"), "禁用");
 
                 ObjectUtil enumField2FailType = new ObjectUtil(loader, packagz + ".Tb$Field2#FAIL_TYPE");
-                Assert.assertEquals(enumField2FailType.invoke("value"), (short)1);
-                Assert.assertEquals(enumField2FailType.invoke("getValue"), (short)1);
+                Assert.assertEquals(enumField2FailType.invoke("value"), (short) 1);
+                Assert.assertEquals(enumField2FailType.invoke("getValue"), (short) 1);
                 Assert.assertEquals(enumField2FailType.invoke("getName"), "启用");
 
                 // 2. 字符串类型的
@@ -93,8 +93,8 @@ public class EnumTypeStatusPluginTest {
 
                 // 3. 全局支持
                 ObjectUtil enumStatusSuccess = new ObjectUtil(loader, packagz + ".Tb$Status#SUCCESS");
-                Assert.assertEquals(enumStatusSuccess.invoke("value"), (short)0);
-                Assert.assertEquals(enumStatusSuccess.invoke("getValue"), (short)0);
+                Assert.assertEquals(enumStatusSuccess.invoke("value"), (short) 0);
+                Assert.assertEquals(enumStatusSuccess.invoke("getValue"), (short) 0);
                 Assert.assertEquals(enumStatusSuccess.invoke("getName"), "禁用");
 
                 // 4. 特殊格式的注释
@@ -116,6 +116,37 @@ public class EnumTypeStatusPluginTest {
                 Assert.assertEquals(enumBreakLineFailType.invoke("value"), 1L);
                 Assert.assertEquals(enumBreakLineFailType.invoke("getValue"), 1L);
                 Assert.assertEquals(enumBreakLineFailType.invoke("getName"), "启用");
+            }
+        });
+    }
+
+    /**
+     * 测试生成的enum
+     * @throws Exception
+     */
+    @Test
+    public void testEnumWithConfigColumns() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/EnumTypeStatusPlugin/mybatis-generator.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                try {
+                    new ObjectUtil(loader, packagz + ".Tb$Field3#SUCCESS");
+                } catch (ClassNotFoundException e) {
+                    Assert.fail();
+                }
+            }
+        });
+
+        tool = MyBatisGeneratorTool.create("scripts/EnumTypeStatusPlugin/mybatis-generator-with-config-columns.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                try {
+                    new ObjectUtil(loader, packagz + ".Tb$Field3#SUCCESS");
+                    Assert.fail();
+                } catch (ClassNotFoundException e) {
+                }
             }
         });
     }

@@ -24,7 +24,9 @@
     <!--导入属性配置 -->
     <context id="default" targetRuntime="MyBatis3">
         <!-- 插件 -->
-        <plugin type="com.itfsw.mybatis.generator.plugins.EnumTypeStatusPlugin"/>
+        <plugin type="com.itfsw.mybatis.generator.plugins.EnumTypeStatusPlugin">
+            <property name="autoScan" value="false"/>
+        </plugin>
 
         <commentGenerator>
             <property name="addRemarkComments" value="true"/>
