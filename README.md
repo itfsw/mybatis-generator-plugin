@@ -34,7 +34,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.2.17</version>
+  <version>1.2.18</version>
 </dependency>
 ```
 ---------------------------------------
@@ -89,7 +89,7 @@ targetCompatibility = 1.8
 
 
 def mybatisGeneratorCore = 'org.mybatis.generator:mybatis-generator-core:1.3.7'
-def itfswMybatisGeneratorPlugin = 'com.itfsw:mybatis-generator-plugin:1.2.17'
+def itfswMybatisGeneratorPlugin = 'com.itfsw:mybatis-generator-plugin:1.2.18'
 
 mybatisGenerator {
   verbose = false
@@ -154,12 +154,15 @@ public interface TbMapper {
 ```
 ### 2. MySQL分页插件
 对应表Example类增加了Mysql分页方法，limit(Integer rows)、limit(Integer offset, Integer rows)和page(Integer page, Integer pageSize)  
->warning:分页从0开始，目前网上流行的大多数前端框架分页都是从0开始，插件保持这种方式； 
+>warning: 分页默认从0开始，目前网上流行的大多数前端框架分页都是从0开始，插件保持这种方式（可通过配置startPage参数修改）； 
 
 插件：
 ```xml
 <!-- MySQL分页插件 -->
-<plugin type="com.itfsw.mybatis.generator.plugins.LimitPlugin"/>
+<plugin type="com.itfsw.mybatis.generator.plugins.LimitPlugin">
+    <!-- 通过配置startPage影响Example中的page方法开始分页的页码，默认分页从0开始 -->
+    <property name="startPage" value="0"/>
+</plugin>
 ```
 使用：  
 ```java
@@ -216,6 +219,8 @@ public class TbExample {
      */
     public TbExample page(Integer page, Integer pageSize) {
         this.offset = page * pageSize;
+        // !!! 如果配置了startPage且不为0
+        // this.offset = (page - startPage) * pageSize;
         this.rows = pageSize;
         return this;
     }
@@ -422,7 +427,22 @@ Mybatis Generator 插件默认把Model类和Example类都生成到一个包下�
 </plugin>
 ```
 ### 6. 批量插入插件
-提供了批量插入batchInsert和batchInsertSelective方法，需配合数据Model属性对应Column获取插件（ModelColumnPlugin）插件使用，实现类似于insertSelective插入列！  
+提供了批量插入batchInsert和batchInsertSelective方法，需配合数据Model属性对应Column获取插件（ModelColumnPlugin）插件使用，实现类似于insertSelective插入列！ 
+>warning: [[issues#70](https://github.com/itfsw/mybatis-generator-plugin/issues/70)]当mybatis版本从3.5.0开始对useGeneratedKeys的keyProperty配置有了新的变更，导致使用batchInsertSelective时对自增主键赋值会报错 
+
+mybatis版本3.5.0bug解决方法
+```xml
+<context>
+    <!-- 指定mybatis版本，让插件指定您所使用的mybatis版本生成对应代码 -->
+    <property name="mybatisVersion" value="3.5.0"/>
+    <!-- 批量插入插件 -->
+    <plugin type="com.itfsw.mybatis.generator.plugins.BatchInsertPlugin">
+        <!-- 或者这里配置 -->
+        <property name="mybatisVersion" value="3.5.0"/>
+    </plugin>
+</context>
+``` 
+ 
 插件：
 ```xml
 <!-- 批量插入插件 -->
@@ -762,7 +782,7 @@ public class Test {
 ```
 ### 10. Selective选择插入更新增强插件
 项目中往往需要指定某些字段进行插入或者更新，或者把某些字段进行设置null处理，这种情况下原生xxxSelective方法往往不能达到需求，因为它的判断条件是对象字段是否为null，这种情况下可使用该插件对xxxSelective方法进行增强。  
->warning:以前老版本（1.1.x）插件处理需要指定的列时是放入Model中指定的，但在实际使用过程中有同事反馈这个处理有点反直觉，导致某些新同事不能及时找到对应方法，而且和增强的SelectSelectivePlugin以及UpsertSelective使用方式都不一致，所以统一修改之。  
+>warning: 以前老版本（1.1.x）插件处理需要指定的列时是放入Model中指定的，但在实际使用过程中有同事反馈这个处理有点反直觉，导致某些新同事不能及时找到对应方法，而且和增强的SelectSelectivePlugin以及UpsertSelective使用方式都不一致，所以统一修改之。  
 
 插件：
 ```xml
@@ -1474,15 +1494,18 @@ public class Test {
 ```
 ### 21. 状态枚举生成插件
 数据库中经常会定义一些状态字段，该工具可根据约定的注释格式生成对应的枚举类，方便使用。
+>warning：插件1.2.18版本以后默认开启自动扫描，根据约定注释格式自动生成对应枚举类
 ```xml
 <xml>
     <!-- 状态枚举生成插件 -->
     <plugin type="com.itfsw.mybatis.generator.plugins.EnumTypeStatusPlugin">
-        <!-- 这里可以定义全局需要检查生成枚举类的列名 -->
+        <!-- 是否开启自动扫描根据约定注释格式生成注释，默认true -->
+        <property name="autoScan" value="true"/>
+        <!-- autoScan为false,这里可以定义全局需要检查生成枚举类的列名 -->
         <property name="enumColumns" value="type, status"/>
     </plugin>
     <table tableName="tb">
-        <!-- 也可以为单独某个table增加配置 -->
+        <!-- autoScan为false,也可以为单独某个table增加配置 -->
         <property name="enumColumns" value="user_type"/>
     </table>
 </xml>
