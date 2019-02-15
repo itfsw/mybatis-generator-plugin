@@ -171,7 +171,8 @@ public class BatchInsertPlugin extends BasePlugin {
         batchInsertSelectiveEle.addAttribute(new Attribute("parameterType", "map"));
 
         // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-        XmlElementGeneratorTools.useGeneratedKeys(batchInsertSelectiveEle, introspectedTable);
+        // issues#70 mybatis 版本升级到3.5.0之后，useGeneratedKeys在配置keyProperty时需要指定前缀
+        XmlElementGeneratorTools.useGeneratedKeys(batchInsertSelectiveEle, introspectedTable, PluginTools.compareVersion(mybatisVersion, "3.5.0") >= 0 ? "list." : null);
 
         // 支持原生字段非空判断
         if (this.allowMultiQueries) {

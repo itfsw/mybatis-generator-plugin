@@ -25,6 +25,7 @@ import org.mybatis.generator.api.MyBatisGenerator;
 
 import java.lang.reflect.Array;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -214,5 +215,50 @@ public class BugFixedTest {
                 }
             });
         }
+    }
+
+    /**
+     * batchInsertSelective
+     * https://github.com/itfsw/mybatis-generator-plugin/issues/70
+     * ！！！！！ 验证时把pom文件mybatis版本升级到3.5.0以上
+     * @throws Exception
+     */
+//    @Test
+    public void issues70() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/issues-70.xml");
+        tool.generate(() -> DBHelper.createDB("scripts/BugFixedTest/issues-70.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 测试sql
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+                List<Object> params = new ArrayList<>();
+                params.add(
+                        new ObjectUtil(loader, packagz + ".Tb")
+                                .set("field1", "test")
+                                .getObject()
+                );
+                params.add(
+                        new ObjectUtil(loader, packagz + ".Tb")
+                                .set("field1", "test")
+                                .set("field2", 1)
+                                .getObject()
+                );
+
+                ObjectUtil columnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
+                Object columns = Array.newInstance(columnField1.getCls(), 1);
+                Array.set(columns, 0, columnField1.getObject());
+
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "batchInsertSelective", params, columns);
+                Assert.assertEquals(sql, "insert into tb ( field1 ) values ( 'test' ) , ( 'test' )");
+                // 2. 执行sql
+                Object count = tbMapper.invoke("batchInsertSelective", params, columns);
+                Assert.assertEquals(count, 2);
+
+                for (int i = 0; i < params.size(); i++) {
+                    ObjectUtil item = new ObjectUtil(params.get(i));
+                    Assert.assertEquals(item.get("id"), 1L + i);
+                }
+            }
+        });
     }
 }

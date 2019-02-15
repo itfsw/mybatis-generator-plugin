@@ -41,9 +41,15 @@ import java.util.List;
  * ---------------------------------------------------------------------------
  */
 public class BasePlugin extends PluginAdapter {
-    protected static final Logger logger = LoggerFactory.getLogger(BasePlugin.class); // 日志
-    protected CommentGenerator commentGenerator;  // 注释工具
-    protected List<String> warnings;    // 提示
+    protected static final Logger logger = LoggerFactory.getLogger(BasePlugin.class);
+    protected CommentGenerator commentGenerator;
+    protected List<String> warnings;
+
+    /**
+     * mybatis 版本
+     */
+    public static final String PRO_MYBATIS_VERSION = "mybatisVersion";
+    protected String mybatisVersion = "3.4.0";
 
     /**
      * Set the context under which this plugin is running.
@@ -83,6 +89,11 @@ public class BasePlugin extends PluginAdapter {
                 logger.error("反射异常", e);
             }
         }
+
+        // mybatis版本
+        if (StringUtility.stringHasValue(context.getProperty(PRO_MYBATIS_VERSION))) {
+            this.mybatisVersion = context.getProperty(PRO_MYBATIS_VERSION);
+        }
     }
 
     /**
@@ -107,9 +118,14 @@ public class BasePlugin extends PluginAdapter {
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
         super.initialized(introspectedTable);
-        if (StringUtility.stringHasValue(introspectedTable.getTableConfiguration().getAlias())){
+        if (StringUtility.stringHasValue(introspectedTable.getTableConfiguration().getAlias())) {
             warnings.add("itfsw:插件" + this.getClass().getTypeName() + "请不要配置alias属性，这个属性官方支持也很混乱，导致插件支持会存在问题！");
         }
         PluginTools.getHook(ITableConfigurationHook.class).tableConfiguration(introspectedTable);
+
+        // mybatis版本
+        if (StringUtility.stringHasValue(this.getProperties().getProperty(PRO_MYBATIS_VERSION))) {
+            this.mybatisVersion = this.getProperties().getProperty(PRO_MYBATIS_VERSION);
+        }
     }
 }
