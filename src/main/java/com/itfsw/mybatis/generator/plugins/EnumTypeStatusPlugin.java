@@ -108,8 +108,6 @@ public class EnumTypeStatusPlugin extends BasePlugin {
                     if (enumInfo.hasItems()) {
                         this.enumColumns.put(column.getJavaProperty(), enumInfo);
                     }
-                } catch (EnumInfo.NotSupportTypeException e) {
-                    warnings.add("itfsw:插件" + EnumTypeStatusPlugin.class.getTypeName() + "找到column为" + column.getActualColumnName() + "对应Java类型不在支持范围内！");
                 } catch (Exception e) {
                     // nothing
                 }
