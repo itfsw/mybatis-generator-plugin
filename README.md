@@ -1499,7 +1499,7 @@ public class Test {
 <xml>
     <!-- 状态枚举生成插件 -->
     <plugin type="com.itfsw.mybatis.generator.plugins.EnumTypeStatusPlugin">
-        <!-- 是否开启自动扫描根据约定注释格式生成注释，默认true -->
+        <!-- 是否开启自动扫描根据约定注释格式生成枚举，默认true -->
         <property name="autoScan" value="true"/>
         <!-- autoScan为false,这里可以定义全局需要检查生成枚举类的列名 -->
         <property name="enumColumns" value="type, status"/>
