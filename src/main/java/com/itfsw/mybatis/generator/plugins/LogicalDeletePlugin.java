@@ -106,6 +106,8 @@ public class LogicalDeletePlugin extends BasePlugin {
      * 逻辑删除枚举
      */
     private InnerEnum logicalDeleteEnum;
+    private int logicalUnDeleteEnumIndex = 0;
+    private int logicalDeleteEnumIndex = 1;
 
     /**
      * 初始化阶段
@@ -116,6 +118,9 @@ public class LogicalDeletePlugin extends BasePlugin {
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
         super.initialized(introspectedTable);
+        this.logicalUnDeleteEnumIndex = 0;
+        this.logicalDeleteEnumIndex = 1;
+
         // 1. 获取配置的逻辑删除列
         Properties properties = getProperties();
         String logicalDeleteColumn = properties.getProperty(PRO_LOGICAL_DELETE_COLUMN);
@@ -139,7 +144,21 @@ public class LogicalDeletePlugin extends BasePlugin {
             }
         }
 
-        // 3. 优先借助 EnumTypeStatusPlugin 插件，去注解里面解析枚举
+        // 3.判断逻辑删除值是否配置了
+        this.logicalDeleteValue = properties.getProperty(PRO_LOGICAL_DELETE_VALUE);
+        this.logicalUnDeleteValue = properties.getProperty(PRO_LOGICAL_UN_DELETE_VALUE);
+        if (introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_VALUE) != null) {
+            this.logicalDeleteValue = introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_VALUE);
+        }
+        if (introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_UN_DELETE_VALUE) != null) {
+            this.logicalUnDeleteValue = introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_UN_DELETE_VALUE);
+        }
+        if (this.logicalDeleteValue == null || this.logicalUnDeleteValue == null) {
+            this.logicalDeleteColumn = null;
+            warnings.add("itfsw(逻辑删除插件):" + introspectedTable.getFullyQualifiedTable() + "没有找到您配置的逻辑删除值，请全局或者局部配置logicalDeleteValue和logicalUnDeleteValue值！");
+        }
+
+        // 4. 优先借助 EnumTypeStatusPlugin 插件，去注解里面解析枚举
         if (this.logicalDeleteColumn != null) {
             EnumTypeStatusPlugin.EnumInfo enumInfo = null;
             try {
@@ -155,40 +174,45 @@ public class LogicalDeletePlugin extends BasePlugin {
 
                 if (enumInfo != null) {
                     // 这个是注释里配置了枚举
-                    if (enumInfo.hasItems() && enumInfo.getItems().size() >= 2) {
-                        this.logicalUnDeleteValue = enumInfo.getItems().get(0).getOriginalValue();
-                        this.logicalUnDeleteConstName = enumInfo.getItems().get(0).getName();
-                        this.logicalDeleteValue = enumInfo.getItems().get(1).getOriginalValue();
-                        this.logicalDeleteConstName = enumInfo.getItems().get(1).getName();
-                        this.logicalDeleteEnum = enumInfo.generateEnum(commentGenerator, introspectedTable);
-                    } else {
-                        // 没有在注释里配置读取xml中配置的
-                        this.logicalDeleteValue = properties.getProperty(PRO_LOGICAL_DELETE_VALUE);
-                        this.logicalUnDeleteValue = properties.getProperty(PRO_LOGICAL_UN_DELETE_VALUE);
-                        if (introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_VALUE) != null) {
-                            this.logicalDeleteValue = introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_VALUE);
-                        }
-                        if (introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_UN_DELETE_VALUE) != null) {
-                            this.logicalUnDeleteValue = introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_UN_DELETE_VALUE);
-                        }
-                        // 4. 判断逻辑删除值是否配置了
-                        if (this.logicalDeleteValue == null || this.logicalUnDeleteValue == null) {
+                    if (enumInfo.hasItems()) {
+                        if (enumInfo.getItems().size() < 2) {
                             this.logicalDeleteColumn = null;
-                            warnings.add("itfsw(逻辑删除插件):" + introspectedTable.getFullyQualifiedTable() + "没有找到您配置的逻辑删除值，请全局或者局部配置logicalDeleteValue和logicalUnDeleteValue值！");
+                            warnings.add("itfsw(逻辑删除插件):" + introspectedTable.getFullyQualifiedTable() + "在配合EnumTypeStatusPlugin插件使用时，枚举数量必须大于等于2！");
                         } else {
-                            // 兼容处理以前一些老用户配置的Long 和 Float配置问题
-                            if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getFullyQualifiedName().equals(Long.class.getName())) {
-                                this.logicalUnDeleteValue = this.logicalUnDeleteValue.replaceAll("L|l", "");
-                                this.logicalDeleteValue = this.logicalDeleteValue.replaceAll("L|l", "");
-                            } else if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getFullyQualifiedName().equals(Float.class.getName())) {
-                                this.logicalUnDeleteValue = this.logicalUnDeleteValue.replaceAll("F|f", "");
-                                this.logicalDeleteValue = this.logicalDeleteValue.replaceAll("F|f", "");
+                            this.logicalDeleteEnumIndex = -1;
+                            this.logicalUnDeleteEnumIndex = -1;
+                            for (int i = 0; i < enumInfo.getItems().size(); i++) {
+                                EnumTypeStatusPlugin.EnumInfo.EnumItemInfo enumItemInfo = enumInfo.getItems().get(i);
+                                if (this.logicalDeleteValue.equals(enumItemInfo.getOriginalValue())) {
+                                    this.logicalDeleteEnumIndex = i;
+                                } else if (this.logicalUnDeleteValue.equals(enumItemInfo.getOriginalValue())) {
+                                    this.logicalUnDeleteEnumIndex = i;
+                                }
+                            }
+                            if (this.logicalDeleteEnumIndex == -1) {
+                                this.logicalDeleteColumn = null;
+                                warnings.add("itfsw(逻辑删除插件):" + introspectedTable.getFullyQualifiedTable() + "在配合EnumTypeStatusPlugin插件使用时，逻辑删除值“" + this.logicalDeleteValue + "”未在枚举中找到！");
+                            } else if (this.logicalDeleteEnumIndex == -1) {
+                                this.logicalDeleteColumn = null;
+                                warnings.add("itfsw(逻辑删除插件):" + introspectedTable.getFullyQualifiedTable() + "在配合EnumTypeStatusPlugin插件使用时，逻辑未删除值“" + this.logicalUnDeleteValue + "”未在枚举中找到！");
+                            } else {
+                                this.logicalDeleteEnum = enumInfo.generateEnum(commentGenerator, introspectedTable);
                             }
 
-                            enumInfo.addItem(this.logicalUnDeleteConstName, "未删除", this.logicalUnDeleteValue);
-                            enumInfo.addItem(this.logicalDeleteConstName, "已删除", this.logicalDeleteValue);
-                            this.logicalDeleteEnum = enumInfo.generateEnum(commentGenerator, introspectedTable);
                         }
+                    } else {
+                        // 兼容处理以前一些老用户配置的Long 和 Float配置问题
+                        if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getFullyQualifiedName().equals(Long.class.getName())) {
+                            this.logicalUnDeleteValue = this.logicalUnDeleteValue.replaceAll("L|l", "");
+                            this.logicalDeleteValue = this.logicalDeleteValue.replaceAll("L|l", "");
+                        } else if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getFullyQualifiedName().equals(Float.class.getName())) {
+                            this.logicalUnDeleteValue = this.logicalUnDeleteValue.replaceAll("F|f", "");
+                            this.logicalDeleteValue = this.logicalDeleteValue.replaceAll("F|f", "");
+                        }
+
+                        enumInfo.addItem(this.logicalUnDeleteConstName, "未删除", this.logicalUnDeleteValue);
+                        enumInfo.addItem(this.logicalDeleteConstName, "已删除", this.logicalDeleteValue);
+                        this.logicalDeleteEnum = enumInfo.generateEnum(commentGenerator, introspectedTable);
                     }
                 }
             }
@@ -455,7 +479,9 @@ public class LogicalDeletePlugin extends BasePlugin {
             // 常量、枚举和逻辑删除方法跟随 逻辑删除列走
             if (this.logicalDeleteColumn.getJavaProperty().equals(field.getName())) {
                 // 1. 添加枚举
-                topLevelClass.addInnerEnum(this.logicalDeleteEnum);
+                if (PluginTools.getHook(ILogicalDeletePluginHook.class).logicalDeleteEnumGenerated(this.logicalDeleteColumn) == false) {
+                    topLevelClass.addInnerEnum(this.logicalDeleteEnum);
+                }
                 // 2. andLogicalDeleted 方法
                 Method mAndLogicalDeleted = JavaElementGeneratorTools.generateMethod(
                         METHOD_LOGICAL_DELETED,
@@ -559,7 +585,7 @@ public class LogicalDeletePlugin extends BasePlugin {
      */
     private String getEnumConstantValue(boolean delete) {
         if (this.logicalDeleteEnum != null) {
-            String enumConstant = this.logicalDeleteEnum.getEnumConstants().get(delete ? 1 : 0);
+            String enumConstant = this.logicalDeleteEnum.getEnumConstants().get(delete ? this.logicalDeleteEnumIndex : this.logicalUnDeleteEnumIndex);
             enumConstant = enumConstant.split("\\(")[0];
             return this.logicalDeleteEnum.getType().getShortName() + "." + enumConstant + ".value()";
         }

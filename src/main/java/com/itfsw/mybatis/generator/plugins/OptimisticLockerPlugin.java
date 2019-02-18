@@ -499,6 +499,11 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
         return true;
     }
 
+    @Override
+    public boolean logicalDeleteEnumGenerated(IntrospectedColumn logicalDeleteColumn) {
+        return false;
+    }
+
     // =================================================== 一些生成方法 ========================================
 
     /**

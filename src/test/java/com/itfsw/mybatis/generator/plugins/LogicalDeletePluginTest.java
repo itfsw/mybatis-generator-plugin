@@ -246,9 +246,9 @@ public class LogicalDeletePluginTest {
                 // 验证andLogicalDeleted方法
                 ObjectUtil tbRemark = new ObjectUtil(loader, packagz + ".TbRemark");
                 tbRemark.invoke("andLogicalDeleted", true);
-                Assert.assertEquals(tbRemark.get("delFlag"), (short)0);
-                tbRemark.invoke("andLogicalDeleted", false);
                 Assert.assertEquals(tbRemark.get("delFlag"), (short)1);
+                tbRemark.invoke("andLogicalDeleted", false);
+                Assert.assertEquals(tbRemark.get("delFlag"), (short)0);
 
                 // 验证sql执行
                 ObjectUtil tbRemarkMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbRemarkMapper")));
@@ -256,7 +256,7 @@ public class LogicalDeletePluginTest {
                 ObjectUtil criteria = new ObjectUtil(tbRemarkExample.invoke("createCriteria"));
                 criteria.invoke("andLogicalDeleted", true);
                 String sql = SqlHelper.getFormatMapperSql(tbRemarkMapper.getObject(), "selectByExample", tbRemarkExample.getObject());
-                Assert.assertEquals(sql, "select id, del_flag from tb_remark WHERE ( del_flag = '0' )");
+                Assert.assertEquals(sql, "select id, del_flag from tb_remark WHERE ( del_flag = '1' )");
                 Object result = tbRemarkMapper.invoke("selectByExample", tbRemarkExample.getObject());
                 Assert.assertEquals(((List)result).size(), 1);
             }

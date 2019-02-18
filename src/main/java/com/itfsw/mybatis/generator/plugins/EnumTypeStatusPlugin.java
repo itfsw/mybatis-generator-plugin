@@ -17,10 +17,13 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.*;
+import com.itfsw.mybatis.generator.plugins.utils.hook.ILogicalDeletePluginHook;
 import org.mybatis.generator.api.CommentGenerator;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
+import org.mybatis.generator.api.dom.xml.Document;
+import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.internal.util.StringUtility;
 
 import java.math.BigDecimal;
@@ -36,7 +39,8 @@ import java.util.regex.Pattern;
  * @time:2018/11/27 20:36
  * ---------------------------------------------------------------------------
  */
-public class EnumTypeStatusPlugin extends BasePlugin {
+public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePluginHook {
+
     /**
      * 自动扫描
      */
@@ -107,19 +111,6 @@ public class EnumTypeStatusPlugin extends BasePlugin {
                 }
             }
         }
-
-        // 逻辑删除插件依赖该插件生成对应枚举
-        if (PluginTools.checkDependencyPlugin(this.getContext(), LogicalDeletePlugin.class)) {
-            // 1. 获取配置的逻辑删除列
-            String logicalDeleteColumnStr = this.getProperties().getProperty(LogicalDeletePlugin.PRO_LOGICAL_DELETE_COLUMN);
-            if (introspectedTable.getTableConfigurationProperty(LogicalDeletePlugin.PRO_LOGICAL_DELETE_COLUMN) != null) {
-                logicalDeleteColumnStr = introspectedTable.getTableConfigurationProperty(LogicalDeletePlugin.PRO_LOGICAL_DELETE_COLUMN);
-            }
-            IntrospectedColumn logicalDeleteColumn = IntrospectedTableTools.safeGetColumn(introspectedTable, logicalDeleteColumnStr);
-            if (logicalDeleteColumn != null) {
-                this.enumColumns.remove(logicalDeleteColumn.getJavaProperty());
-            }
-        }
     }
 
     /**
@@ -145,6 +136,34 @@ public class EnumTypeStatusPlugin extends BasePlugin {
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         this.generateModelEnum(topLevelClass, introspectedTable);
         return super.modelBaseRecordClassGenerated(topLevelClass, introspectedTable);
+    }
+
+    // ======================================= ILogicalDeletePluginHook ======================================
+
+
+    @Override
+    public boolean clientLogicalDeleteByExampleMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        return true;
+    }
+
+    @Override
+    public boolean clientLogicalDeleteByPrimaryKeyMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        return true;
+    }
+
+    @Override
+    public boolean sqlMapLogicalDeleteByExampleElementGenerated(Document document, XmlElement element, IntrospectedColumn logicalDeleteColumn, String logicalDeleteValue, IntrospectedTable introspectedTable) {
+        return true;
+    }
+
+    @Override
+    public boolean sqlMapLogicalDeleteByPrimaryKeyElementGenerated(Document document, XmlElement element, IntrospectedColumn logicalDeleteColumn, String logicalDeleteValue, IntrospectedTable introspectedTable) {
+        return true;
+    }
+
+    @Override
+    public boolean logicalDeleteEnumGenerated(IntrospectedColumn logicalDeleteColumn) {
+        return this.enumColumns.containsKey(logicalDeleteColumn.getJavaProperty());
     }
 
     /**

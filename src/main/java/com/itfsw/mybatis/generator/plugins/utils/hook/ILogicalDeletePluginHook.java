@@ -71,4 +71,11 @@ public interface ILogicalDeletePluginHook {
      * @return
      */
     boolean sqlMapLogicalDeleteByPrimaryKeyElementGenerated(Document document, XmlElement element, IntrospectedColumn logicalDeleteColumn, String logicalDeleteValue, IntrospectedTable introspectedTable);
+
+    /**
+     * 逻辑删除枚举是否生成
+     * @param logicalDeleteColumn
+     * @return
+     */
+    boolean logicalDeleteEnumGenerated(IntrospectedColumn logicalDeleteColumn);
 }

@@ -492,9 +492,9 @@ public class Test {
 - 查询构造工具中增加逻辑删除条件andLogicalDeleted(boolean)；
 - 数据Model增加逻辑删除条件andLogicalDeleted(boolean)；
 - 增加逻辑删除常量IS_DELETED（已删除 默认值）、NOT_DELETED（未删除 默认值）（[[issues#11]](https://github.com/itfsw/mybatis-generator-plugin/issues/11)）；
-- 增加逻辑删除枚举，通过注解覆盖逻辑删除配置，具体使用参照[状态枚举生成插件（EnumTypeStatusPlugin）](#21-状态枚举生成插件)。
+- 增加逻辑删除枚举；
 
->warning: 使用注解生成逻辑删除枚举时，枚举数量必须大于等于2，且第一个代表未删除，第二个代表删除。同时不必配置enumColumns选项，逻辑删除插件使用logicalDeleteColumn覆盖该配置。
+>warning: 注意在配合[状态枚举生成插件（EnumTypeStatusPlugin）](#21-状态枚举生成插件)使用时的注释格式，枚举数量必须大于等于2，且逻辑删除和未删除的值能在枚举中找到。
  
 插件：
 ```xml

@@ -311,6 +311,16 @@ public class HookAggregator implements IUpsertPluginHook,
         return true;
     }
 
+    @Override
+    public boolean logicalDeleteEnumGenerated(IntrospectedColumn logicalDeleteColumn) {
+        for (ILogicalDeletePluginHook plugin : this.getPlugins(ILogicalDeletePluginHook.class)) {
+            if (plugin.logicalDeleteEnumGenerated(logicalDeleteColumn)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // ============================================= ILombokPluginHook ==============================================
 
 
