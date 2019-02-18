@@ -16,10 +16,7 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
-import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
-import com.itfsw.mybatis.generator.plugins.utils.IntrospectedTableTools;
-import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
+import com.itfsw.mybatis.generator.plugins.utils.*;
 import org.mybatis.generator.api.CommentGenerator;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
@@ -27,10 +24,7 @@ import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.internal.util.StringUtility;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -113,6 +107,19 @@ public class EnumTypeStatusPlugin extends BasePlugin {
                 }
             }
         }
+
+        // 逻辑删除插件依赖该插件生成对应枚举
+        if (PluginTools.checkDependencyPlugin(this.getContext(), LogicalDeletePlugin.class)) {
+            // 1. 获取配置的逻辑删除列
+            String logicalDeleteColumnStr = this.getProperties().getProperty(LogicalDeletePlugin.PRO_LOGICAL_DELETE_COLUMN);
+            if (introspectedTable.getTableConfigurationProperty(LogicalDeletePlugin.PRO_LOGICAL_DELETE_COLUMN) != null) {
+                logicalDeleteColumnStr = introspectedTable.getTableConfigurationProperty(LogicalDeletePlugin.PRO_LOGICAL_DELETE_COLUMN);
+            }
+            IntrospectedColumn logicalDeleteColumn = IntrospectedTableTools.safeGetColumn(introspectedTable, logicalDeleteColumnStr);
+            if (logicalDeleteColumn != null) {
+                this.enumColumns.remove(logicalDeleteColumn.getJavaProperty());
+            }
+        }
     }
 
     /**
@@ -125,6 +132,19 @@ public class EnumTypeStatusPlugin extends BasePlugin {
     public boolean modelPrimaryKeyClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         this.generateModelEnum(topLevelClass, introspectedTable);
         return super.modelPrimaryKeyClassGenerated(topLevelClass, introspectedTable);
+    }
+
+    /**
+     * Model 生成
+     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     * @param topLevelClass
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        this.generateModelEnum(topLevelClass, introspectedTable);
+        return super.modelBaseRecordClassGenerated(topLevelClass, introspectedTable);
     }
 
     /**
@@ -141,20 +161,6 @@ public class EnumTypeStatusPlugin extends BasePlugin {
             }
         }
     }
-
-    /**
-     * Model 生成
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
-     */
-    @Override
-    public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        this.generateModelEnum(topLevelClass, introspectedTable);
-        return super.modelBaseRecordClassGenerated(topLevelClass, introspectedTable);
-    }
-
 
     public static class EnumInfo {
         private List<EnumItemInfo> items = new ArrayList<>();
