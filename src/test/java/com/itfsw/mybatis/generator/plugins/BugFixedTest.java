@@ -261,4 +261,28 @@ public class BugFixedTest {
             }
         });
     }
+
+    /**
+     * EnumTypeStatusPlugin 支持负数
+     * https://github.com/itfsw/mybatis-generator-plugin/pull/72
+     * @throws Exception
+     */
+    @Test
+    public void pull72() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/pull-72.xml");
+        tool.generate(() -> DBHelper.createDB("scripts/BugFixedTest/pull-72.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil enumField2Success = new ObjectUtil(loader, packagz + ".Tb$Type#SUCCESS");
+                Assert.assertEquals(enumField2Success.invoke("value"), (short) 0);
+                Assert.assertEquals(enumField2Success.invoke("getValue"), (short) 0);
+                Assert.assertEquals(enumField2Success.invoke("getName"), "成功");
+
+                ObjectUtil enumField2FailType = new ObjectUtil(loader, packagz + ".Tb$Type#FAIL");
+                Assert.assertEquals(enumField2FailType.invoke("value"), (short) -1);
+                Assert.assertEquals(enumField2FailType.invoke("getValue"), (short) -1);
+                Assert.assertEquals(enumField2FailType.invoke("getName"), "失败");
+            }
+        });
+    }
 }

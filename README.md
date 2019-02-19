@@ -1513,7 +1513,7 @@ public class Test {
 >warning: 约定的注释检查规则的正则表达式如下
 ```java
 public class EnumTypeStatusPlugin {
-    public final static String REMARKS_PATTERN = ".*\\s*\\[\\s*(\\w+\\s*\\(\\s*[\\u4e00-\\u9fa5_a-zA-Z0-9]+\\s*\\)\\s*:\\s*[\\u4e00-\\u9fa5_a-zA-Z0-9]+\\s*\\,?\\s*)+\\s*\\]\\s*.*";
+    public final static String REMARKS_PATTERN = ".*\\s*\\[\\s*(\\w+\\s*\\(\\s*[\\u4e00-\\u9fa5_-a-zA-Z0-9]+\\s*\\)\\s*:\\s*[\\u4e00-\\u9fa5_-a-zA-Z0-9]+\\s*\\,?\\s*)+\\s*\\]\\s*.*";
 }
 
 ```
