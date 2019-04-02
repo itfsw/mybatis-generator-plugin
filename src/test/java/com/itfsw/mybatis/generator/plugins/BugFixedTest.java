@@ -74,7 +74,7 @@ public class BugFixedTest {
                 tbExample.set("orderByClause", TbColumnTable.invoke("asc"));
 
                 sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns);
-                Assert.assertEquals(sql, "select id , field1 , `table` from tb Test WHERE ( Test.id < '160' ) order by `table` ASC");
+                Assert.assertEquals(sql, "select Test.id as Test_id , Test.field1 as Test_field1 , Test.`table` as `Test_table` from tb Test WHERE ( Test.id < '160' ) order by `table` ASC");
                 ObjectUtil result1 = new ObjectUtil(((List) tbMapper.invoke("selectByExampleSelective", tbExample.getObject(), columns)).get(0));
                 Assert.assertEquals(result1.get("table"), "tb");
             }
@@ -258,6 +258,33 @@ public class BugFixedTest {
                     ObjectUtil item = new ObjectUtil(params.get(i));
                     Assert.assertEquals(item.get("id"), 1L + i);
                 }
+            }
+        });
+    }
+
+    /**
+     * upsertSelective
+     * https://github.com/itfsw/mybatis-generator-plugin/issues/76
+     * @throws Exception
+     */
+    @Test
+    public void issues76() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/issues-76.xml");
+        tool.generate(() -> DBHelper.createDB("scripts/BugFixedTest/issues-76.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 普通
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
+                tb.set("field1", "ts1");
+
+                // sql
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertSelective", tb.getObject());
+                Assert.assertEquals(sql, "insert into tb ( field1 ) values ( 'ts1' ) on duplicate key update field1 = 'ts1'");
+                Object result = tbMapper.invoke("upsertSelective", tb.getObject());
+                Assert.assertEquals(result, 1);
+                Assert.assertEquals(tb.get("id"), 1L);
             }
         });
     }

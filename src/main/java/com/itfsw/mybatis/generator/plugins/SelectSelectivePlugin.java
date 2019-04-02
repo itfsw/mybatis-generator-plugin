@@ -338,12 +338,17 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
         keysEle.addAttribute(new Attribute("collection", "selective"));
         keysEle.addAttribute(new Attribute("item", "column"));
         keysEle.addAttribute(new Attribute("separator", ","));
-        keysEle.addElement(new TextElement("${column.escapedColumnName}"));
+        keysEle.addElement(new TextElement("${column.aliasedEscapedColumnName}"));
 
         XmlElement otherwiseEle = new XmlElement("otherwise");
         chooseEle.addElement(otherwiseEle);
-        for (Element element : XmlElementGeneratorTools.generateKeys(introspectedTable.getAllColumns())) {
-            otherwiseEle.addElement(element);
+        // 存在关键词column或者table定义了alias属性,这里直接使用对应的ColumnListElement
+        if (introspectedTable.getRules().generateSelectByExampleWithBLOBs()) {
+            otherwiseEle.addElement(XmlElementGeneratorTools.getBaseColumnListElement(introspectedTable));
+            otherwiseEle.addElement(new TextElement(","));
+            otherwiseEle.addElement(XmlElementGeneratorTools.getBlobColumnListElement(introspectedTable));
+        } else {
+            otherwiseEle.addElement(XmlElementGeneratorTools.getBaseColumnListElement(introspectedTable));
         }
 
         return chooseEle;

@@ -310,6 +310,13 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
     public boolean sqlMapUpsertSelectiveElementGenerated(XmlElement element, List<IntrospectedColumn> columns, XmlElement insertColumnsEle, XmlElement insertValuesEle, XmlElement setsEle, IntrospectedTable introspectedTable) {
         // parameterType
         XmlElementTools.replaceAttribute(element, new Attribute("parameterType", "map"));
+        // mybatis 3.5.0 之后对keyProperty处理有变更
+        element.getAttributes().removeIf(attribute -> {
+            String name = attribute.getName();
+            return name.equals("useGeneratedKeys") || name.equals("keyProperty") || name.equals("keyColumn");
+        });
+        XmlElementGeneratorTools.useGeneratedKeys(element, introspectedTable, "record.");
+
 
         // 替换insert column
         XmlElementTools.replaceXmlElement(insertColumnsEle, this.generateInsertColumnSelective(columns));
