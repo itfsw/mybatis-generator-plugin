@@ -2,7 +2,16 @@
 应该说使用Mybatis就一定离不开[MyBatis Generator](https://github.com/mybatis/generator)这款代码生成插件，而这款插件自身还提供了插件拓展功能用于强化插件本身，官方已经提供了一些[拓展插件](http://www.mybatis.org/generator/reference/plugins.html)，本项目的目的也是通过该插件机制来强化Mybatis Generator本身，方便和减少我们平时的代码开发量。  
 >因为插件是本人兴之所至所临时发布的项目（本人已近三年未做JAVA开发，代码水平请大家见谅），但基本插件都是在实际项目中经过检验的请大家放心使用，但因为项目目前主要数据库为MySQL，Mybatis实现使用Mapper.xml方式，所以代码生成时对于其他数据库和注解方式的支持未予考虑，请大家见谅。    
   
->因为1.2版本对Selective选择插入更新增强插件进行了重构，不再兼容老版。老版本参见分支[V1.1.x](https://github.com/itfsw/mybatis-generator-plugin/tree/V1.1)(只进行BUG修正，不再添加新功能)；  
+>V1.3.x版本的测试基准基于mybatis-3.5.0，同时向下兼容V3.4.0(某些插件需要context节点配置mybatis版本信息[[issues#70](https://github.com/itfsw/mybatis-generator-plugin/issues/70)])。老版本参见分支[V1.2.x](https://github.com/itfsw/mybatis-generator-plugin/tree/V1.2)；  
+```xml
+<context>
+    <!-- 
+        解决 批量插入插件（BatchInsertPlugin）在mybatis3.5.0以下版本无法返回自增主键的问题
+        指定mybatis版本，让插件指定您所使用的mybatis版本生成对应代码
+     -->
+    <property name="mybatisVersion" value="3.4.0"/>
+</context>
+```
 
 ---------------------------------------
 插件列表：  

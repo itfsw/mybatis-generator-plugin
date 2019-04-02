@@ -220,12 +220,13 @@ public class BugFixedTest {
     /**
      * batchInsertSelective
      * https://github.com/itfsw/mybatis-generator-plugin/issues/70
-     * ！！！！！ 验证时把pom文件mybatis版本升级到3.5.0以上
+     * ！！！！！ 验证时把pom文件mybatis版本降级到3.5.0以下
      * @throws Exception
      */
-//    @Test
+    @Test
     public void issues70() throws Exception {
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/issues-70.xml");
+//        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/issues-70-mybatis-3-4-0.xml");
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/issues-70-mybatis-3-5-0.xml");
         tool.generate(() -> DBHelper.createDB("scripts/BugFixedTest/issues-70.sql"), new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {

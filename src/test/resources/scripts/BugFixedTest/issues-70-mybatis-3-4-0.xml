@@ -22,7 +22,7 @@
     <properties resource="db.properties"/>
     <!--导入属性配置 -->
     <context id="default" targetRuntime="MyBatis3">
-        <property name="mybatisVersion" value="3.5.0"/>
+        <property name="mybatisVersion" value="3.4.0"/>
 
         <!-- 插件 -->
         <!-- 批量插入插件 -->

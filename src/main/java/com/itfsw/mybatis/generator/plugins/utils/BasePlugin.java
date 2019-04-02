@@ -49,7 +49,7 @@ public class BasePlugin extends PluginAdapter {
      * mybatis 版本
      */
     public static final String PRO_MYBATIS_VERSION = "mybatisVersion";
-    protected String mybatisVersion = "3.4.0";
+    protected String mybatisVersion = "3.5.0";
 
     /**
      * Set the context under which this plugin is running.
