@@ -42,7 +42,9 @@
         <javaClientGenerator targetPackage="" targetProject="" type="XMLMAPPER"/>
 
         <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 要自动生成的表 +++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
-        <table tableName="tb"/>
+        <table tableName="tb">
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+        </table>
         <table tableName="tb_keys"/>
         <table tableName="tb_single_blob"/>
         <table tableName="tb_blobs"/>

@@ -20,11 +20,11 @@ SET FOREIGN_KEY_CHECKS=0;
 -- ----------------------------
 DROP TABLE IF EXISTS `tb`;
 CREATE TABLE `tb` (
-  `id` bigint(20) NOT NULL COMMENT '注释1',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '注释1',
   `field1` varchar(255) DEFAULT NULL COMMENT '注释2',
   `field2` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Records of tb
