@@ -291,6 +291,40 @@ public class BugFixedTest {
     }
 
     /**
+     * 测试批量batchUpsert存在主键的情况
+     * https://github.com/itfsw/mybatis-generator-plugin/issues/77
+     * @throws Exception
+     */
+    @Test
+    public void issues77() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/issues-77.xml");
+        tool.generate(() -> DBHelper.createDB("scripts/BugFixedTest/issues-77.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+                List<Object> params = new ArrayList<>();
+                params.add(new ObjectUtil(loader, packagz + ".Tb").set("id", 1L).set("field1", "ts1").getObject());
+                params.add(new ObjectUtil(loader, packagz + ".Tb").set("id", 6L).set("field1", "ts2").set("field2", 1).getObject());
+
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "batchUpsert", params);
+                Assert.assertEquals(sql, "insert into tb (id, field1, field2) values (1, 'ts1', null ) , (6, 'ts2', 1 ) on duplicate key update id = values(id), field1 = values(field1), field2 = values(field2)");
+                // 2. 执行sql
+                Object count = tbMapper.invoke("batchUpsert", params);
+                Assert.assertEquals(count, 3);
+
+                // 验证
+                ResultSet rs = DBHelper.execute(sqlSession, "select * from tb where id = 1");
+                rs.first();
+                Assert.assertEquals(rs.getString("field1"), "ts1");
+
+                rs = DBHelper.execute(sqlSession, "select * from tb where id = 6");
+                rs.first();
+                Assert.assertEquals(rs.getString("field1"), "ts2");
+            }
+        });
+    }
+
+    /**
      * EnumTypeStatusPlugin 支持负数
      * https://github.com/itfsw/mybatis-generator-plugin/pull/72
      * @throws Exception

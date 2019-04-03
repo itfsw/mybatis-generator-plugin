@@ -320,9 +320,8 @@ public class UpsertPlugin extends BasePlugin {
         foreachInsertColumnsCheck.addAttribute(new Attribute("separator", ","));
 
         // 所有表字段
-        List<IntrospectedColumn> columns = ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns());
-        List<IntrospectedColumn> columns1 = ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns());
-        for (int i = 0; i < columns1.size(); i++) {
+        List<IntrospectedColumn> columns = ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getAllColumns());
+        for (int i = 0; i < columns.size(); i++) {
             IntrospectedColumn introspectedColumn = columns.get(i);
             XmlElement check = new XmlElement("if");
             check.addAttribute(new Attribute("test", "'" + introspectedColumn.getActualColumnName() + "'.toString() == column.value"));
@@ -370,7 +369,7 @@ public class UpsertPlugin extends BasePlugin {
 
         // insert
         insertEle.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-        for (Element element : XmlElementGeneratorTools.generateUpsertKeys(columns, null)) {
+        for (Element element : XmlElementGeneratorTools.generateKeys(columns, true)) {
             insertEle.addElement(element);
         }
         insertEle.addElement(new TextElement("values"));
@@ -382,7 +381,7 @@ public class UpsertPlugin extends BasePlugin {
         foreachEle.addAttribute(new Attribute("item", "item"));
         foreachEle.addAttribute(new Attribute("separator", ","));
 
-        for (Element element : XmlElementGeneratorTools.generateUpsertValues(columns, "item.", true)) {
+        for (Element element : XmlElementGeneratorTools.generateValues(columns, "item.", true)) {
             foreachEle.addElement(element);
         }
         insertEle.addElement(new TextElement("on duplicate key update "));
