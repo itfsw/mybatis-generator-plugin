@@ -304,10 +304,10 @@ public class BugFixedTest {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
                 List<Object> params = new ArrayList<>();
                 params.add(new ObjectUtil(loader, packagz + ".Tb").set("id", 1L).set("field1", "ts1").getObject());
-                params.add(new ObjectUtil(loader, packagz + ".Tb").set("id", 6L).set("field1", "ts2").set("field2", 1).getObject());
+                params.add(new ObjectUtil(loader, packagz + ".Tb").set("field1", "ts2").set("field2", 1).getObject());
 
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "batchUpsert", params);
-                Assert.assertEquals(sql, "insert into tb (id, field1, field2) values (1, 'ts1', null ) , (6, 'ts2', 1 ) on duplicate key update id = values(id), field1 = values(field1), field2 = values(field2)");
+                Assert.assertEquals(sql, "insert into tb (id, field1, field2) values (1, 'ts1', null ) , (null, 'ts2', 1 ) on duplicate key update id = values(id), field1 = values(field1), field2 = values(field2)");
                 // 2. 执行sql
                 Object count = tbMapper.invoke("batchUpsert", params);
                 Assert.assertEquals(count, 3);
@@ -317,7 +317,7 @@ public class BugFixedTest {
                 rs.first();
                 Assert.assertEquals(rs.getString("field1"), "ts1");
 
-                rs = DBHelper.execute(sqlSession, "select * from tb where id = 6");
+                rs = DBHelper.execute(sqlSession, "select * from tb where id = 4");
                 rs.first();
                 Assert.assertEquals(rs.getString("field1"), "ts2");
             }
