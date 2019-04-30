@@ -21,6 +21,9 @@ import org.apache.ibatis.session.SqlSession;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mybatis.generator.api.GeneratedJavaFile;
+import org.mybatis.generator.api.GeneratedXmlFile;
+import org.mybatis.generator.api.MyBatisGenerator;
 import org.mybatis.generator.exception.InvalidConfigurationException;
 import org.mybatis.generator.exception.XMLParserException;
 
@@ -155,5 +158,18 @@ public class LimitPluginTest {
                 Assert.assertEquals(list.size(), 5);
             }
         });
+    }
+
+    /**
+     * 测试pageComment
+     */
+    @Test
+    public void testWithPageComment() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LimitPlugin/mybatis-generator-with-pageComment.xml");
+        MyBatisGenerator generate = tool.generate();
+        List<GeneratedJavaFile> generatedJavaFiles = generate.getGeneratedJavaFiles();
+        List<GeneratedXmlFile> generatedXmlFiles = generate.getGeneratedXmlFiles();
+        Assert.assertTrue(generatedJavaFiles.size() > 0);
+        Assert.assertTrue(generatedXmlFiles.size() > 0);
     }
 }

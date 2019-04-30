@@ -43,8 +43,10 @@ public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHoo
      * 分页开始页码
      */
     public final static String PRO_START_PAGE = "startPage";
+    public final static String PRO_PAGE_COMMENT = "pageComment";
     private final static int DEFAULT_START_PAGE = 0;
     private int startPage;
+    private boolean pageComment;
 
     /**
      * {@inheritDoc}
@@ -75,6 +77,10 @@ public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHoo
         } else {
             this.startPage = DEFAULT_START_PAGE;
         }
+        String pageComment = this.getProperties().getProperty(LimitPlugin.PRO_PAGE_COMMENT);
+        if (StringUtility.isTrue(pageComment)) {
+            this.pageComment = Boolean.valueOf(pageComment);
+        }
     }
 
     /**
@@ -94,7 +100,7 @@ public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHoo
                 integerWrapper,
                 null
         );
-        commentGenerator.addFieldComment(offsetField, introspectedTable);
+        addFieldCommentIfConfigPageComment(offsetField, introspectedTable);
         topLevelClass.addField(offsetField);
 
         Field rowsField = JavaElementGeneratorTools.generateField(
@@ -103,25 +109,25 @@ public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHoo
                 integerWrapper,
                 null
         );
-        commentGenerator.addFieldComment(rowsField, introspectedTable);
+        addFieldCommentIfConfigPageComment(rowsField, introspectedTable);
         topLevelClass.addField(rowsField);
         logger.debug("itfsw(MySQL分页插件):" + topLevelClass.getType().getShortName() + "增加offset和rows字段");
 
         // 增加getter && setter 方法
         Method mSetOffset = JavaElementGeneratorTools.generateSetterMethod(offsetField);
-        commentGenerator.addGeneralMethodComment(mSetOffset, introspectedTable);
+        addMethodCommentIfConfigPageComment(mSetOffset, introspectedTable);
         FormatTools.addMethodWithBestPosition(topLevelClass, mSetOffset);
 
         Method mGetOffset = JavaElementGeneratorTools.generateGetterMethod(offsetField);
-        commentGenerator.addGeneralMethodComment(mGetOffset, introspectedTable);
+        addMethodCommentIfConfigPageComment(mGetOffset, introspectedTable);
         FormatTools.addMethodWithBestPosition(topLevelClass, mGetOffset);
 
         Method mSetRows = JavaElementGeneratorTools.generateSetterMethod(rowsField);
-        commentGenerator.addGeneralMethodComment(mSetRows, introspectedTable);
+        addMethodCommentIfConfigPageComment(mSetRows, introspectedTable);
         FormatTools.addMethodWithBestPosition(topLevelClass, mSetRows);
 
         Method mGetRows = JavaElementGeneratorTools.generateGetterMethod(rowsField);
-        commentGenerator.addGeneralMethodComment(mGetRows, introspectedTable);
+        addMethodCommentIfConfigPageComment(mGetRows, introspectedTable);
         FormatTools.addMethodWithBestPosition(topLevelClass, mGetRows);
         logger.debug("itfsw(MySQL分页插件):" + topLevelClass.getType().getShortName() + "增加offset和rows的getter和setter实现。");
 
@@ -132,7 +138,7 @@ public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHoo
                 topLevelClass.getType(),
                 new Parameter(integerWrapper, "rows")
         );
-        commentGenerator.addGeneralMethodComment(setLimit, introspectedTable);
+        addMethodCommentIfConfigPageComment(setLimit, introspectedTable);
         setLimit = JavaElementGeneratorTools.generateMethodBody(
                 setLimit,
                 "this.rows = rows;",
@@ -147,7 +153,7 @@ public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHoo
                 new Parameter(integerWrapper, "offset"),
                 new Parameter(integerWrapper, "rows")
         );
-        commentGenerator.addGeneralMethodComment(setLimit2, introspectedTable);
+        addMethodCommentIfConfigPageComment(setLimit2, introspectedTable);
         setLimit2 = JavaElementGeneratorTools.generateMethodBody(
                 setLimit2,
                 "this.offset = offset;",
@@ -164,7 +170,7 @@ public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHoo
                 new Parameter(integerWrapper, "page"),
                 new Parameter(integerWrapper, "pageSize")
         );
-        commentGenerator.addGeneralMethodComment(setPage, introspectedTable);
+        addMethodCommentIfConfigPageComment(setPage, introspectedTable);
         setPage = JavaElementGeneratorTools.generateMethodBody(
                 setPage,
                 "this.offset = " + (this.startPage == 0 ? "page" : "(page - " + this.startPage + ")") + " * pageSize;",
@@ -185,6 +191,20 @@ public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHoo
         }
 
         return true;
+    }
+
+    private void addMethodCommentIfConfigPageComment(Method mSetOffset,
+            IntrospectedTable introspectedTable) {
+        if (pageComment) {
+            commentGenerator.addGeneralMethodComment(mSetOffset, introspectedTable);
+        }
+    }
+
+    private void addFieldCommentIfConfigPageComment(Field offsetField,
+            IntrospectedTable introspectedTable) {
+        if (pageComment) {
+            commentGenerator.addFieldComment(offsetField, introspectedTable);
+        }
     }
 
     /**
