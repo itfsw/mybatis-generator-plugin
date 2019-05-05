@@ -55,23 +55,6 @@ public class CommentPluginTest {
     }
 
     /**
-     * 测试没有配置模板的情况
-     */
-    @Test
-    public void testGenerateWithoutTemplate() throws Exception {
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/CommentPlugin/mybatis-generator-without-template.xml");
-        MyBatisGenerator myBatisGenerator = tool.generate();
-        // 是否在使用系统默认模板
-        int count = 0;
-        for (GeneratedJavaFile file : myBatisGenerator.getGeneratedJavaFiles()) {
-            if (file.getFormattedContent().indexOf("@project https://github.com/itfsw/mybatis-generator-plugin") != -1) {
-                count++;
-            }
-        }
-        Assert.assertTrue(count > 0);
-    }
-
-    /**
      * 测试配置了模板参数转换
      */
     @Test

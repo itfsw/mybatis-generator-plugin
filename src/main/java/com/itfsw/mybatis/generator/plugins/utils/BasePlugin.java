@@ -25,7 +25,6 @@ import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.config.Context;
 import org.mybatis.generator.config.PluginConfiguration;
-import org.mybatis.generator.internal.DefaultCommentGenerator;
 import org.mybatis.generator.internal.util.StringUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,15 +65,9 @@ public class BasePlugin extends PluginAdapter {
         PluginConfiguration cfg = PluginTools.getPluginConfiguration(context, CommentPlugin.class);
 
         if (cfg == null || cfg.getProperty(CommentPlugin.PRO_TEMPLATE) == null) {
-            if (context.getCommentGenerator() instanceof DefaultCommentGenerator) {
-                // 使用默认模板引擎
-                commentGenerator = new TemplateCommentGenerator(context, "default-comment.ftl", true);
-            } else {
-                // 用户自定义
-                commentGenerator = context.getCommentGenerator();
-            }
+            commentGenerator = context.getCommentGenerator();
         } else {
-            TemplateCommentGenerator templateCommentGenerator = new TemplateCommentGenerator(context, cfg.getProperty(CommentPlugin.PRO_TEMPLATE), false);
+            TemplateCommentGenerator templateCommentGenerator = new TemplateCommentGenerator(context, cfg.getProperty(CommentPlugin.PRO_TEMPLATE));
 
             // ITFSW 插件使用的注释生成器
             commentGenerator = templateCommentGenerator;

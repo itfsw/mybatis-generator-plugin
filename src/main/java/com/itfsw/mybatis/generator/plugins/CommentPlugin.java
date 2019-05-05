@@ -29,7 +29,10 @@ import java.util.Properties;
  * ---------------------------------------------------------------------------
  */
 public class CommentPlugin extends BasePlugin {
-    public static final String PRO_TEMPLATE = "template";  // 模板 property
+    /**
+     * 模板 property
+     */
+    public static final String PRO_TEMPLATE = "template";
 
     /**
      * 插件具体实现查看BasePlugin

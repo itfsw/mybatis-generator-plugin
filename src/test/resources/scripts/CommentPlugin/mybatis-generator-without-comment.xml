@@ -25,7 +25,9 @@
     <context id="default" targetRuntime="MyBatis3">
         <!-- 插件 -->
         <!-- 注释插件 -->
-        <plugin type="com.itfsw.mybatis.generator.plugins.CommentPlugin"/>
+        <plugin type="com.itfsw.mybatis.generator.plugins.CommentPlugin">
+            <property name="template" value="src/test/resources/scripts/CommentPlugin/test-comment.ftl"/>
+        </plugin>
 
         <commentGenerator>
             <property name="suppressAllComments" value="true"/>

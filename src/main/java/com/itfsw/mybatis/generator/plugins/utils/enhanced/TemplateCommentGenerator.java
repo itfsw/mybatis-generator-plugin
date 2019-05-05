@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.File;
-import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.*;
 
@@ -65,22 +64,15 @@ public class TemplateCommentGenerator implements CommentGenerator {
      * 构造函数
      * @param context
      * @param templatePath  模板路径
-     * @param useForDefault 未使用Comment插件，用作默认注释生成器
      */
-    public TemplateCommentGenerator(Context context, String templatePath, boolean useForDefault) {
+    public TemplateCommentGenerator(Context context, String templatePath) {
         try {
             Document doc = null;
-            if (useForDefault) {
-                InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(templatePath);
-                doc = new SAXReader().read(inputStream);
-                inputStream.close();
+            File file = new File(templatePath);
+            if (file.exists()) {
+                doc = new SAXReader().read(file);
             } else {
-                File file = new File(templatePath);
-                if (file.exists()) {
-                    doc = new SAXReader().read(file);
-                } else {
-                    logger.error("没有找到对应注释模板:" + templatePath);
-                }
+                logger.error("没有找到对应注释模板:" + templatePath);
             }
 
             // 遍历comment 节点
