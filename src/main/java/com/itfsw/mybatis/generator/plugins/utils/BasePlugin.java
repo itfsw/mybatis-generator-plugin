@@ -68,13 +68,13 @@ public class BasePlugin extends PluginAdapter {
         if (cfg == null || cfg.getProperty(CommentPlugin.PRO_TEMPLATE) == null) {
             if (context.getCommentGenerator() instanceof DefaultCommentGenerator) {
                 // 使用默认模板引擎
-                commentGenerator = new TemplateCommentGenerator("default-comment.ftl", true);
+                commentGenerator = new TemplateCommentGenerator(context, "default-comment.ftl", true);
             } else {
                 // 用户自定义
                 commentGenerator = context.getCommentGenerator();
             }
         } else {
-            TemplateCommentGenerator templateCommentGenerator = new TemplateCommentGenerator(cfg.getProperty(CommentPlugin.PRO_TEMPLATE), false);
+            TemplateCommentGenerator templateCommentGenerator = new TemplateCommentGenerator(context, cfg.getProperty(CommentPlugin.PRO_TEMPLATE), false);
 
             // ITFSW 插件使用的注释生成器
             commentGenerator = templateCommentGenerator;

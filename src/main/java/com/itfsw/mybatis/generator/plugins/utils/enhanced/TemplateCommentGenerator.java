@@ -28,6 +28,8 @@ import org.mybatis.generator.api.MyBatisGenerator;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
+import org.mybatis.generator.config.CommentGeneratorConfiguration;
+import org.mybatis.generator.config.Context;
 import org.mybatis.generator.config.MergeConstants;
 import org.mybatis.generator.config.PropertyRegistry;
 import org.mybatis.generator.internal.util.StringUtility;
@@ -51,9 +53,9 @@ import static org.mybatis.generator.internal.util.StringUtility.isTrue;
  * ---------------------------------------------------------------------------
  */
 public class TemplateCommentGenerator implements CommentGenerator {
-    protected static final Logger logger = LoggerFactory.getLogger(TemplateCommentGenerator.class); // 日志
+    protected static final Logger logger = LoggerFactory.getLogger(TemplateCommentGenerator.class);
 
-    private Map<EnumNode, Template> templates = new HashMap<>();  // 模板
+    private Map<EnumNode, Template> templates = new HashMap<>();
 
     private boolean suppressDate = false;
 
@@ -61,13 +63,14 @@ public class TemplateCommentGenerator implements CommentGenerator {
 
     /**
      * 构造函数
-     * @param templatePath 模板路径
+     * @param context
+     * @param templatePath  模板路径
      * @param useForDefault 未使用Comment插件，用作默认注释生成器
      */
-    public TemplateCommentGenerator(String templatePath, boolean useForDefault) {
+    public TemplateCommentGenerator(Context context, String templatePath, boolean useForDefault) {
         try {
             Document doc = null;
-            if (useForDefault){
+            if (useForDefault) {
                 InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(templatePath);
                 doc = new SAXReader().read(inputStream);
                 inputStream.close();
@@ -81,16 +84,22 @@ public class TemplateCommentGenerator implements CommentGenerator {
             }
 
             // 遍历comment 节点
-            if (doc != null){
-                for (EnumNode node : EnumNode.values()){
+            if (doc != null) {
+                for (EnumNode node : EnumNode.values()) {
                     Element element = doc.getRootElement().elementByID(node.value());
-                    if (element != null){
+                    if (element != null) {
                         Configuration cfg = new Configuration(Configuration.VERSION_2_3_26);
                         // 字符串清理
                         Template template = new Template(node.value(), element.getText(), cfg);
                         templates.put(node, template);
                     }
                 }
+            }
+
+            // 解析mybatis generator 注释配置
+            CommentGeneratorConfiguration config = context.getCommentGeneratorConfiguration();
+            if (config != null) {
+                this.addConfigurationProperties(config.getProperties());
             }
         } catch (Exception e) {
             logger.error("注释模板XML解析失败！", e);
@@ -100,8 +109,8 @@ public class TemplateCommentGenerator implements CommentGenerator {
 
     /**
      * 获取评论
-     * @param map 模板参数
-     * @param node  节点ID
+     * @param map  模板参数
+     * @param node 节点ID
      * @return
      */
     private String[] getComments(Map<String, Object> map, EnumNode node) {
@@ -109,7 +118,7 @@ public class TemplateCommentGenerator implements CommentGenerator {
         try {
             StringWriter stringWriter = new StringWriter();
             Template template = templates.get(node);
-            if (template != null){
+            if (template != null) {
                 template.process(map, stringWriter);
 
                 String comment = stringWriter.toString();
@@ -128,21 +137,23 @@ public class TemplateCommentGenerator implements CommentGenerator {
 
     /**
      * 添加评论
-     *
      * @param javaElement
      * @param map
      * @param node
      */
     private void addJavaElementComment(JavaElement javaElement, Map<String, Object> map, EnumNode node) {
+        if (this.suppressAllComments) {
+            return;
+        }
         // 获取评论
         String[] comments = getComments(map, node);
-        if (comments != null){
+        if (comments != null) {
             // 去除空评论
-            if (comments.length == 1 && !StringUtility.stringHasValue(comments[0])){
+            if (comments.length == 1 && !StringUtility.stringHasValue(comments[0])) {
                 return;
             }
             // 添加评论
-            for (String comment : comments){
+            for (String comment : comments) {
                 javaElement.addJavaDocLine(comment);
             }
         }
@@ -150,21 +161,23 @@ public class TemplateCommentGenerator implements CommentGenerator {
 
     /**
      * 添加评论
-     *
      * @param compilationUnit
      * @param map
      * @param node
      */
     private void addCompilationUnitComment(CompilationUnit compilationUnit, Map<String, Object> map, EnumNode node) {
+        if (this.suppressAllComments) {
+            return;
+        }
         // 获取评论
         String[] comments = getComments(map, node);
-        if (comments != null){
+        if (comments != null) {
             // 去除空评论
-            if (comments.length == 1 && !StringUtility.stringHasValue(comments[0])){
+            if (comments.length == 1 && !StringUtility.stringHasValue(comments[0])) {
                 return;
             }
             // 添加评论
-            for (String comment : comments){
+            for (String comment : comments) {
                 compilationUnit.addFileCommentLine(comment);
             }
         }
@@ -172,21 +185,23 @@ public class TemplateCommentGenerator implements CommentGenerator {
 
     /**
      * 添加评论
-     *
      * @param xmlElement
      * @param map
      * @param node
      */
     private void addXmlElementComment(XmlElement xmlElement, Map<String, Object> map, EnumNode node) {
+        if (this.suppressAllComments) {
+            return;
+        }
         // 获取评论
         String[] comments = getComments(map, node);
-        if (comments != null){
+        if (comments != null) {
             // 去除空评论
-            if (comments.length == 1 && !StringUtility.stringHasValue(comments[0])){
+            if (comments.length == 1 && !StringUtility.stringHasValue(comments[0])) {
                 return;
             }
             // 添加评论
-            for (String comment : comments){
+            for (String comment : comments) {
                 xmlElement.addElement(new TextElement(comment));
             }
         }
@@ -197,9 +212,7 @@ public class TemplateCommentGenerator implements CommentGenerator {
      * CommentGenerator configuration.
      *
      * This method will be called before any of the other methods.
-     *
-     * @param properties
-     *            All properties from the configuration
+     * @param properties All properties from the configuration
      */
     @Override
     public void addConfigurationProperties(Properties properties) {
@@ -217,13 +230,9 @@ public class TemplateCommentGenerator implements CommentGenerator {
      *
      * <b>Important:</b> This method should add a the nonstandard JavaDoc tag "@mbg.generated" to the comment. Without
      * this tag, the Eclipse based Java merge feature will fail.
-     *
-     * @param field
-     *            the field
-     * @param introspectedTable
-     *            the introspected table
-     * @param introspectedColumn
-     *            the introspected column
+     * @param field              the field
+     * @param introspectedTable  the introspected table
+     * @param introspectedColumn the introspected column
      */
     @Override
     public void addFieldComment(Field field, IntrospectedTable introspectedTable, IntrospectedColumn introspectedColumn) {
@@ -239,14 +248,11 @@ public class TemplateCommentGenerator implements CommentGenerator {
 
     /**
      * Adds the field comment.
-     *
-     * @param field
-     *            the field
-     * @param introspectedTable
-     *            the introspected table
+     * @param field             the field
+     * @param introspectedTable the introspected table
      */
     @Override
-   public void addFieldComment(Field field, IntrospectedTable introspectedTable) {
+    public void addFieldComment(Field field, IntrospectedTable introspectedTable) {
         Map<String, Object> map = new HashMap<>();
         map.put("mgb", MergeConstants.NEW_ELEMENT_TAG);
         map.put("field", field);
@@ -265,11 +271,8 @@ public class TemplateCommentGenerator implements CommentGenerator {
      * Because of difficulties with the Java file merger, the default implementation
      * of this method should NOT add comments.  Comments should only be added if
      * specifically requested by the user (for example, by enabling table remark comments).
-     *
-     * @param topLevelClass
-     *            the top level class
-     * @param introspectedTable
-     *            the introspected table
+     * @param topLevelClass     the top level class
+     * @param introspectedTable the introspected table
      */
     @Override
     public void addModelClassComment(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -284,16 +287,13 @@ public class TemplateCommentGenerator implements CommentGenerator {
 
     /**
      * Adds the inner class comment.
-     *
-     * @param innerClass
-     *            the inner class
-     * @param introspectedTable
-     *            the introspected table
+     * @param innerClass        the inner class
+     * @param introspectedTable the introspected table
      */
     @Override
     public void addClassComment(InnerClass innerClass, IntrospectedTable introspectedTable) {
-        if (innerClass instanceof InnerInterfaceWrapperToInnerClass){
-            InnerInterface innerInterface = ((InnerInterfaceWrapperToInnerClass)innerClass).getInnerInterface();
+        if (innerClass instanceof InnerInterfaceWrapperToInnerClass) {
+            InnerInterface innerInterface = ((InnerInterfaceWrapperToInnerClass) innerClass).getInnerInterface();
 
             Map<String, Object> map = new HashMap<>();
             map.put("mgb", MergeConstants.NEW_ELEMENT_TAG);
@@ -315,13 +315,9 @@ public class TemplateCommentGenerator implements CommentGenerator {
 
     /**
      * Adds the inner class comment.
-     *
-     * @param innerClass
-     *            the inner class
-     * @param introspectedTable
-     *            the introspected table
-     * @param markAsDoNotDelete
-     *            the mark as do not delete
+     * @param innerClass        the inner class
+     * @param introspectedTable the introspected table
+     * @param markAsDoNotDelete the mark as do not delete
      */
     @Override
     public void addClassComment(InnerClass innerClass, IntrospectedTable introspectedTable, boolean markAsDoNotDelete) {
@@ -337,11 +333,8 @@ public class TemplateCommentGenerator implements CommentGenerator {
 
     /**
      * Adds the enum comment.
-     *
-     * @param innerEnum
-     *            the inner enum
-     * @param introspectedTable
-     *            the introspected table
+     * @param innerEnum         the inner enum
+     * @param introspectedTable the introspected table
      */
     @Override
     public void addEnumComment(InnerEnum innerEnum, IntrospectedTable introspectedTable) {
@@ -356,13 +349,9 @@ public class TemplateCommentGenerator implements CommentGenerator {
 
     /**
      * Adds the getter comment.
-     *
-     * @param method
-     *            the method
-     * @param introspectedTable
-     *            the introspected table
-     * @param introspectedColumn
-     *            the introspected column
+     * @param method             the method
+     * @param introspectedTable  the introspected table
+     * @param introspectedColumn the introspected column
      */
     @Override
     public void addGetterComment(Method method, IntrospectedTable introspectedTable, IntrospectedColumn introspectedColumn) {
@@ -378,13 +367,9 @@ public class TemplateCommentGenerator implements CommentGenerator {
 
     /**
      * Adds the setter comment.
-     *
-     * @param method
-     *            the method
-     * @param introspectedTable
-     *            the introspected table
-     * @param introspectedColumn
-     *            the introspected column
+     * @param method             the method
+     * @param introspectedTable  the introspected table
+     * @param introspectedColumn the introspected column
      */
     @Override
     public void addSetterComment(Method method, IntrospectedTable introspectedTable, IntrospectedColumn introspectedColumn) {
@@ -400,11 +385,8 @@ public class TemplateCommentGenerator implements CommentGenerator {
 
     /**
      * Adds the general method comment.
-     *
-     * @param method
-     *            the method
-     * @param introspectedTable
-     *            the introspected table
+     * @param method            the method
+     * @param introspectedTable the introspected table
      */
     @Override
     public void addGeneralMethodComment(Method method, IntrospectedTable introspectedTable) {
@@ -425,9 +407,7 @@ public class TemplateCommentGenerator implements CommentGenerator {
      * <p>
      *
      * The default implementation does nothing.
-     *
-     * @param compilationUnit
-     *            the compilation unit
+     * @param compilationUnit the compilation unit
      */
     @Override
     public void addJavaFileComment(CompilationUnit compilationUnit) {
@@ -442,9 +422,7 @@ public class TemplateCommentGenerator implements CommentGenerator {
     /**
      * This method should add a suitable comment as a child element of the specified xmlElement to warn users that the
      * element was generated and is subject to regeneration.
-     *
-     * @param xmlElement
-     *            the xml element
+     * @param xmlElement the xml element
      */
     @Override
     public void addComment(XmlElement xmlElement) {
@@ -463,9 +441,7 @@ public class TemplateCommentGenerator implements CommentGenerator {
      * <p>
      *
      * The default implementation does nothing.
-     *
-     * @param rootElement
-     *            the root element
+     * @param rootElement the root element
      */
     @Override
     public void addRootComment(XmlElement rootElement) {
@@ -480,18 +456,18 @@ public class TemplateCommentGenerator implements CommentGenerator {
     @Override
     public void addGeneralMethodAnnotation(Method method, IntrospectedTable introspectedTable,
                                            Set<FullyQualifiedJavaType> imports) {
-        imports.add(new FullyQualifiedJavaType("javax.annotation.Generated")); //$NON-NLS-1$
-        String comment = "Source Table: " + introspectedTable.getFullyQualifiedTable().toString(); //$NON-NLS-1$
+        imports.add(new FullyQualifiedJavaType("javax.annotation.Generated"));
+        String comment = "Source Table: " + introspectedTable.getFullyQualifiedTable().toString();
         method.addAnnotation(getGeneratedAnnotation(comment));
     }
 
     @Override
     public void addGeneralMethodAnnotation(Method method, IntrospectedTable introspectedTable,
                                            IntrospectedColumn introspectedColumn, Set<FullyQualifiedJavaType> imports) {
-        imports.add(new FullyQualifiedJavaType("javax.annotation.Generated")); //$NON-NLS-1$
-        String comment = "Source field: " //$NON-NLS-1$
+        imports.add(new FullyQualifiedJavaType("javax.annotation.Generated"));
+        String comment = "Source field: "
                 + introspectedTable.getFullyQualifiedTable().toString()
-                + "." //$NON-NLS-1$
+                + "."
                 + introspectedColumn.getActualColumnName();
         method.addAnnotation(getGeneratedAnnotation(comment));
     }
@@ -499,18 +475,18 @@ public class TemplateCommentGenerator implements CommentGenerator {
     @Override
     public void addFieldAnnotation(Field field, IntrospectedTable introspectedTable,
                                    Set<FullyQualifiedJavaType> imports) {
-        imports.add(new FullyQualifiedJavaType("javax.annotation.Generated")); //$NON-NLS-1$
-        String comment = "Source Table: " + introspectedTable.getFullyQualifiedTable().toString(); //$NON-NLS-1$
+        imports.add(new FullyQualifiedJavaType("javax.annotation.Generated"));
+        String comment = "Source Table: " + introspectedTable.getFullyQualifiedTable().toString();
         field.addAnnotation(getGeneratedAnnotation(comment));
     }
 
     @Override
     public void addFieldAnnotation(Field field, IntrospectedTable introspectedTable,
                                    IntrospectedColumn introspectedColumn, Set<FullyQualifiedJavaType> imports) {
-        imports.add(new FullyQualifiedJavaType("javax.annotation.Generated")); //$NON-NLS-1$
-        String comment = "Source field: " //$NON-NLS-1$
+        imports.add(new FullyQualifiedJavaType("javax.annotation.Generated"));
+        String comment = "Source field: "
                 + introspectedTable.getFullyQualifiedTable().toString()
-                + "." //$NON-NLS-1$
+                + "."
                 + introspectedColumn.getActualColumnName();
         field.addAnnotation(getGeneratedAnnotation(comment));
     }
@@ -518,31 +494,31 @@ public class TemplateCommentGenerator implements CommentGenerator {
     @Override
     public void addClassAnnotation(InnerClass innerClass, IntrospectedTable introspectedTable,
                                    Set<FullyQualifiedJavaType> imports) {
-        imports.add(new FullyQualifiedJavaType("javax.annotation.Generated")); //$NON-NLS-1$
-        String comment = "Source Table: " + introspectedTable.getFullyQualifiedTable().toString(); //$NON-NLS-1$
+        imports.add(new FullyQualifiedJavaType("javax.annotation.Generated"));
+        String comment = "Source Table: " + introspectedTable.getFullyQualifiedTable().toString();
         innerClass.addAnnotation(getGeneratedAnnotation(comment));
     }
 
     private String getGeneratedAnnotation(String comment) {
         StringBuilder buffer = new StringBuilder();
-        buffer.append("@Generated("); //$NON-NLS-1$
+        buffer.append("@Generated(");
         if (suppressAllComments) {
             buffer.append('\"');
         } else {
-            buffer.append("value=\""); //$NON-NLS-1$
+            buffer.append("value=\"");
         }
 
         buffer.append(MyBatisGenerator.class.getName());
         buffer.append('\"');
 
         if (!suppressDate && !suppressAllComments) {
-            buffer.append(", date=\""); //$NON-NLS-1$
+            buffer.append(", date=\"");
             buffer.append(DatatypeConverter.printDateTime(Calendar.getInstance()));
             buffer.append('\"');
         }
 
         if (!suppressAllComments) {
-            buffer.append(", comments=\""); //$NON-NLS-1$
+            buffer.append(", comments=\"");
             buffer.append(comment);
             buffer.append('\"');
         }
@@ -580,10 +556,9 @@ public class TemplateCommentGenerator implements CommentGenerator {
 
         /**
          * 值
-         *
          * @return
          */
-        public String value(){
+        public String value() {
             return value;
         }
     }

@@ -22,6 +22,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.mybatis.generator.api.GeneratedJavaFile;
 import org.mybatis.generator.api.MyBatisGenerator;
+import org.mybatis.generator.config.MergeConstants;
 
 import java.lang.reflect.Array;
 import java.sql.ResultSet;
@@ -322,6 +323,26 @@ public class BugFixedTest {
                 Assert.assertEquals(rs.getString("field1"), "ts2");
             }
         });
+    }
+
+    /**
+     * 测试批量batchUpsert存在主键的情况
+     * https://github.com/itfsw/mybatis-generator-plugin/issues/77
+     * @throws Exception
+     */
+    @Test
+    public void issues81() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/issues-81.xml");
+        MyBatisGenerator myBatisGenerator =  tool.generate(() -> DBHelper.createDB("scripts/BugFixedTest/issues-81.sql"));
+
+        // 是否在使用系统默认模板
+        int count = 0;
+        for (GeneratedJavaFile file : myBatisGenerator.getGeneratedJavaFiles()) {
+            if (file.getFormattedContent().indexOf(MergeConstants.NEW_ELEMENT_TAG) != -1) {
+                count++;
+            }
+        }
+        Assert.assertTrue(count == 0);
     }
 
     /**
