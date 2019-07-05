@@ -21,10 +21,7 @@ import com.itfsw.mybatis.generator.plugins.utils.BeanUtils;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.Plugin;
-import org.mybatis.generator.api.dom.java.InnerClass;
-import org.mybatis.generator.api.dom.java.Interface;
-import org.mybatis.generator.api.dom.java.Method;
-import org.mybatis.generator.api.dom.java.TopLevelClass;
+import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.Element;
 import org.mybatis.generator.api.dom.xml.XmlElement;
@@ -46,11 +43,13 @@ import java.util.List;
 public class HookAggregator implements IUpsertPluginHook,
         IModelBuilderPluginHook,
         IIncrementsPluginHook,
+        IIncrementPluginHook,
         IOptimisticLockerPluginHook,
         ISelectOneByExamplePluginHook,
         ITableConfigurationHook,
         ILombokPluginHook,
         ILogicalDeletePluginHook,
+        IModelColumnPluginHook,
         ISelectSelectivePluginHook {
 
     protected static final Logger logger = LoggerFactory.getLogger(BasePlugin.class);
@@ -121,6 +120,34 @@ public class HookAggregator implements IUpsertPluginHook,
         } else {
             return this.getPlugins(IIncrementsPluginHook.class).get(0).incrementSetsWithSelectiveEnhancedPluginElementGenerated(versionColumn);
         }
+    }
+
+    // ============================================= IIncrementPluginHook ==============================================
+
+    @Override
+    public XmlElement generateIncrementSet(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma) {
+        if (this.getPlugins(IIncrementPluginHook.class).isEmpty()) {
+            return null;
+        } else {
+            return this.getPlugins(IIncrementPluginHook.class).get(0).generateIncrementSet(introspectedColumn, prefix, hasComma);
+        }
+    }
+
+    @Override
+    public XmlElement generateIncrementSetSelective(IntrospectedColumn introspectedColumn, String prefix) {
+        if (this.getPlugins(IIncrementPluginHook.class).isEmpty()) {
+            return null;
+        } else {
+            return this.getPlugins(IIncrementPluginHook.class).get(0).generateIncrementSetSelective(introspectedColumn, prefix);
+        }
+    }
+
+    @Override
+    public XmlElement generateIncrementSetForSelectiveEnhancedPlugin(IntrospectedColumn versionColumn) {
+        if (!this.getPlugins(IIncrementPluginHook.class).isEmpty()) {
+            return this.getPlugins(IIncrementPluginHook.class).get(0).generateIncrementSetForSelectiveEnhancedPlugin(versionColumn);
+        }
+        return null;
     }
 
     // ============================================ IModelBuilderPluginHook =============================================
@@ -360,6 +387,18 @@ public class HookAggregator implements IUpsertPluginHook,
     public boolean sqlMapSelectByExampleSelectiveElementGenerated(Document document, XmlElement element, IntrospectedTable introspectedTable) {
         for (ISelectSelectivePluginHook plugin : this.getPlugins(ISelectSelectivePluginHook.class)) {
             if (!plugin.sqlMapSelectByExampleSelectiveElementGenerated(document, element, introspectedTable)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // ============================================= IModelColumnPluginHook ==============================================
+
+    @Override
+    public boolean modelColumnEnumGenerated(InnerEnum innerEnum, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        for (IModelColumnPluginHook plugin : this.getPlugins(IModelColumnPluginHook.class)) {
+            if (!plugin.modelColumnEnumGenerated(innerEnum, topLevelClass, introspectedTable)) {
                 return false;
             }
         }

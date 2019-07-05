@@ -16,6 +16,7 @@
 
 package com.itfsw.mybatis.generator.plugins.utils;
 
+import com.itfsw.mybatis.generator.plugins.utils.hook.IIncrementPluginHook;
 import com.itfsw.mybatis.generator.plugins.utils.hook.IIncrementsPluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
@@ -341,6 +342,9 @@ public class XmlElementGeneratorTools {
             for (IntrospectedColumn introspectedColumn : columns) {
                 if (introspectedColumn.isGeneratedAlways() || introspectedColumn.isIdentity()) {
                     generateSelectiveToTrimEleTo(trimEle, introspectedColumn, prefix, type);
+                } else if (type == 3 && PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSetSelective(introspectedColumn, prefix) != null) {
+                    // IncrementPlugin 插件支持
+                    trimEle.addElement(PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSetSelective(introspectedColumn, prefix));
                 } else {
                     generateSelectiveCommColumnTo(trimEle, introspectedColumn, prefix, type);
                 }
@@ -356,7 +360,16 @@ public class XmlElementGeneratorTools {
                 switch (type) {
                     case 3:
                         List<Element> incrementEles = PluginTools.getHook(IIncrementsPluginHook.class).incrementSetElementGenerated(introspectedColumn, prefix, false);
-                        if (!incrementEles.isEmpty()) {
+                        XmlElement incrementEle = PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSet(introspectedColumn, prefix, false);
+
+                        if (incrementEle != null) {
+                            // 增量插件支持
+                            if (sb.length() > 0) {
+                                list.add(new TextElement(sb.toString()));
+                                sb.setLength(0);
+                            }
+                            list.add(incrementEle);
+                        } else if (!incrementEles.isEmpty()) {
                             // 增量插件支持
                             if (sb.length() > 0) {
                                 list.add(new TextElement(sb.toString()));
@@ -450,6 +463,9 @@ public class XmlElementGeneratorTools {
 
             // if it is primitive, we cannot do a null check
             generateSelectiveCommColumnTo(trimEle, introspectedColumn, prefix, type);
+        } else if (type == 3 && PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSetSelective(introspectedColumn, prefix) != null) {
+            // IncrementPlugin 插件支持
+            trimEle.addElement(PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSetSelective(introspectedColumn, prefix));
         } else {
             XmlElement eleIf = new XmlElement("if");
             eleIf.addAttribute(new Attribute("test", introspectedColumn.getJavaProperty(prefix) + " != null"));
@@ -573,13 +589,37 @@ public class XmlElementGeneratorTools {
             sb.append("'");
             sb.append(value);
             sb.append("'");
-        } else if (logicalDeleteColumn.getFullyQualifiedJavaType().getFullyQualifiedName().equals(Long.class.getName())){
+        } else if (logicalDeleteColumn.getFullyQualifiedJavaType().getFullyQualifiedName().equals(Long.class.getName())) {
             sb.append(value.replaceAll("L|l", ""));
-        } else if (logicalDeleteColumn.getFullyQualifiedJavaType().getFullyQualifiedName().equals(Float.class.getName())){
+        } else if (logicalDeleteColumn.getFullyQualifiedJavaType().getFullyQualifiedName().equals(Float.class.getName())) {
             sb.append(value.replaceAll("F|f", ""));
         } else {
             sb.append(value);
         }
+        return sb.toString();
+    }
+
+    /**
+     * Gets the parameter clause.
+     * @param valueStr
+     * @param introspectedColumn the introspected column
+     * @return the parameter clause
+     */
+    public static String getParameterClause(String valueStr, IntrospectedColumn introspectedColumn) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("#{");
+        sb.append(valueStr);
+        sb.append(",jdbcType=");
+        sb.append(introspectedColumn.getJdbcTypeName());
+
+        if (stringHasValue(introspectedColumn.getTypeHandler())) {
+            sb.append(",typeHandler=");
+            sb.append(introspectedColumn.getTypeHandler());
+        }
+
+        sb.append('}');
+
         return sb.toString();
     }
 }

@@ -17,6 +17,7 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.*;
+import com.itfsw.mybatis.generator.plugins.utils.hook.IIncrementPluginHook;
 import com.itfsw.mybatis.generator.plugins.utils.hook.IIncrementsPluginHook;
 import com.itfsw.mybatis.generator.plugins.utils.hook.IOptimisticLockerPluginHook;
 import com.itfsw.mybatis.generator.plugins.utils.hook.IUpsertPluginHook;
@@ -494,20 +495,22 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         setForeachEle.addAttribute(new Attribute("item", "column"));
         setForeachEle.addAttribute(new Attribute("separator", ","));
 
-        Element incrementEle = PluginTools.getHook(IIncrementsPluginHook.class).incrementSetsWithSelectiveEnhancedPluginElementGenerated(versionColumn);
-        // 普通情况
-        if (incrementEle == null && versionColumn == null) {
-            setForeachEle.addElement(new TextElement("${column.escapedColumnName} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
-        } else if (incrementEle != null) {
-            setForeachEle.addElement(incrementEle);
+        Element incrementSetEle = PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSetForSelectiveEnhancedPlugin(versionColumn);
+        if (incrementSetEle == null) {
+            incrementSetEle = PluginTools.getHook(IIncrementsPluginHook.class).incrementSetsWithSelectiveEnhancedPluginElementGenerated(versionColumn);
+        }
+
+        if (incrementSetEle != null) {
+            setForeachEle.addElement(incrementSetEle);
         } else if (versionColumn != null) {
             XmlElement ifEle = new XmlElement("if");
             ifEle.addAttribute(new Attribute("test", "column.value != '" + versionColumn.getActualColumnName() + "'.toString()"));
             ifEle.addElement(new TextElement("${column.escapedColumnName} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
 
             setForeachEle.addElement(ifEle);
+        } else {
+            setForeachEle.addElement(new TextElement("${column.escapedColumnName} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
         }
-
 
         XmlElement setOtherwiseEle = new XmlElement("otherwise");
         setOtherwiseEle.addElement(XmlElementGeneratorTools.generateSetsSelective(columns, "record."));

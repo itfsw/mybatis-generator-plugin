@@ -43,6 +43,7 @@ import java.util.List;
  * @time:2017/6/19 15:20
  * ---------------------------------------------------------------------------
  */
+@Deprecated
 public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginHook, IIncrementsPluginHook, ILombokPluginHook {
     public static final String PRO_INCREMENTS_COLUMNS = "incrementsColumns";  // incrementsColumns property
     public static final String FIELD_INC_MAP = "incrementsColumnsInfoMap";    // 为了防止和用户数据库字段冲突，特殊命名
@@ -64,6 +65,12 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
         // 插件使用前提是使用了ModelBuilderPlugin插件
         if (!(PluginTools.checkDependencyPlugin(getContext(), ModelBuilderPlugin.class) || PluginTools.checkDependencyPlugin(getContext(), LombokPlugin.class))) {
             warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件需配合" + ModelBuilderPlugin.class.getTypeName() + "或者" + LombokPlugin.class.getTypeName() + "插件使用！");
+            return false;
+        }
+
+        // 插件使用前提是使用了ModelBuilderPlugin插件
+        if (PluginTools.checkDependencyPlugin(getContext(), IncrementPlugin.class)) {
+            warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件和" + IncrementPlugin.class.getTypeName() + "插件冲突！");
             return false;
         }
 
@@ -522,7 +529,8 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
                     when.addAttribute(new Attribute("test", sb.toString()));
                     when.addElement(new TextElement("${column.escapedColumnName} = ${column.escapedColumnName} ${record." + METHOD_GET_INC_MAP + "()."
                             + introspectedColumn.getActualColumnName()
-                            + ".value} #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+                            + ".value} "
+                            + XmlElementGeneratorTools.getParameterClause("record.${column.javaProperty}", introspectedColumn)));
                     choose.addElement(when);
                 }
             }
