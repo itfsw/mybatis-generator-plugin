@@ -310,12 +310,11 @@ public class OptimisticLockerPluginTest {
 
                 ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
                 tb.set("id", 1L);
-                tb.invoke("nextVersion", 152L);  // nextVersion方法
                 tb.set("incF2", 10L);
                 tb.set("incF3", 5L);
 
                 // sql
-                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateWithVersionByExample", 100L, tb.getObject(), tbExample.getObject());
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateWithVersionByExample", 100L, tb.invoke("nextVersion", 152L), tbExample.getObject());
                 Assert.assertEquals(sql, "update tb set inc_f1 = 152, id = 1, field1 = 'null', inc_f2 = 10, inc_f3 = 5 WHERE inc_f1 = 100 and ( ( id = '1' ) )");
 
                 // 执行一次，因为版本号100不存在所以应该返回0
