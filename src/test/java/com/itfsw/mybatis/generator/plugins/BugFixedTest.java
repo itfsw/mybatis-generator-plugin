@@ -151,6 +151,26 @@ public class BugFixedTest {
     }
 
     /**
+     * 测试domainObjectRenamingRule和
+     */
+    @Test
+    public void bug0004() throws Exception {
+        DBHelper.createDB("scripts/BugFixedTest/bug-0004.sql");
+        // 规则 ^T 替换成空，也就是去掉前缀
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/bug-0004.xml");
+        MyBatisGenerator myBatisGenerator = tool.generate();
+        for (GeneratedJavaFile file : myBatisGenerator.getGeneratedJavaFiles()) {
+            String name = file.getCompilationUnit().getType().getShortName();
+            if (!name.matches("B.*")) {
+                Assert.assertTrue(false);
+            }
+            if (name.endsWith("Example")) {
+                Assert.assertEquals(file.getCompilationUnit().getType().getPackageName(), "com.itfsw.dao.example");
+            }
+        }
+    }
+
+    /**
      * typeHandler 导致的问题
      */
     @Test
@@ -370,7 +390,7 @@ public class BugFixedTest {
     @Test
     public void issues81() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/issues-81.xml");
-        MyBatisGenerator myBatisGenerator =  tool.generate(() -> DBHelper.createDB("scripts/BugFixedTest/issues-81.sql"));
+        MyBatisGenerator myBatisGenerator = tool.generate(() -> DBHelper.createDB("scripts/BugFixedTest/issues-81.sql"));
 
         // 是否在使用系统默认模板
         int count = 0;
