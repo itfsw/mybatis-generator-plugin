@@ -354,7 +354,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook,
 
             if (versionColumn == null) {
                 XmlElement otherwise = new XmlElement("otherwise");
-                otherwise.addElement(new TextElement("${column.escapedColumnName} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+                otherwise.addElement(new TextElement("${column.escapedColumnName} = " + XmlElementGeneratorTools.getParameterClause("record.${column.javaProperty}", versionColumn) + "}"));
                 choose.addElement(otherwise);
             } else {
                 XmlElement when = new XmlElement("when");
