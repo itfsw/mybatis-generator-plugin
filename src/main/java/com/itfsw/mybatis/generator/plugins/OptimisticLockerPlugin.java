@@ -239,13 +239,14 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
             Method nextVersion = JavaElementGeneratorTools.generateMethod(
                     METHOD_NEXT_VERSION,
                     JavaVisibility.PUBLIC,
-                    null,
+                    topLevelClass.getType(),
                     new Parameter(this.versionColumn.getFullyQualifiedJavaType(), "version")
             );
             commentGenerator.addSetterComment(nextVersion, introspectedTable, this.versionColumn);
             JavaElementGeneratorTools.generateMethodBody(
                     nextVersion,
-                    "this." + this.versionColumn.getJavaProperty() + " = version;"
+                    "this." + this.versionColumn.getJavaProperty() + " = version;",
+                    "return this;"
             );
 
             FormatTools.addMethodWithBestPosition(topLevelClass, nextVersion);
@@ -273,6 +274,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
                     builderClass.getType(),
                     new Parameter(this.versionColumn.getFullyQualifiedJavaType(), "version")
             );
+            nextVersion.addAnnotation("@Deprecated");
             commentGenerator.addSetterComment(nextVersion, introspectedTable, this.versionColumn);
 
             Method setterMethod = JavaBeansUtil.getJavaBeansSetter(this.versionColumn, context, introspectedTable);
