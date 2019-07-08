@@ -1391,8 +1391,8 @@ public class Test {
                 Tb.builder()
                   .id(102)
                   .field1("ts1")
-                  .nextVersion(System.currentTimeMillis())    // 传入nextVersion
                   .build()
+                  .nextVersion(System.currentTimeMillis())    // 传入nextVersion
         );
         // 对应生成的Sql: update tb set version = 1525773888559, field1 = 'ts1' where version = 100 and id = 102
     }
