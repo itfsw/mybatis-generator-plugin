@@ -167,7 +167,6 @@ public class ExampleEnhancedPlugin extends BasePlugin {
                         "column"
                 )
         );
-        commentGenerator.addGeneralMethodComment(method, introspectedTable);
 
         // 方法体
         sb.setLength(0);
