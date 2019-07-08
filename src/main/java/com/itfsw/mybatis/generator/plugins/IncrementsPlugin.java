@@ -203,7 +203,7 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
         if (this.support()) {
             boolean find = false;
             for (IntrospectedColumn column : columns) {
-                if (this.supportColumn(column)) {
+                if (this.supportIncrement(column)) {
                     find = true;
                     break;
                 }
@@ -330,7 +330,7 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
                 FullyQualifiedJavaType builderType2 = new FullyQualifiedJavaType(topLevelClass.getType().getShortName() + "." + topLevelClass.getType().getShortName() + "Builder");
                 builderType2.addTypeArgument(new SpecTypeArgumentsFullyQualifiedJavaType("<C, B>"));
                 for (IntrospectedColumn column : columns) {
-                    if (this.supportColumn(column)) {
+                    if (this.supportIncrement(column)) {
                         Field field = JavaBeansUtil.getJavaBeansField(column, context, introspectedTable);
                         // 增加方法
                         Method mIncrements = JavaElementGeneratorTools.generateMethod(
@@ -413,7 +413,7 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
 
             // Builder 中 添加字段支持
             for (IntrospectedColumn column : columns) {
-                if (this.supportColumn(column)) {
+                if (this.supportIncrement(column)) {
                     Field field = JavaBeansUtil.getJavaBeansField(column, context, introspectedTable);
                     // 增加方法
                     Method mIncrements = JavaElementGeneratorTools.generateMethod(
@@ -464,7 +464,7 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
     public List<Element> incrementSetElementGenerated(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma) {
         List<Element> list = new ArrayList<>();
 
-        if (this.supportColumn(introspectedColumn)) {
+        if (this.supportIncrement(introspectedColumn)) {
             // 1. column = 节点
             list.add(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = "));
 
@@ -506,51 +506,50 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
 
     /**
      * 生成增量操作节点(SelectiveEnhancedPlugin)
-     * @param versionColumn 需要排除的column（主要是和乐观锁插件整合时要把版本列排除掉）
+     * @param columns
      * @return
      */
     @Override
-    public Element incrementSetsWithSelectiveEnhancedPluginElementGenerated(IntrospectedColumn versionColumn) {
+    public List<XmlElement> incrementSetsWithSelectiveEnhancedPluginElementGenerated(List<IntrospectedColumn> columns) {
         if (this.support()) {
-            XmlElement choose = new XmlElement("choose");
+            List<XmlElement> results = new ArrayList<>();
 
-            for (IntrospectedColumn introspectedColumn : this.incColumns) {
-                if (versionColumn == null || !introspectedColumn.getActualColumnName().equals(versionColumn.getActualColumnName())) {
-                    XmlElement when = new XmlElement("when");
+            for (IntrospectedColumn incColumn : this.incColumns) {
 
-                    // 需要 inc 的列
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("'");
-                    sb.append(introspectedColumn.getActualColumnName());
-                    sb.append("'.toString()");
-                    sb.append(" == ");
-                    sb.append("column.value");
+                // !!! 不能用contains,IntrospectedColumn对象不同
+                for (IntrospectedColumn column : columns) {
+                    if (incColumn.getActualColumnName().equals(column.getActualColumnName())) {
+                        XmlElement when = new XmlElement("when");
 
-                    when.addAttribute(new Attribute("test", sb.toString()));
-                    when.addElement(new TextElement("${column.escapedColumnName} = ${column.escapedColumnName} ${record." + METHOD_GET_INC_MAP + "()."
-                            + introspectedColumn.getActualColumnName()
-                            + ".value} "
-                            + XmlElementGeneratorTools.getParameterClause("record.${column.javaProperty}", introspectedColumn)));
-                    choose.addElement(when);
+                        // 需要 inc 的列
+                        when.addAttribute(new Attribute("test", "'" + column.getActualColumnName() + "'.toString() == column.value"));
+                        when.addElement(new TextElement("${column.escapedColumnName} = ${column.escapedColumnName} ${record." + METHOD_GET_INC_MAP + "()."
+                                + incColumn.getActualColumnName()
+                                + ".value} "
+                                + XmlElementGeneratorTools.getParameterClause("record.${column.javaProperty}", incColumn)));
+                        results.add(when);
+                    }
                 }
             }
 
-            if (versionColumn == null) {
-                XmlElement otherwise = new XmlElement("otherwise");
-                otherwise.addElement(new TextElement("${column.escapedColumnName} = "+XmlElementGeneratorTools.getParameterClause("record.${column.javaProperty}", versionColumn)+"}"));
-                choose.addElement(otherwise);
-            } else {
-                XmlElement when = new XmlElement("when");
-                when.addAttribute(new Attribute("test", "column.value != '" + versionColumn.getActualColumnName() + "'.toString()"));
-
-                when.addElement(new TextElement("${column.escapedColumnName} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
-
-                choose.addElement(when);
-            }
-
-            return choose;
+            return results.isEmpty() ? null : results;
         }
         return null;
+    }
+
+    /**
+     * 判断是否为需要进行增量操作的column
+     * @param column
+     * @return
+     */
+    @Override
+    public boolean supportIncrement(IntrospectedColumn column) {
+        for (IntrospectedColumn incColumn : this.incColumns) {
+            if (incColumn.getActualColumnName().equals(column.getActualColumnName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // =================================================== 原生方法的支持 ====================================================
@@ -721,19 +720,5 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
      */
     private boolean support() {
         return this.incColumns.size() > 0;
-    }
-
-    /**
-     * 判断是否为需要进行增量操作的column
-     * @param searchColumn
-     * @return
-     */
-    private boolean supportColumn(IntrospectedColumn searchColumn) {
-        for (IntrospectedColumn column : this.incColumns) {
-            if (column.getActualColumnName().equals(searchColumn.getActualColumnName())) {
-                return true;
-            }
-        }
-        return false;
     }
 }

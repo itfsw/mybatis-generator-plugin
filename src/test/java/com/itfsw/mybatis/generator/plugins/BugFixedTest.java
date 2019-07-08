@@ -26,6 +26,7 @@ import org.mybatis.generator.config.MergeConstants;
 
 import java.lang.reflect.Array;
 import java.sql.ResultSet;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -109,6 +110,42 @@ public class BugFixedTest {
                 Assert.assertEquals(result, 1);
                 // 自增ID
                 Assert.assertEquals(tb.get("id"), 1L);
+            }
+        });
+    }
+
+    /**
+     * 集成SelectiveEnhancedPlugin，typeHandler问题
+     * @throws Exception
+     */
+    @Test
+    public void bug0003() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/bug-0003.xml");
+        tool.generate(() -> DBHelper.createDB("scripts/BugFixedTest/bug-0003.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
+
+                tb.set("id", 1L);
+                tb.set("field1", new SimpleDateFormat("yyyy-MM-dd").parse("2019-07-08"));
+
+
+                tbMapper.invoke("updateByPrimaryKey", tb.getObject());
+                ResultSet rs = DBHelper.execute(sqlSession.getConnection(), "select field1 from tb where id = 1");
+                rs.first();
+                Assert.assertEquals(rs.getString("field1"), "2019:07:08");
+
+                tb.set("field1", new SimpleDateFormat("yyyy-MM-dd").parse("2019-07-09"));
+                ObjectUtil tbColumnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
+                Object columns = Array.newInstance(tbColumnField1.getCls(), 1);
+                Array.set(columns, 0, tbColumnField1.getObject());
+
+                tbMapper.invoke("updateByPrimaryKeySelective", tb.getObject(), columns);
+                rs = DBHelper.execute(sqlSession.getConnection(), "select field1 from tb where id = 1");
+                rs.first();
+                Assert.assertEquals(rs.getString("field1"), "2019:07:09");
             }
         });
     }

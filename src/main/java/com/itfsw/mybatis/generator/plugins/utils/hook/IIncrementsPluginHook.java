@@ -18,6 +18,7 @@ package com.itfsw.mybatis.generator.plugins.utils.hook;
 
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.dom.xml.Element;
+import org.mybatis.generator.api.dom.xml.XmlElement;
 
 import java.util.List;
 
@@ -41,8 +42,15 @@ public interface IIncrementsPluginHook {
 
     /**
      * 生成增量操作节点(SelectiveEnhancedPlugin)
-     * @param versionColumn 需要排除的column（主要是和乐观锁插件整合时要把版本列排除掉）
+     * @param columns
      * @return
      */
-    Element incrementSetsWithSelectiveEnhancedPluginElementGenerated(IntrospectedColumn versionColumn);
+    List<XmlElement> incrementSetsWithSelectiveEnhancedPluginElementGenerated(List<IntrospectedColumn> columns);
+
+    /**
+     * 是否支持increment
+     * @param column
+     * @return
+     */
+    boolean supportIncrement(IntrospectedColumn column);
 }

@@ -114,11 +114,11 @@ public class HookAggregator implements IUpsertPluginHook,
     }
 
     @Override
-    public Element incrementSetsWithSelectiveEnhancedPluginElementGenerated(IntrospectedColumn versionColumn) {
+    public List<XmlElement> incrementSetsWithSelectiveEnhancedPluginElementGenerated(List<IntrospectedColumn> columns) {
         if (this.getPlugins(IIncrementsPluginHook.class).isEmpty()) {
             return null;
         } else {
-            return this.getPlugins(IIncrementsPluginHook.class).get(0).incrementSetsWithSelectiveEnhancedPluginElementGenerated(versionColumn);
+            return this.getPlugins(IIncrementsPluginHook.class).get(0).incrementSetsWithSelectiveEnhancedPluginElementGenerated(columns);
         }
     }
 
@@ -143,9 +143,19 @@ public class HookAggregator implements IUpsertPluginHook,
     }
 
     @Override
-    public XmlElement generateIncrementSetForSelectiveEnhancedPlugin(IntrospectedColumn versionColumn) {
+    public boolean supportIncrement(IntrospectedColumn column) {
         if (!this.getPlugins(IIncrementPluginHook.class).isEmpty()) {
-            return this.getPlugins(IIncrementPluginHook.class).get(0).generateIncrementSetForSelectiveEnhancedPlugin(versionColumn);
+            return this.getPlugins(IIncrementPluginHook.class).get(0).supportIncrement(column);
+        } else if (!this.getPlugins(IIncrementsPluginHook.class).isEmpty()) {
+            return this.getPlugins(IIncrementsPluginHook.class).get(0).supportIncrement(column);
+        }
+        return false;
+    }
+
+    @Override
+    public List<XmlElement> generateIncrementSetForSelectiveEnhancedPlugin(List<IntrospectedColumn> columns) {
+        if (!this.getPlugins(IIncrementPluginHook.class).isEmpty()) {
+            return this.getPlugins(IIncrementPluginHook.class).get(0).generateIncrementSetForSelectiveEnhancedPlugin(columns);
         }
         return null;
     }
