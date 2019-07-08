@@ -125,9 +125,10 @@ public class TableRenameConfigurationPlugin extends BasePlugin implements ITable
             }
             // TODO 官方bug临时修复
             if (tableConfiguration.getDomainObjectRenamingRule() != null) {
-                String domainObjectName = fullyQualifiedTable.getDomainObjectName();
+                StringBuilder domainObjectName = new StringBuilder(fullyQualifiedTable.getDomainObjectName());
                 // 首字母大写
-                BeanUtils.setProperty(fullyQualifiedTable, "domainObjectName", getCamelCaseString(domainObjectName, true));
+                domainObjectName.setCharAt(0, Character.toUpperCase(domainObjectName.charAt(0)));
+                BeanUtils.setProperty(fullyQualifiedTable, "domainObjectName", domainObjectName.toString());
 
                 // 重新初始化一下属性
                 BeanUtils.invoke(introspectedTable, IntrospectedTable.class, "calculateJavaClientAttributes");
