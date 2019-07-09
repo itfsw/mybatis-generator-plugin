@@ -27,12 +27,12 @@ import org.junit.Test;
 import org.mybatis.generator.api.GeneratedJavaFile;
 import org.mybatis.generator.api.MyBatisGenerator;
 import org.mybatis.generator.api.dom.java.CompilationUnit;
-import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
+import org.mybatis.generator.api.dom.java.TopLevelClass;
 
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 /**
  * ---------------------------------------------------------------------------
@@ -58,74 +58,43 @@ public class LombokPluginTest {
     public void testGenerate() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LombokPlugin/mybatis-generator.xml");
         MyBatisGenerator myBatisGenerator = tool.generate();
+
+        List<String> comm = Arrays.asList("@Data", "@NoArgsConstructor", "@AllArgsConstructor");
+        List<String> child = new ArrayList<>(Arrays.asList("@EqualsAndHashCode(callSuper = true)", "@ToString(callSuper = true)"));
+        child.addAll(comm);
+        List<String> superBuilderParent = new ArrayList<>(Arrays.asList("@SuperBuilder"));
+        superBuilderParent.addAll(comm);
+        List<String> superBuilderChild = new ArrayList<>(Arrays.asList("@SuperBuilder"));
+        superBuilderChild.addAll(child);
+        List<String> builder = new ArrayList<>(Arrays.asList("@Builder"));
+        builder.addAll(comm);
+
         for (GeneratedJavaFile file : myBatisGenerator.getGeneratedJavaFiles()) {
             CompilationUnit compilationUnit = file.getCompilationUnit();
-            String name = compilationUnit.getType().getShortName();
-            if ("TbKeyBlobKey".equals(name)) {
-                Assert.assertTrue(checkImportedType(compilationUnit.getImportedTypes(), Arrays.asList(
-                        LombokPlugin.EnumLombokAnnotations.DATA,
-                        LombokPlugin.EnumLombokAnnotations.SUPER_BUILDER,
-                        LombokPlugin.EnumLombokAnnotations.NO_ARGS_CONSTRUCTOR,
-                        LombokPlugin.EnumLombokAnnotations.ALL_ARGS_CONSTRUCTOR
-                ), true));
+            if (compilationUnit instanceof TopLevelClass) {
+                TopLevelClass topLevelClass = (TopLevelClass) compilationUnit;
+                String name = topLevelClass.getType().getShortName();
+                if ("TbKeyBlobKey".equals(name)) {
+                    Assert.assertEquals(superBuilderParent.size(), topLevelClass.getAnnotations().size());
+                    Assert.assertTrue(superBuilderParent.containsAll(topLevelClass.getAnnotations()));
+                } else if ("TbKeyBlobWithBLOBs".equals(name)) {
+                    Assert.assertEquals(superBuilderChild.size(), topLevelClass.getAnnotations().size());
+                    Assert.assertTrue(superBuilderChild.containsAll(topLevelClass.getAnnotations()));
+                }
 
-                Assert.assertFalse(checkImportedType(compilationUnit.getImportedTypes(), Arrays.asList(
-                        LombokPlugin.EnumLombokAnnotations.BUILDER,
-                        LombokPlugin.EnumLombokAnnotations.EQUALS_AND_HASH_CODE_CALL_SUPER
-                ), false));
-            } else if ("TbKeyBlobWithBLOBs".equals(name)) {
-                Assert.assertTrue(checkImportedType(compilationUnit.getImportedTypes(), Arrays.asList(
-                        LombokPlugin.EnumLombokAnnotations.DATA,
-                        LombokPlugin.EnumLombokAnnotations.SUPER_BUILDER,
-                        LombokPlugin.EnumLombokAnnotations.NO_ARGS_CONSTRUCTOR,
-                        LombokPlugin.EnumLombokAnnotations.ALL_ARGS_CONSTRUCTOR,
-                        LombokPlugin.EnumLombokAnnotations.EQUALS_AND_HASH_CODE_CALL_SUPER
-                ), true));
+                // tb 没有继承
+                if ("Tb".equals(name)) {
+                    Assert.assertEquals(builder.size(), topLevelClass.getAnnotations().size());
+                    Assert.assertTrue(builder.containsAll(topLevelClass.getAnnotations()));
+                }
 
-                Assert.assertFalse(checkImportedType(compilationUnit.getImportedTypes(), Arrays.asList(
-                        LombokPlugin.EnumLombokAnnotations.BUILDER
-                ), false));
-            }
-
-            // tb 没有继承
-            if ("Tb".equals(name)) {
-                Assert.assertTrue(checkImportedType(compilationUnit.getImportedTypes(), Arrays.asList(
-                        LombokPlugin.EnumLombokAnnotations.DATA,
-                        LombokPlugin.EnumLombokAnnotations.BUILDER,
-                        LombokPlugin.EnumLombokAnnotations.NO_ARGS_CONSTRUCTOR,
-                        LombokPlugin.EnumLombokAnnotations.ALL_ARGS_CONSTRUCTOR
-                ), true));
-
-                Assert.assertFalse(checkImportedType(compilationUnit.getImportedTypes(), Arrays.asList(
-                        LombokPlugin.EnumLombokAnnotations.SUPER_BUILDER,
-                        LombokPlugin.EnumLombokAnnotations.EQUALS_AND_HASH_CODE_CALL_SUPER
-                ), false));
-            }
-
-            if ("TbKeysKey".equals(name)) {
-                Assert.assertTrue(checkImportedType(compilationUnit.getImportedTypes(), Arrays.asList(
-                        LombokPlugin.EnumLombokAnnotations.DATA,
-                        LombokPlugin.EnumLombokAnnotations.SUPER_BUILDER,
-                        LombokPlugin.EnumLombokAnnotations.NO_ARGS_CONSTRUCTOR,
-                        LombokPlugin.EnumLombokAnnotations.ALL_ARGS_CONSTRUCTOR
-                ), true));
-
-                Assert.assertFalse(checkImportedType(compilationUnit.getImportedTypes(), Arrays.asList(
-                        LombokPlugin.EnumLombokAnnotations.BUILDER,
-                        LombokPlugin.EnumLombokAnnotations.EQUALS_AND_HASH_CODE_CALL_SUPER
-                ), false));
-            } else if ("TbKeys".equals(name)) {
-                Assert.assertTrue(checkImportedType(compilationUnit.getImportedTypes(), Arrays.asList(
-                        LombokPlugin.EnumLombokAnnotations.DATA,
-                        LombokPlugin.EnumLombokAnnotations.SUPER_BUILDER,
-                        LombokPlugin.EnumLombokAnnotations.NO_ARGS_CONSTRUCTOR,
-                        LombokPlugin.EnumLombokAnnotations.ALL_ARGS_CONSTRUCTOR,
-                        LombokPlugin.EnumLombokAnnotations.EQUALS_AND_HASH_CODE_CALL_SUPER
-                ), true));
-
-                Assert.assertFalse(checkImportedType(compilationUnit.getImportedTypes(), Arrays.asList(
-                        LombokPlugin.EnumLombokAnnotations.BUILDER
-                ), false));
+                if ("TbKeysKey".equals(name)) {
+                    Assert.assertEquals(superBuilderParent.size(), topLevelClass.getAnnotations().size());
+                    Assert.assertTrue(superBuilderParent.containsAll(topLevelClass.getAnnotations()));
+                } else if ("TbKeys".equals(name)) {
+                    Assert.assertEquals(superBuilderChild.size(), topLevelClass.getAnnotations().size());
+                    Assert.assertTrue(superBuilderChild.containsAll(topLevelClass.getAnnotations()));
+                }
             }
         }
     }
@@ -137,50 +106,29 @@ public class LombokPluginTest {
     public void testGenerateDefault() throws Exception {
         MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LombokPlugin/mybatis-generator-default.xml");
         MyBatisGenerator myBatisGenerator = tool.generate();
+
+        List<String> comm = Arrays.asList("@Data");
+        List<String> child = new ArrayList<>(Arrays.asList("@EqualsAndHashCode(callSuper = true)", "@ToString(callSuper = true)"));
+        child.addAll(comm);
+
         for (GeneratedJavaFile file : myBatisGenerator.getGeneratedJavaFiles()) {
             CompilationUnit compilationUnit = file.getCompilationUnit();
-            String name = compilationUnit.getType().getShortName();
-            if ("TbKeyBlobKey".equals(name)) {
-                Assert.assertTrue(checkImportedType(compilationUnit.getImportedTypes(), Arrays.asList(
-                        LombokPlugin.EnumLombokAnnotations.DATA
+            if (compilationUnit instanceof TopLevelClass) {
+                TopLevelClass topLevelClass = (TopLevelClass) compilationUnit;
+                String name = topLevelClass.getType().getShortName();
+                if ("TbKeyBlobKey".equals(name)) {
+                    Assert.assertEquals(comm.size(), topLevelClass.getAnnotations().size());
+                    Assert.assertTrue(comm.containsAll(topLevelClass.getAnnotations()));
+                } else if ("TbKeyBlobWithBLOBs".equals(name)) {
+                    Assert.assertEquals(child.size(), topLevelClass.getAnnotations().size());
+                    Assert.assertTrue(child.containsAll(topLevelClass.getAnnotations()));
+                }
 
-                ), true));
-
-                Assert.assertFalse(checkImportedType(compilationUnit.getImportedTypes(), Arrays.asList(
-                        LombokPlugin.EnumLombokAnnotations.BUILDER,
-                        LombokPlugin.EnumLombokAnnotations.EQUALS_AND_HASH_CODE_CALL_SUPER,
-                        LombokPlugin.EnumLombokAnnotations.SUPER_BUILDER,
-                        LombokPlugin.EnumLombokAnnotations.NO_ARGS_CONSTRUCTOR,
-                        LombokPlugin.EnumLombokAnnotations.ALL_ARGS_CONSTRUCTOR
-                ), false));
-            } else if ("TbKeyBlobWithBLOBs".equals(name)) {
-                Assert.assertTrue(checkImportedType(compilationUnit.getImportedTypes(), Arrays.asList(
-                        LombokPlugin.EnumLombokAnnotations.DATA,
-                        LombokPlugin.EnumLombokAnnotations.EQUALS_AND_HASH_CODE_CALL_SUPER
-                ), true));
-
-                Assert.assertFalse(checkImportedType(compilationUnit.getImportedTypes(), Arrays.asList(
-                        LombokPlugin.EnumLombokAnnotations.BUILDER,
-                        LombokPlugin.EnumLombokAnnotations.SUPER_BUILDER,
-                        LombokPlugin.EnumLombokAnnotations.NO_ARGS_CONSTRUCTOR,
-                        LombokPlugin.EnumLombokAnnotations.ALL_ARGS_CONSTRUCTOR
-
-                ), false));
-            }
-
-            // tb 没有继承
-            if ("Tb".equals(name)) {
-                Assert.assertTrue(checkImportedType(compilationUnit.getImportedTypes(), Arrays.asList(
-                        LombokPlugin.EnumLombokAnnotations.DATA
-                ), true));
-
-                Assert.assertFalse(checkImportedType(compilationUnit.getImportedTypes(), Arrays.asList(
-                        LombokPlugin.EnumLombokAnnotations.SUPER_BUILDER,
-                        LombokPlugin.EnumLombokAnnotations.EQUALS_AND_HASH_CODE_CALL_SUPER,
-                        LombokPlugin.EnumLombokAnnotations.BUILDER,
-                        LombokPlugin.EnumLombokAnnotations.NO_ARGS_CONSTRUCTOR,
-                        LombokPlugin.EnumLombokAnnotations.ALL_ARGS_CONSTRUCTOR
-                ), false));
+                // tb 没有继承
+                if ("Tb".equals(name)) {
+                    Assert.assertEquals(comm.size(), topLevelClass.getAnnotations().size());
+                    Assert.assertTrue(comm.containsAll(topLevelClass.getAnnotations()));
+                }
             }
         }
     }
@@ -288,29 +236,23 @@ public class LombokPluginTest {
     }
 
     /**
-     * 验证引包
-     * @param importedTypes
-     * @param annotations
-     * @param all
-     * @return
+     * 测试 @Accessors(chain = true) 注解
+     * @throws Exception
      */
-    private boolean checkImportedType(Set<FullyQualifiedJavaType> importedTypes, List<LombokPlugin.EnumLombokAnnotations> annotations, boolean all) {
-        for (LombokPlugin.EnumLombokAnnotations annotation : annotations) {
-            boolean find = false;
-            for (FullyQualifiedJavaType javaType : importedTypes) {
-                if (javaType.getFullyQualifiedName().equals(annotation.getClazz())) {
-                    if (all) {
-                        find = true;
-                    } else {
-                        return true;
-                    }
+    @Test
+    public void testAccessorsAnnotation() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LombokPlugin/mybatis-generator-accessors.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                try {
+                    ObjectUtil tbLombok = new ObjectUtil(loader, packagz + ".TbLombok");
+
+                    Assert.assertEquals(tbLombok.invoke("setField1", "test").getClass().getTypeName(), packagz + ".TbLombok");
+                } catch (Exception e) {
+                    Assert.assertTrue(false);
                 }
             }
-            if (find == false) {
-                return false;
-            }
-        }
-
-        return true;
+        });
     }
 }

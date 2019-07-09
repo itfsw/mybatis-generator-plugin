@@ -26,8 +26,12 @@ import org.mybatis.generator.api.dom.java.Method;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
 import org.mybatis.generator.internal.util.StringUtility;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * ---------------------------------------------------------------------------
@@ -38,13 +42,21 @@ import java.util.Properties;
  * ---------------------------------------------------------------------------
  */
 public class LombokPlugin extends BasePlugin {
-    public static final String PRO_BUILDER = "@Builder";  // 是否支持 Builder 注解
-    public static final String PRO_ALL_ARGS_CONSTRUCTOR = "@AllArgsConstructor"; // 是否支持 AllArgsConstructor 注解
-    public static final String PRO_NO_ARGS_CONSTRUCTOR = "@NoArgsConstructor"; // 是否支持 NoArgsConstructor 注解
+    private final static List<String> LOMBOK_FEATURES;
+    private final static List<String> LOMBOK_EXPERIMENTAL_FEATURES;
+    private final static Pattern LOMBOK_ANNOTATION = Pattern.compile("@([a-zA-z]+)(\\(.*\\))?");
 
-    private boolean hasBuilder;
-    private boolean hasAllArgsConstructor;
-    private boolean hasNoArgsConstructor;
+    static {
+        LOMBOK_FEATURES = Arrays.asList(
+                "Getter", "Setter", "ToString", "EqualsAndHashCode", "NoArgsConstructor",
+                "RequiredArgsConstructor", "AllArgsConstructor", "Data", "Value", "Builder", "Log"
+        );
+        LOMBOK_EXPERIMENTAL_FEATURES = Arrays.asList(
+                "Accessors", "FieldDefaults", "Wither", "UtilityClass", "Helper", "FieldNameConstants", "SuperBuilder"
+        );
+    }
+
+    private List<String> annotations;
 
     /**
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
@@ -54,16 +66,46 @@ public class LombokPlugin extends BasePlugin {
     @Override
     public boolean validate(List<String> warnings) {
         Properties properties = this.getProperties();
-
-        String builder = properties.getProperty(PRO_BUILDER);
-        String allArgsConstructor = properties.getProperty(PRO_ALL_ARGS_CONSTRUCTOR);
-        String noArgsConstructor = properties.getProperty(PRO_NO_ARGS_CONSTRUCTOR);
-
-        this.hasBuilder = builder == null ? false : StringUtility.isTrue(builder);
-        this.hasAllArgsConstructor = allArgsConstructor == null ? false : StringUtility.isTrue(allArgsConstructor);
-        this.hasNoArgsConstructor = noArgsConstructor == null ? false : StringUtility.isTrue(noArgsConstructor);
+        for (Object key : properties.keySet()) {
+            String annotation = key.toString().trim();
+            if (!annotation.matches(LOMBOK_ANNOTATION.pattern())) {
+                this.warnings.add("itfsw:插件" + LombokPlugin.class.getTypeName() + "不能识别的注解（" + annotation + "）！");
+                return false;
+            } else if (annotation.startsWith("@Builder") && annotation.matches(".*\\(.*\\)")) {
+                this.warnings.add("itfsw:插件" + LombokPlugin.class.getTypeName() + "@Builder 注解不允许配置属性（" + annotation + "）！");
+                return false;
+            }
+        }
 
         return super.validate(warnings);
+    }
+
+    /**
+     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public void initialized(IntrospectedTable introspectedTable) {
+        super.initialized(introspectedTable);
+
+        this.annotations = new ArrayList<>();
+        Properties properties = this.getProperties();
+        boolean findData = false;
+        for (Object key : properties.keySet()) {
+            String annotation = key.toString().trim();
+            if (annotation.startsWith("@Data")) {
+                findData = true;
+            }
+
+            if (StringUtility.isTrue(properties.getProperty(key.toString()))) {
+                this.annotations.add(annotation);
+            }
+        }
+
+        if (!findData) {
+            this.annotations.add(0, "@Data");
+        }
     }
 
     /**
@@ -74,31 +116,7 @@ public class LombokPlugin extends BasePlugin {
      */
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        // @Data
-        this.addAnnotations(topLevelClass, EnumLombokAnnotations.DATA);
-        if (topLevelClass.getSuperClass() != null) {
-            this.addAnnotations(topLevelClass, EnumLombokAnnotations.EQUALS_AND_HASH_CODE_CALL_SUPER);
-            this.addAnnotations(topLevelClass, EnumLombokAnnotations.TO_STRING_CALL_SUPER);
-        }
-
-        // @Builder
-        List<IntrospectedColumn> columns = IntrospectedTableTools.getModelBaseRecordClomns(introspectedTable);
-        if (this.hasBuilder && PluginTools.getHook(ILombokPluginHook.class).modelBaseRecordBuilderClassGenerated(topLevelClass, columns, introspectedTable)) {
-            // 有子类或者父类
-            if (introspectedTable.getRules().generateRecordWithBLOBsClass() || introspectedTable.getRules().generatePrimaryKeyClass() || topLevelClass.getSuperClass() != null) {
-                this.addAnnotations(topLevelClass, EnumLombokAnnotations.SUPER_BUILDER);
-            } else {
-                this.addAnnotations(topLevelClass, EnumLombokAnnotations.BUILDER);
-            }
-        }
-
-        // @Constructor
-        if (this.hasNoArgsConstructor) {
-            this.addAnnotations(topLevelClass, EnumLombokAnnotations.NO_ARGS_CONSTRUCTOR);
-        }
-        if (this.hasAllArgsConstructor) {
-            this.addAnnotations(topLevelClass, EnumLombokAnnotations.ALL_ARGS_CONSTRUCTOR);
-        }
+        this.addAnnotations(topLevelClass, introspectedTable, IntrospectedTableTools.getModelBaseRecordClomns(introspectedTable));
         return super.modelBaseRecordClassGenerated(topLevelClass, introspectedTable);
     }
 
@@ -110,31 +128,7 @@ public class LombokPlugin extends BasePlugin {
      */
     @Override
     public boolean modelPrimaryKeyClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        // @Data
-        this.addAnnotations(topLevelClass, EnumLombokAnnotations.DATA);
-        if (topLevelClass.getSuperClass() != null) {
-            this.addAnnotations(topLevelClass, EnumLombokAnnotations.EQUALS_AND_HASH_CODE_CALL_SUPER);
-            this.addAnnotations(topLevelClass, EnumLombokAnnotations.TO_STRING_CALL_SUPER);
-        }
-
-        // @Builder
-        List<IntrospectedColumn> columns = introspectedTable.getPrimaryKeyColumns();
-        if (this.hasBuilder && PluginTools.getHook(ILombokPluginHook.class).modelPrimaryKeyBuilderClassGenerated(topLevelClass, columns, introspectedTable)) {
-            // 有子类或者父类
-            if (introspectedTable.getRules().generateRecordWithBLOBsClass() || introspectedTable.getRules().generateBaseRecordClass() || topLevelClass.getSuperClass() != null) {
-                this.addAnnotations(topLevelClass, EnumLombokAnnotations.SUPER_BUILDER);
-            } else {
-                this.addAnnotations(topLevelClass, EnumLombokAnnotations.BUILDER);
-            }
-        }
-
-        // @Constructor
-        if (this.hasNoArgsConstructor) {
-            this.addAnnotations(topLevelClass, EnumLombokAnnotations.NO_ARGS_CONSTRUCTOR);
-        }
-        if (this.hasAllArgsConstructor) {
-            this.addAnnotations(topLevelClass, EnumLombokAnnotations.ALL_ARGS_CONSTRUCTOR);
-        }
+        this.addAnnotations(topLevelClass, introspectedTable, introspectedTable.getPrimaryKeyColumns());
         return super.modelPrimaryKeyClassGenerated(topLevelClass, introspectedTable);
     }
 
@@ -146,31 +140,7 @@ public class LombokPlugin extends BasePlugin {
      */
     @Override
     public boolean modelRecordWithBLOBsClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        // @Data
-        this.addAnnotations(topLevelClass, EnumLombokAnnotations.DATA);
-        if (topLevelClass.getSuperClass() != null) {
-            this.addAnnotations(topLevelClass, EnumLombokAnnotations.EQUALS_AND_HASH_CODE_CALL_SUPER);
-            this.addAnnotations(topLevelClass, EnumLombokAnnotations.TO_STRING_CALL_SUPER);
-        }
-
-        // @Builder
-        List<IntrospectedColumn> columns = introspectedTable.getBLOBColumns();
-        if (this.hasBuilder && PluginTools.getHook(ILombokPluginHook.class).modelRecordWithBLOBsBuilderClassGenerated(topLevelClass, columns, introspectedTable)) {
-            // 有子类或者父类
-            if (introspectedTable.getRules().generateBaseRecordClass() || introspectedTable.getRules().generatePrimaryKeyClass() || topLevelClass.getSuperClass() != null) {
-                this.addAnnotations(topLevelClass, EnumLombokAnnotations.SUPER_BUILDER);
-            } else {
-                this.addAnnotations(topLevelClass, EnumLombokAnnotations.BUILDER);
-            }
-        }
-
-        // @Constructor
-        if (this.hasNoArgsConstructor) {
-            this.addAnnotations(topLevelClass, EnumLombokAnnotations.NO_ARGS_CONSTRUCTOR);
-        }
-        if (this.hasAllArgsConstructor) {
-            this.addAnnotations(topLevelClass, EnumLombokAnnotations.ALL_ARGS_CONSTRUCTOR);
-        }
+        this.addAnnotations(topLevelClass, introspectedTable, introspectedTable.getBLOBColumns());
         return super.modelRecordWithBLOBsClassGenerated(topLevelClass, introspectedTable);
     }
 
@@ -185,7 +155,12 @@ public class LombokPlugin extends BasePlugin {
      */
     @Override
     public boolean modelGetterMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable, ModelClassType modelClassType) {
-        return false;
+        for (String annotation : this.annotations) {
+            if (annotation.startsWith("@Data") || annotation.startsWith("@Getter")) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -199,58 +174,63 @@ public class LombokPlugin extends BasePlugin {
      */
     @Override
     public boolean modelSetterMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable, ModelClassType modelClassType) {
-        return false;
+        for (String annotation : this.annotations) {
+            if (annotation.startsWith("@Data") || annotation.startsWith("@Setter")) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
      * 添加注解
      * @param topLevelClass
-     * @param annotations
+     * @param introspectedTable
+     * @param columns
      */
-    private void addAnnotations(TopLevelClass topLevelClass, EnumLombokAnnotations annotations) {
-        topLevelClass.addImportedType(annotations.getClazz());
-        topLevelClass.addAnnotation(annotations.getAnnotation());
+    private void addAnnotations(TopLevelClass topLevelClass, IntrospectedTable introspectedTable, List<IntrospectedColumn> columns) {
+        for (String annotation : this.annotations) {
+            // @Data
+            if (annotation.startsWith("@Data")) {
+                this.addAnnotation(topLevelClass, annotation);
+                if (topLevelClass.getSuperClass() != null) {
+                    this.addAnnotation(topLevelClass, "@EqualsAndHashCode(callSuper = true)");
+                    this.addAnnotation(topLevelClass, "@ToString(callSuper = true)");
+                }
+            } else if (annotation.startsWith("@Builder")) {
+                if (PluginTools.getHook(ILombokPluginHook.class).modelBaseRecordBuilderClassGenerated(topLevelClass, columns, introspectedTable)) {
+                    // 有子类或者父类
+                    if (introspectedTable.getRules().generateRecordWithBLOBsClass() || introspectedTable.getRules().generatePrimaryKeyClass() || topLevelClass.getSuperClass() != null) {
+                        this.addAnnotation(topLevelClass, "@SuperBuilder");
+                    } else {
+                        this.addAnnotation(topLevelClass, "@Builder");
+                    }
+                }
+            } else {
+                this.addAnnotation(topLevelClass, annotation);
+            }
+        }
     }
 
     /**
-     * lombok 类型
+     * 添加注解
+     * @param topLevelClass
+     * @param annotation
      */
-    public enum EnumLombokAnnotations {
-        DATA("@Data", "lombok.Data"),
-        BUILDER("@Builder", "lombok.Builder"),
-        SUPER_BUILDER("@SuperBuilder", "lombok.experimental.SuperBuilder"),
-        ALL_ARGS_CONSTRUCTOR("@AllArgsConstructor", "lombok.AllArgsConstructor"),
-        NO_ARGS_CONSTRUCTOR("@NoArgsConstructor", "lombok.NoArgsConstructor"),
-        EQUALS_AND_HASH_CODE_CALL_SUPER("@EqualsAndHashCode(callSuper = true)", "lombok.EqualsAndHashCode"),
-        SETTER("@Setter", "lombok.Setter"),
-        ACCESSORS_FLUENT_TRUE("@Accessors(fluent = true)", "lombok.experimental.Accessors"),
-        TO_STRING("@ToString", "lombok.ToString"),
-        TO_STRING_CALL_SUPER("@ToString(callSuper = true)", "lombok.ToString");
-
-        private final String annotation;
-        private final String clazz;
-
-        EnumLombokAnnotations(String annotation, String clazz) {
-            this.annotation = annotation;
-            this.clazz = clazz;
-        }
-
-        /**
-         * Getter method for property <tt>annotation</tt>.
-         * @return property value of annotation
-         * @author hewei
-         */
-        public String getAnnotation() {
-            return annotation;
-        }
-
-        /**
-         * Getter method for property <tt>clazz</tt>.
-         * @return property value of clazz
-         * @author hewei
-         */
-        public String getClazz() {
-            return clazz;
+    private void addAnnotation(TopLevelClass topLevelClass, String annotation) {
+        // 正则提取annotation
+        Matcher matcher = LOMBOK_ANNOTATION.matcher(annotation);
+        if (matcher.find()) {
+            String annotationName = matcher.group(1);
+            if (LOMBOK_FEATURES.contains(annotationName)) {
+                topLevelClass.addImportedType("lombok." + annotationName);
+            } else if (LOMBOK_EXPERIMENTAL_FEATURES.contains(annotationName)) {
+                topLevelClass.addImportedType("lombok.experimental." + annotationName);
+            } else {
+                this.warnings.add("itfsw:插件" + LombokPlugin.class.getTypeName() + "没有找到注解（" + annotation + "）！");
+                return;
+            }
+            topLevelClass.addAnnotation(annotation);
         }
     }
 }

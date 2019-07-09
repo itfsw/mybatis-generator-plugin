@@ -260,16 +260,16 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
                 }
 
                 // 类注解
-                topLevelClass.addImportedType(LombokPlugin.EnumLombokAnnotations.SETTER.getClazz());
-                builderCls.addAnnotation(LombokPlugin.EnumLombokAnnotations.SETTER.getAnnotation());
-                topLevelClass.addImportedType(LombokPlugin.EnumLombokAnnotations.ACCESSORS_FLUENT_TRUE.getClazz());
-                builderCls.addAnnotation(LombokPlugin.EnumLombokAnnotations.ACCESSORS_FLUENT_TRUE.getAnnotation());
+                topLevelClass.addImportedType("lombok.Setter");
+                builderCls.addAnnotation("@Setter");
+                topLevelClass.addImportedType("lombok.experimental.Accessors");
+                builderCls.addAnnotation("@Accessors(fluent = true)");
                 if (topLevelClass.getSuperClass() != null) {
-                    topLevelClass.addImportedType(LombokPlugin.EnumLombokAnnotations.TO_STRING_CALL_SUPER.getClazz());
-                    builderCls.addAnnotation(LombokPlugin.EnumLombokAnnotations.TO_STRING_CALL_SUPER.getAnnotation());
+                    topLevelClass.addImportedType("lombok.ToString");
+                    builderCls.addAnnotation("@ToString(callSuper = true)");
                 } else {
-                    topLevelClass.addImportedType(LombokPlugin.EnumLombokAnnotations.TO_STRING.getClazz());
-                    builderCls.addAnnotation(LombokPlugin.EnumLombokAnnotations.TO_STRING.getAnnotation());
+                    topLevelClass.addImportedType("lombok.ToString");
+                    builderCls.addAnnotation("@ToString");
                 }
 
 
@@ -576,8 +576,8 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
         topLevelClass.addImportedType("java.util.HashMap");
         // inc map 获取方法
         if (withLombok) {
-            topLevelClass.addImportedType(LombokPlugin.EnumLombokAnnotations.ACCESSORS_FLUENT_TRUE.getClazz());
-            fIncrements.addAnnotation(LombokPlugin.EnumLombokAnnotations.ACCESSORS_FLUENT_TRUE.getAnnotation());
+            topLevelClass.addImportedType("lombok.experimental.Accessors");
+            fIncrements.addAnnotation("@Accessors(fluent = true)");
         } else {
             Method getIncMapMethod = JavaElementGeneratorTools.generateMethod(
                     METHOD_GET_INC_MAP,

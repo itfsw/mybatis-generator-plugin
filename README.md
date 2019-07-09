@@ -28,7 +28,7 @@
 * [~~Table增加前缀插件（TablePrefixPlugin）~~](#11-table增加前缀插件)
 * [~~Table重命名插件（TableRenamePlugin）~~](#12-table重命名插件)
 * [自定义注释插件（CommentPlugin）](#13-自定义注释插件)
-* [增量插件（IncrementsPlugin）](#14-增量插件)
+* [~~增量插件（IncrementsPlugin）~~](#14-增量插件)
 * [查询结果选择性返回插件（SelectSelectivePlugin）](#15-查询结果选择性返回插件)
 * [~~官方ConstructorBased配置BUG临时修正插件（ConstructorBasedBugFixPlugin）~~](#16-官方constructorbased配置bug临时修正插件)
 * [乐观锁插件（OptimisticLockerPlugin）](#17-乐观锁插件)
@@ -36,6 +36,7 @@
 * [Lombok插件（LombokPlugin）](#19-Lombok插件)
 * [数据ModelCloneable插件（ModelCloneablePlugin）](#20-数据ModelCloneable插件)
 * [状态枚举生成插件（EnumTypeStatusPlugin）](#21-状态枚举生成插件)
+* [增量插件（IncrementPlugin）](#22-增量插件)
 
 ---------------------------------------
 Maven引用：  
@@ -1251,6 +1252,8 @@ Mybatis Generator是原生支持自定义注释的（commentGenerator配置type�
 ### 14. 增量插件
 为更新操作生成set filedxxx = filedxxx +/- inc 操作，方便某些统计字段的更新操作，常用于某些需要计数的场景；  
 
+>warning：该插件在整合LombokPlugin使用时会生成大量附加代码影响代码美观，强力建议切换到新版插件[IncrementPlugin](#22-增量插件);    
+
 插件：
 ```xml
 <xml>
@@ -1400,7 +1403,7 @@ public class Test {
 ```
 ### 18. 表重命名配置插件
 官方提供了domainObjectRenamingRule(官方最新版本已提供)、columnRenamingRule分别进行生成的表名称和对应表字段的重命名支持，但是它需要每个表单独进行配置，对于常用的如表附带前缀“t_”、字段前缀“f_”这种全局性替换会比较麻烦。   
-该插件提供了一种全局替换机制，当表没有单独指定domainObjectRenamingRule、columnRenamingRule时采用全局性配置。同时该插件会修复官方domainObjectRenamingRule的bug(没有进行正确的首字母大写)。   
+该插件提供了一种全局替换机制，当表没有单独指定domainObjectRenamingRule、columnRenamingRule时采用全局性配置。   
 同时插件提供clientSuffix、exampleSuffix、modelSuffix来修改对应生成的类和文件的结尾（之前issue中有用户希望能把Mapper替换成Dao）。       
 - 全局domainObjectRenamingRule  
 ```xml
@@ -1460,11 +1463,10 @@ public class Test {
 ### 19. Lombok插件
 使用Lombok的使用可以减少很多重复代码的书写，目前项目中已大量使用。
 但Lombok的@Builder对于类的继承支持很不好，最近发现新版(>=1.18.2)已经提供了对@SuperBuilder的支持，所以新增该插件方便简写代码。
->warning: 目前很多IDE工具对@SuperBuilder支持不是很好，虽不影响正常使用，但是开发时很不友好，暂时可以使用ModelBuilderPlugin代替该功能。  
 
 >warning1: @Builder注解在Lombok 版本 >= 1.18.2 的情况下才能开启，对于存在继承关系的model会自动替换成@SuperBuilder注解。  
 
->warning2: 配合插件IncrementsPlugin 并且 @Builder开启的情况下，因为@SuperBuilder的一些限制，
+>warning2: 配合插件IncrementsPlugin（已不推荐使用，请使用新版[IncrementPlugin](#22-增量插件)解决该问题） 并且 @Builder开启的情况下，因为@SuperBuilder的一些限制，
 插件模拟Lombok插件生成了一些附加代码可能在某些编译器上会提示错误，请忽略（Lombok = 1.18.2 已测试）。
 
 ```xml
@@ -1593,6 +1595,38 @@ public class Tb {
         public String getName() {
             return this.name;
         }
+    }
+}
+```
+### 22. 增量插件
+为更新操作生成set filedxxx = filedxxx +/- inc 操作，方便某些统计字段的更新操作，常用于某些需要计数的场景,需配合（[ModelColumnPlugin](#8-数据model属性对应column获取插件)）插件使用；     
+
+插件：
+```xml
+<xml>
+    <!-- 增量插件 -->
+    <plugin type="com.itfsw.mybatis.generator.plugins.IncrementPlugin" />
+    
+    <table tableName="tb">
+        <!-- 配置需要进行增量操作的列名称（英文半角逗号分隔） -->
+        <property name="incrementColumns" value="field1,field2"/>
+    </table>
+</xml>
+```
+使用：  
+```java
+public class Test {
+    public static void main(String[] args) {
+        // 在构建更新对象时，配置了增量支持的字段会增加传入增量枚举的方法
+        Tb tb = Tb.builder()
+                .id(102)
+                .field4(new Date())
+                .build()
+                .increment(Tb.Column.field1.inc(1)) // 字段1 统计增加1
+                .increment(Tb.Column.field2.dec(2)); // 字段2 统计减去2
+        // 更新操作，可以是 updateByExample, updateByExampleSelective, updateByPrimaryKey
+        // , updateByPrimaryKeySelective, upsert, upsertSelective等所有涉及更新的操作
+        this.tbMapper.updateByPrimaryKey(tb);
     }
 }
 ```
