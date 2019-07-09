@@ -79,3 +79,17 @@ CREATE TABLE `tb_lombok` (
 -- ----------------------------
 -- Records of tb_lombok
 -- ----------------------------
+
+-- ----------------------------
+-- Table structure for tb_only_keys
+-- ----------------------------
+DROP TABLE IF EXISTS `tb_only_keys`;
+CREATE TABLE `tb_only_keys` (
+  `key1` bigint(20) NOT NULL,
+  `key2` bigint(20) NOT NULL,
+  PRIMARY KEY (`key1`,`key2`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Records of tb_only_keys
+-- ----------------------------

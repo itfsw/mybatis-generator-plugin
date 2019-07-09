@@ -1465,7 +1465,7 @@ public class Test {
 使用Lombok的使用可以减少很多重复代码的书写，目前项目中已大量使用。
 但Lombok的@Builder对于类的继承支持很不好，最近发现新版(>=1.18.2)已经提供了对@SuperBuilder的支持，所以新增该插件方便简写代码。
 
->warning1: @Builder注解在Lombok 版本 >= 1.18.2 的情况下才能开启，对于存在继承关系的model会自动替换成@SuperBuilder注解。  
+>warning1: @Builder注解在Lombok 版本 >= 1.18.2 的情况下才能开启，对于存在继承关系的model会自动替换成@SuperBuilder注解(目前IDEA的插件对于SuperBuilder的还不支持（作者已经安排上更新日程）)。  
 
 >warning2: 配合插件IncrementsPlugin（已不推荐使用，请使用新版[IncrementPlugin](#22-增量插件)解决该问题） 并且 @Builder开启的情况下，因为@SuperBuilder的一些限制，
 插件模拟Lombok插件生成了一些附加代码可能在某些编译器上会提示错误，请忽略（Lombok = 1.18.2 已测试）。
@@ -1476,7 +1476,7 @@ public class Test {
     <plugin type="com.itfsw.mybatis.generator.plugins.LombokPlugin">
         <!-- @Data 默认开启,同时插件会对子类自动附加@EqualsAndHashCode(callSuper = true)，@ToString(callSuper = true) -->
         <property name="@Data" value="true"/>
-        <!-- @Builder 必须在 Lombok 版本 >= 1.18.2 的情况下开启，插件为了在子类Builder中未父类属性赋值，对存在继承关系的类自动替换成@SuperBuilder -->
+        <!-- @Builder 必须在 Lombok 版本 >= 1.18.2 的情况下开启，对存在继承关系的类自动替换成@SuperBuilder -->
         <property name="@Builder" value="false"/>
         <!-- @NoArgsConstructor 和 @AllArgsConstructor 使用规则和Lombok一致 -->
         <property name="@AllArgsConstructor" value="false"/>

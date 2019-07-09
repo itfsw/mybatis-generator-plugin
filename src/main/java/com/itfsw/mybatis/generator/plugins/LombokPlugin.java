@@ -71,9 +71,6 @@ public class LombokPlugin extends BasePlugin {
             if (!annotation.matches(LOMBOK_ANNOTATION.pattern())) {
                 this.warnings.add("itfsw:插件" + LombokPlugin.class.getTypeName() + "不能识别的注解（" + annotation + "）！");
                 return false;
-            } else if (annotation.startsWith("@Builder") && annotation.matches(".*\\(.*\\)")) {
-                this.warnings.add("itfsw:插件" + LombokPlugin.class.getTypeName() + "@Builder 注解不允许配置属性（" + annotation + "）！");
-                return false;
             }
         }
 
@@ -198,12 +195,33 @@ public class LombokPlugin extends BasePlugin {
                     this.addAnnotation(topLevelClass, "@ToString(callSuper = true)");
                 }
             } else if (annotation.startsWith("@Builder")) {
-                if (PluginTools.getHook(ILombokPluginHook.class).modelBaseRecordBuilderClassGenerated(topLevelClass, columns, introspectedTable)) {
+                // TODO 配合IncrementsPlugin,以后删除
+                boolean checkIncrementsPlugin = true;
+                if (introspectedTable.getRules().generatePrimaryKeyClass() && topLevelClass.getType().getFullyQualifiedName().equals(introspectedTable.getPrimaryKeyType())) {
+                    checkIncrementsPlugin = PluginTools.getHook(ILombokPluginHook.class).modelPrimaryKeyBuilderClassGenerated(topLevelClass, columns, introspectedTable);
+                } else if (introspectedTable.getRules().generateBaseRecordClass() && topLevelClass.getType().getFullyQualifiedName().equals(introspectedTable.getBaseRecordType())) {
+                    checkIncrementsPlugin = PluginTools.getHook(ILombokPluginHook.class).modelBaseRecordBuilderClassGenerated(topLevelClass, columns, introspectedTable);
+                } else if (introspectedTable.getRules().generateRecordWithBLOBsClass() && topLevelClass.getType().getFullyQualifiedName().equals(introspectedTable.getRecordWithBLOBsType())) {
+                    checkIncrementsPlugin = PluginTools.getHook(ILombokPluginHook.class).modelRecordWithBLOBsBuilderClassGenerated(topLevelClass, columns, introspectedTable);
+                }
+
+                if (checkIncrementsPlugin) {
                     // 有子类或者父类
-                    if (introspectedTable.getRules().generateRecordWithBLOBsClass() || introspectedTable.getRules().generatePrimaryKeyClass() || topLevelClass.getSuperClass() != null) {
+                    int count = 0;
+                    if (introspectedTable.getRules().generatePrimaryKeyClass()) {
+                        count++;
+                    }
+                    if (introspectedTable.getRules().generateBaseRecordClass()) {
+                        count++;
+                    }
+                    if (introspectedTable.getRules().generateRecordWithBLOBsClass()) {
+                        count++;
+                    }
+
+                    if (topLevelClass.getSuperClass() != null || count >= 2) {
                         this.addAnnotation(topLevelClass, "@SuperBuilder");
                     } else {
-                        this.addAnnotation(topLevelClass, "@Builder");
+                        this.addAnnotation(topLevelClass, annotation);
                     }
                 }
             } else {

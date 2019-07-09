@@ -134,6 +134,26 @@ public class LombokPluginTest {
     }
 
     /**
+     * 测试具体生成（只有keys的特殊情况，尽量使用Builder）
+     */
+    @Test
+    public void testGenerateWithOnlyKeys() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LombokPlugin/mybatis-generator-with-only-keys.xml");
+        MyBatisGenerator myBatisGenerator = tool.generate();
+
+        for (GeneratedJavaFile file : myBatisGenerator.getGeneratedJavaFiles()) {
+            CompilationUnit compilationUnit = file.getCompilationUnit();
+            if (compilationUnit instanceof TopLevelClass) {
+                TopLevelClass topLevelClass = (TopLevelClass) compilationUnit;
+                String name = topLevelClass.getType().getShortName();
+                if (name.equals("TbOnlyKeysKey")){
+                    Assert.assertTrue(topLevelClass.getAnnotations().contains("@Builder"));
+                }
+            }
+        }
+    }
+
+    /**
      * 测试 @Data 注解
      * @throws Exception
      */
