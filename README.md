@@ -1473,11 +1473,15 @@ public class Test {
 <xml>
     <!-- Lombok插件 -->
     <plugin type="com.itfsw.mybatis.generator.plugins.LombokPlugin">
-        <!-- @Builder 必须在 Lombok 版本 >= 1.18.2 的情况下 -->
+        <!-- @Data 默认开启,同时插件会对子类自动附加@EqualsAndHashCode(callSuper = true)，@ToString(callSuper = true) -->
+        <property name="@Data" value="true"/>
+        <!-- @Builder 必须在 Lombok 版本 >= 1.18.2 的情况下开启，插件为了在子类Builder中未父类属性赋值，对存在继承关系的类自动替换成@SuperBuilder -->
         <property name="@Builder" value="false"/>
         <!-- @NoArgsConstructor 和 @AllArgsConstructor 使用规则和Lombok一致 -->
         <property name="@AllArgsConstructor" value="false"/>
         <property name="@NoArgsConstructor" value="false"/>
+        <!-- @Getter、@Setter、@Accessors 等使用规则参见官方文档 -->
+        <property name="@Accessors(chain = true)" value="false"/>
     </plugin>
 </xml>
 ```
