@@ -37,6 +37,7 @@
 * [数据ModelCloneable插件（ModelCloneablePlugin）](#20-数据ModelCloneable插件)
 * [状态枚举生成插件（EnumTypeStatusPlugin）](#21-状态枚举生成插件)
 * [增量插件（IncrementPlugin）](#22-增量插件)
+* [Mapper注解插件（MapperAnnotationPlugin）](#23-Mapper注解插件)
 
 ---------------------------------------
 Maven引用：  
@@ -1633,4 +1634,19 @@ public class Test {
         this.tbMapper.updateByPrimaryKey(tb);
     }
 }
+```
+### 23. Mapper注解插件
+对官方的（[MapperAnnotationPlugin](http://www.mybatis.org/generator/reference/plugins.html)）增强，可自定义附加@Repository注解（IDEA工具对@Mapper注解支持有问题，使用@Autowired会报无法找到对应bean，附加@Repository后解决）；     
+
+插件：
+```xml
+<xml>
+    <!-- Mapper注解插件 -->
+    <plugin type="com.itfsw.mybatis.generator.plugins.MapperAnnotationPlugin">
+        <!-- @Mapper 默认开启 -->
+        <property name="@Mapper" value="true"/>
+        <!-- @Repository 默认关闭，开启后解决IDEA工具@Autowired报错 -->
+        <property name="@Repository" value="false"/>
+    </plugin>
+</xml>
 ```
