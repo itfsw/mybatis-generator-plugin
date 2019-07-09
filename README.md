@@ -45,7 +45,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.3.3</version>
+  <version>1.3.4</version>
 </dependency>
 ```
 ---------------------------------------
@@ -100,7 +100,7 @@ targetCompatibility = 1.8
 
 
 def mybatisGeneratorCore = 'org.mybatis.generator:mybatis-generator-core:1.3.7'
-def itfswMybatisGeneratorPlugin = 'com.itfsw:mybatis-generator-plugin:1.3.3'
+def itfswMybatisGeneratorPlugin = 'com.itfsw:mybatis-generator-plugin:1.3.4'
 
 mybatisGenerator {
   verbose = false
