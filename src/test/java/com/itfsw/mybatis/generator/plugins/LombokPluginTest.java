@@ -275,4 +275,25 @@ public class LombokPluginTest {
             }
         });
     }
+
+    /**
+     * 测试 SuperBuilder 兼容 IDEA
+     * @throws Exception
+     */
+    @Test
+    public void testWithSupportSuperBuilderForIdea() throws Exception{
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LombokPlugin/mybatis-generator-with-supportSuperBuilderForIdea.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                try {
+                    Object tbKeyBlobWithBLOBs = loader.loadClass(packagz + ".TbKeyBlobWithBLOBs").getMethod("builder").invoke(null);
+
+                    Assert.assertEquals(tbKeyBlobWithBLOBs.getClass().getTypeName(), packagz + ".TbKeyBlobWithBLOBs$Builder");
+                } catch (Exception e) {
+                    Assert.assertTrue(false);
+                }
+            }
+        });
+    }
 }

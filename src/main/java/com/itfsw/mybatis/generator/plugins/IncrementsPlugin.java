@@ -178,18 +178,18 @@ public class IncrementsPlugin extends BasePlugin implements IModelBuilderPluginH
     // =============================================== ILombokPluginHook ===================================================
 
     @Override
-    public boolean modelBaseRecordBuilderClassGenerated(TopLevelClass topLevelClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
-        return this.lombokBuilderClassGenerated(topLevelClass, columns, introspectedTable);
+    public boolean modelBaseRecordBuilderClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        return this.lombokBuilderClassGenerated(topLevelClass, IntrospectedTableTools.getModelBaseRecordClomns(introspectedTable), introspectedTable);
     }
 
     @Override
-    public boolean modelPrimaryKeyBuilderClassGenerated(TopLevelClass topLevelClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
-        return this.lombokBuilderClassGenerated(topLevelClass, columns, introspectedTable);
+    public boolean modelPrimaryKeyBuilderClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        return this.lombokBuilderClassGenerated(topLevelClass, introspectedTable.getPrimaryKeyColumns(), introspectedTable);
     }
 
     @Override
-    public boolean modelRecordWithBLOBsBuilderClassGenerated(TopLevelClass topLevelClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
-        return this.lombokBuilderClassGenerated(topLevelClass, columns, introspectedTable);
+    public boolean modelRecordWithBLOBsBuilderClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        return this.lombokBuilderClassGenerated(topLevelClass, introspectedTable.getBLOBColumns(), introspectedTable);
     }
 
     /**

@@ -21,15 +21,14 @@ import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
 import com.itfsw.mybatis.generator.plugins.utils.enhanced.InnerTypeFullyQualifiedJavaType;
+import com.itfsw.mybatis.generator.plugins.utils.hook.ILombokPluginHook;
 import com.itfsw.mybatis.generator.plugins.utils.hook.IModelBuilderPluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.internal.util.JavaBeansUtil;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * ---------------------------------------------------------------------------
@@ -39,9 +38,8 @@ import java.util.Map;
  * @time:2016/12/28 14:56
  * ---------------------------------------------------------------------------
  */
-public class ModelBuilderPlugin extends BasePlugin {
+public class ModelBuilderPlugin extends BasePlugin implements ILombokPluginHook {
     public static final String BUILDER_CLASS_NAME = "Builder";  // Builder 类名
-    private Map<IntrospectedTable, InnerTypeFullyQualifiedJavaType> innerClasses = new HashMap<>();
 
     /**
      * Model Methods 生成
@@ -86,6 +84,31 @@ public class ModelBuilderPlugin extends BasePlugin {
         return super.modelPrimaryKeyClassGenerated(topLevelClass, introspectedTable);
     }
 
+    // ------------------------------------------------------- LombokPluginHook -------------------------------------------------------
+
+    @Override
+    public boolean modelBaseRecordBuilderClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        // 判断是否有生成Model的WithBLOBs类
+        List<IntrospectedColumn> columns = introspectedTable.getRules().generateRecordWithBLOBsClass() ? introspectedTable.getNonBLOBColumns() : introspectedTable.getAllColumns();
+        InnerClass innerClass = this.generateModelBuilder(topLevelClass, introspectedTable, columns);
+        topLevelClass.addInnerClass(innerClass);
+        return true;
+    }
+
+    @Override
+    public boolean modelPrimaryKeyBuilderClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        InnerClass innerClass = this.generateModelBuilder(topLevelClass, introspectedTable, introspectedTable.getPrimaryKeyColumns());
+        topLevelClass.addInnerClass(innerClass);
+        return true;
+    }
+
+    @Override
+    public boolean modelRecordWithBLOBsBuilderClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        InnerClass innerClass = this.generateModelBuilder(topLevelClass, introspectedTable, introspectedTable.getAllColumns());
+        topLevelClass.addInnerClass(innerClass);
+        return true;
+    }
+
     /**
      * 生成ModelBuilder
      * @param topLevelClass
@@ -98,15 +121,13 @@ public class ModelBuilderPlugin extends BasePlugin {
         InnerClass innerClass = new InnerClass(BUILDER_CLASS_NAME);
         innerClass.setVisibility(JavaVisibility.PUBLIC);
         innerClass.setStatic(true);
+        if (topLevelClass.getSuperClass() != null) {
+            innerClass.setSuperClass(topLevelClass.getSuperClass().getShortName() + "." + BUILDER_CLASS_NAME);
+        }
 
         // 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
         // 顺序为 key base withBLOBs
         InnerTypeFullyQualifiedJavaType builderType = new InnerTypeFullyQualifiedJavaType(topLevelClass.getType().getFullyQualifiedName() + "." + BUILDER_CLASS_NAME);
-        if (innerClasses.get(introspectedTable) != null) {
-            innerClass.setSuperClass(innerClasses.get(introspectedTable));
-            innerClasses.remove(introspectedTable);
-        }
-        innerClasses.put(introspectedTable, builderType);
 
         // 增加静态builder方法实现和lombok一样
         Method builder = JavaElementGeneratorTools.generateMethod(
@@ -175,5 +196,4 @@ public class ModelBuilderPlugin extends BasePlugin {
 
         return innerClass;
     }
-
 }

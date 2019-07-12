@@ -362,9 +362,9 @@ public class HookAggregator implements IUpsertPluginHook,
 
 
     @Override
-    public boolean modelBaseRecordBuilderClassGenerated(TopLevelClass topLevelClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
+    public boolean modelBaseRecordBuilderClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         for (ILombokPluginHook plugin : this.getPlugins(ILombokPluginHook.class)) {
-            if (!plugin.modelBaseRecordBuilderClassGenerated(topLevelClass, columns, introspectedTable)) {
+            if (!plugin.modelBaseRecordBuilderClassGenerated(topLevelClass, introspectedTable)) {
                 return false;
             }
         }
@@ -372,9 +372,9 @@ public class HookAggregator implements IUpsertPluginHook,
     }
 
     @Override
-    public boolean modelPrimaryKeyBuilderClassGenerated(TopLevelClass topLevelClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
+    public boolean modelPrimaryKeyBuilderClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         for (ILombokPluginHook plugin : this.getPlugins(ILombokPluginHook.class)) {
-            if (!plugin.modelPrimaryKeyBuilderClassGenerated(topLevelClass, columns, introspectedTable)) {
+            if (!plugin.modelPrimaryKeyBuilderClassGenerated(topLevelClass, introspectedTable)) {
                 return false;
             }
         }
@@ -382,9 +382,9 @@ public class HookAggregator implements IUpsertPluginHook,
     }
 
     @Override
-    public boolean modelRecordWithBLOBsBuilderClassGenerated(TopLevelClass topLevelClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
+    public boolean modelRecordWithBLOBsBuilderClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         for (ILombokPluginHook plugin : this.getPlugins(ILombokPluginHook.class)) {
-            if (!plugin.modelRecordWithBLOBsBuilderClassGenerated(topLevelClass, columns, introspectedTable)) {
+            if (!plugin.modelRecordWithBLOBsBuilderClassGenerated(topLevelClass, introspectedTable)) {
                 return false;
             }
         }

@@ -16,11 +16,8 @@
 
 package com.itfsw.mybatis.generator.plugins.utils.hook;
 
-import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
-
-import java.util.List;
 
 /**
  * ---------------------------------------------------------------------------
@@ -34,27 +31,24 @@ public interface ILombokPluginHook {
     /**
      * Model builder class 生成
      * @param topLevelClass
-     * @param columns
      * @param introspectedTable
      * @return
      */
-    boolean modelBaseRecordBuilderClassGenerated(TopLevelClass topLevelClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable);
+    boolean modelBaseRecordBuilderClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable);
 
     /**
      * Model builder class 生成
      * @param topLevelClass
-     * @param columns
      * @param introspectedTable
      * @return
      */
-    boolean modelPrimaryKeyBuilderClassGenerated(TopLevelClass topLevelClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable);
+    boolean modelPrimaryKeyBuilderClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable);
 
     /**
      * Model builder class 生成
      * @param topLevelClass
-     * @param columns
      * @param introspectedTable
      * @return
      */
-    boolean modelRecordWithBLOBsBuilderClassGenerated(TopLevelClass topLevelClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable);
+    boolean modelRecordWithBLOBsBuilderClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable);
 }
