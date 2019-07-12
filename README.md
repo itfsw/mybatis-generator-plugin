@@ -45,7 +45,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.3.4</version>
+  <version>1.3.5</version>
 </dependency>
 ```
 ---------------------------------------
@@ -100,7 +100,7 @@ targetCompatibility = 1.8
 
 
 def mybatisGeneratorCore = 'org.mybatis.generator:mybatis-generator-core:1.3.7'
-def itfswMybatisGeneratorPlugin = 'com.itfsw:mybatis-generator-plugin:1.3.4'
+def itfswMybatisGeneratorPlugin = 'com.itfsw:mybatis-generator-plugin:1.3.5'
 
 mybatisGenerator {
   verbose = false
@@ -1465,7 +1465,7 @@ public class Test {
 使用Lombok的使用可以减少很多重复代码的书写，目前项目中已大量使用。
 但Lombok的@Builder对于类的继承支持很不好，最近发现新版(>=1.18.2)已经提供了对@SuperBuilder的支持，所以新增该插件方便简写代码。
 
->warning1: @Builder注解在Lombok 版本 >= 1.18.2 的情况下才能开启，对于存在继承关系的model会自动替换成@SuperBuilder注解(目前IDEA的插件对于SuperBuilder的还不支持（作者已经安排上更新日程）)。  
+>warning1: @Builder注解在Lombok 版本 >= 1.18.2 的情况下才能开启，对于存在继承关系的model会自动替换成@SuperBuilder注解(目前IDEA的插件对于SuperBuilder的还不支持（作者已经安排上更新日程）, 可以开启配置supportSuperBuilderForIdea使插件在遇到@SuperBuilder注解时使用ModelBuilderPlugin替代该注解)。  
 
 >warning2: 配合插件IncrementsPlugin（已不推荐使用，请使用新版[IncrementPlugin](#22-增量插件)解决该问题） 并且 @Builder开启的情况下，因为@SuperBuilder的一些限制，
 插件模拟Lombok插件生成了一些附加代码可能在某些编译器上会提示错误，请忽略（Lombok = 1.18.2 已测试）。
@@ -1483,6 +1483,8 @@ public class Test {
         <property name="@NoArgsConstructor" value="false"/>
         <!-- @Getter、@Setter、@Accessors 等使用规则参见官方文档 -->
         <property name="@Accessors(chain = true)" value="false"/>
+        <!-- 临时解决IDEA工具对@SuperBuilder的不支持问题，开启后(默认未开启)插件在遇到@SuperBuilder注解时会调用ModelBuilderPlugin来生成相应的builder代码 -->
+        <property name="supportSuperBuilderForIdea" value="false"/>
     </plugin>
 </xml>
 ```
