@@ -73,7 +73,9 @@ public class IncrementPluginTest {
 
                 ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
                 ObjectUtil tbColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Column#incF1");
-                tb.invoke("increment", tbColumnIncF1.invoke("inc", 100L));
+                Object tbR = tb.invoke("increment", tbColumnIncF1.invoke("inc", 100L));
+
+                Assert.assertEquals(tb.getObject().getClass(), tbR.getClass());
 
                 // sql
                 String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateByExample", tb.getObject(), tbExample.getObject());

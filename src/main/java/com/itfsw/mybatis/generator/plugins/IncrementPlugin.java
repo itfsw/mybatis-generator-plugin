@@ -395,12 +395,13 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook,
             Method mIncrement = JavaElementGeneratorTools.generateMethod(
                     METHOD_INCREMENT,
                     JavaVisibility.PUBLIC,
-                    null,
+                    topLevelClass.getType(),
                     new Parameter(new FullyQualifiedJavaType(ModelColumnPlugin.ENUM_NAME + "." + CLASS_INCREMENT), "increment")
             );
             commentGenerator.addGeneralMethodComment(mIncrement, introspectedTable);
 
             mIncrement.addBodyLine("this." + FIELD_INC_MAP + ".put(increment.getColumn().value(), increment);");
+            mIncrement.addBodyLine("return this;");
             FormatTools.addMethodWithBestPosition(topLevelClass, mIncrement);
         }
     }
