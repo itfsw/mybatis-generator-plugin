@@ -95,6 +95,10 @@ public class ModelColumnPluginTest {
                         Assert.assertTrue(false);
                     }
                 }
+
+                // 6. all 方法
+                result = (Object[])(MethodUtils.invokeStaticMethod(Class.forName(packagz + ".Tb$Column"), "all", null));
+                Assert.assertEquals(result.length, 5);
             }
         });
     }

@@ -45,6 +45,7 @@ public class ModelColumnPlugin extends BasePlugin {
      * 自定义方法
      */
     public static final String METHOD_EXCLUDES = "excludes";
+    public static final String METHOD_ALL = "all";
     public static final String METHOD_GET_ESCAPED_COLUMN_NAME = "getEscapedColumnName";
     public static final String METHOD_GET_ALIASED_ESCAPED_COLUMN_NAME = "getAliasedEscapedColumnName";
 
@@ -244,6 +245,18 @@ public class ModelColumnPlugin extends BasePlugin {
         );
         FormatTools.addMethodWithBestPosition(innerEnum, mExcludes);
         logger.debug("itfsw(数据Model属性对应Column获取插件):" + topLevelClass.getType().getShortName() + ".Column增加excludes方法。");
+
+        // all
+        Method mAll = JavaElementGeneratorTools.generateMethod(
+                METHOD_ALL,
+                JavaVisibility.PUBLIC,
+                new FullyQualifiedJavaType(ENUM_NAME + "[]")
+        );
+        commentGenerator.addGeneralMethodComment(mAll, introspectedTable);
+        mAll.setStatic(true);
+        mAll.addBodyLine("return Column.values();");
+        FormatTools.addMethodWithBestPosition(innerEnum, mAll);
+        logger.debug("itfsw(数据Model属性对应Column获取插件):" + topLevelClass.getType().getShortName() + ".Column增加all方法。");
 
         // getEscapedColumnName
         Method mGetEscapedColumnName = JavaElementGeneratorTools.generateMethod(
