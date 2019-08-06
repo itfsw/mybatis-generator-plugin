@@ -134,7 +134,7 @@ public class ObjectUtil {
                 int check = parameterTypes.length > 0 ? parameterTypes.length - (parameterTypes[parameterTypes.length - 1].getName().startsWith("[") ? 1 : 0) : 0;
                 for (int i = 0; i < check; i++) {
                     Class parameterType = parameterTypes[i];
-                    if (!(parameterType.isAssignableFrom(args[i].getClass()))) {
+                    if (args[i] != null && !(parameterType.isAssignableFrom(args[i].getClass()))) {
                         flag = false;
                     }
                     // 基础类型

@@ -403,6 +403,33 @@ public class BugFixedTest {
     }
 
     /**
+     * selectByExampleSelective有下划线的字段总返回空
+     */
+    @Test
+    public void issues92() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/issues-92.xml");
+        tool.generate(() -> DBHelper.createDB("scripts/BugFixedTest/issues-92.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                // selective
+                ObjectUtil tbColumnId = new ObjectUtil(loader, packagz + ".Tb$Column#id");
+                ObjectUtil tbColumnMyName = new ObjectUtil(loader, packagz + ".Tb$Column#myName");
+                Object columns = Array.newInstance(tbColumnId.getCls(), 2);
+                Array.set(columns, 0, tbColumnId.getObject());
+                Array.set(columns, 1, tbColumnMyName.getObject());
+
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", null, columns);
+                Assert.assertEquals(sql, "select id , my_name from tb");
+                // 2. 执行sql
+                List<Object> list = (List<Object>) tbMapper.invoke("selectByExampleSelective", null, columns);
+                Assert.assertTrue(new ObjectUtil(list.get(0)).get("myName") != null);
+            }
+        });
+    }
+
+    /**
      * EnumTypeStatusPlugin 支持负数
      * https://github.com/itfsw/mybatis-generator-plugin/pull/72
      * @throws Exception

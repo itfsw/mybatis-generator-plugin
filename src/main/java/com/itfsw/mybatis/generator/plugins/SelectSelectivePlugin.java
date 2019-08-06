@@ -272,7 +272,7 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
             if (!selectOne) {
                 // issues#20
                 XmlElement ifDistinctElement = new XmlElement("if");
-                ifDistinctElement.addAttribute(new Attribute("test", "example.distinct"));
+                ifDistinctElement.addAttribute(new Attribute("test", "example != null and example.distinct"));
                 ifDistinctElement.addElement(new TextElement("distinct"));
                 selectSelectiveEle.addElement(ifDistinctElement);
             }
@@ -287,10 +287,17 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
         selectSelectiveEle.addElement(new TextElement("from " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
 
         if (byExample) {
-            selectSelectiveEle.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
+            XmlElement ifElement = new XmlElement("if");
+            ifElement.addAttribute(new Attribute("test", "example != null"));
+
+            XmlElement includeElement = new XmlElement("include");
+            includeElement.addAttribute(new Attribute("refid", introspectedTable.getMyBatis3UpdateByExampleWhereClauseId()));
+            ifElement.addElement(includeElement);
+
+            selectSelectiveEle.addElement(ifElement);
 
             XmlElement ifElement1 = new XmlElement("if");
-            ifElement1.addAttribute(new Attribute("test", "example.orderByClause != null"));
+            ifElement1.addAttribute(new Attribute("test", "example != null and example.orderByClause != null"));
             ifElement1.addElement(new TextElement("order by ${example.orderByClause}"));
             selectSelectiveEle.addElement(ifElement1);
         } else {
