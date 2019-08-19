@@ -45,7 +45,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.3.5</version>
+  <version>1.3.6</version>
 </dependency>
 ```
 ---------------------------------------
@@ -100,7 +100,7 @@ targetCompatibility = 1.8
 
 
 def mybatisGeneratorCore = 'org.mybatis.generator:mybatis-generator-core:1.3.7'
-def itfswMybatisGeneratorPlugin = 'com.itfsw:mybatis-generator-plugin:1.3.5'
+def itfswMybatisGeneratorPlugin = 'com.itfsw:mybatis-generator-plugin:1.3.6'
 
 mybatisGenerator {
   verbose = false
@@ -674,6 +674,9 @@ public class Test {
         
         // 4. excludes 方法
         this.tbMapper.batchInsertSelective(list, Tb.Column.excludes(Tb.Column.id, Tb.Column.delFlag));
+        
+        // 5. all 方法
+        this.tbMapper.batchInsertSelective(list, Tb.Column.all());
     }
 }
 ```
