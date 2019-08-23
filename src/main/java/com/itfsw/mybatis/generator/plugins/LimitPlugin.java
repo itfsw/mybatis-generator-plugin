@@ -248,7 +248,7 @@ public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHoo
      */
     private void generateLimitElementWithExample(XmlElement element) {
         XmlElement ifLimitNotNullElement = new XmlElement("if");
-        ifLimitNotNullElement.addAttribute(new Attribute("test", "example.rows != null"));
+        ifLimitNotNullElement.addAttribute(new Attribute("test", "example != null and example.rows != null"));
 
         XmlElement ifOffsetNotNullElement = new XmlElement("if");
         ifOffsetNotNullElement.addAttribute(new Attribute("test", "example.offset != null"));

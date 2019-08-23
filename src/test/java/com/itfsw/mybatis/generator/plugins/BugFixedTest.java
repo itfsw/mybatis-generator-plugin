@@ -171,6 +171,27 @@ public class BugFixedTest {
     }
 
     /**
+     * 测试Example为null情况
+     */
+    @Test
+    public void bug0005() throws Exception {
+        // 规则 ^T 替换成空，也就是去掉前缀
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/bug-0005.xml");
+        tool.generate(() -> DBHelper.createDB("scripts/BugFixedTest/bug-0005.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                List list = (List) tbMapper.invoke("selectByExample", null);
+                Assert.assertEquals(list.size(), 4);
+
+                list = (List)  tbMapper.invoke("selectByExampleSelective", null, null);
+                Assert.assertEquals(list.size(), 4);
+            }
+        });
+    }
+
+    /**
      * typeHandler 导致的问题
      */
     @Test

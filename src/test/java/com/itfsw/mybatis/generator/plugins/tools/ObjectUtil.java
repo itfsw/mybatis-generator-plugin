@@ -126,7 +126,10 @@ public class ObjectUtil {
     public Object invoke(String methodName, Object... args) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         List<Method> methods = getMethods(methodName);
         for (Method method : methods) {
-            if (method.getParameterTypes().length == args.length) {
+            if (method.getParameters().length == 1 && args == null) {
+                method.setAccessible(true);
+                return method.invoke(this.object, new Object[]{null});
+            } else if (method.getParameterTypes().length == args.length) {
                 boolean flag = true;
                 Class[] parameterTypes = method.getParameterTypes();
                 // !! mapper动态代理后VarArgs检查有问题
