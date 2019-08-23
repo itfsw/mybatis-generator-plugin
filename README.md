@@ -45,7 +45,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.3.6</version>
+  <version>1.3.7</version>
 </dependency>
 ```
 ---------------------------------------
@@ -100,7 +100,7 @@ targetCompatibility = 1.8
 
 
 def mybatisGeneratorCore = 'org.mybatis.generator:mybatis-generator-core:1.3.7'
-def itfswMybatisGeneratorPlugin = 'com.itfsw:mybatis-generator-plugin:1.3.6'
+def itfswMybatisGeneratorPlugin = 'com.itfsw:mybatis-generator-plugin:1.3.7'
 
 mybatisGenerator {
   verbose = false
@@ -1632,8 +1632,8 @@ public class Test {
                 .id(102)
                 .field4(new Date())
                 .build()
-                .increment(Tb.Column.field1.inc(1)) // 字段1 统计增加1
-                .increment(Tb.Column.field2.dec(2)); // 字段2 统计减去2
+                .increment(Tb.Increment.field1.inc(1)) // 字段1 统计增加1
+                .increment(Tb.Increment.field2.dec(2)); // 字段2 统计减去2
         // 更新操作，可以是 updateByExample, updateByExampleSelective, updateByPrimaryKey
         // , updateByPrimaryKeySelective, upsert, upsertSelective等所有涉及更新的操作
         this.tbMapper.updateByPrimaryKey(tb);
