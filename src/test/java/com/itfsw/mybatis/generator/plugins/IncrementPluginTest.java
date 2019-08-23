@@ -72,7 +72,7 @@ public class IncrementPluginTest {
                 criteria.invoke("andIdEqualTo", 3l);
 
                 ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
-                ObjectUtil tbColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Column#incF1");
+                ObjectUtil tbColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Increment#incF1");
                 Object tbR = tb.invoke("increment", tbColumnIncF1.invoke("inc", 100L));
 
                 Assert.assertEquals(tb.getObject().getClass(), tbR.getClass());
@@ -103,8 +103,8 @@ public class IncrementPluginTest {
                 // 2. 测试updateByPrimaryKey、updateByPrimaryKeySelective
                 ObjectUtil tbKeysMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbKeysMapper")));
 
-                ObjectUtil tbKeysColumnIncF1 = new ObjectUtil(loader, packagz + ".TbKeys$Column#incF1");
-                ObjectUtil tbKeysColumnIncF3 = new ObjectUtil(loader, packagz + ".TbKeys$Column#incF3");
+                ObjectUtil tbKeysColumnIncF1 = new ObjectUtil(loader, packagz + ".TbKeys$Increment#incF1");
+                ObjectUtil tbKeysColumnIncF3 = new ObjectUtil(loader, packagz + ".TbKeys$Increment#incF3");
 
                 ObjectUtil tbKeys = new ObjectUtil(loader, packagz + ".TbKeys");
                 tbKeys.set("key1", 1l);
@@ -134,7 +134,7 @@ public class IncrementPluginTest {
                 tbBlobsExampleCriteria.invoke("andIdEqualTo", 3l);
 
                 ObjectUtil tbBlobsWithBLOBs = new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs");
-                ObjectUtil tbBlobsWithBLOBsIncF1 = new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs$Column#incF1");
+                ObjectUtil tbBlobsWithBLOBsIncF1 = new ObjectUtil(loader, packagz + ".TbBlobsWithBLOBs$Increment#incF1");
                 tbBlobsWithBLOBs.invoke("increment", tbBlobsWithBLOBsIncF1.invoke("inc", 100L));
 
                 tbBlobsWithBLOBs.set("incF2", 50L);
@@ -176,17 +176,18 @@ public class IncrementPluginTest {
                 criteria.invoke("andIdEqualTo", 3l);
 
                 ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
-                ObjectUtil tbColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Column#incF1");
+                ObjectUtil tbIncrementColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Increment#incF1");
 
-                tb.invoke("increment", tbColumnIncF1.invoke("inc", 100L));
+                tb.invoke("increment", tbIncrementColumnIncF1.invoke("inc", 100L));
                 tb.set("incF2", 200l);
 
                 // selective
                 ObjectUtil TbColumnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
+                ObjectUtil TbColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Column#incF1");
                 ObjectUtil TbColumnIncF2 = new ObjectUtil(loader, packagz + ".Tb$Column#incF2");
                 Object columns = Array.newInstance(TbColumnField1.getCls(), 3);
                 Array.set(columns, 0, TbColumnField1.getObject());
-                Array.set(columns, 1, tbColumnIncF1.getObject());
+                Array.set(columns, 1, TbColumnIncF1.getObject());
                 Array.set(columns, 2, TbColumnIncF2.getObject());
 
                 // sql
@@ -205,7 +206,7 @@ public class IncrementPluginTest {
                 Assert.assertEquals(rs.getInt("inc_f1"), 103);
 
                 // inc_f1 再减去50
-                tb.invoke("increment", tbColumnIncF1.invoke("dec", 50L));
+                tb.invoke("increment", tbIncrementColumnIncF1.invoke("dec", 50L));
                 result = tbMapper.invoke("updateByExampleSelective", tb.getObject(), tbExample.getObject(), Array.newInstance(TbColumnField1.getCls(), 0));
                 Assert.assertEquals(result, 1);
                 // 验证执行结果
@@ -219,8 +220,8 @@ public class IncrementPluginTest {
 
 
                 ObjectUtil tbKeys = new ObjectUtil(loader, packagz + ".TbKeys");
-                ObjectUtil tbKeysColumnIncF1 = new ObjectUtil(loader, packagz + ".TbKeys$Column#incF1");
-                ObjectUtil tbKeysColumnIncF3 = new ObjectUtil(loader, packagz + ".TbKeys$Column#incF3");
+                ObjectUtil tbKeysColumnIncF1 = new ObjectUtil(loader, packagz + ".TbKeys$Increment#incF1");
+                ObjectUtil tbKeysColumnIncF3 = new ObjectUtil(loader, packagz + ".TbKeys$Increment#incF3");
                 tbKeys.set("key1", 1l);
                 tbKeys.set("key2", "k1");
                 tbKeys.invoke("increment", tbKeysColumnIncF1.invoke("inc", 10L));
@@ -228,10 +229,10 @@ public class IncrementPluginTest {
 
                 // selective
                 ObjectUtil TbColumnKey1 = new ObjectUtil(loader, packagz + ".TbKeys$Column#key1");
-                tbColumnIncF1 = new ObjectUtil(loader, packagz + ".TbKeys$Column#incF1");
+                tbIncrementColumnIncF1 = new ObjectUtil(loader, packagz + ".TbKeys$Column#incF1");
                 columns = Array.newInstance(TbColumnKey1.getCls(), 2);
                 Array.set(columns, 0, TbColumnKey1.getObject());
-                Array.set(columns, 1, tbColumnIncF1.getObject());
+                Array.set(columns, 1, tbIncrementColumnIncF1.getObject());
 
                 // sql
                 // 非空判断
@@ -263,7 +264,7 @@ public class IncrementPluginTest {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
 
                 ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
-                ObjectUtil tbColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Column#incF1");
+                ObjectUtil tbColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Increment#incF1");
                 tb.set("id", 10L);
                 tb.set("field1", "ts1");
                 tb.set("incF1", 10L);
@@ -361,7 +362,7 @@ public class IncrementPluginTest {
                 criteria.invoke("andIdEqualTo", 1l);
 
                 ObjectUtil tbKeyWord = new ObjectUtil(loader, packagz + ".TbKeyWord");
-                ObjectUtil tbKeyWordColumnUpdate = new ObjectUtil(loader, packagz + ".TbKeyWord$Column#update");
+                ObjectUtil tbKeyWordColumnUpdate = new ObjectUtil(loader, packagz + ".TbKeyWord$Increment#update");
                 tbKeyWord.invoke("increment", tbKeyWordColumnUpdate.invoke("inc", 100L));
 
                 // 执行
@@ -390,7 +391,7 @@ public class IncrementPluginTest {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
 
                 ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
-                ObjectUtil tbColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Column#incF1");
+                ObjectUtil tbColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Increment#incF1");
 
                 tb.set("id", 10L);
                 tb.set("field1", "ts1");
@@ -423,7 +424,7 @@ public class IncrementPluginTest {
                 criteria.invoke("andField1EqualTo", "ts123");
 
                 ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
-                ObjectUtil tbColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Column#incF1");
+                ObjectUtil tbColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Increment#incF1");
 
                 tb.set("id", 11L);
                 tb.set("field1", "ts123");
@@ -444,7 +445,7 @@ public class IncrementPluginTest {
 
                 tb.invoke("increment", tbColumnIncF1.invoke("dec", 50L));
                 result = tbMapper.invoke("upsertByExampleSelective", tb.getObject(), tbExample.getObject(), Array.newInstance(new ObjectUtil(loader, packagz + ".Tb$Column#field1").getCls(), 0));
-                System.out.println("kks" + SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExampleSelective", tb.getObject(), tbExample.getObject(), Array.newInstance(new ObjectUtil(loader, packagz + ".Tb$Column#field1").getCls(), 0)));
+                System.out.println("kks" + SqlHelper.getFormatMapperSql(tbMapper.getObject(), "upsertByExampleSelective", tb.getObject(), tbExample.getObject(), Array.newInstance(new ObjectUtil(loader, packagz + ".Tb$Increment#field1").getCls(), 0)));
 
                 Assert.assertEquals(result, 1);
                 // 验证执行结果
@@ -461,20 +462,21 @@ public class IncrementPluginTest {
                 ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
 
                 ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
-                ObjectUtil tbColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Column#incF1");
+                ObjectUtil tbIncrementColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Increment#incF1");
 
                 tb.set("id", 20L);
                 tb.set("field1", "ts1");
                 tb.set("incF1", 20L);
-                tb.invoke("increment", tbColumnIncF1.invoke("inc", 20L));
+                tb.invoke("increment", tbIncrementColumnIncF1.invoke("inc", 20L));
 
                 ObjectUtil TbColumnId = new ObjectUtil(loader, packagz + ".Tb$Column#id");
                 ObjectUtil TbColumnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
+                ObjectUtil TbColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Column#incF1");
                 ObjectUtil TbColumnIncF2 = new ObjectUtil(loader, packagz + ".Tb$Column#incF2");
                 Object columns = Array.newInstance(TbColumnField1.getCls(), 4);
                 Array.set(columns, 0, TbColumnId.getObject());
                 Array.set(columns, 1, TbColumnField1.getObject());
-                Array.set(columns, 2, tbColumnIncF1.getObject());
+                Array.set(columns, 2, TbColumnIncF1.getObject());
                 Array.set(columns, 3, TbColumnIncF2.getObject());
 
                 // sql
@@ -483,7 +485,7 @@ public class IncrementPluginTest {
                 Object result = tbMapper.invoke("upsertSelective", tb.getObject(), columns);
                 Assert.assertEquals(result, 1);
                 // 再次执行触发update
-                tb.invoke("increment", tbColumnIncF1.invoke("inc", 20L));
+                tb.invoke("increment", tbIncrementColumnIncF1.invoke("inc", 20L));
                 result = tbMapper.invoke("upsertSelective", tb.getObject(), columns);
                 Assert.assertEquals(result, 2);
                 ResultSet rs = DBHelper.execute(sqlSession, "select * from tb where id = 20");
@@ -504,20 +506,21 @@ public class IncrementPluginTest {
                 criteria.invoke("andField1EqualTo", "ts123");
 
                 ObjectUtil tb = new ObjectUtil(loader, packagz + ".Tb");
-                ObjectUtil tbColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Column#incF1");
+                ObjectUtil tbIncrementColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Increment#incF1");
 
                 tb.set("id", 11L);
                 tb.set("field1", "ts123");
                 tb.set("incF1", 100L);
-                tb.invoke("increment", tbColumnIncF1.invoke("dec", 100L));
+                tb.invoke("increment", tbIncrementColumnIncF1.invoke("dec", 100L));
 
                 ObjectUtil TbColumnId = new ObjectUtil(loader, packagz + ".Tb$Column#id");
                 ObjectUtil TbColumnField1 = new ObjectUtil(loader, packagz + ".Tb$Column#field1");
+                ObjectUtil TbColumnIncF1 = new ObjectUtil(loader, packagz + ".Tb$Column#incF1");
                 ObjectUtil TbColumnIncF2 = new ObjectUtil(loader, packagz + ".Tb$Column#incF2");
                 Object columns = Array.newInstance(TbColumnField1.getCls(), 4);
                 Array.set(columns, 0, TbColumnId.getObject());
                 Array.set(columns, 1, TbColumnField1.getObject());
-                Array.set(columns, 2, tbColumnIncF1.getObject());
+                Array.set(columns, 2, TbColumnIncF1.getObject());
                 Array.set(columns, 3, TbColumnIncF2.getObject());
 
                 // sql
@@ -532,7 +535,7 @@ public class IncrementPluginTest {
                 Assert.assertEquals(rs.getInt("inc_f1"), 100);
 
 
-                tb.invoke("increment", tbColumnIncF1.invoke("dec", 50L));
+                tb.invoke("increment", tbIncrementColumnIncF1.invoke("dec", 50L));
                 result = tbMapper.invoke("upsertByExampleSelective", tb.getObject(), tbExample.getObject(), columns);
                 Assert.assertEquals(result, 1);
                 // 验证执行结果
@@ -563,7 +566,7 @@ public class IncrementPluginTest {
                 criteria.invoke("andIdEqualTo", 3l);
 
                 ObjectUtil tbBuilder = new ObjectUtil(loader.loadClass(packagz + ".Tb").getMethod("builder").invoke(null));
-                ObjectUtil tbColumnField2 = new ObjectUtil(loader, packagz + ".Tb$Column#field2");
+                ObjectUtil tbColumnField2 = new ObjectUtil(loader, packagz + ".Tb$Increment#field2");
                 ObjectUtil tb = new ObjectUtil(tbBuilder.invoke("build"));
 
                 tb.invoke("increment", tbColumnField2.invoke("inc", 100));
@@ -596,9 +599,9 @@ public class IncrementPluginTest {
 
                 ObjectUtil tbLombokWithBLOBs = new ObjectUtil(tbLombokWithBLOBsBuilder.invoke("build"));
 
-                ObjectUtil tbLombokWithBLOBsColumnIncF1 = new ObjectUtil(loader, packagz + ".TbLombokWithBLOBs$Column#incF1");
+                ObjectUtil tbLombokWithBLOBsColumnIncF1 = new ObjectUtil(loader, packagz + ".TbLombokWithBLOBs$Increment#incF1");
                 tbLombokWithBLOBs.invoke("increment", tbLombokWithBLOBsColumnIncF1.invoke("inc", (short) 1));
-                ObjectUtil tbLombokWithBLOBsColumnId = new ObjectUtil(loader, packagz + ".TbLombokWithBLOBs$Column#id");
+                ObjectUtil tbLombokWithBLOBsColumnId = new ObjectUtil(loader, packagz + ".TbLombokWithBLOBs$Increment#id");
                 tbLombokWithBLOBs.invoke("increment", tbLombokWithBLOBsColumnId.invoke("dec", 100L));
 
                 // sql
