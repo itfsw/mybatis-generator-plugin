@@ -451,6 +451,26 @@ public class BugFixedTest {
     }
 
     /**
+     * 枚举插件无法生成枚举：枚举值为字符串的情况无法生成枚举
+     * https://github.com/itfsw/mybatis-generator-plugin/issues/100
+     * @throws Exception
+     */
+    @Test
+    public void issues100() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/issues-100.xml");
+        tool.generate(() -> DBHelper.createDB("scripts/BugFixedTest/issues-100.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 测试标准注释
+                ObjectUtil enumField2Success = new ObjectUtil(loader, packagz + ".SysCompany$CompanyStatus#DISABLE");
+                Assert.assertEquals(enumField2Success.invoke("value"), "disable");
+                Assert.assertEquals(enumField2Success.invoke("getValue"), "disable");
+                Assert.assertEquals(enumField2Success.invoke("getName"), "禁用");
+            }
+        });
+    }
+
+    /**
      * EnumTypeStatusPlugin 支持负数
      * https://github.com/itfsw/mybatis-generator-plugin/pull/72
      * @throws Exception
