@@ -32,8 +32,9 @@ import java.util.List;
 
 /**
  * ---------------------------------------------------------------------------
- *
+ * <p>
  * ---------------------------------------------------------------------------
+ *
  * @author: hewei
  * @time:2018/5/29 15:56
  * ---------------------------------------------------------------------------
@@ -85,6 +86,7 @@ public class BugFixedTest {
 
     /**
      * insertSelective 因为集成SelectiveEnhancedPlugin，传入参数变成map,自增ID返回要修正
+     *
      * @throws Exception
      */
     @Test
@@ -116,6 +118,7 @@ public class BugFixedTest {
 
     /**
      * 集成SelectiveEnhancedPlugin，typeHandler问题
+     *
      * @throws Exception
      */
     @Test
@@ -185,7 +188,7 @@ public class BugFixedTest {
                 List list = (List) tbMapper.invoke("selectByExample", null);
                 Assert.assertEquals(list.size(), 4);
 
-                list = (List)  tbMapper.invoke("selectByExampleSelective", null, null);
+                list = (List) tbMapper.invoke("selectByExampleSelective", null, null);
                 Assert.assertEquals(list.size(), 4);
             }
         });
@@ -228,6 +231,7 @@ public class BugFixedTest {
 
     /**
      * 表重命名配置插件生成的大小写错误
+     *
      * @throws Exception
      */
     @Test
@@ -245,6 +249,7 @@ public class BugFixedTest {
     /**
      * 乐观锁插件配合SelectiveEnhancedPlugin多生成了selective参数的问题
      * https://github.com/itfsw/mybatis-generator-plugin/issues/69
+     *
      * @throws Exception
      */
     @Test
@@ -300,6 +305,7 @@ public class BugFixedTest {
      * batchInsertSelective
      * https://github.com/itfsw/mybatis-generator-plugin/issues/70
      * ！！！！！ 验证时把pom文件mybatis版本降级到3.5.0以下
+     *
      * @throws Exception
      */
     @Test
@@ -345,6 +351,7 @@ public class BugFixedTest {
     /**
      * upsertSelective
      * https://github.com/itfsw/mybatis-generator-plugin/issues/76
+     *
      * @throws Exception
      */
     @Test
@@ -372,6 +379,7 @@ public class BugFixedTest {
     /**
      * 测试批量batchUpsert存在主键的情况
      * https://github.com/itfsw/mybatis-generator-plugin/issues/77
+     *
      * @throws Exception
      */
     @Test
@@ -406,6 +414,7 @@ public class BugFixedTest {
     /**
      * 测试批量batchUpsert存在主键的情况
      * https://github.com/itfsw/mybatis-generator-plugin/issues/77
+     *
      * @throws Exception
      */
     @Test
@@ -453,6 +462,7 @@ public class BugFixedTest {
     /**
      * 枚举插件无法生成枚举：枚举值为字符串的情况无法生成枚举
      * https://github.com/itfsw/mybatis-generator-plugin/issues/100
+     *
      * @throws Exception
      */
     @Test
@@ -473,6 +483,7 @@ public class BugFixedTest {
     /**
      * EnumTypeStatusPlugin 支持负数
      * https://github.com/itfsw/mybatis-generator-plugin/pull/72
+     *
      * @throws Exception
      */
     @Test
@@ -490,6 +501,39 @@ public class BugFixedTest {
                 Assert.assertEquals(enumField2FailType.invoke("value"), (short) -1);
                 Assert.assertEquals(enumField2FailType.invoke("getValue"), (short) -1);
                 Assert.assertEquals(enumField2FailType.invoke("getName"), "失败");
+            }
+        });
+    }
+
+    /**
+     * SelectSelectivePlugin DISTINCT
+     * https://github.com/itfsw/mybatis-generator-plugin/pull/103
+     *
+     * @throws Exception
+     */
+    @Test
+    public void pull103() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/pull-103.xml");
+        tool.generate(() -> DBHelper.createDB("scripts/BugFixedTest/pull-103.sql"), new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                // 1. 测试sql
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                tbExample.invoke("setDistinct", true);
+
+                ObjectUtil columnType = new ObjectUtil(loader, packagz + ".Tb$Column#type");
+                Object columns = Array.newInstance(columnType.getCls(), 1);
+                Array.set(columns, 0, columnType.getObject());
+
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExampleSelective", tbExample.getObject(), columns);
+                Assert.assertEquals(sql, "select distinct 'true' as QUERYID, type from tb");
+                try {
+                    tbMapper.invoke("selectByExampleSelective", tbExample.getObject(), columns);
+                } catch (Exception e) {
+                    Assert.assertTrue(false);
+                }
             }
         });
     }
