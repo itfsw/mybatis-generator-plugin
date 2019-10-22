@@ -265,9 +265,6 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
 
         if (byExample) {
             selectSelectiveEle.addElement(new TextElement("select"));
-            if (stringHasValue(introspectedTable.getSelectByExampleQueryId())) {
-                selectSelectiveEle.addElement(new TextElement("'" + introspectedTable.getSelectByExampleQueryId() + "' as QUERYID,"));
-            }
 
             if (!selectOne) {
                 // issues#20
@@ -275,6 +272,11 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
                 ifDistinctElement.addAttribute(new Attribute("test", "example != null and example.distinct"));
                 ifDistinctElement.addElement(new TextElement("distinct"));
                 selectSelectiveEle.addElement(ifDistinctElement);
+            }
+
+            //issue#102
+            if (stringHasValue(introspectedTable.getSelectByExampleQueryId())) {
+                selectSelectiveEle.addElement(new TextElement("'" + introspectedTable.getSelectByExampleQueryId() + "' as QUERYID,"));
             }
         } else {
             selectSelectiveEle.addElement(new TextElement("select"));
