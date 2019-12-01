@@ -1657,7 +1657,7 @@ public class Test {
 </xml>
 ```
 
-### 24.修改目标包名插件
+### 24. 修改目标包名插件
 有的项目组要求按照业务逻辑划分子包，在业务子包中进一步分controller、service, entity、mapper...., ModelClass需要生成在entity包中，ClientClass需要生成在mapper包中，而SQLMAP文件需要在/src/map/xxx/文件夹下，`targetPackage`属性和`domainObjectName`无法实现
 TargetPackagePlugin可用为一个表的ModelClass、ClientClass、SQLMap分别设置不同的targetPackage
 
