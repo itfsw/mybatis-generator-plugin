@@ -38,6 +38,7 @@
 * [状态枚举生成插件（EnumTypeStatusPlugin）](#21-状态枚举生成插件)
 * [增量插件（IncrementPlugin）](#22-增量插件)
 * [Mapper注解插件（MapperAnnotationPlugin）](#23-Mapper注解插件)
+* [修改目标包名插件](#24-修改目标包名插件)
 
 ---------------------------------------
 Maven引用：  
@@ -1655,3 +1656,22 @@ public class Test {
     </plugin>
 </xml>
 ```
+
+### 24. 修改目标包名插件
+有的项目组要求按照业务逻辑划分子包，在业务子包中进一步分controller、service, entity、mapper...., ModelClass需要生成在entity包中，ClientClass需要生成在mapper包中，而SQLMAP文件需要在/src/map/xxx/文件夹下，`targetPackage`属性和`domainObjectName`无法实现
+TargetPackagePlugin可用为一个表的ModelClass、ClientClass、SQLMap分别设置不同的targetPackage
+
+插件：
+```xml
+<xml>
+    <plugin type="com.itfsw.mybatis.generator.plugins.TargetPackagePlugin"/>
+    
+    <table schema="FG_DB" tableName="USER">
+        <property name="modelTargetPackage" value="account.entity" />
+        <property name="clientTargetPackage" value="account.mapper"/>
+        <property name="sqlMapTargetPackage" value="account" />
+    </table>
+</xml>
+```
+
+生成的三类文件的包名分别为<javaModelGenerator>、<javaClientGenerator>、<sqlMapGenerator>标签中配置的`targetPackage`属性与<table>标签中配置的`xxxTargetPackage`属性的拼接结果
