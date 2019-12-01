@@ -14,21 +14,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /***
- *  Copyright (C), 2010,9 szcport
- *  File name and path: com.itfsw.mybatis.generator.plugins.TargetPackagePlugin
- *  Author : luodexin, Version : 1.0, First complete date:
- *  Description :
  *
- *  Others :
- *  Function List:
- *      1. xxx
- *      2. xxx
- *
- *  History:
- *    1. Date: 2019-11-26
- *       Version:
- *       Author:
- *       Modification:
+ * TargetPackagePlugin可用为一个表的ModelClass、ClientClass、SQLMap分别设置不同的targetPackage
  *
  **/
 
