@@ -1674,4 +1674,4 @@ TargetPackagePlugin可用为一个表的ModelClass、ClientClass、SQLMap分别�
 </xml>
 ```
 
-生成的三类文件的包名分别为<javaModelGenerator>、<javaClientGenerator>、<sqlMapGenerator>标签中配置的`targetPackage`属性与<table>标签中配置的`xxxTargetPackage`属性的拼接结果
+生成的三类文件的包名分别为`<javaModelGenerator>`、`<javaClientGenerator>`、`<sqlMapGenerator>`标签中配置的`targetPackage`属性与`<table>`标签中配置的`xxxTargetPackage`属性的拼接结果
