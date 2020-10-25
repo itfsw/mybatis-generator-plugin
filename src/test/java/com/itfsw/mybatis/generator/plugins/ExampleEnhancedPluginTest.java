@@ -89,6 +89,28 @@ public class ExampleEnhancedPluginTest {
     }
 
     /**
+     * 测试生成的distinct方法
+     */
+    @Test
+    public void testDistinct() throws Exception {
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ExampleEnhancedPlugin/mybatis-generator.xml");
+        tool.generate(new AbstractShellCallback() {
+            @Override
+            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
+                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
+
+                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
+                Object rExample = tbExample.invoke("distinct", true);
+
+                Assert.assertEquals(rExample.getClass().getTypeName(), packagz + ".TbExample");
+
+                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
+                Assert.assertEquals(sql, "select distinct id, field1, field2 from tb");
+            }
+        });
+    }
+
+    /**
      * 测试静态 createCriteria
      * @throws Exception
      */

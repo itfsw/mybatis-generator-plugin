@@ -92,6 +92,9 @@ public class ExampleEnhancedPlugin extends BasePlugin {
         // when
         addWhenToExample(topLevelClass, introspectedTable);
 
+        // 增强链式调用(distinct)
+        addDistinctMethodToExample(topLevelClass, introspectedTable);
+
         return true;
     }
 
@@ -411,5 +414,28 @@ public class ExampleEnhancedPlugin extends BasePlugin {
 
         FormatTools.addMethodWithBestPosition(topLevelClass, orderByMethod1);
         logger.debug("itfsw(Example增强插件):" + topLevelClass.getType().getShortName() + "增加方法orderBy(String ... orderByClauses)");
+    }
+
+    /**
+     * 增强链式调用(distinct)
+     * @param topLevelClass
+     * @param introspectedTable
+     */
+    private void addDistinctMethodToExample(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        // 添加orderBy
+        Method distinctMethod = JavaElementGeneratorTools.generateMethod(
+                "distinct",
+                JavaVisibility.PUBLIC,
+                topLevelClass.getType(),
+                new Parameter(FullyQualifiedJavaType.getBooleanPrimitiveInstance(), "distinct")
+        );
+        commentGenerator.addGeneralMethodComment(distinctMethod, introspectedTable);
+        distinctMethod = JavaElementGeneratorTools.generateMethodBody(
+                distinctMethod,
+                "this.setDistinct(distinct);",
+                "return this;"
+        );
+        FormatTools.addMethodWithBestPosition(topLevelClass, distinctMethod);
+        logger.debug("itfsw(Example增强插件):" + topLevelClass.getType().getShortName() + "增加方法distinct");
     }
 }
