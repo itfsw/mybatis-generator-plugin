@@ -17,16 +17,13 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
-import com.sun.xml.internal.ws.util.StringUtils;
-import freemarker.template.utility.CollectionUtils;
-import freemarker.template.utility.StringUtil;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
 import org.mybatis.generator.api.dom.java.Interface;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
-import org.mybatis.generator.internal.util.StringUtility;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * ---------------------------------------------------------------------------
