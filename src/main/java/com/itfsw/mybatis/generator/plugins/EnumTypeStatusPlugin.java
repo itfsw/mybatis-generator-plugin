@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
  * ---------------------------------------------------------------------------
  * type or status enum 插件
  * ---------------------------------------------------------------------------
+ *
  * @author: hewei
  * @time:2018/11/27 20:36
  * ---------------------------------------------------------------------------
@@ -57,6 +58,7 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
 
     /**
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     *
      * @param introspectedTable
      */
     @Override
@@ -115,6 +117,7 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
 
     /**
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     *
      * @param topLevelClass
      * @param introspectedTable
      * @return
@@ -128,6 +131,7 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
     /**
      * Model 生成
      * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     *
      * @param topLevelClass
      * @param introspectedTable
      * @return
@@ -168,6 +172,7 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
 
     /**
      * 生成对应enum
+     *
      * @param topLevelClass
      * @param introspectedTable
      */
@@ -204,6 +209,7 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
 
         /**
          * 添加Enum Item
+         *
          * @param name
          * @param comment
          * @param value
@@ -215,6 +221,7 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
 
         /**
          * 判断是否有节点
+         *
          * @return
          */
         public boolean hasItems() {
@@ -223,6 +230,7 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
 
         /**
          * 解析注释
+         *
          * @param remarks
          */
         public void parseRemarks(String remarks) throws CannotParseException {
@@ -251,6 +259,7 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
 
         /**
          * Getter method for property <tt>items</tt>.
+         *
          * @return property value of items
          * @author hewei
          */
@@ -314,6 +323,42 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
             commentGenerator.addGeneralMethodComment(mName, introspectedTable);
             FormatTools.addMethodWithBestPosition(innerEnum, mName);
 
+            // parseValue 方法
+            Method mParseValue = JavaElementGeneratorTools.generateMethod(
+                    "parseValue",
+                    JavaVisibility.PUBLIC,
+                    innerEnum.getType(),
+                    new Parameter(fValue.getType(), "value")
+            );
+            mParseValue.addBodyLine("if (value != null) {");
+            mParseValue.addBodyLine("for (" + innerEnum.getType().getShortName() + " item : values()) {");
+            mParseValue.addBodyLine("if (item.value.equals(value)) {");
+            mParseValue.addBodyLine("return item;");
+            mParseValue.addBodyLine("}");
+            mParseValue.addBodyLine("}");
+            mParseValue.addBodyLine("}");
+            mParseValue.addBodyLine("return null;");
+            commentGenerator.addGeneralMethodComment(mParseValue, introspectedTable);
+            FormatTools.addMethodWithBestPosition(innerEnum, mParseValue);
+
+            // parseName 方法
+            Method mParseName = JavaElementGeneratorTools.generateMethod(
+                    "parseName",
+                    JavaVisibility.PUBLIC,
+                    innerEnum.getType(),
+                    new Parameter(fName.getType(), "name")
+            );
+            mParseName.addBodyLine("if (name != null) {");
+            mParseName.addBodyLine("for (" + innerEnum.getType().getShortName() + " item : values()) {");
+            mParseName.addBodyLine("if (item.name.equals(name)) {");
+            mParseName.addBodyLine("return item;");
+            mParseName.addBodyLine("}");
+            mParseName.addBodyLine("}");
+            mParseName.addBodyLine("}");
+            mParseName.addBodyLine("return null;");
+            commentGenerator.addGeneralMethodComment(mParseName, introspectedTable);
+            FormatTools.addMethodWithBestPosition(innerEnum, mParseName);
+
             return innerEnum;
         }
 
@@ -333,6 +378,7 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
 
             /**
              * Getter method for property <tt>comment</tt>.
+             *
              * @return property value of comment
              * @author hewei
              */
@@ -342,6 +388,7 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
 
             /**
              * Getter method for property <tt>name</tt>.
+             *
              * @return property value of name
              * @author hewei
              */
@@ -351,6 +398,7 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
 
             /**
              * Getter method for property <tt>value</tt>.
+             *
              * @return property value of value
              * @author hewei
              */
@@ -365,6 +413,7 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
 
             /**
              * Getter method for property <tt>value</tt>.
+             *
              * @return property value of value
              * @author hewei
              */

@@ -116,6 +116,21 @@ public class EnumTypeStatusPluginTest {
                 Assert.assertEquals(enumBreakLineFailType.invoke("value"), 1L);
                 Assert.assertEquals(enumBreakLineFailType.invoke("getValue"), 1L);
                 Assert.assertEquals(enumBreakLineFailType.invoke("getName"), "启用");
+
+                // 6. 测试 parse
+                // parseValue
+                Assert.assertNull(enumBreakLineSuccess.invoke("parseValue", null));
+                Object em1 = enumBreakLineSuccess.invoke("parseValue", 0L);
+                Assert.assertEquals(em1.toString(), "SUCCESS");
+                Object em2 = enumBreakLineSuccess.invoke("parseValue", 1L);
+                Assert.assertEquals(em2.toString(), "FAIL_TYPE");
+
+                // parseName
+                Assert.assertNull(enumBreakLineSuccess.invoke("parseName", null));
+                Object em3 = enumBreakLineSuccess.invoke("parseName", "禁用");
+                Assert.assertEquals(em3.toString(), "SUCCESS");
+                Object em4 = enumBreakLineSuccess.invoke("parseName", "启用");
+                Assert.assertEquals(em4.toString(), "FAIL_TYPE");
             }
         });
     }
