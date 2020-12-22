@@ -214,6 +214,25 @@ public class IncrementPluginTest {
                 rs.first();
                 Assert.assertEquals(rs.getInt("inc_f1"), 53);
 
+                // bug: <=1.3.8，生成的xml中
+                //        <foreach collection="selective" item="column" separator=",">
+                //          <choose>
+                //            <when test="'inc_f1'.toString() == column.value">
+                //              ${column.escapedColumnName} = ${column.escapedColumnName} ${record.incrementColumnsInfoMap.inc_f1.operate} #{record.incrementColumnsInfoMap.inc_f1.value,jdbcType=BIGINT}
+                //            </when>
+                //            <when test="'inc_f1'.toString() == column.value">
+                //              ${column.escapedColumnName} = #{record.${column.javaProperty},jdbcType=BIGINT}
+                //            </when>
+                //            <otherwise>
+                //              ${column.escapedColumnName} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}
+                //            </otherwise>
+                //          </choose>
+                //        </foreach>
+
+                tb = new ObjectUtil(loader, packagz + ".Tb");
+                tb.set("incF2", 200l);
+                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "updateByExampleSelective", tb.getObject(), tbExample.getObject(), columns);
+                Assert.assertEquals(sql, "update tb SET field1 = 'null' , inc_f1 = null , inc_f2 = 200 WHERE ( id = '3' )");
 
                 // 2. 测试updateByPrimaryKeySelective
                 ObjectUtil tbKeysMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbKeysMapper")));

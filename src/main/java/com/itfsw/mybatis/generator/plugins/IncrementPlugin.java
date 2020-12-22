@@ -306,7 +306,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
                         // 需要 inc 的列
                         String columnMap = "record." + FIELD_INC_MAP + "." + MyBatis3FormattingUtilities.escapeStringForMyBatis3(incColumn.getActualColumnName());
 
-                        when.addAttribute(new Attribute("test", "'" + column.getActualColumnName() + "'.toString() == column.value"));
+                        when.addAttribute(new Attribute("test", "'" + column.getActualColumnName() + "'.toString() == column.value and " + columnMap + " != null"));
                         when.addElement(new TextElement("${column.escapedColumnName} = ${column.escapedColumnName} "
                                 + "${" + columnMap + "." + FIELD_OPERATE_FOR_CLASS_INCREMENT + "} "
                                 + XmlElementGeneratorTools.getParameterClause(columnMap + "." + FIELD_VALUE_FOR_CLASS_INCREMENT, incColumn))
