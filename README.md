@@ -1561,6 +1561,26 @@ public class Tb {
         public String getName() {
             return this.name;
         }
+        public Field2 parseValue(Short value) {
+            if (value != null) {
+                for (Field2 item : values()) {
+                    if (item.value.equals(value)) {
+                        return item;
+                    }
+                }
+            }
+            return null;
+        }
+        public Field2 parseName(String name) {
+            if (name != null) {
+                for (Field2 item : values()) {
+                    if (item.name.equals(name)) {
+                        return item;
+                    }
+                }
+            }
+            return null;
+        }
     }
 
     public enum Status {
@@ -1583,6 +1603,26 @@ public class Tb {
         public String getName() {
             return this.name;
         }
+        public Status parseValue(Short value) {
+            if (value != null) {
+                for (Status item : values()) {
+                    if (item.value.equals(value)) {
+                        return item;
+                    }
+                }
+            }
+            return null;
+        }
+        public Status parseName(String name) {
+            if (name != null) {
+                for (Status item : values()) {
+                    if (item.name.equals(name)) {
+                        return item;
+                    }
+                }
+            }
+            return null;
+        }
     }
 
     public enum UserType {
@@ -1604,6 +1644,26 @@ public class Tb {
         }
         public String getName() {
             return this.name;
+        }
+        public UserType parseValue(Short value) {
+            if (value != null) {
+                for (UserType item : values()) {
+                    if (item.value.equals(value)) {
+                        return item;
+                    }
+                }
+            }
+            return null;
+        }
+        public UserType parseName(String name) {
+            if (name != null) {
+                for (UserType item : values()) {
+                    if (item.name.equals(name)) {
+                        return item;
+                    }
+                }
+            }
+            return null;
         }
     }
 }
