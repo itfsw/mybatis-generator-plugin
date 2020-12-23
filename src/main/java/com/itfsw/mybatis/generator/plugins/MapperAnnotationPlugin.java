@@ -58,9 +58,11 @@ public class MapperAnnotationPlugin extends BasePlugin {
             String annotationName = prop.getKey().toString().trim();
             String annotationImport = prop.getValue().toString().trim();
             // TODO 兼容老版本
-            if ("@Repository".equals(annotationName) && StringUtility.isTrue(annotationImport)) {
-                interfaze.addImportedType(new FullyQualifiedJavaType("org.springframework.stereotype.Repository"));
-                interfaze.addAnnotation("@Repository");
+            if ("@Repository".equals(annotationName) && ("true".equalsIgnoreCase(annotationImport) || "false".equalsIgnoreCase(annotationImport))) {
+                if (StringUtility.isTrue(annotationImport)) {
+                    interfaze.addImportedType(new FullyQualifiedJavaType("org.springframework.stereotype.Repository"));
+                    interfaze.addAnnotation("@Repository");
+                }
             } else if (!"@Mapper".equals(annotationName)) {
                 interfaze.addImportedType(new FullyQualifiedJavaType(annotationImport));
                 interfaze.addAnnotation(annotationName);
