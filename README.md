@@ -1710,8 +1710,10 @@ public class Test {
     <plugin type="com.itfsw.mybatis.generator.plugins.MapperAnnotationPlugin">
         <!-- @Mapper 默认开启 -->
         <property name="@Mapper" value="true"/>
-        <!-- @Repository 默认关闭，开启后解决IDEA工具@Autowired报错 -->
-        <property name="@Repository" value="false"/>
+        <!-- @Repository 开启后解决IDEA工具@Autowired报错 -->
+        <property name="@Repository" value="org.springframework.stereotype.Repository"/>
+        <!-- 其他自定义注解 -->
+        <property name="@DS(&quot;master&quot;)" value="com.baomidou.dynamic.datasource.annotation.DS"/>
     </plugin>
 </xml>
 ```

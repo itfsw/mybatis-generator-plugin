@@ -66,12 +66,36 @@ public class MapperAnnotationPluginTest {
     }
 
     /**
+     * 测试@Mapper false 并且自定义 @Repository
+     * @throws Exception
+     */
+    @Test
+    public void testWithMapperFalseAndCustomRepository() throws Exception{
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/MapperAnnotationPlugin/mybatis-generator-with-mapper-false.xml");
+        MyBatisGenerator myBatisGenerator = tool.generate();
+
+        for (GeneratedJavaFile file : myBatisGenerator.getGeneratedJavaFiles()) {
+            CompilationUnit compilationUnit = file.getCompilationUnit();
+            if (compilationUnit instanceof Interface && compilationUnit.getType().getShortName().endsWith("Mapper")) {
+                Interface interfaze = (Interface) compilationUnit;
+
+                Assert.assertEquals(interfaze.getAnnotations().size(), 2);
+                Assert.assertEquals(interfaze.getAnnotations().get(0), "@DS(\"master\")");
+                Assert.assertEquals(interfaze.getAnnotations().get(1), "@Repository");
+                Assert.assertTrue(interfaze.getImportedTypes().contains(new FullyQualifiedJavaType("org.springframework.test.Repository")));
+                Assert.assertTrue(interfaze.getImportedTypes().contains(new FullyQualifiedJavaType("com.baomidou.dynamic.datasource.annotation.DS")));
+            }
+        }
+    }
+
+
+    /**
      * 测试配置Repository
      * @throws Exception
      */
     @Test
     public void testWithRepository() throws Exception{
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/MapperAnnotationPlugin/mybatis-generator-with-repository.xml");
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/MapperAnnotationPlugin/mybatis-generator-with-old-repository.xml");
         MyBatisGenerator myBatisGenerator = tool.generate();
 
         for (GeneratedJavaFile file : myBatisGenerator.getGeneratedJavaFiles()) {

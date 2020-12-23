@@ -21,13 +21,14 @@ import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
 import org.mybatis.generator.api.dom.java.Interface;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
+import org.mybatis.generator.internal.util.StringUtility;
 
 import java.util.Map;
 import java.util.Properties;
 
 /**
  * ---------------------------------------------------------------------------
- *
+ * <p>
  * ---------------------------------------------------------------------------
  *
  * @author: hewei
@@ -35,39 +36,38 @@ import java.util.Properties;
  * ---------------------------------------------------------------------------
  */
 public class MapperAnnotationPlugin extends BasePlugin {
+    /**
+     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     *
+     * @param interfaze
+     * @param topLevelClass
+     * @param introspectedTable
+     * @return
+     */
+    @Override
+    public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        Properties properties = getProperties();
+        // 和官方插件一致支持，没有配置特殊注解时默认开启@Mapper
+        if ("true".equalsIgnoreCase(properties.getProperty("@Mapper", "true")) && introspectedTable.getTargetRuntime() == IntrospectedTable.TargetRuntime.MYBATIS3) {
+            // don't need to do this for MYBATIS3_DSQL as that runtime already adds this annotation
+            interfaze.addImportedType(new FullyQualifiedJavaType("org.apache.ibatis.annotations.Mapper"));
+            interfaze.addAnnotation("@Mapper");
+        }
 
-	/**
-	 * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-	 * @param introspectedTable
-	 * @return
-	 */
-	@Override
-	public void initialized(IntrospectedTable introspectedTable) {
-		super.initialized(introspectedTable);
-	}
+        for (Map.Entry<Object, Object> prop : properties.entrySet()) {
+            String annotationName = prop.getKey().toString().trim();
+            String annotationImport = prop.getValue().toString().trim();
+            // TODO 兼容老版本
+            if ("@Repository".equals(annotationName) && StringUtility.isTrue(annotationImport)) {
+                interfaze.addImportedType(new FullyQualifiedJavaType("org.springframework.stereotype.Repository"));
+                interfaze.addAnnotation("@Repository");
+            } else if (!"@Mapper".equals(annotationName)) {
+                interfaze.addImportedType(new FullyQualifiedJavaType(annotationImport));
+                interfaze.addAnnotation(annotationName);
+            }
+        }
 
-	/**
-	 * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-	 * @param interfaze
-	 * @param topLevelClass
-	 * @param introspectedTable
-	 * @return
-	 */
-	@Override
-	public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass,
-			IntrospectedTable introspectedTable) {
-
-		Properties properties = getProperties();
-		String annotationName;
-		String annotationImport;
-		for (Map.Entry<Object, Object> prop : properties.entrySet()) {
-			annotationName = (String) prop.getKey();
-			annotationImport = (String) prop.getValue();
-			interfaze.addImportedType(new FullyQualifiedJavaType(annotationImport));
-			interfaze.addAnnotation(annotationName);
-		}
-
-		return true;
-	}
+        return true;
+    }
 
 }
