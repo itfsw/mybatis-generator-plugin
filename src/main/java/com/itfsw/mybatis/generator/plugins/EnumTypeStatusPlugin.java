@@ -330,6 +330,7 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
                     innerEnum.getType(),
                     new Parameter(fValue.getType(), "value")
             );
+            mParseValue.setStatic(true);
             mParseValue.addBodyLine("if (value != null) {");
             mParseValue.addBodyLine("for (" + innerEnum.getType().getShortName() + " item : values()) {");
             mParseValue.addBodyLine("if (item.value.equals(value)) {");
@@ -348,6 +349,7 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
                     innerEnum.getType(),
                     new Parameter(fName.getType(), "name")
             );
+            mParseName.setStatic(true);
             mParseName.addBodyLine("if (name != null) {");
             mParseName.addBodyLine("for (" + innerEnum.getType().getShortName() + " item : values()) {");
             mParseName.addBodyLine("if (item.name.equals(name)) {");

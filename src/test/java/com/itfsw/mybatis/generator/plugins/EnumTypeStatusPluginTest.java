@@ -26,6 +26,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.sql.SQLException;
 
 /**
@@ -118,18 +119,20 @@ public class EnumTypeStatusPluginTest {
                 Assert.assertEquals(enumBreakLineFailType.invoke("getName"), "启用");
 
                 // 6. 测试 parse
-                // parseValue
-                Assert.assertNull(enumBreakLineSuccess.invoke("parseValue", null));
-                Object em1 = enumBreakLineSuccess.invoke("parseValue", 0L);
+                Class enumBreakLine = loader.loadClass(packagz + ".Tb$BreakLine");
+                Method mParseValue = enumBreakLine.getMethod("parseValue", Long.class);
+                Assert.assertNull(mParseValue.invoke("parseValue", new Object[]{null}));
+                Object em1 = mParseValue.invoke("parseValue", 0L);
                 Assert.assertEquals(em1.toString(), "SUCCESS");
-                Object em2 = enumBreakLineSuccess.invoke("parseValue", 1L);
+                Object em2 = mParseValue.invoke("parseValue", 1L);
                 Assert.assertEquals(em2.toString(), "FAIL_TYPE");
 
                 // parseName
-                Assert.assertNull(enumBreakLineSuccess.invoke("parseName", null));
-                Object em3 = enumBreakLineSuccess.invoke("parseName", "禁用");
+                Method mParseName = enumBreakLine.getMethod("parseName", String.class);
+                Assert.assertNull(mParseName.invoke("parseName", new Object[]{null}));
+                Object em3 = mParseName.invoke("parseName", "禁用");
                 Assert.assertEquals(em3.toString(), "SUCCESS");
-                Object em4 = enumBreakLineSuccess.invoke("parseName", "启用");
+                Object em4 = mParseName.invoke("parseName", "启用");
                 Assert.assertEquals(em4.toString(), "FAIL_TYPE");
             }
         });
