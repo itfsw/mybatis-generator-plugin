@@ -45,7 +45,7 @@ Maven引用：
 <dependency>
   <groupId>com.itfsw</groupId>
   <artifactId>mybatis-generator-plugin</artifactId>
-  <version>1.3.9</version>
+  <version>1.3.10</version>
 </dependency>
 ```
 ---------------------------------------
