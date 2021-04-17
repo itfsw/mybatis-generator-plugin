@@ -42,7 +42,6 @@ public class SelectForUpdatePluginPluginTest {
         });
     }
 
-
     @Test
     public void testSelectByExampleForUpdate() throws Exception {
 
@@ -144,6 +143,18 @@ public class SelectForUpdatePluginPluginTest {
                 Assert.assertEquals(Tb.get("field2"), "fd2");
             }
         });
+    }
+
+    @Test
+    public void testWithLimitPlugin() throws Exception {
+
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/SelectForUpdatePlugin/mybatis-generator-limit.xml");
+        try {
+            tool.generate();
+        } catch (Exception e) {
+            Assert.assertTrue(e.getCause() instanceof IllegalStateException);
+            Assert.assertTrue("SelectForUpdatePlugin的顺序必须在LimitPlugin之后,请调整插件顺序".equals(e.getCause().getMessage()));
+        }
     }
 
 }

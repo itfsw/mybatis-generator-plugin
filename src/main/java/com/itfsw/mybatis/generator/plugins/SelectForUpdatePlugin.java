@@ -7,12 +7,15 @@ import com.itfsw.mybatis.generator.plugins.utils.XmlElementTools;
 import com.itfsw.mybatis.generator.plugins.utils.hook.ISelectOneByExamplePluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
+import org.mybatis.generator.api.Plugin;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
+import org.mybatis.generator.internal.PluginAggregator;
 
+import java.lang.reflect.Field;
 import java.util.List;
 
 /**
@@ -47,6 +50,11 @@ public class SelectForUpdatePlugin extends BasePlugin implements ISelectOneByExa
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
         super.initialized(introspectedTable);
+        try {
+            validatePluginOrder();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         this.selectByPrimaryKeyForUpdateEle = null;
 
         this.selectByExampleForUpdateEle = null;
@@ -59,7 +67,6 @@ public class SelectForUpdatePlugin extends BasePlugin implements ISelectOneByExa
 
     @Override
     public boolean clientSelectByExampleWithoutBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
-
         FullyQualifiedJavaType baseRecordType = new FullyQualifiedJavaType(introspectedTable.getBaseRecordType());
         FullyQualifiedJavaType listType = new FullyQualifiedJavaType("java.util.List");
         listType.addTypeArgument(baseRecordType);
@@ -177,11 +184,36 @@ public class SelectForUpdatePlugin extends BasePlugin implements ISelectOneByExa
      */
     @Override
     public boolean sqlMapSelectByExampleWithoutBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+
         XmlElement xmlElement = cloneAndAddForUpdateElement(element);
         xmlElement.addAttribute(new Attribute("id", METHOD_SELECT_BY_EXAMPLE_FOR_UPDATE));
         commentGenerator.addComment(xmlElement);
         this.selectByExampleForUpdateEle = xmlElement;
         return super.sqlMapSelectByExampleWithoutBLOBsElementGenerated(element, introspectedTable);
+    }
+
+
+    private void validatePluginOrder() throws Exception {
+        PluginAggregator plugins = (PluginAggregator) getContext().getPlugins();
+        Field field = PluginAggregator.class.getDeclaredField("plugins");
+        field.setAccessible(true);
+        List<Plugin> pluginList = (List<Plugin>) field.get(plugins);
+        int forUpdateOrder = 0;
+        int limitOrder = -1;
+        for (int i = 0; i < pluginList.size(); i++) {
+            if (pluginList.get(i) instanceof SelectForUpdatePlugin) {
+                forUpdateOrder = i;
+            }
+            if (pluginList.get(i) instanceof LimitPlugin) {
+                limitOrder = i;
+            }
+        }
+        if (limitOrder == -1) {
+            return;
+        }
+        if (limitOrder > forUpdateOrder) {
+            throw new IllegalStateException("SelectForUpdatePlugin的顺序必须在LimitPlugin之后,请调整插件顺序");
+        }
     }
 
     @Override

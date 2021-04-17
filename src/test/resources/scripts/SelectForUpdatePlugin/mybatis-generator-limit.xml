@@ -25,9 +25,9 @@
 
         <plugin type="com.itfsw.mybatis.generator.plugins.SelectOneByExamplePlugin"/>
 
-        <plugin type="com.itfsw.mybatis.generator.plugins.LimitPlugin"/>
-
         <plugin type="com.itfsw.mybatis.generator.plugins.SelectForUpdatePlugin"/>
+
+        <plugin type="com.itfsw.mybatis.generator.plugins.LimitPlugin"/>
 
         <!--jdbc的数据库连接 -->
         <jdbcConnection driverClass="${driver}" connectionURL="${url}" userId="${username}" password="${password}" >
