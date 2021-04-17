@@ -30,6 +30,7 @@ import org.mybatis.generator.config.xml.ConfigurationParser;
 import org.mybatis.generator.exception.InvalidConfigurationException;
 import org.mybatis.generator.exception.XMLParserException;
 import org.mybatis.generator.internal.DefaultShellCallback;
+import org.mybatis.generator.internal.util.StringUtility;
 
 import javax.sql.DataSource;
 import javax.tools.JavaCompiler;
@@ -49,8 +50,9 @@ import java.util.List;
 
 /**
  * ---------------------------------------------------------------------------
- *
+ * <p>
  * ---------------------------------------------------------------------------
+ *
  * @author: hewei
  * @time:2017/7/4 16:14
  * ---------------------------------------------------------------------------
@@ -64,6 +66,7 @@ public class MyBatisGeneratorTool {
 
     /**
      * 创建
+     *
      * @param resource
      * @return
      */
@@ -75,12 +78,13 @@ public class MyBatisGeneratorTool {
         ConfigurationParser cp = new ConfigurationParser(tool.warnings);
         tool.config = cp.parseConfiguration(Resources.getResourceAsStream(resource));
         // 修正配置目标
-        tool.fixConfigToTarget();
+        tool.fixConfigToTarget(null);
         return tool;
     }
 
     /**
      * 执行MyBatisGenerator
+     *
      * @param before
      * @param callback
      * @return
@@ -98,6 +102,7 @@ public class MyBatisGeneratorTool {
 
     /**
      * 执行MyBatisGenerator
+     *
      * @param callback
      * @return
      * @throws SQLException
@@ -105,13 +110,14 @@ public class MyBatisGeneratorTool {
      * @throws InterruptedException
      */
     public MyBatisGenerator generate(AbstractShellCallback callback) throws Exception {
-       return this.generate(() -> {
+        return this.generate(() -> {
 
-       }, callback);
+        }, callback);
     }
 
     /**
      * 执行MyBatisGenerator
+     *
      * @param before
      * @return
      * @throws SQLException
@@ -127,6 +133,7 @@ public class MyBatisGeneratorTool {
 
     /**
      * 执行MyBatisGenerator(不生成文件)
+     *
      * @return
      * @throws SQLException
      * @throws IOException
@@ -139,7 +146,24 @@ public class MyBatisGeneratorTool {
     }
 
     /**
+     * 执行MyBatisGenerator(生成文件)
+     *
+     * @return
+     * @throws InvalidConfigurationException
+     * @throws InterruptedException
+     * @throws SQLException
+     * @throws IOException
+     */
+    public MyBatisGenerator generateAndWriteFiles(String dir) throws InvalidConfigurationException, InterruptedException, SQLException, IOException {
+        MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, new DefaultShellCallback(true), warnings);
+        fixConfigToTarget(dir);
+        myBatisGenerator.generate(null, null, null, true);
+        return myBatisGenerator;
+    }
+
+    /**
      * 编译项目并返回 SqlSession
+     *
      * @return
      */
     public SqlSession compile() throws IOException, ClassNotFoundException {
@@ -152,6 +176,7 @@ public class MyBatisGeneratorTool {
 
     /**
      * 获取目标目录的ClassLoader
+     *
      * @return
      */
     public ClassLoader getTargetClassLoader() throws MalformedURLException {
@@ -162,6 +187,7 @@ public class MyBatisGeneratorTool {
 
     /**
      * 获取SqlSession
+     *
      * @return
      * @throws IOException
      */
@@ -186,6 +212,7 @@ public class MyBatisGeneratorTool {
 
     /**
      * 动态编译java文件
+     *
      * @param files
      */
     private void compileJavaFiles(List<File> files) {
@@ -206,6 +233,7 @@ public class MyBatisGeneratorTool {
 
     /**
      * 获取指定后缀的文件
+     *
      * @param file
      * @return
      */
@@ -227,9 +255,14 @@ public class MyBatisGeneratorTool {
     /**
      * 修正配置到指定target
      */
-    private void fixConfigToTarget() {
+    private void fixConfigToTarget(String dir) {
         this.targetProject = this.getClass().getClassLoader().getResource("").getPath();
-        this.targetPackage = DAO_PACKAGE + ".s" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
+        if (StringUtility.stringHasValue(dir)) {
+            this.targetPackage = DAO_PACKAGE + "." + dir;
+        } else {
+            this.targetPackage = DAO_PACKAGE + ".s" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
+        }
+
         for (Context context : config.getContexts()) {
             context.getJavaModelGeneratorConfiguration().setTargetProject(targetProject);
             context.getJavaModelGeneratorConfiguration().setTargetPackage(targetPackage);
@@ -242,6 +275,7 @@ public class MyBatisGeneratorTool {
 
     /**
      * Getter method for property <tt>warnings</tt>.
+     *
      * @return property value of warnings
      * @author hewei
      */
@@ -251,6 +285,7 @@ public class MyBatisGeneratorTool {
 
     /**
      * Getter method for property <tt>config</tt>.
+     *
      * @return property value of config
      * @author hewei
      */
@@ -260,6 +295,7 @@ public class MyBatisGeneratorTool {
 
     /**
      * Getter method for property <tt>targetPackage</tt>.
+     *
      * @return property value of targetPackage
      * @author hewei
      */
