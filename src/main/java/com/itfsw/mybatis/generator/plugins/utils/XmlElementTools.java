@@ -17,7 +17,7 @@
 package com.itfsw.mybatis.generator.plugins.utils;
 
 import org.mybatis.generator.api.dom.xml.Attribute;
-import org.mybatis.generator.api.dom.xml.Element;
+import org.mybatis.generator.api.dom.xml.VisitableElement;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 
@@ -25,19 +25,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-/**
- * ---------------------------------------------------------------------------
- *
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2018/5/2 17:52
- * ---------------------------------------------------------------------------
- */
 public class XmlElementTools {
     /**
      * 获取属性
-     * @param element
-     * @param name
      */
     public static Attribute getAttribute(XmlElement element, String name) {
         Iterator<Attribute> iterator = element.getAttributes().iterator();
@@ -52,8 +42,6 @@ public class XmlElementTools {
 
     /**
      * 移除属性
-     * @param element
-     * @param name
      */
     public static void removeAttribute(XmlElement element, String name) {
         Iterator<Attribute> iterator = element.getAttributes().iterator();
@@ -67,8 +55,6 @@ public class XmlElementTools {
 
     /**
      * 替换属性
-     * @param element
-     * @param attribute
      */
     public static void replaceAttribute(XmlElement element, Attribute attribute) {
         removeAttribute(element, attribute.getName());
@@ -77,8 +63,6 @@ public class XmlElementTools {
 
     /**
      * xmlElement 替换
-     * @param srcEle
-     * @param destEle
      */
     public static void replaceXmlElement(XmlElement srcEle, XmlElement destEle) {
         srcEle.setName(destEle.getName());
@@ -90,14 +74,11 @@ public class XmlElementTools {
 
     /**
      * 查找指定xml节点下指定节点名称的元素
-     * @param xmlElement
-     * @param name
-     * @return
      */
     public static List<XmlElement> findXmlElements(XmlElement xmlElement, String name) {
         List<XmlElement> list = new ArrayList<>();
-        List<Element> elements = xmlElement.getElements();
-        for (Element ele : elements) {
+        List<VisitableElement> elements = xmlElement.getElements();
+        for (VisitableElement ele : elements) {
             if (ele instanceof XmlElement) {
                 XmlElement xmlElement1 = (XmlElement) ele;
                 if (name.equalsIgnoreCase(xmlElement1.getName())) {
@@ -110,12 +91,10 @@ public class XmlElementTools {
 
     /**
      * 查询指定xml下所有text xml 节点
-     * @param xmlElement
-     * @return
      */
     public static List<TextElement> findAllTextElements(XmlElement xmlElement){
         List<TextElement> textElements = new ArrayList<>();
-        for (Element element : xmlElement.getElements()){
+        for (VisitableElement element : xmlElement.getElements()){
             if (element instanceof XmlElement){
                 textElements.addAll(findAllTextElements((XmlElement) element));
             } else if (element instanceof TextElement){
@@ -127,15 +106,13 @@ public class XmlElementTools {
 
     /**
      * 拷贝
-     * @param element
-     * @return
      */
     public static XmlElement clone(XmlElement element) {
         XmlElement destEle = new XmlElement(element.getName());
         for (Attribute attribute : element.getAttributes()) {
             destEle.addAttribute(XmlElementTools.clone(attribute));
         }
-        for (Element ele : element.getElements()) {
+        for (VisitableElement ele : element.getElements()) {
             if (ele instanceof XmlElement) {
                 destEle.addElement(XmlElementTools.clone((XmlElement) ele));
             } else if (ele instanceof TextElement) {
@@ -147,8 +124,6 @@ public class XmlElementTools {
 
     /**
      * 拷贝
-     * @param attribute
-     * @return
      */
     public static Attribute clone(Attribute attribute) {
         return new Attribute(attribute.getName(), attribute.getValue());
@@ -156,8 +131,6 @@ public class XmlElementTools {
 
     /**
      * 拷贝
-     * @param textElement
-     * @return
      */
     public static TextElement clone(TextElement textElement) {
         return new TextElement(textElement.getContent());

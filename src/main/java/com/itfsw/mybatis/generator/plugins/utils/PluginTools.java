@@ -26,21 +26,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * ---------------------------------------------------------------------------
  * 插件工具集
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2017/4/20 15:43
- * ---------------------------------------------------------------------------
  */
 public class PluginTools {
     private static final Logger logger = LoggerFactory.getLogger(PluginTools.class);
 
     /**
      * 获取挂载
-     * @param clazz
-     * @param <T>
-     * @return
      */
     public static <T> T getHook(Class<T> clazz) {
         return (T) HookAggregator.getInstance();
@@ -50,7 +42,6 @@ public class PluginTools {
      * 检查插件依赖
      * @param context 上下文
      * @param plugins 插件
-     * @return
      */
     public static boolean checkDependencyPlugin(Context context, Class... plugins) {
         for (Class plugin : plugins) {
@@ -82,7 +73,6 @@ public class PluginTools {
     /**
      * 获取插件列表
      * @param ctx 上下文
-     * @return
      */
     public static List<PluginConfiguration> getConfigPlugins(Context ctx) {
         try {
@@ -98,7 +88,6 @@ public class PluginTools {
      * 获取插件配置
      * @param context 上下文
      * @param plugin  插件
-     * @return
      */
     public static PluginConfiguration getPluginConfiguration(Context context, Class plugin) {
         int index = getPluginIndex(context, plugin);
@@ -110,8 +99,6 @@ public class PluginTools {
 
     /**
      * 版本号比较
-     * @param v1
-     * @param v2
      * @return 0代表相等，1代表左边大，-1代表右边大
      * Utils.compareVersion("1.0.358_20180820090554","1.0.358_20180820090553")=1
      */

@@ -32,12 +32,7 @@ import org.mybatis.generator.internal.util.StringUtility;
 import java.util.*;
 
 /**
- * ---------------------------------------------------------------------------
  * 乐观锁插件
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2018/4/26 10:24
- * ---------------------------------------------------------------------------
  */
 public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderPluginHook, ILogicalDeletePluginHook {
     public static final String METHOD_DELETE_WITH_VERSION_BY_EXAMPLE = "deleteWithVersionByExample";  // 方法名
@@ -56,7 +51,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
     public static final String PRO_VERSION_COLUMN = "versionColumn";  // 版本列-Key
     public static final String PRO_CUSTOMIZED_NEXT_VERSION = "customizedNextVersion";    // 使用用户自定义nextVersion key
 
-    private Map<IntrospectedTable, List<XmlElement>> sqlMaps = new HashMap<>(); // sqlMap xml 节点
+    private final Map<IntrospectedTable, List<XmlElement>> sqlMaps = new HashMap<>(); // sqlMap xml 节点
     private IntrospectedColumn versionColumn;   // 版本列
     private boolean customizedNextVersion;  // 使用用户自定义nextVersion
 
@@ -68,7 +63,9 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
         // 读取并验证版本列
         String versionColumn = introspectedTable.getTableConfigurationProperty(PRO_VERSION_COLUMN);
         if (versionColumn != null) {
-            this.versionColumn = introspectedTable.getColumn(versionColumn);
+            if (introspectedTable.getColumn(versionColumn).isPresent()) {
+                this.versionColumn = introspectedTable.getColumn(versionColumn).get();
+            }
             if (this.versionColumn == null) {
                 warnings.add("itfsw(乐观锁插件):表" + introspectedTable.getFullyQualifiedTable() + "配置的版本列(" + introspectedTable.getTableConfigurationProperty(PRO_VERSION_COLUMN) + ")没有找到！");
             }
@@ -78,17 +75,12 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
 
         // 自定义nextVersion
         // 首先获取全局配置
-        Properties properties = getProperties();
         String customizedNextVersion = properties.getProperty(PRO_CUSTOMIZED_NEXT_VERSION);
         // 获取表单独配置，如果有则覆盖全局配置
         if (introspectedTable.getTableConfigurationProperty(PRO_CUSTOMIZED_NEXT_VERSION) != null) {
             customizedNextVersion = introspectedTable.getTableConfigurationProperty(PRO_CUSTOMIZED_NEXT_VERSION);
         }
-        if (StringUtility.stringHasValue(customizedNextVersion) && StringUtility.isTrue(customizedNextVersion)) {
-            this.customizedNextVersion = true;
-        } else {
-            this.customizedNextVersion = false;
-        }
+        this.customizedNextVersion = StringUtility.stringHasValue(customizedNextVersion) && StringUtility.isTrue(customizedNextVersion);
 
         super.initialized(introspectedTable);
     }
@@ -257,12 +249,6 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
 
     /**
      * Model builder set 方法生成
-     * @param method
-     * @param topLevelClass
-     * @param builderClass
-     * @param introspectedColumn
-     * @param introspectedTable
-     * @return
      */
     @Override
     public boolean modelBuilderSetterMethodGenerated(Method method, TopLevelClass topLevelClass, InnerClass builderClass, IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable) {
@@ -293,11 +279,6 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
 
     /**
      * Model builder class 生成
-     * @param topLevelClass
-     * @param builderClass
-     * @param columns
-     * @param introspectedTable
-     * @return
      */
     @Override
     public boolean modelBuilderClassGenerated(TopLevelClass topLevelClass, InnerClass builderClass, List<IntrospectedColumn> columns, IntrospectedTable introspectedTable) {
@@ -317,9 +298,6 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
     }
 
     /**
-     * @param element
-     * @param introspectedTable
-     * @return
      * @see org.mybatis.generator.codegen.mybatis3.xmlmapper.elements.DeleteByPrimaryKeyElementGenerator#addElements(XmlElement)
      */
     @Override
@@ -510,7 +488,6 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
 
     /**
      * 生成版本判断节点
-     * @return
      */
     private String generateVersionEleStr() {
         StringBuilder sb = new StringBuilder();
@@ -528,11 +505,6 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
 
     /**
      * 替换Example 方法
-     * @param introspectedTable
-     * @param method
-     * @param interfaze
-     * @param methodName
-     * @return
      */
     private Method replaceUpdateExampleMethod(IntrospectedTable introspectedTable, Method method, Interface interfaze, String methodName) {
         Method withVersionMethod = new Method(method);
@@ -550,11 +522,6 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
 
     /**
      * 替换Example 方法
-     * @param introspectedTable
-     * @param method
-     * @param interfaze
-     * @param methodName
-     * @return
      */
     private Method replaceDeleteExampleMethod(IntrospectedTable introspectedTable, Method method, Interface interfaze, String methodName) {
         Method withVersionMethod = new Method(method);
@@ -575,11 +542,6 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
 
     /**
      * 替换主键 方法
-     * @param introspectedTable
-     * @param method
-     * @param interfaze
-     * @param methodName
-     * @return
      */
     private Method replaceUpdatePrimaryKeyMethod(IntrospectedTable introspectedTable, Method method, Interface interfaze, String methodName) {
         Method withVersionMethod = new Method(method);
@@ -600,11 +562,6 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
 
     /**
      * 替换主键 方法
-     * @param introspectedTable
-     * @param method
-     * @param interfaze
-     * @param methodName
-     * @return
      */
     private Method replaceDeletePrimaryKeyMethod(IntrospectedTable introspectedTable, Method method, Interface interfaze, String methodName) {
         Method withVersionMethod = new Method(method);
@@ -625,10 +582,6 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
 
     /**
      * 替换Example
-     * @param introspectedTable
-     * @param element
-     * @param id
-     * @return
      */
     private XmlElement replaceExampleXmlElement(IntrospectedTable introspectedTable, XmlElement element, String id) {
         XmlElement withVersionEle = XmlElementTools.clone(element);
@@ -654,11 +607,6 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
 
     /**
      * 替换 主键查询
-     * @param introspectedTable
-     * @param element
-     * @param id
-     * @param update
-     * @return
      */
     private XmlElement replacePrimaryKeyXmlElement(IntrospectedTable introspectedTable, XmlElement element, String id, boolean update) {
         XmlElement withVersionEle = XmlElementTools.clone(element);
@@ -669,10 +617,10 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
         FormatTools.replaceComment(commentGenerator, withVersionEle);
 
         // 替换查询语句
-        Iterator<Element> elementIterator = withVersionEle.getElements().iterator();
+        Iterator<VisitableElement> elementIterator = withVersionEle.getElements().iterator();
         boolean flag = false;
         while (elementIterator.hasNext()) {
-            Element ele = elementIterator.next();
+            VisitableElement ele = elementIterator.next();
             if (ele instanceof TextElement && ((TextElement) ele).getContent().matches(".*where.*")) {
                 flag = true;
             }
@@ -718,22 +666,10 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
 
     /**
      * 生成update sql map
-     * @param introspectedTable
-     * @param columns
-     * @param id
-     * @param selective
-     * @param byExample
-     * @return
      */
     private XmlElement generateSqlMapUpdate(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, String id, boolean selective, boolean byExample) {
         // 移除版本列
-        Iterator<IntrospectedColumn> columnIterator = columns.iterator();
-        while (columnIterator.hasNext()) {
-            IntrospectedColumn introspectedColumn = columnIterator.next();
-            if (introspectedColumn.getActualColumnName().equals(this.versionColumn.getActualColumnName())) {
-                columnIterator.remove();
-            }
-        }
+        columns.removeIf(introspectedColumn -> introspectedColumn.getActualColumnName().equals(this.versionColumn.getActualColumnName()));
 
         XmlElement updateEle = new XmlElement("update");
 
@@ -763,9 +699,9 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
             // 版本自增
             updateEle.addElement(this.generateVersionSetEle(selective));
             // set 节点
-            List<Element> setsEles = XmlElementGeneratorTools.generateSets(columns, "record.");
+            List<VisitableElement> setsEles = XmlElementGeneratorTools.generateSets(columns, "record.");
             //  XmlElementGeneratorTools.generateSets, 因为传入参数不可能带IdentityAndGeneratedAlwaysColumn所以返回的是set列表而不可能是trim 元素
-            for (Element ele : setsEles) {
+            for (VisitableElement ele : setsEles) {
                 updateEle.addElement(ele);
             }
         }
@@ -789,12 +725,6 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
 
     /**
      * 生成LogicalDelete sql map
-     * @param introspectedTable
-     * @param id
-     * @param logicalDeleteColumn
-     * @param logicalDeleteValue
-     * @param byExample
-     * @return
      */
     private XmlElement generateSqlMapLogicalDelete(IntrospectedTable introspectedTable, String id, IntrospectedColumn logicalDeleteColumn, String logicalDeleteValue, boolean byExample) {
         XmlElement updateEle = new XmlElement("update");
@@ -850,8 +780,6 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
 
     /**
      * 生成版本号set节点
-     * @param selective
-     * @return
      */
     private TextElement generateVersionSetEle(boolean selective) {
         if (this.customizedNextVersion) {

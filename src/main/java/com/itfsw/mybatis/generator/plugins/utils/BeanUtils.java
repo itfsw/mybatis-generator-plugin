@@ -16,26 +16,16 @@
 
 package com.itfsw.mybatis.generator.plugins.utils;
 
+import org.mybatis.generator.config.Context;
+import org.mybatis.generator.config.JDBCConnectionConfiguration;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-/**
- * ---------------------------------------------------------------------------
- *
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2018/5/3 18:39
- * ---------------------------------------------------------------------------
- */
 public class BeanUtils {
     /**
      * 设置属性
-     * @param bean
-     * @param name
-     * @param value
-     * @throws NoSuchFieldException
-     * @throws IllegalAccessException
      */
     public static void setProperty(final Object bean, final String name, final Object value) throws NoSuchFieldException, IllegalAccessException {
         Field field = bean.getClass().getDeclaredField(name);
@@ -45,9 +35,6 @@ public class BeanUtils {
 
     /**
      * 获取属性
-     * @param bean
-     * @param name
-     * @return
      */
     public static Object getProperty(final Object bean, final String name) throws NoSuchFieldException, IllegalAccessException {
         Field field = bean.getClass().getDeclaredField(name);
@@ -56,18 +43,28 @@ public class BeanUtils {
     }
 
     /**
+     * 获取属性
+     */
+    public static Object getProperty(final Class clazz, final Object bean, final String name) throws NoSuchFieldException, IllegalAccessException {
+        Field field = clazz.getDeclaredField(name);
+        field.setAccessible(true);
+        return field.get(bean);
+    }
+
+    /**
      * 执行无参方法
-     * @param bean
-     * @param clazz
-     * @param name
-     * @return
-     * @throws NoSuchMethodException
-     * @throws InvocationTargetException
-     * @throws IllegalAccessException
      */
     public static Object invoke(final Object bean, Class clazz, final String name) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         Method method = clazz.getDeclaredMethod(name);
         method.setAccessible(true);
         return method.invoke(bean);
+    }
+
+    public static JDBCConnectionConfiguration getJdbcConnectionConfiguration(Context context) {
+        try {
+            return (JDBCConnectionConfiguration) getProperty(context, "jdbcConnectionConfiguration");
+        } catch (Exception e) {
+            throw new RuntimeException("无法获取到jdbcConnectionConfiguration", e);
+        }
     }
 }

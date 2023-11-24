@@ -28,7 +28,7 @@ import org.mybatis.generator.api.dom.java.Field;
 import org.mybatis.generator.api.dom.java.Method;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
 import org.mybatis.generator.api.dom.xml.Document;
-import org.mybatis.generator.api.dom.xml.Element;
+import org.mybatis.generator.api.dom.xml.VisitableElement;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.config.MergeConstants;
@@ -84,7 +84,7 @@ public class CommentPluginTest {
         // xml注释
         ObjectUtil xml = new ObjectUtil(myBatisGenerator.getGeneratedXmlFiles().get(0));
         Document doc = (Document) xml.get("document");
-        List<Element> els = ((XmlElement) (doc.getRootElement().getElements().get(0))).getElements();
+        List<VisitableElement> els = ((XmlElement) (doc.getRootElement().getElements().get(0))).getElements();
         String comment = ((TextElement) els.get(0)).getContent();
         Assert.assertEquals(comment, "addComment:BaseResultMap");
     }

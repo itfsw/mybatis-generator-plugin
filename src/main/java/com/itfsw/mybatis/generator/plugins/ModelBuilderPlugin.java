@@ -31,22 +31,14 @@ import org.mybatis.generator.internal.util.JavaBeansUtil;
 import java.util.List;
 
 /**
- * ---------------------------------------------------------------------------
  * 增加Model Builder方法
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2016/12/28 14:56
- * ---------------------------------------------------------------------------
  */
 public class ModelBuilderPlugin extends BasePlugin implements ILombokPluginHook {
     public static final String BUILDER_CLASS_NAME = "Builder";  // Builder 类名
 
     /**
      * Model Methods 生成
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -59,10 +51,7 @@ public class ModelBuilderPlugin extends BasePlugin implements ILombokPluginHook 
 
     /**
      * Model Methods 生成
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelRecordWithBLOBsClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -72,10 +61,7 @@ public class ModelBuilderPlugin extends BasePlugin implements ILombokPluginHook 
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelPrimaryKeyClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -111,21 +97,17 @@ public class ModelBuilderPlugin extends BasePlugin implements ILombokPluginHook 
 
     /**
      * 生成ModelBuilder
-     * @param topLevelClass
-     * @param introspectedTable
-     * @param columns
-     * @return
      */
     private InnerClass generateModelBuilder(TopLevelClass topLevelClass, IntrospectedTable introspectedTable, List<IntrospectedColumn> columns) {
         // 生成内部Builder类
         InnerClass innerClass = new InnerClass(BUILDER_CLASS_NAME);
         innerClass.setVisibility(JavaVisibility.PUBLIC);
         innerClass.setStatic(true);
-        if (topLevelClass.getSuperClass() != null) {
-            innerClass.setSuperClass(topLevelClass.getSuperClass().getShortName() + "." + BUILDER_CLASS_NAME);
+        if (topLevelClass.getSuperClass().isPresent()) {
+            innerClass.setSuperClass(topLevelClass.getSuperClass().get().getShortName() + "." + BUILDER_CLASS_NAME);
         }
 
-        // 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+        // <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
         // 顺序为 key base withBLOBs
         InnerTypeFullyQualifiedJavaType builderType = new InnerTypeFullyQualifiedJavaType(topLevelClass.getType().getFullyQualifiedName() + "." + BUILDER_CLASS_NAME);
 

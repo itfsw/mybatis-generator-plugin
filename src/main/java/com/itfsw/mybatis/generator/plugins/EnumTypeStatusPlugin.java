@@ -16,7 +16,10 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.*;
+import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
+import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
+import com.itfsw.mybatis.generator.plugins.utils.IntrospectedTableTools;
+import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.hook.ILogicalDeletePluginHook;
 import org.mybatis.generator.api.CommentGenerator;
 import org.mybatis.generator.api.IntrospectedColumn;
@@ -27,18 +30,15 @@ import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.internal.util.StringUtility;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * ---------------------------------------------------------------------------
  * type or status enum 插件
- * ---------------------------------------------------------------------------
- *
- * @author: hewei
- * @time:2018/11/27 20:36
- * ---------------------------------------------------------------------------
  */
 public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePluginHook {
 
@@ -57,19 +57,17 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
     private Map<String, EnumInfo> enumColumns;
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     *
-     * @param introspectedTable
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
         super.initialized(introspectedTable);
         this.enumColumns = new LinkedHashMap<>();
-        String autoScan = this.getProperties().getProperty(PRO_AUTO_SCAN);
+        String autoScan = properties.getProperty(PRO_AUTO_SCAN);
         // 是否开启了自动扫描
         if (StringUtility.stringHasValue(autoScan) && !StringUtility.isTrue(autoScan)) {
             // 获取全局配置
-            String enumColumns = this.getProperties().getProperty(EnumTypeStatusPlugin.PRO_ENUM_COLUMNS);
+            String enumColumns = properties.getProperty(EnumTypeStatusPlugin.PRO_ENUM_COLUMNS);
             // 如果有局部配置，则附加上去
             String tableEnumColumns = introspectedTable.getTableConfigurationProperty(EnumTypeStatusPlugin.PRO_ENUM_COLUMNS);
             if (tableEnumColumns != null) {
@@ -116,11 +114,7 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     *
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelPrimaryKeyClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -130,11 +124,7 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
 
     /**
      * Model 生成
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     *
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -172,9 +162,6 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
 
     /**
      * 生成对应enum
-     *
-     * @param topLevelClass
-     * @param introspectedTable
      */
     private void generateModelEnum(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         // 枚举跟随字段走
@@ -187,8 +174,8 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
     }
 
     public static class EnumInfo {
-        private List<EnumItemInfo> items = new ArrayList<>();
-        private IntrospectedColumn column;
+        private final List<EnumItemInfo> items = new ArrayList<>();
+        private final IntrospectedColumn column;
 
         public EnumInfo(IntrospectedColumn column) throws NotSupportTypeException, CannotParseException {
             String javaType = column.getFullyQualifiedJavaType().getFullyQualifiedName();
@@ -209,11 +196,6 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
 
         /**
          * 添加Enum Item
-         *
-         * @param name
-         * @param comment
-         * @param value
-         * @return
          */
         public void addItem(String name, String comment, String value) {
             items.add(new EnumItemInfo(this.column, name, comment, value));
@@ -221,17 +203,13 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
 
         /**
          * 判断是否有节点
-         *
-         * @return
          */
         public boolean hasItems() {
-            return items.size() > 0;
+            return !items.isEmpty();
         }
 
         /**
          * 解析注释
-         *
-         * @param remarks
          */
         public void parseRemarks(String remarks) throws CannotParseException {
             if (!StringUtility.stringHasValue(remarks) || !remarks.matches(REMARKS_PATTERN)) {
@@ -261,16 +239,17 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
          * Getter method for property <tt>items</tt>.
          *
          * @return property value of items
-         * @author hewei
          */
         public List<EnumItemInfo> getItems() {
             return items;
         }
 
-        public class NotSupportTypeException extends Exception {
+        public static class NotSupportTypeException extends Exception {
+            private static final long serialVersionUID = 2283026936991058746L;
         }
 
-        public class CannotParseException extends Exception {
+        public static class CannotParseException extends Exception {
+            private static final long serialVersionUID = -8307246050506041126L;
         }
 
         public InnerEnum generateEnum(CommentGenerator commentGenerator, IntrospectedTable introspectedTable) {
@@ -365,11 +344,11 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
         }
 
 
-        public class EnumItemInfo {
-            private IntrospectedColumn column;
-            private String name;
-            private String comment;
-            private String value;
+        public static class EnumItemInfo {
+            private final IntrospectedColumn column;
+            private final String name;
+            private final String comment;
+            private final String value;
 
             public EnumItemInfo(IntrospectedColumn column, String name, String comment, String value) {
                 this.column = column;

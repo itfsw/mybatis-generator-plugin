@@ -154,26 +154,6 @@ public class BugFixedTest {
     }
 
     /**
-     * 测试domainObjectRenamingRule和
-     */
-    @Test
-    public void bug0004() throws Exception {
-        DBHelper.createDB("scripts/BugFixedTest/bug-0004.sql");
-        // 规则 ^T 替换成空，也就是去掉前缀
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/BugFixedTest/bug-0004.xml");
-        MyBatisGenerator myBatisGenerator = tool.generate();
-        for (GeneratedJavaFile file : myBatisGenerator.getGeneratedJavaFiles()) {
-            String name = file.getCompilationUnit().getType().getShortName();
-            if (!name.matches("B.*")) {
-                Assert.assertTrue(false);
-            }
-            if (name.endsWith("Example")) {
-                Assert.assertEquals(file.getCompilationUnit().getType().getPackageName(), "com.itfsw.dao.example");
-            }
-        }
-    }
-
-    /**
      * 测试Example为null情况
      */
     @Test

@@ -22,19 +22,11 @@ import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
 
 /**
- * ---------------------------------------------------------------------------
  * Cloneable
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2018/11/7 15:26
- * ---------------------------------------------------------------------------
  */
 public class ModelCloneablePlugin extends BasePlugin {
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -43,10 +35,7 @@ public class ModelCloneablePlugin extends BasePlugin {
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelPrimaryKeyClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -55,10 +44,7 @@ public class ModelCloneablePlugin extends BasePlugin {
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelRecordWithBLOBsClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -68,8 +54,6 @@ public class ModelCloneablePlugin extends BasePlugin {
 
     /**
      * 支持Cloneable
-     * @param topLevelClass
-     * @param introspectedTable
      */
     private void supportCloneable(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         // implement

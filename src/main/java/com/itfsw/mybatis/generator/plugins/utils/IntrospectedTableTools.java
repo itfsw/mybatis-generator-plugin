@@ -16,13 +16,10 @@
 
 package com.itfsw.mybatis.generator.plugins.utils;
 
-import com.itfsw.mybatis.generator.plugins.ExampleTargetPlugin;
 import org.mybatis.generator.api.FullyQualifiedTable;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.config.Context;
-import org.mybatis.generator.config.JavaModelGeneratorConfiguration;
-import org.mybatis.generator.config.PluginConfiguration;
 import org.mybatis.generator.internal.util.StringUtility;
 
 import java.lang.reflect.Field;
@@ -31,20 +28,12 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 /**
- * ---------------------------------------------------------------------------
  * IntrospectedTable 的一些拓展增强
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2017/6/13 13:48
- * ---------------------------------------------------------------------------
  */
 public class IntrospectedTableTools {
 
     /**
      * 设置DomainObjectName和MapperName
-     * @param introspectedTable
-     * @param context
-     * @param domainObjectName
      */
     public static void setDomainObjectName(IntrospectedTable introspectedTable, Context context, String domainObjectName) throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         // 配置信息（没啥用）
@@ -67,25 +56,10 @@ public class IntrospectedTableTools {
         Method calculateXmlAttributes = IntrospectedTable.class.getDeclaredMethod("calculateXmlAttributes");
         calculateXmlAttributes.setAccessible(true);
         calculateXmlAttributes.invoke(introspectedTable);
-
-        // 注意！！ 如果配置了ExampleTargetPlugin插件，要修正Example 位置
-        PluginConfiguration configuration = PluginTools.getPluginConfiguration(context, ExampleTargetPlugin.class);
-        if (configuration != null && configuration.getProperty(ExampleTargetPlugin.PRO_TARGET_PACKAGE) != null) {
-            String exampleType = introspectedTable.getExampleType();
-            // 修改包名
-            JavaModelGeneratorConfiguration javaModelGeneratorConfiguration = context.getJavaModelGeneratorConfiguration();
-            String targetPackage = javaModelGeneratorConfiguration.getTargetPackage();
-            String newExampleType = exampleType.replace(targetPackage, configuration.getProperty(ExampleTargetPlugin.PRO_TARGET_PACKAGE));
-
-            introspectedTable.setExampleType(newExampleType);
-        }
     }
 
     /**
      * 安全获取column 通过正则获取的name可能包含beginningDelimiter&&endingDelimiter
-     * @param introspectedTable
-     * @param columnName
-     * @return
      */
     public static IntrospectedColumn safeGetColumn(IntrospectedTable introspectedTable, String columnName) {
         // columnName
@@ -100,15 +74,16 @@ public class IntrospectedTableTools {
             columnName = columnName.replaceFirst(endingDelimiter + "$", "");
         }
 
-        return introspectedTable.getColumn(columnName);
+        if (introspectedTable.getColumn(columnName).isPresent()) {
+            return introspectedTable.getColumn(columnName).get();
+        }
+        return null;
     }
 
     /**
      * 获取生成model baseRecord的列
-     * @param introspectedTable
-     * @return
      */
-    public static List<IntrospectedColumn> getModelBaseRecordClomns(IntrospectedTable introspectedTable) {
+    public static List<IntrospectedColumn> getModelBaseRecordColumns(IntrospectedTable introspectedTable) {
         List<IntrospectedColumn> introspectedColumns;
         if (includePrimaryKeyColumns(introspectedTable)) {
             if (includeBLOBColumns(introspectedTable)) {
@@ -130,8 +105,6 @@ public class IntrospectedTableTools {
 
     /**
      * 是否有primaryKey 列
-     * @param introspectedTable
-     * @return
      */
     public static boolean includePrimaryKeyColumns(IntrospectedTable introspectedTable) {
         return !introspectedTable.getRules().generatePrimaryKeyClass()
@@ -140,8 +113,6 @@ public class IntrospectedTableTools {
 
     /**
      * 是否有 blob 列
-     * @param introspectedTable
-     * @return
      */
     public static boolean includeBLOBColumns(IntrospectedTable introspectedTable) {
         return !introspectedTable.getRules().generateRecordWithBLOBsClass()

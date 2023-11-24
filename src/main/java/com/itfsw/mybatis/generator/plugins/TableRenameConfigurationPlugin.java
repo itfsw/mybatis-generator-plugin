@@ -38,14 +38,6 @@ import static org.mybatis.generator.internal.util.JavaBeansUtil.getValidProperty
 import static org.mybatis.generator.internal.util.StringUtility.isTrue;
 import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 
-/**
- * ---------------------------------------------------------------------------
- *
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2018/5/21 11:23
- * ---------------------------------------------------------------------------
- */
 public class TableRenameConfigurationPlugin extends BasePlugin implements ITableConfigurationHook {
     public static final String PRO_TABLE_SEARCH_STRING = "domainObjectRenamingRule.searchString";  // 查找 property
     public static final String PRO_TABLE_REPLACE_STRING = "domainObjectRenamingRule.replaceString";  // 替换 property
@@ -77,8 +69,6 @@ public class TableRenameConfigurationPlugin extends BasePlugin implements ITable
      */
     @Override
     public boolean validate(List<String> warnings) {
-        Properties properties = this.getProperties();
-
         this.tableSearchString = properties.getProperty(PRO_TABLE_SEARCH_STRING);
         this.tableReplaceString = properties.getProperty(PRO_TABLE_REPLACE_STRING);
         this.columnSearchString = properties.getProperty(PRO_COLUMN_SEARCH_STRING);
@@ -93,7 +83,6 @@ public class TableRenameConfigurationPlugin extends BasePlugin implements ITable
 
     /**
      * 表配置
-     * @param introspectedTable
      */
     @Override
     public void tableConfiguration(IntrospectedTable introspectedTable) {
@@ -102,9 +91,9 @@ public class TableRenameConfigurationPlugin extends BasePlugin implements ITable
             FullyQualifiedTable fullyQualifiedTable = introspectedTable.getFullyQualifiedTable();
 
             String tableReplaceDisable = tableConfiguration.getProperty(PRO_TABLE_REPLACE_DISABLE);
-            this.tableReplaceDisable = tableReplaceDisable == null ? false : StringUtility.isTrue(tableReplaceDisable);
+            this.tableReplaceDisable = tableReplaceDisable != null && StringUtility.isTrue(tableReplaceDisable);
             String columnReplaceDisable = tableConfiguration.getProperty(PRO_COLUMN_REPLACE_DISABLE);
-            this.columnReplaceDisable = columnReplaceDisable == null ? false : StringUtility.isTrue(columnReplaceDisable);
+            this.columnReplaceDisable = columnReplaceDisable != null && StringUtility.isTrue(columnReplaceDisable);
 
             String javaClientInterfacePackage = (String) BeanUtils.invoke(introspectedTable, IntrospectedTable.class, "calculateJavaClientInterfacePackage");
             String sqlMapPackage = (String) BeanUtils.invoke(introspectedTable, IntrospectedTable.class, "calculateSqlMapPackage");
@@ -207,15 +196,12 @@ public class TableRenameConfigurationPlugin extends BasePlugin implements ITable
                 introspectedTable.setRecordWithBLOBsType(sb.toString());
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 
     /**
      * column rename
-     * @param columns
-     * @param rule
-     * @param tc
      */
     private void renameColumns(List<IntrospectedColumn> columns, ColumnRenamingRule rule, TableConfiguration tc) {
         Pattern pattern = Pattern.compile(rule.getSearchString());

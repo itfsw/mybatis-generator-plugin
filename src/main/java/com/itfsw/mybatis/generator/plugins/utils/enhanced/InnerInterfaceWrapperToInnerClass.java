@@ -16,19 +16,14 @@
 
 package com.itfsw.mybatis.generator.plugins.utils.enhanced;
 
-import org.mybatis.generator.api.dom.java.CompilationUnit;
 import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
 import org.mybatis.generator.api.dom.java.InnerClass;
+import org.mybatis.generator.api.dom.java.InnerInterface;
 
 /**
- * ---------------------------------------------------------------------------
  * 把InnerInterface包装成InnerClass(Mybatis Generator 没有提供内部接口实现)
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2017/1/12 17:40
- * ---------------------------------------------------------------------------
  */
-public class InnerInterfaceWrapperToInnerClass extends InnerClass{
+public class InnerInterfaceWrapperToInnerClass extends InnerClass {
     private InnerInterface innerInterface;  // 内部接口
 
 
@@ -40,25 +35,14 @@ public class InnerInterfaceWrapperToInnerClass extends InnerClass{
         super(typeName);
     }
 
-    public InnerInterfaceWrapperToInnerClass(InnerInterface innerInterface){
+    public InnerInterfaceWrapperToInnerClass(InnerInterface innerInterface) {
         super(innerInterface.getType());
         this.innerInterface = innerInterface;
     }
 
     /**
-     * 重写获取Java内容方法，调用InnerInterface的实现
-     *
-     * @param indentLevel
-     * @param compilationUnit
-     * @return
-     */
-    @Override
-    public String getFormattedContent(int indentLevel, CompilationUnit compilationUnit) {
-        return this.innerInterface.getFormattedContent(indentLevel, compilationUnit);
-    }
-
-    /**
      * Getter method for property <tt>innerInterface</tt>.
+     *
      * @return property value of innerInterface
      * @author hewei
      */
@@ -68,6 +52,7 @@ public class InnerInterfaceWrapperToInnerClass extends InnerClass{
 
     /**
      * Setter method for property <tt>innerInterface</tt>.
+     *
      * @param innerInterface value to be assigned to property innerInterface
      * @author hewei
      */

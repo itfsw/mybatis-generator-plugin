@@ -24,54 +24,24 @@ import org.mybatis.generator.api.dom.xml.XmlElement;
 
 import java.util.List;
 
-/**
- * ---------------------------------------------------------------------------
- *
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2018/4/27 11:09
- * ---------------------------------------------------------------------------
- */
 public interface IUpsertPluginHook {
     /**
      * upsertSelective 方法
-     * @param method
-     * @param interfaze
-     * @param introspectedTable
-     * @return
      */
     boolean clientUpsertSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable);
 
     /**
      * upsertByExampleSelective 方法
-     * @param method
-     * @param interfaze
-     * @param introspectedTable
-     * @return
      */
     boolean clientUpsertByExampleSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable);
 
     /**
      * upsertSelective xml
-     * @param element
-     * @param columns
-     * @param insertColumnsEle
-     * @param insertValuesEle
-     * @param setsEle
-     * @param introspectedTable
-     * @return
      */
     boolean sqlMapUpsertSelectiveElementGenerated(XmlElement element, List<IntrospectedColumn> columns, XmlElement insertColumnsEle, XmlElement insertValuesEle, XmlElement setsEle, IntrospectedTable introspectedTable);
 
     /**
      * upsertByExampleSelective xml
-     * @param element
-     * @param columns
-     * @param insertColumnsEle
-     * @param insertValuesEle
-     * @param setsEle
-     * @param introspectedTable
-     * @return
      */
     boolean sqlMapUpsertByExampleSelectiveElementGenerated(XmlElement element, List<IntrospectedColumn> columns, XmlElement insertColumnsEle, XmlElement insertValuesEle, XmlElement setsEle, IntrospectedTable introspectedTable);
 }

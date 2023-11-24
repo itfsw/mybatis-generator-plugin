@@ -20,21 +20,9 @@ import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.InnerEnum;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
 
-/**
- * ---------------------------------------------------------------------------
- *
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2019/7/5 14:17
- * ---------------------------------------------------------------------------
- */
 public interface IModelColumnPluginHook {
     /**
      * Model Column 枚举生成
-     * @param innerEnum
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
      */
     boolean modelColumnEnumGenerated(InnerEnum innerEnum, TopLevelClass topLevelClass, IntrospectedTable introspectedTable);
 }

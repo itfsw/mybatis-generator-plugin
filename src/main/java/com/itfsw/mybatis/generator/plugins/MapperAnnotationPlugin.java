@@ -26,27 +26,22 @@ import org.mybatis.generator.internal.util.StringUtility;
 import java.util.Map;
 import java.util.Properties;
 
-/**
- * ---------------------------------------------------------------------------
- * <p>
- * ---------------------------------------------------------------------------
- *
- * @author: hewei
- * @time:2019/7/9 14:30
- * ---------------------------------------------------------------------------
- */
 public class MapperAnnotationPlugin extends BasePlugin {
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
+     * This method is called when the entire client has been generated.
+     * Implement this method to add additional methods or fields to a generated
+     * client interface or implementation.
      *
-     * @param interfaze
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * @param interfaze         the generated interface if any, may be null
+     * @param introspectedTable The class containing information about the table as
+     *                          introspected from the database
+     * @return true if the interface should be generated, false if the generated
+     * interface should be ignored. In the case of multiple plugins, the
+     * first plugin returning false will disable the calling of further
+     * plugins.
      */
     @Override
-    public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        Properties properties = getProperties();
+    public boolean clientGenerated(Interface interfaze, IntrospectedTable introspectedTable) {
         // 和官方插件一致支持，没有配置特殊注解时默认开启@Mapper
         if ("true".equalsIgnoreCase(properties.getProperty("@Mapper", "true")) && introspectedTable.getTargetRuntime() == IntrospectedTable.TargetRuntime.MYBATIS3) {
             // don't need to do this for MYBATIS3_DSQL as that runtime already adds this annotation
@@ -71,5 +66,4 @@ public class MapperAnnotationPlugin extends BasePlugin {
 
         return true;
     }
-
 }

@@ -34,12 +34,7 @@ import java.util.*;
 import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 
 /**
- * ---------------------------------------------------------------------------
  * 逻辑删除插件
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2017/1/13 14:08
- * ---------------------------------------------------------------------------
  */
 public class LogicalDeletePlugin extends BasePlugin {
     public static final String METHOD_LOGICAL_DELETE_BY_EXAMPLE = "logicalDeleteByExample";
@@ -111,9 +106,7 @@ public class LogicalDeletePlugin extends BasePlugin {
 
     /**
      * 初始化阶段
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
@@ -122,7 +115,6 @@ public class LogicalDeletePlugin extends BasePlugin {
         this.logicalDeleteEnumIndex = 1;
 
         // 1. 获取配置的逻辑删除列
-        Properties properties = getProperties();
         String logicalDeleteColumn = properties.getProperty(PRO_LOGICAL_DELETE_COLUMN);
         if (introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_COLUMN) != null) {
             logicalDeleteColumn = introspectedTable.getTableConfigurationProperty(PRO_LOGICAL_DELETE_COLUMN);
@@ -134,7 +126,7 @@ public class LogicalDeletePlugin extends BasePlugin {
         }
 
         // 2. 获取逻辑删除常量值
-        this.enableLogicalDeleteConst = properties.getProperty(PRO_ENABLE_LOGICAL_DELETE_CONST) == null ? true : StringUtility.isTrue(properties.getProperty(PRO_ENABLE_LOGICAL_DELETE_CONST));
+        this.enableLogicalDeleteConst = properties.getProperty(PRO_ENABLE_LOGICAL_DELETE_CONST) == null || StringUtility.isTrue(properties.getProperty(PRO_ENABLE_LOGICAL_DELETE_CONST));
         if (this.enableLogicalDeleteConst) {
             if (properties.getProperty(PRO_LOGICAL_DELETE_CONST_NAME) != null) {
                 this.logicalDeleteConstName = properties.getProperty(PRO_LOGICAL_DELETE_CONST_NAME).toUpperCase();
@@ -203,11 +195,11 @@ public class LogicalDeletePlugin extends BasePlugin {
                     } else {
                         // 兼容处理以前一些老用户配置的Long 和 Float配置问题
                         if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getFullyQualifiedName().equals(Long.class.getName())) {
-                            this.logicalUnDeleteValue = this.logicalUnDeleteValue.replaceAll("L|l", "");
-                            this.logicalDeleteValue = this.logicalDeleteValue.replaceAll("L|l", "");
+                            this.logicalUnDeleteValue = this.logicalUnDeleteValue.replaceAll("[Ll]", "");
+                            this.logicalDeleteValue = this.logicalDeleteValue.replaceAll("[Ll]", "");
                         } else if (this.logicalDeleteColumn.getFullyQualifiedJavaType().getFullyQualifiedName().equals(Float.class.getName())) {
-                            this.logicalUnDeleteValue = this.logicalUnDeleteValue.replaceAll("F|f", "");
-                            this.logicalDeleteValue = this.logicalDeleteValue.replaceAll("F|f", "");
+                            this.logicalUnDeleteValue = this.logicalUnDeleteValue.replaceAll("[Ff]", "");
+                            this.logicalDeleteValue = this.logicalDeleteValue.replaceAll("[Ff]", "");
                         }
 
                         enumInfo.addItem(this.logicalUnDeleteConstName, "未删除", this.logicalUnDeleteValue);
@@ -230,14 +222,10 @@ public class LogicalDeletePlugin extends BasePlugin {
 
     /**
      * Java Client Methods 生成
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param interfaze
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
-    public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+    public boolean clientGenerated(Interface interfaze, IntrospectedTable introspectedTable) {
         if (this.logicalDeleteColumn != null) {
             // 1. 逻辑删除ByExample
             Method mLogicalDeleteByExample = JavaElementGeneratorTools.generateMethod(
@@ -336,10 +324,7 @@ public class LogicalDeletePlugin extends BasePlugin {
 
     /**
      * SQL Map Methods 生成
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param document
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
@@ -387,16 +372,15 @@ public class LogicalDeletePlugin extends BasePlugin {
                 logicalDeleteByPrimaryKey.addAttribute(new Attribute("parameterType", parameterClass));
                 commentGenerator.addComment(logicalDeleteByPrimaryKey);
 
-                StringBuilder sb1 = new StringBuilder();
-                sb1.append("update ");
-                sb1.append(introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime());
-                sb1.append(" set ");
-                // 更新逻辑删除字段
-                sb1.append(this.logicalDeleteColumn.getActualColumnName());
-                sb1.append(" = ");
-                sb1.append(XmlElementGeneratorTools.generateLogicalDeleteColumnValue(this.logicalDeleteColumn, this.logicalDeleteValue));
+                String sb1 = "update " +
+                        introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime() +
+                        " set " +
+                        // 更新逻辑删除字段
+                        this.logicalDeleteColumn.getActualColumnName() +
+                        " = " +
+                        XmlElementGeneratorTools.generateLogicalDeleteColumnValue(this.logicalDeleteColumn, this.logicalDeleteValue);
 
-                logicalDeleteByPrimaryKey.addElement(new TextElement(sb1.toString()));
+                logicalDeleteByPrimaryKey.addElement(new TextElement(sb1));
 
                 XmlElementGeneratorTools.generateWhereByPrimaryKeyTo(logicalDeleteByPrimaryKey, introspectedTable.getPrimaryKeyColumns());
 
@@ -465,13 +449,7 @@ public class LogicalDeletePlugin extends BasePlugin {
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param field
-     * @param topLevelClass
-     * @param introspectedColumn
-     * @param introspectedTable
-     * @param modelClassType
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelFieldGenerated(Field field, TopLevelClass topLevelClass, IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable, ModelClassType modelClassType) {
@@ -479,7 +457,7 @@ public class LogicalDeletePlugin extends BasePlugin {
             // 常量、枚举和逻辑删除方法跟随 逻辑删除列走
             if (this.logicalDeleteColumn.getJavaProperty().equals(field.getName())) {
                 // 1. 添加枚举
-                if (PluginTools.getHook(ILogicalDeletePluginHook.class).logicalDeleteEnumGenerated(this.logicalDeleteColumn) == false) {
+                if (!PluginTools.getHook(ILogicalDeletePluginHook.class).logicalDeleteEnumGenerated(this.logicalDeleteColumn)) {
                     topLevelClass.addInnerEnum(this.logicalDeleteEnum);
                 }
                 // 2. andLogicalDeleted 方法
@@ -521,10 +499,7 @@ public class LogicalDeletePlugin extends BasePlugin {
 
     /**
      * ModelExample Methods 生成
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelExampleClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -542,10 +517,10 @@ public class LogicalDeletePlugin extends BasePlugin {
                     method.setReturnType(innerClass.getType());
                     method.addParameter(new Parameter(FullyQualifiedJavaType.getBooleanPrimitiveInstance(), "deleted"));
 
-                    StringBuffer sb = new StringBuffer();
+                    StringBuilder sb = new StringBuilder();
                     sb.append("return deleted ? ");
 
-                    String modelName = this.getColumnInModelType().getShortName();
+                    String modelName = Objects.requireNonNull(this.getColumnInModelType()).getShortName();
 
                     // 调用EqualTo方法
                     StringBuilder equalToMethodName = new StringBuilder();
@@ -554,7 +529,7 @@ public class LogicalDeletePlugin extends BasePlugin {
                     equalToMethodName.insert(0, "and");
                     equalToMethodName.append("EqualTo");
                     sb.append(equalToMethodName);
-                    sb.append("(" + modelName + "." + this.getEnumConstantValue(true) + ")");
+                    sb.append("(").append(modelName).append(".").append(this.getEnumConstantValue(true)).append(")");
 
                     sb.append(" : ");
 
@@ -565,7 +540,7 @@ public class LogicalDeletePlugin extends BasePlugin {
                     notEqualToMethodName.insert(0, "and");
                     notEqualToMethodName.append("NotEqualTo");
                     sb.append(notEqualToMethodName);
-                    sb.append("(" + modelName + "." + this.getEnumConstantValue(true) + ")");
+                    sb.append("(").append(modelName).append(".").append(this.getEnumConstantValue(true)).append(")");
 
                     sb.append(";");
 
@@ -580,8 +555,6 @@ public class LogicalDeletePlugin extends BasePlugin {
 
     /**
      * 获取逻辑删除枚举
-     * @param delete
-     * @return
      */
     private String getEnumConstantValue(boolean delete) {
         if (this.logicalDeleteEnum != null) {
@@ -594,7 +567,6 @@ public class LogicalDeletePlugin extends BasePlugin {
 
     /**
      * 获取逻辑删除列所在model(modelExampleClassGenerated执行顺序在前面！！！！！和官网上不一样，没办法只有自己去找）
-     * @return
      */
     private FullyQualifiedJavaType getColumnInModelType() {
         if (this.logicalDeleteColumn != null) {

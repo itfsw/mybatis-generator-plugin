@@ -18,28 +18,22 @@ package com.itfsw.mybatis.generator.plugins.utils.hook;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.BeanUtils;
+import org.mybatis.generator.api.CompositePlugin;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.Plugin;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.Document;
-import org.mybatis.generator.api.dom.xml.Element;
+import org.mybatis.generator.api.dom.xml.VisitableElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.config.Context;
+import org.mybatis.generator.internal.PluginAggregator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * ---------------------------------------------------------------------------
- *
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2018/4/27 11:33
- * ---------------------------------------------------------------------------
- */
 public class HookAggregator implements IUpsertPluginHook,
         IModelBuilderPluginHook,
         IIncrementsPluginHook,
@@ -62,11 +56,6 @@ public class HookAggregator implements IUpsertPluginHook,
     public HookAggregator() {
     }
 
-    /**
-     * Getter method for property <tt>instance</tt>.
-     * @return property value of instance
-     * @author hewei
-     */
     public static HookAggregator getInstance() {
         return instance;
     }
@@ -82,15 +71,13 @@ public class HookAggregator implements IUpsertPluginHook,
 
     /**
      * 获取插件
-     * @param clazz
-     * @param <T>
-     * @return
      */
     private <T> List<T> getPlugins(Class<T> clazz) {
         List list = new ArrayList();
         // 反射获取插件列表，不能用单例去弄，不然因为类释放的问题而导致测试用例出问题
         try {
-            List<Plugin> plugins = (List<Plugin>) BeanUtils.getProperty(this.context.getPlugins(), "plugins");
+            PluginAggregator pluginAggregator = (PluginAggregator) context.getPlugins();
+            List<Plugin> plugins = (List<Plugin>) BeanUtils.getProperty(CompositePlugin.class, pluginAggregator, "plugins");
             for (Plugin plugin : plugins) {
                 if (clazz.isInstance(plugin)) {
                     list.add(plugin);
@@ -105,7 +92,7 @@ public class HookAggregator implements IUpsertPluginHook,
     // ============================================= IIncrementsPluginHook ==============================================
 
     @Override
-    public List<Element> incrementSetElementGenerated(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma) {
+    public List<VisitableElement> incrementSetElementGenerated(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma) {
         if (this.getPlugins(IIncrementsPluginHook.class).isEmpty()) {
             return new ArrayList<>();
         } else {

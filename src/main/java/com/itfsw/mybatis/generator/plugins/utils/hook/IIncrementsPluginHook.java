@@ -17,40 +17,24 @@
 package com.itfsw.mybatis.generator.plugins.utils.hook;
 
 import org.mybatis.generator.api.IntrospectedColumn;
-import org.mybatis.generator.api.dom.xml.Element;
+import org.mybatis.generator.api.dom.xml.VisitableElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 
 import java.util.List;
 
-/**
- * ---------------------------------------------------------------------------
- *
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2018/4/28 17:50
- * ---------------------------------------------------------------------------
- */
 public interface IIncrementsPluginHook {
     /**
      * 生成增量操作节点
-     * @param introspectedColumn
-     * @param prefix
-     * @param hasComma
-     * @return
      */
-    List<Element> incrementSetElementGenerated(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma);
+    List<VisitableElement> incrementSetElementGenerated(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma);
 
     /**
      * 生成增量操作节点(SelectiveEnhancedPlugin)
-     * @param columns
-     * @return
      */
     List<XmlElement> incrementSetsWithSelectiveEnhancedPluginElementGenerated(List<IntrospectedColumn> columns);
 
     /**
      * 是否支持increment
-     * @param column
-     * @return
      */
     boolean supportIncrement(IntrospectedColumn column);
 }

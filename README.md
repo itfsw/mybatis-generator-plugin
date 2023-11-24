@@ -306,10 +306,7 @@ public class Test {
 插件：
 ```xml
 <!-- Example Criteria 增强插件 -->
-<plugin type="com.itfsw.mybatis.generator.plugins.ExampleEnhancedPlugin">
-    <!-- 是否支持已经过时的andIf方法（推荐使用when代替），默认支持 -->
-    <property name="enableAndIf" value="true"/>
-</plugin>
+<plugin type="com.itfsw.mybatis.generator.plugins.ExampleEnhancedPlugin"/>
 ```
 使用：  
 ```java
@@ -322,43 +319,6 @@ public class Test {
                 .createCriteria()
                 .andField1EqualTo(1)
                 .andField2EqualTo("xxx")
-                .example()
-        );
-        
-        // ----------------- andIf （@Deprecated 尽量使用when代替）  ---------------------
-        // Criteria增强了链式调用，现在一些按条件增加的查询条件不会打乱链式调用了
-        // old
-        TbExample oldEx = new TbExample();
-        TbExample.Criteria criteria = oldEx
-                .createCriteria()
-                .andField1EqualTo(1)
-                .andField2EqualTo("xxx");
-        // 如果随机数大于0.5，附加Field3查询条件
-        if (Math.random() > 0.5){
-            criteria.andField3EqualTo(2)
-                    .andField4EqualTo(new Date());
-        }
-        this.tbMapper.selectByExample(oldEx);
-
-        // new
-        this.tbMapper.selectByExample(
-                new TbExample()
-                .createCriteria()
-                .andField1EqualTo(1)
-                .andField2EqualTo("xxx")
-                // 如果随机数大于0.5，附加Field3查询条件
-                .andIf(Math.random() > 0.5, new TbExample.Criteria.ICriteriaAdd() {
-                    @Override
-                    public TbExample.Criteria add(TbExample.Criteria add) {
-                        return add.andField3EqualTo(2)
-                                .andField4EqualTo(new Date());
-                    }
-                })
-                // 当然最简洁的写法是采用java8的Lambda表达式，当然你的项目是Java8+
-                .andIf(Math.random() > 0.5, add -> add
-                        .andField3EqualTo(2)
-                        .andField4EqualTo(new Date())
-                )
                 .example()
         );
         
@@ -426,16 +386,6 @@ public class Test {
         );
     }
 }
-```
-### 5. Example 目标包修改插件
-Mybatis Generator 插件默认把Model类和Example类都生成到一个包下，这样该包下类就会很多不方便区分，该插件目的就是把Example类独立到一个新包下，方便查看。  
-插件：
-```xml
-<!-- Example 目标包修改插件 -->
-<plugin type="com.itfsw.mybatis.generator.plugins.ExampleTargetPlugin">
-    <!-- 修改Example类生成到目标包下 -->
-    <property name="targetPackage" value="com.itfsw.mybatis.generator.dao.example"/>
-</plugin>
 ```
 ### 6. 批量插入插件
 提供了批量插入batchInsert和batchInsertSelective方法，需配合数据Model属性对应Column获取插件（ModelColumnPlugin）插件使用，实现类似于insertSelective插入列！    
@@ -837,102 +787,7 @@ public class Test {
     }
 }
 ```
-### 11. Table增加前缀插件
-项目中有时会遇到配置多数据源对应多业务的情况，这种情况下可能会出现不同数据源出现重复表名，造成异常冲突。
-该插件允许为表增加前缀，改变最终生成的Model、Mapper、Example类名以及xml名。  
->warning: 使用[Table重命名插件](12-table重命名插件)可以实现相同功能！  
->warning: 官方最新版本中已提供domainObjectRenamingRule支持(可以配合[表重命名配置插件](#18-表重命名配置插件)进行全局配置)！  
-```xml
-<table tableName="tb">
-    <domainObjectRenamingRule searchString="^" replaceString="DB1" />
-</table>
-```
-插件：
-```xml
-<xml>
-    <!-- Table增加前缀插件 -->
-    <plugin type="com.itfsw.mybatis.generator.plugins.TablePrefixPlugin">
-        <!-- 这里配置的是全局表前缀，当然在table中配置的值会覆盖该全局配置 -->
-        <property name="prefix" value="Cm"/>
-    </plugin>
-    
-    <table tableName="tb">
-        <!-- 这里可以单独表配置前缀，覆盖全局配置 -->
-        <property name="suffix" value="Db1"/>
-    </table>
-</xml>
-```
-使用：  
-```java
-public class Test {
-    public static void main(String[] args) {
-        // Tb 表对应的Model、Mapper、Example类都增加了Db1的前缀
-        // Model类名: Tb -> Db1Tb
-        // Mapper类名: TbMapper -> Db1TbMapper
-        // Example类名: TbExample -> Db1TbExample
-        // xml文件名: TbMapper.xml -> Db1TbMapper.xml
-    }
-}
-```
-### 12. Table重命名插件
-插件由来：  
-记得才开始工作时某个隔壁项目组的坑爹项目，由于某些特定的原因数据库设计表名为t1~tn,字段名为f1~fn。
-这种情况下如何利用Mybatis Generator生成可读的代码呢，字段可以用columnOverride来替换，Model、Mapper等则需要使用domainObjectName+mapperName来实现方便辨识的代码。  
->该插件解决：domainObjectName+mapperName?好吧我想简化一下，所以直接使用tableOverride（仿照columnOverride）来实现便于配置的理解。 
 
-某些DBA喜欢在数据库设计时使用t_、f_这种类似的设计（[[issues#4]](https://github.com/itfsw/mybatis-generator-plugin/issues/4)），
-这种情况下我们就希望能有类似[columnRenamingRule](http://www.mybatis.org/generator/configreference/columnRenamingRule.html)这种重命名插件来修正最终生成的Model、Mapper等命名。
->该插件解决：使用正则替换table生成的Model、Example、Mapper等命名。
- 
-项目中有时会遇到配置多数据源对应多业务的情况，这种情况下可能会出现不同数据源出现重复表名，造成异常冲突。
-该插件可以实现和[Table增加前缀插件](11-table增加前缀插件)相同的功能，仿照如下配置。  
-```xml
-<property name="searchString" value="^"/>
-<property name="replaceString" value="DB1"/>
-```
->warning: 官方最新版本中已提供domainObjectRenamingRule支持(可以配合[表重命名配置插件](#18-表重命名配置插件)进行全局配置)！  
-```xml
-<table tableName="tb">
-    <domainObjectRenamingRule searchString="^T" replaceString="" />
-</table>
-``` 
-
-插件：
-```xml
-<xml>
-    <!-- Table重命名插件 -->
-    <plugin type="com.itfsw.mybatis.generator.plugins.TableRenamePlugin">
-        <!-- 可根据具体需求确定是否配置 -->
-        <property name="searchString" value="^T"/>
-        <property name="replaceString" value=""/>
-    </plugin>
-    
-    <table tableName="tb">
-        <!-- 这个优先级最高，会忽略searchString、replaceString的配置 -->
-        <property name="tableOverride" value="TestDb"/>
-    </table>
-</xml>
-```
-使用：  
-```java
-public class Test {
-    public static void main(String[] args) {
-        // 1. 使用searchString和replaceString时，和Mybatis Generator一样使用的是java.util.regex.Matcher.replaceAll去进行正则替换
-        // 表： T_USER
-        // Model类名: TUser -> User
-        // Mapper类名: TUserMapper -> UserMapper
-        // Example类名: TUserExample -> UserExample
-        // xml文件名: TUserMapper.xml -> UserMapper.xml
-        
-        // 2. 使用表tableOverride时，该配置优先级最高
-        // 表： T_BOOK
-        // Model类名: TBook -> TestDb
-        // Mapper类名: TBookMapper -> TestDbMapper
-        // Example类名: TBookExample -> TestDbExample
-        // xml文件名: TBookMapper.xml -> TestDbMapper.xml
-    }
-}
-```
 ### 13. 自定义注释插件
 Mybatis Generator是原生支持自定义注释的（commentGenerator配置type属性），但使用比较麻烦需要自己实现CommentGenerator接口并打包配置赖等等。  
 该插件借助freemarker极佳的灵活性实现了自定义注释的快速配置。  
@@ -1252,40 +1107,6 @@ Mybatis Generator是原生支持自定义注释的（commentGenerator配置type�
  */
         ]]></comment>
 </template>
-```
-### 14. 增量插件
-为更新操作生成set filedxxx = filedxxx +/- inc 操作，方便某些统计字段的更新操作，常用于某些需要计数的场景；  
-
->warning：该插件在整合LombokPlugin使用时会生成大量附加代码影响代码美观，强力建议切换到新版插件[IncrementPlugin](#22-增量插件);    
-
-插件：
-```xml
-<xml>
-    <!-- 增量插件 -->
-    <plugin type="com.itfsw.mybatis.generator.plugins.IncrementsPlugin" />
-    
-    <table tableName="tb">
-        <!-- 配置需要进行增量操作的列名称（英文半角逗号分隔） -->
-        <property name="incrementsColumns" value="field1,field2"/>
-    </table>
-</xml>
-```
-使用：  
-```java
-public class Test {
-    public static void main(String[] args) {
-        // 在构建更新对象时，配置了增量支持的字段会增加传入增量枚举的方法
-        Tb tb = Tb.builder()
-                .id(102)
-                .field1(1, Tb.Builder.Inc.INC)  // 字段1 统计增加1
-                .field2(2, Tb.Builder.Inc.DEC)  // 字段2 统计减去2
-                .field4(new Date())
-                .build();
-        // 更新操作，可以是 updateByExample, updateByExampleSelective, updateByPrimaryKey
-        // , updateByPrimaryKeySelective, upsert, upsertSelective等所有涉及更新的操作
-        this.tbMapper.updateByPrimaryKey(tb);
-    }
-}
 ```
 ### 15. 查询结果选择性返回插件
 一般我们在做查询优化的时候会要求查询返回时不要返回自己不需要的字段数据，因为Sending data所花费的时间和加大内存的占用

@@ -22,8 +22,8 @@ import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.Attribute;
-import org.mybatis.generator.api.dom.xml.Element;
 import org.mybatis.generator.api.dom.xml.TextElement;
+import org.mybatis.generator.api.dom.xml.VisitableElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 import org.mybatis.generator.internal.util.JavaBeansUtil;
@@ -32,14 +32,6 @@ import org.mybatis.generator.internal.util.StringUtility;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * ---------------------------------------------------------------------------
- *
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2019/7/4 11:01
- * ---------------------------------------------------------------------------
- */
 public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook {
     public static final String PRO_INCREMENT_COLUMNS = "incrementColumns";
 
@@ -73,15 +65,13 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
     private List<IntrospectedColumn> incColumns;
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param warnings
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean validate(List<String> warnings) {
 
         // 插件使用前提是使用了ModelBuilderPlugin插件
-        if (!PluginTools.checkDependencyPlugin(getContext(), ModelColumnPlugin.class)) {
+        if (!PluginTools.checkDependencyPlugin(context, ModelColumnPlugin.class)) {
             warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件需配合" + ModelColumnPlugin.class.getTypeName() + "插件使用！");
             return false;
         }
@@ -90,8 +80,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param introspectedTable
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
@@ -114,10 +103,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param element
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean sqlMapUpdateByExampleSelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
@@ -126,10 +112,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param element
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean sqlMapUpdateByExampleWithBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
@@ -138,10 +121,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param element
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean sqlMapUpdateByExampleWithoutBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
@@ -150,10 +130,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param element
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean sqlMapUpdateByPrimaryKeySelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
@@ -162,10 +139,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param element
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean sqlMapUpdateByPrimaryKeyWithBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
@@ -174,10 +148,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param element
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean sqlMapUpdateByPrimaryKeyWithoutBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
@@ -187,10 +158,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
 
     /**
      * Model Methods 生成
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -200,10 +168,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
 
     /**
      * Model Methods 生成
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelRecordWithBLOBsClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -212,10 +177,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelPrimaryKeyClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -232,7 +194,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
             XmlElement choose = new XmlElement("choose");
 
             // 启用增量操作
-            String columnMap = (prefix != null ? prefix : "_parameter.") + FIELD_INC_MAP + "." + MyBatis3FormattingUtilities.escapeStringForMyBatis3(introspectedColumn.getActualColumnName());
+            String columnMap = (prefix != null ? prefix : "_parameter.") + FIELD_INC_MAP + "." + MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn);
             XmlElement whenIncEle = new XmlElement("when");
             whenIncEle.addAttribute(new Attribute("test", columnMap + " != null"));
             TextElement spec = new TextElement(
@@ -264,7 +226,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
             XmlElement choose = new XmlElement("choose");
 
             // 启用增量操作
-            String columnMap = (prefix != null ? prefix : "_parameter.") + FIELD_INC_MAP + "." + MyBatis3FormattingUtilities.escapeStringForMyBatis3(introspectedColumn.getActualColumnName());
+            String columnMap = (prefix != null ? prefix : "_parameter.") + FIELD_INC_MAP + "." + MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn);
             XmlElement whenIncEle = new XmlElement("when");
             whenIncEle.addAttribute(new Attribute("test", columnMap + " != null"));
             TextElement spec = new TextElement(
@@ -289,9 +251,6 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
 
     /**
      * 生成增量操作节点(SelectiveEnhancedPlugin)
-     * @param columns
-     * @return
-     * @see SelectiveEnhancedPlugin#generateSetsSelective(List, IntrospectedColumn)
      */
     @Override
     public List<XmlElement> generateIncrementSetForSelectiveEnhancedPlugin(List<IntrospectedColumn> columns) {
@@ -304,7 +263,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
                         XmlElement when = new XmlElement("when");
 
                         // 需要 inc 的列
-                        String columnMap = "record." + FIELD_INC_MAP + "." + MyBatis3FormattingUtilities.escapeStringForMyBatis3(incColumn.getActualColumnName());
+                        String columnMap = "record." + FIELD_INC_MAP + "." + MyBatis3FormattingUtilities.getEscapedColumnName(incColumn);
 
                         when.addAttribute(new Attribute("test", "'" + column.getActualColumnName() + "'.toString() == column.value and " + columnMap + " != null"));
                         when.addElement(new TextElement("${column.escapedColumnName} = ${column.escapedColumnName} "
@@ -324,8 +283,6 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
 
     /**
      * 判断是否为需要进行增量操作的column
-     * @param column
-     * @return
      */
     @Override
     public boolean supportIncrement(IntrospectedColumn column) {
@@ -341,8 +298,6 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
 
     /**
      * 向topLevelClass 添加必要的操作函数
-     * @param topLevelClass
-     * @param introspectedTable
      */
     private void generateIncrement(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         if (this.support()) {
@@ -356,9 +311,6 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
 
     /**
      * 构建Increment Enum
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
      */
     private InnerEnum generateIncrementEnum(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         InnerEnum innerEnum = new InnerEnum(new FullyQualifiedJavaType(ENUM_INCREMENT));
@@ -404,15 +356,14 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
         for (IntrospectedColumn introspectedColumn : this.incColumns) {
             Field field = JavaBeansUtil.getJavaBeansField(introspectedColumn, context, introspectedTable);
 
-            StringBuffer sb = new StringBuffer();
-            sb.append(field.getName());
-            sb.append("(");
-            sb.append(ModelColumnPlugin.ENUM_NAME);
-            sb.append(".");
-            sb.append(field.getName());
-            sb.append(")");
+            String sb = field.getName() +
+                    "(" +
+                    ModelColumnPlugin.ENUM_NAME +
+                    "." +
+                    field.getName() +
+                    ")";
 
-            innerEnum.addEnumConstant(sb.toString());
+            innerEnum.addEnumConstant(sb);
         }
 
 
@@ -424,8 +375,6 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
 
     /**
      * 向topLevelClass 添加必要的操作函数
-     * @param topLevelClass
-     * @param introspectedTable
      */
     private void addIncMethodToTopLevelClass(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         // 增加field
@@ -459,18 +408,17 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
 
     /**
      * 有Selective代码生成
-     * @param element
      */
     private void generatedWithSelective(XmlElement element, IntrospectedTable introspectedTable, boolean hasPrefix) {
         if (this.support()) {
             // 查找 set->if->text
             List<XmlElement> sets = XmlElementTools.findXmlElements(element, "set");
-            if (sets.size() > 0) {
+            if (!sets.isEmpty()) {
                 List<XmlElement> ifs = XmlElementTools.findXmlElements(sets.get(0), "if");
-                if (ifs.size() > 0) {
+                if (!ifs.isEmpty()) {
                     for (XmlElement xmlElement : ifs) {
                         // 下面为if的text节点
-                        List<Element> textEles = xmlElement.getElements();
+                        List<VisitableElement> textEles = xmlElement.getElements();
                         TextElement textEle = (TextElement) textEles.get(0);
                         String[] strs = textEle.getContent().split("=");
                         String columnName = strs[0].trim();
@@ -486,13 +434,10 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
 
     /**
      * 无Selective代码生成
-     * @param xmlElement
-     * @param introspectedTable
-     * @param hasPrefix
      */
     private void generatedWithoutSelective(XmlElement xmlElement, IntrospectedTable introspectedTable, boolean hasPrefix) {
         for (int i = 0; i < xmlElement.getElements().size(); i++) {
-            Element ele = xmlElement.getElements().get(i);
+            VisitableElement ele = xmlElement.getElements().get(i);
             // 找到text节点且格式为 set xx = xx 或者 xx = xx
             if (ele instanceof TextElement) {
                 String text = ((TextElement) ele).getContent().trim();
@@ -512,16 +457,13 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
 
     /**
      * 是否启用了
-     * @return
      */
     private boolean support() {
-        return this.incColumns.size() > 0;
+        return !this.incColumns.isEmpty();
     }
 
     /**
      * 生成Increment类
-     * @param introspectedTable
-     * @return
      */
     private InnerClass generateIncrementItemClass(IntrospectedTable introspectedTable) {
         InnerClass incCls = new InnerClass(CLASS_INCREMENT_ITEM);

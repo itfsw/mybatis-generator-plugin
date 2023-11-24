@@ -16,14 +16,6 @@
 
 package com.itfsw.mybatis.generator.plugins.utils;
 
-/**
- * ---------------------------------------------------------------------------
- *
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2019/7/12 10:13
- * ---------------------------------------------------------------------------
- */
 public enum EnumModelType {
     MODEL_PRIMARY_KEY, MODEL_BASE_RECORD, MODEL_RECORD_WITH_BLOBS
 }

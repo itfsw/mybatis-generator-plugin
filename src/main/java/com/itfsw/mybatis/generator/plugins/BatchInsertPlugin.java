@@ -27,15 +27,9 @@ import org.mybatis.generator.internal.util.StringUtility;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 /**
- * ---------------------------------------------------------------------------
  * 批量插入插件
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2017/1/13 9:33
- * ---------------------------------------------------------------------------
  */
 public class BatchInsertPlugin extends BasePlugin {
     public static final String METHOD_BATCH_INSERT = "batchInsert";  // 方法名
@@ -50,25 +44,24 @@ public class BatchInsertPlugin extends BasePlugin {
     public boolean validate(List<String> warnings) {
 
         // 插件使用前提是数据库为MySQL或者SQLserver，因为返回主键使用了JDBC的getGenereatedKeys方法获取主键
-        if ("com.mysql.jdbc.Driver".equalsIgnoreCase(this.getContext().getJdbcConnectionConfiguration().getDriverClass()) == false
-                && "com.microsoft.jdbc.sqlserver.SQLServer".equalsIgnoreCase(this.getContext().getJdbcConnectionConfiguration().getDriverClass()) == false
-                && "com.microsoft.sqlserver.jdbc.SQLServerDriver".equalsIgnoreCase(this.getContext().getJdbcConnectionConfiguration().getDriverClass()) == false
-                && "com.mysql.cj.jdbc.Driver".equalsIgnoreCase(this.getContext().getJdbcConnectionConfiguration().getDriverClass()) == false) {
+        if (!"com.mysql.jdbc.Driver".equalsIgnoreCase(BeanUtils.getJdbcConnectionConfiguration(context).getDriverClass())
+                && !"com.microsoft.jdbc.sqlserver.SQLServer".equalsIgnoreCase(BeanUtils.getJdbcConnectionConfiguration(context).getDriverClass())
+                && !"com.microsoft.sqlserver.jdbc.SQLServerDriver".equalsIgnoreCase(BeanUtils.getJdbcConnectionConfiguration(context).getDriverClass())
+                && !"com.mysql.cj.jdbc.Driver".equalsIgnoreCase(BeanUtils.getJdbcConnectionConfiguration(context).getDriverClass())) {
             warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件使用前提是数据库为MySQL或者SQLserver，因为返回主键使用了JDBC的getGenereatedKeys方法获取主键！");
             return false;
         }
 
 
         // 插件使用前提是使用了ModelColumnPlugin插件
-        if (!PluginTools.checkDependencyPlugin(getContext(), ModelColumnPlugin.class)) {
+        if (!PluginTools.checkDependencyPlugin(context, ModelColumnPlugin.class)) {
             warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件需配合com.itfsw.mybatis.generator.plugins.ModelColumnPlugin插件使用！");
             return false;
         }
 
         // 插件是否开启了多sql提交
-        Properties properties = this.getProperties();
         String allowMultiQueries = properties.getProperty(PRO_ALLOW_MULTI_QUERIES);
-        this.allowMultiQueries = allowMultiQueries == null ? false : StringUtility.isTrue(allowMultiQueries);
+        this.allowMultiQueries = allowMultiQueries != null && StringUtility.isTrue(allowMultiQueries);
         if (this.allowMultiQueries) {
             // 提示用户注意信息
             warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件您开启了allowMultiQueries支持，注意在jdbc url 配置中增加“allowMultiQueries=true”支持（不怎么建议使用该功能，开启多sql提交会增加sql注入的风险，请确保你所有sql都使用MyBatis书写，请不要使用statement进行sql提交）！");
@@ -80,14 +73,10 @@ public class BatchInsertPlugin extends BasePlugin {
 
     /**
      * Java Client Methods 生成
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param interfaze
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
-    public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+    public boolean clientGenerated(Interface interfaze, IntrospectedTable introspectedTable) {
         // 1. batchInsert
         FullyQualifiedJavaType listType = FullyQualifiedJavaType.getNewListInstance();
         listType.addTypeArgument(introspectedTable.getRules().calculateAllFieldsClass());
@@ -98,6 +87,7 @@ public class BatchInsertPlugin extends BasePlugin {
                 new Parameter(listType, "list", "@Param(\"list\")")
 
         );
+        mBatchInsert.setAbstract(true);
         commentGenerator.addGeneralMethodComment(mBatchInsert, introspectedTable);
         // interface 增加方法
         FormatTools.addMethodWithBestPosition(interfaze, mBatchInsert);
@@ -112,6 +102,7 @@ public class BatchInsertPlugin extends BasePlugin {
                 new Parameter(listType, "list", "@Param(\"list\")"),
                 new Parameter(selectiveType, "selective", "@Param(\"selective\")", true)
         );
+        mBatchInsertSelective.setAbstract(true);
         commentGenerator.addGeneralMethodComment(mBatchInsertSelective, introspectedTable);
         // interface 增加方法
         FormatTools.addMethodWithBestPosition(interfaze, mBatchInsertSelective);
@@ -122,10 +113,7 @@ public class BatchInsertPlugin extends BasePlugin {
 
     /**
      * SQL Map Methods 生成
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param document
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
@@ -141,7 +129,7 @@ public class BatchInsertPlugin extends BasePlugin {
         XmlElementGeneratorTools.useGeneratedKeys(batchInsertEle, introspectedTable);
 
         batchInsertEle.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-        for (Element element : XmlElementGeneratorTools.generateKeys(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()), true)) {
+        for (VisitableElement element : XmlElementGeneratorTools.generateKeys(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()), true)) {
             batchInsertEle.addElement(element);
         }
 
@@ -151,7 +139,7 @@ public class BatchInsertPlugin extends BasePlugin {
         foreachElement.addAttribute(new Attribute("item", "item"));
         foreachElement.addAttribute(new Attribute("separator", ","));
 
-        for (Element element : XmlElementGeneratorTools.generateValues(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()), "item.")) {
+        for (VisitableElement element : XmlElementGeneratorTools.generateValues(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()), "item.")) {
             foreachElement.addElement(element);
         }
 
@@ -221,11 +209,9 @@ public class BatchInsertPlugin extends BasePlugin {
 
     /**
      * 生成insert selective 增强的插入语句
-     * @param introspectedTable
-     * @return
      */
-    private List<Element> generateSelectiveEnhancedEles(IntrospectedTable introspectedTable) {
-        List<Element> eles = new ArrayList<>();
+    private List<VisitableElement> generateSelectiveEnhancedEles(IntrospectedTable introspectedTable) {
+        List<VisitableElement> eles = new ArrayList<>();
 
         eles.add(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime() + " ("));
 

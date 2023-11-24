@@ -36,12 +36,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * ---------------------------------------------------------------------------
  * LombokPlugin
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2018/10/29 14:33
- * ---------------------------------------------------------------------------
  */
 public class LombokPlugin extends BasePlugin {
     /**
@@ -67,13 +62,10 @@ public class LombokPlugin extends BasePlugin {
     private boolean suportSuperBuilderForIdea;
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param warnings
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean validate(List<String> warnings) {
-        Properties properties = this.getProperties();
         for (Object key : properties.keySet()) {
             String annotation = key.toString().trim();
             if (!(annotation.matches(LOMBOK_ANNOTATION.pattern()) || PRO_SUPPORT_SUPER_BUILDER_FOR_IDEA.equals(annotation))) {
@@ -86,16 +78,13 @@ public class LombokPlugin extends BasePlugin {
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
         super.initialized(introspectedTable);
 
         this.annotations = new ArrayList<>();
-        Properties properties = this.getProperties();
         boolean findData = false;
         for (Object key : properties.keySet()) {
             String annotation = key.toString().trim();
@@ -117,10 +106,7 @@ public class LombokPlugin extends BasePlugin {
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -129,10 +115,7 @@ public class LombokPlugin extends BasePlugin {
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelPrimaryKeyClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -141,10 +124,7 @@ public class LombokPlugin extends BasePlugin {
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelRecordWithBLOBsClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -153,13 +133,7 @@ public class LombokPlugin extends BasePlugin {
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param method
-     * @param topLevelClass
-     * @param introspectedColumn
-     * @param introspectedTable
-     * @param modelClassType
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelGetterMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable, ModelClassType modelClassType) {
@@ -172,13 +146,7 @@ public class LombokPlugin extends BasePlugin {
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param method
-     * @param topLevelClass
-     * @param introspectedColumn
-     * @param introspectedTable
-     * @param modelClassType
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelSetterMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable, ModelClassType modelClassType) {
@@ -192,16 +160,13 @@ public class LombokPlugin extends BasePlugin {
 
     /**
      * 添加注解
-     * @param topLevelClass
-     * @param introspectedTable
-     * @param modelType
      */
     private void addAnnotations(TopLevelClass topLevelClass, IntrospectedTable introspectedTable, EnumModelType modelType) {
         for (String annotation : this.annotations) {
             // @Data
             if (annotation.startsWith("@Data")) {
                 this.addAnnotation(topLevelClass, annotation);
-                if (topLevelClass.getSuperClass() != null) {
+                if (topLevelClass.getSuperClass().isPresent()) {
                     this.addAnnotation(topLevelClass, "@EqualsAndHashCode(callSuper = true)");
                     this.addAnnotation(topLevelClass, "@ToString(callSuper = true)");
                 }
@@ -235,7 +200,7 @@ public class LombokPlugin extends BasePlugin {
                         count++;
                     }
 
-                    if (topLevelClass.getSuperClass() != null || count >= 2) {
+                    if (topLevelClass.getSuperClass().isPresent() || count >= 2) {
                         if (this.suportSuperBuilderForIdea) {
                             // TODO 兼容老版本
                             PluginConfiguration configuration = new PluginConfiguration();
@@ -267,8 +232,6 @@ public class LombokPlugin extends BasePlugin {
 
     /**
      * 添加注解
-     * @param topLevelClass
-     * @param annotation
      */
     private void addAnnotation(TopLevelClass topLevelClass, String annotation) {
         // 正则提取annotation

@@ -21,22 +21,20 @@ import com.itfsw.mybatis.generator.plugins.utils.hook.ISelectOneByExamplePluginH
 import com.itfsw.mybatis.generator.plugins.utils.hook.ISelectSelectivePluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
-import org.mybatis.generator.api.dom.java.*;
-import org.mybatis.generator.api.dom.xml.*;
+import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
+import org.mybatis.generator.api.dom.java.Interface;
+import org.mybatis.generator.api.dom.java.Method;
+import org.mybatis.generator.api.dom.java.Parameter;
+import org.mybatis.generator.api.dom.xml.Attribute;
+import org.mybatis.generator.api.dom.xml.Document;
+import org.mybatis.generator.api.dom.xml.TextElement;
+import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 
 import java.util.List;
 
 import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 
-/**
- * ---------------------------------------------------------------------------
- *
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2017/6/29 13:34
- * ---------------------------------------------------------------------------
- */
 public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExamplePluginHook {
     public static final String METHOD_SELECT_BY_EXAMPLE_SELECTIVE = "selectByExampleSelective";
     public static final String METHOD_SELECT_BY_PRIMARY_KEY_SELECTIVE = "selectByPrimaryKeySelective";
@@ -46,15 +44,13 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
     private XmlElement selectByPrimaryKeySelectiveEle;
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param warnings
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean validate(List<String> warnings) {
 
         // 插件使用前提是使用了ModelColumnPlugin插件
-        if (!PluginTools.checkDependencyPlugin(getContext(), ModelColumnPlugin.class)) {
+        if (!PluginTools.checkDependencyPlugin(context, ModelColumnPlugin.class)) {
             warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件需配合com.itfsw.mybatis.generator.plugins.ModelColumnPlugin插件使用！");
             return false;
         }
@@ -63,8 +59,7 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param introspectedTable
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
@@ -155,10 +150,7 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param document
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
@@ -236,8 +228,6 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
 
     /**
      * 生成selectOneByExampleSelective
-     * @param introspectedTable
-     * @return
      */
     private XmlElement generateSelectOneByExampleSelectiveElement(IntrospectedTable introspectedTable) {
         return this.generateSelectSelectiveElement(METHOD_SELECT_ONE_BY_EXAMPLE_SELECTIVE, introspectedTable, true, true);
@@ -245,8 +235,6 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
 
     /**
      * 生成selectOneByExampleSelective
-     * @param introspectedTable
-     * @return
      */
     private XmlElement generateSelectSelectiveElement(String id, IntrospectedTable introspectedTable, boolean selectOne, boolean byExample) {
         XmlElement selectSelectiveEle = new XmlElement("select");
@@ -331,8 +319,6 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
 
     /**
      * 生成Selective xml节点
-     * @param introspectedTable
-     * @return
      */
     private XmlElement generateSelectiveElement(IntrospectedTable introspectedTable) {
         XmlElement chooseEle = new XmlElement("choose");
@@ -365,11 +351,6 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
 
     /**
      * 替换方法成withSelective
-     * @param method
-     * @param name
-     * @param firstAnnotation
-     * @param introspectedTable
-     * @return
      */
     private Method replaceMethodWithSelective(Method method, String name, String firstAnnotation, IntrospectedTable introspectedTable) {
         Method withSelective = JavaElementTools.clone(method);
@@ -388,8 +369,6 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
 
     /**
      * 获取ModelColumn type
-     * @param introspectedTable
-     * @return
      */
     private FullyQualifiedJavaType getModelColumnFullyQualifiedJavaType(IntrospectedTable introspectedTable) {
         return new FullyQualifiedJavaType(introspectedTable.getRules().calculateAllFieldsClass().getShortName() + "." + ModelColumnPlugin.ENUM_NAME);

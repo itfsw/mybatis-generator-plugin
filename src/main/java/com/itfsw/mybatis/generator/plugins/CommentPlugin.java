@@ -21,12 +21,7 @@ import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import java.util.Properties;
 
 /**
- * ---------------------------------------------------------------------------
  * 评论插件
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2017/6/8 11:21
- * ---------------------------------------------------------------------------
  */
 public class CommentPlugin extends BasePlugin {
     /**
@@ -36,7 +31,6 @@ public class CommentPlugin extends BasePlugin {
 
     /**
      * 插件具体实现查看BasePlugin
-     * @param properties
      */
     @Override
     public void setProperties(Properties properties) {

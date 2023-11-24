@@ -4,52 +4,37 @@ import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
-import com.itfsw.mybatis.generator.plugins.utils.enhanced.InnerInterface;
 import com.itfsw.mybatis.generator.plugins.utils.enhanced.InnerInterfaceWrapperToInnerClass;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
-import org.mybatis.generator.internal.util.StringUtility;
 
 import java.util.List;
 
 /**
- * ---------------------------------------------------------------------------
  * Example 增强插件
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2017/1/16 16:28
- * ---------------------------------------------------------------------------
  */
 public class ExampleEnhancedPlugin extends BasePlugin {
     // newAndCreateCriteria 方法
     public static final String METHOD_NEW_AND_CREATE_CRITERIA = "newAndCreateCriteria";
-    // 逻辑删除列-Key
-    public static final String PRO_ENABLE_AND_IF = "enableAndIf";
     // 是否启用column的操作
     private boolean enableColumnOperate = false;
-    // 是否启用了过期的andIf
-    private boolean enableAndIf;
 
     /**
      * {@inheritDoc}
+     *
      * @param introspectedTable
      */
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
         super.initialized(introspectedTable);
         this.enableColumnOperate = PluginTools.checkDependencyPlugin(context, ModelColumnPlugin.class);
-        String enableAndIf = properties.getProperty(PRO_ENABLE_AND_IF);
-        this.enableAndIf = enableAndIf == null ? true : StringUtility.isTrue(enableAndIf);
     }
 
     /**
      * ModelExample Methods 生成
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelExampleClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -59,10 +44,6 @@ public class ExampleEnhancedPlugin extends BasePlugin {
             if ("Criteria".equals(innerClass.getType().getShortName())) {
                 // 工厂方法
                 addFactoryMethodToCriteria(topLevelClass, innerClass, introspectedTable);
-                // andIf
-                if (this.enableAndIf) {
-                    addAndIfMethodToCriteria(topLevelClass, innerClass, introspectedTable);
-                }
                 // when
                 addWhenToCriteria(topLevelClass, innerClass, introspectedTable);
             } else if ("GeneratedCriteria".equals(innerClass.getType().getShortName())) {
@@ -100,8 +81,6 @@ public class ExampleEnhancedPlugin extends BasePlugin {
 
     /**
      * 添加 createCriteria 静态方法
-     * @param topLevelClass
-     * @param introspectedTable
      */
     private void addStaticCreateCriteriaMethodToExample(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         Method createCriteriaMethod = JavaElementGeneratorTools.generateMethod(
@@ -120,9 +99,6 @@ public class ExampleEnhancedPlugin extends BasePlugin {
 
     /**
      * 添加列操作方法
-     * @param topLevelClass
-     * @param innerClass
-     * @param introspectedTable
      */
     private void addColumnMethodToCriteria(TopLevelClass topLevelClass, InnerClass innerClass, IntrospectedTable introspectedTable) {
         // !!!!! Column import比较特殊引入的是外部类
@@ -146,11 +122,6 @@ public class ExampleEnhancedPlugin extends BasePlugin {
 
     /**
      * 生成column操作的具体方法
-     * @param introspectedTable
-     * @param introspectedColumn
-     * @param nameFragment
-     * @param operator
-     * @return
      */
     private Method generateSingleValueMethod(IntrospectedTable introspectedTable, IntrospectedColumn introspectedColumn, String nameFragment, String operator) {
         // 方法名
@@ -194,9 +165,6 @@ public class ExampleEnhancedPlugin extends BasePlugin {
 
     /**
      * 添加工厂方法
-     * @param topLevelClass
-     * @param innerClass
-     * @param introspectedTable
      */
     private void addFactoryMethodToCriteria(TopLevelClass topLevelClass, InnerClass innerClass, IntrospectedTable introspectedTable) {
         // example field
@@ -237,9 +205,6 @@ public class ExampleEnhancedPlugin extends BasePlugin {
 
     /**
      * 增强Criteria的链式调用(when)
-     * @param topLevelClass
-     * @param innerClass
-     * @param introspectedTable
      */
     private void addWhenToCriteria(TopLevelClass topLevelClass, InnerClass innerClass, IntrospectedTable introspectedTable) {
         this.addWhenToClass(topLevelClass, innerClass, introspectedTable, "criteria");
@@ -247,8 +212,6 @@ public class ExampleEnhancedPlugin extends BasePlugin {
 
     /**
      * 增强Example的链式调用(when)
-     * @param topLevelClass
-     * @param introspectedTable
      */
     private void addWhenToExample(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         this.addWhenToClass(topLevelClass, topLevelClass, introspectedTable, "example");
@@ -256,9 +219,6 @@ public class ExampleEnhancedPlugin extends BasePlugin {
 
     /**
      * 增强链式调用(when)
-     * @param topLevelClass
-     * @param clazz
-     * @param introspectedTable
      */
     private void addWhenToClass(TopLevelClass topLevelClass, InnerClass clazz, IntrospectedTable introspectedTable, String type) {
         // 添加接口When
@@ -319,60 +279,7 @@ public class ExampleEnhancedPlugin extends BasePlugin {
     }
 
     /**
-     * 增强Criteria的链式调用，添加andIf(boolean addIf, CriteriaAdd add)方法，实现链式调用中按条件增加查询语句
-     * @param topLevelClass
-     * @param innerClass
-     * @param introspectedTable
-     */
-    @Deprecated
-    private void addAndIfMethodToCriteria(TopLevelClass topLevelClass, InnerClass innerClass, IntrospectedTable introspectedTable) {
-        // 添加接口CriteriaAdd
-        InnerInterface criteriaAddInterface = new InnerInterface("ICriteriaAdd");
-        criteriaAddInterface.setVisibility(JavaVisibility.PUBLIC);
-        criteriaAddInterface.addAnnotation("@Deprecated");
-        logger.debug("itfsw(Example增强插件):" + topLevelClass.getType().getShortName() + "." + innerClass.getType().getShortName() + "增加接口ICriteriaAdd");
-
-        // ICriteriaAdd增加接口add
-        Method addMethod = JavaElementGeneratorTools.generateMethod(
-                "add",
-                JavaVisibility.DEFAULT,
-                innerClass.getType(),
-                new Parameter(innerClass.getType(), "add")
-        );
-        commentGenerator.addGeneralMethodComment(addMethod, introspectedTable);
-        FormatTools.addMethodWithBestPosition(criteriaAddInterface, addMethod);
-        logger.debug("itfsw(Example增强插件):" + topLevelClass.getType().getShortName() + "." + innerClass.getType().getShortName() + "." + criteriaAddInterface.getType().getShortName() + "增加方法add");
-
-        InnerClass innerClassWrapper = new InnerInterfaceWrapperToInnerClass(criteriaAddInterface);
-        // 添加注释
-        commentGenerator.addClassComment(innerClassWrapper, introspectedTable);
-        innerClass.addInnerClass(innerClassWrapper);
-
-        // 添加andIf方法
-        Method andIfMethod = JavaElementGeneratorTools.generateMethod(
-                "andIf",
-                JavaVisibility.PUBLIC,
-                innerClass.getType(),
-                new Parameter(FullyQualifiedJavaType.getBooleanPrimitiveInstance(), "ifAdd"),
-                new Parameter(criteriaAddInterface.getType(), "add")
-        );
-        andIfMethod.addAnnotation("@Deprecated");
-        commentGenerator.addGeneralMethodComment(andIfMethod, introspectedTable);
-        andIfMethod = JavaElementGeneratorTools.generateMethodBody(
-                andIfMethod,
-                "if (ifAdd) {",
-                "add.add(this);",
-                "}",
-                "return this;"
-        );
-        FormatTools.addMethodWithBestPosition(innerClass, andIfMethod);
-        logger.debug("itfsw(Example增强插件):" + topLevelClass.getType().getShortName() + "." + innerClass.getType().getShortName() + "增加方法andIf");
-    }
-
-    /**
      * Example增强了setOrderByClause方法，新增orderBy(String orderByClause)方法直接返回example，增强链式调用，可以一路.下去了。
-     * @param topLevelClass
-     * @param introspectedTable
      */
     private void addOrderByMethodToExample(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         // 添加orderBy
@@ -418,8 +325,6 @@ public class ExampleEnhancedPlugin extends BasePlugin {
 
     /**
      * 增强链式调用(distinct)
-     * @param topLevelClass
-     * @param introspectedTable
      */
     private void addDistinctMethodToExample(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         // 添加orderBy

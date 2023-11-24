@@ -17,6 +17,7 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
+import com.itfsw.mybatis.generator.plugins.utils.BeanUtils;
 import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.hook.ISelectSelectivePluginHook;
@@ -31,12 +32,7 @@ import org.mybatis.generator.internal.util.StringUtility;
 import java.util.List;
 
 /**
- * ---------------------------------------------------------------------------
  * 增加分页方法
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2016/12/29 18:14
- * ---------------------------------------------------------------------------
  */
 public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHook {
     /**
@@ -52,8 +48,8 @@ public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHoo
     @Override
     public boolean validate(List<String> warnings) {
         // 该插件只支持MYSQL
-        if ("com.mysql.jdbc.Driver".equalsIgnoreCase(this.getContext().getJdbcConnectionConfiguration().getDriverClass()) == false
-                && "com.mysql.cj.jdbc.Driver".equalsIgnoreCase(this.getContext().getJdbcConnectionConfiguration().getDriverClass()) == false) {
+        if (!"com.mysql.jdbc.Driver".equalsIgnoreCase(BeanUtils.getJdbcConnectionConfiguration(context).getDriverClass())
+                && !"com.mysql.cj.jdbc.Driver".equalsIgnoreCase(BeanUtils.getJdbcConnectionConfiguration(context).getDriverClass())) {
             warnings.add("itfsw:插件" + this.getClass().getTypeName() + "只支持MySQL数据库！");
             return false;
         }
@@ -61,17 +57,16 @@ public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHoo
     }
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param introspectedTable
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
         super.initialized(introspectedTable);
 
         // 获取配置
-        String startPage = this.getProperties().getProperty(LimitPlugin.PRO_START_PAGE);
+        String startPage = properties.getProperty(LimitPlugin.PRO_START_PAGE);
         if (StringUtility.stringHasValue(startPage)) {
-            this.startPage = Integer.valueOf(startPage);
+            this.startPage = Integer.parseInt(startPage);
         } else {
             this.startPage = DEFAULT_START_PAGE;
         }
@@ -79,10 +74,7 @@ public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHoo
 
     /**
      * ModelExample Methods 生成
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelExampleClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -189,10 +181,7 @@ public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHoo
 
     /**
      * SQL Map Methods 生成
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param element
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean sqlMapSelectByExampleWithoutBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
@@ -202,10 +191,7 @@ public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHoo
 
     /**
      * SQL Map Methods 生成
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param element
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean sqlMapSelectByExampleWithBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
@@ -223,7 +209,6 @@ public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHoo
 
     /**
      * 生成limit节点
-     * @param element
      */
     private void generateLimitElement(XmlElement element) {
         XmlElement ifLimitNotNullElement = new XmlElement("if");
@@ -244,7 +229,6 @@ public class LimitPlugin extends BasePlugin implements ISelectSelectivePluginHoo
 
     /**
      * 生成limit节点
-     * @param element
      */
     private void generateLimitElementWithExample(XmlElement element) {
         XmlElement ifLimitNotNullElement = new XmlElement("if");

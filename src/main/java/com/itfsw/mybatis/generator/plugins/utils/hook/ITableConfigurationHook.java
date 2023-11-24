@@ -18,18 +18,9 @@ package com.itfsw.mybatis.generator.plugins.utils.hook;
 
 import org.mybatis.generator.api.IntrospectedTable;
 
-/**
- * ---------------------------------------------------------------------------
- *
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2018/5/21 11:24
- * ---------------------------------------------------------------------------
- */
 public interface ITableConfigurationHook {
     /**
      * 表配置
-     * @param introspectedTable
      */
     void tableConfiguration(IntrospectedTable introspectedTable);
 }

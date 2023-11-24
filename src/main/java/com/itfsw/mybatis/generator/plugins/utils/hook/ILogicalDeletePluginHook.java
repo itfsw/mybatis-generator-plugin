@@ -23,59 +23,30 @@ import org.mybatis.generator.api.dom.java.Method;
 import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 
-/**
- * ---------------------------------------------------------------------------
- *
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2018/9/11 11:00
- * ---------------------------------------------------------------------------
- */
+
 public interface ILogicalDeletePluginHook {
     /**
      * logicalDeleteByExample
-     * @param method
-     * @param interfaze
-     * @param introspectedTable
-     * @return
      */
     boolean clientLogicalDeleteByExampleMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable);
 
     /**
      * logicalDeleteByPrimaryKey
-     * @param method
-     * @param interfaze
-     * @param introspectedTable
-     * @return
      */
     boolean clientLogicalDeleteByPrimaryKeyMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable);
 
     /**
      * logicalDeleteByExample
-     * @param document
-     * @param element
-     * @param logicalDeleteColumn
-     * @param logicalDeleteValue
-     * @param introspectedTable
-     * @return
      */
     boolean sqlMapLogicalDeleteByExampleElementGenerated(Document document, XmlElement element, IntrospectedColumn logicalDeleteColumn, String logicalDeleteValue, IntrospectedTable introspectedTable);
 
     /**
      * logicalDeleteByPrimaryKey
-     * @param document
-     * @param element
-     * @param logicalDeleteColumn
-     * @param logicalDeleteValue
-     * @param introspectedTable
-     * @return
      */
     boolean sqlMapLogicalDeleteByPrimaryKeyElementGenerated(Document document, XmlElement element, IntrospectedColumn logicalDeleteColumn, String logicalDeleteValue, IntrospectedTable introspectedTable);
 
     /**
      * 逻辑删除枚举是否生成
-     * @param logicalDeleteColumn
-     * @return
      */
     boolean logicalDeleteEnumGenerated(IntrospectedColumn logicalDeleteColumn);
 }

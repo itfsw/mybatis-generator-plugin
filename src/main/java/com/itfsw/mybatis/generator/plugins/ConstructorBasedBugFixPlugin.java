@@ -29,20 +29,12 @@ import org.mybatis.generator.api.dom.java.TopLevelClass;
 import java.util.List;
 
 /**
- * ---------------------------------------------------------------------------
  * constructorBased 官方 bug 修正插件
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2017/7/28 11:05
- * ---------------------------------------------------------------------------
  */
 public class ConstructorBasedBugFixPlugin extends BasePlugin {
 
     /**
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param topLevelClass
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -55,10 +47,9 @@ public class ConstructorBasedBugFixPlugin extends BasePlugin {
                 String[] strs = version.split("\\.");
                 if (strs.length == 3 && strs[0].equals("1") && strs[1].equals("3") && Integer.parseInt(strs[2]) < 6){
                     // 添加没有BLOBs的构造方法
-                    Method method = new Method();
+                    Method method = new Method(topLevelClass.getType().getShortName());
                     method.setVisibility(JavaVisibility.PUBLIC);
                     method.setConstructor(true);
-                    method.setName(topLevelClass.getType().getShortName());
                     commentGenerator.addGeneralMethodComment(method, introspectedTable);
 
                     // 使用没有blobs的字段

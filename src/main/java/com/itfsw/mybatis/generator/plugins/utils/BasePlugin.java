@@ -32,12 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 /**
- * ---------------------------------------------------------------------------
  * 基础plugin
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2017/4/28 13:57
- * ---------------------------------------------------------------------------
  */
 public class BasePlugin extends PluginAdapter {
     protected static final Logger logger = LoggerFactory.getLogger(BasePlugin.class);
@@ -96,7 +91,7 @@ public class BasePlugin extends PluginAdapter {
     public boolean validate(List<String> warnings) {
         this.warnings = warnings;
         // 插件使用前提是targetRuntime为MyBatis3
-        if (StringUtility.stringHasValue(getContext().getTargetRuntime()) && "MyBatis3".equalsIgnoreCase(getContext().getTargetRuntime()) == false) {
+        if (StringUtility.stringHasValue(context.getTargetRuntime()) && !"MyBatis3".equalsIgnoreCase(context.getTargetRuntime())) {
             warnings.add("itfsw:插件" + this.getClass().getTypeName() + "要求运行targetRuntime必须为MyBatis3！");
             return false;
         }
@@ -117,8 +112,8 @@ public class BasePlugin extends PluginAdapter {
         PluginTools.getHook(ITableConfigurationHook.class).tableConfiguration(introspectedTable);
 
         // mybatis版本
-        if (StringUtility.stringHasValue(this.getProperties().getProperty(PRO_MYBATIS_VERSION))) {
-            this.mybatisVersion = this.getProperties().getProperty(PRO_MYBATIS_VERSION);
+        if (StringUtility.stringHasValue(properties.getProperty(PRO_MYBATIS_VERSION))) {
+            this.mybatisVersion = properties.getProperty(PRO_MYBATIS_VERSION);
         }
     }
 }

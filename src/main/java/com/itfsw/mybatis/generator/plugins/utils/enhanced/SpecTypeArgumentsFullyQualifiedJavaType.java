@@ -18,18 +18,12 @@ package com.itfsw.mybatis.generator.plugins.utils.enhanced;
 
 import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
 
-/**
- * ---------------------------------------------------------------------------
- *
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2018/11/2 18:21
- * ---------------------------------------------------------------------------
- */
 public class SpecTypeArgumentsFullyQualifiedJavaType extends FullyQualifiedJavaType {
-    private String fullTypeSpecification;
+    private final String fullTypeSpecification;
+
     /**
      * Use this constructor to construct a generic type with the specified type parameters.
+     *
      * @param fullTypeSpecification the full type specification
      */
     public SpecTypeArgumentsFullyQualifiedJavaType(String fullTypeSpecification) {

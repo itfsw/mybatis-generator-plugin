@@ -22,19 +22,9 @@ import org.mybatis.generator.api.dom.java.Method;
 import org.mybatis.generator.api.dom.java.Parameter;
 import org.mybatis.generator.api.dom.java.TypeParameter;
 
-/**
- * ---------------------------------------------------------------------------
- *
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2018/5/7 18:14
- * ---------------------------------------------------------------------------
- */
 public class JavaElementTools {
     /**
      * clone
-     * @param method
-     * @return
      */
     public static Method clone(Method method) {
         Method dest = new Method(method.getName());
@@ -42,7 +32,9 @@ public class JavaElementTools {
         for (String javaDocLine : method.getJavaDocLines()) {
             dest.addJavaDocLine(javaDocLine);
         }
-        dest.setReturnType(method.getReturnType());
+        if (method.getReturnType().isPresent()){
+            dest.setReturnType(method.getReturnType().get());
+        }
         for (Parameter parameter : method.getParameters()) {
             dest.addParameter(JavaElementTools.clone(parameter));
         }
@@ -65,8 +57,6 @@ public class JavaElementTools {
 
     /**
      * clone
-     * @param parameter
-     * @return
      */
     public static Parameter clone(Parameter parameter) {
         Parameter dest = new Parameter(parameter.getType(), parameter.getName(), parameter.isVarargs());

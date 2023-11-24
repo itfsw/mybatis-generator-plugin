@@ -36,14 +36,10 @@ import org.mybatis.generator.internal.util.StringUtility;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
- * ---------------------------------------------------------------------------
  * Selective 增强插件
- * ---------------------------------------------------------------------------
- * @author: hewei
- * @time:2018/4/20 15:39
- * ---------------------------------------------------------------------------
  */
 public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPluginHook, IOptimisticLockerPluginHook {
 
@@ -54,7 +50,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
     public boolean validate(List<String> warnings) {
 
         // 插件使用前提是使用了ModelColumnPlugin插件
-        if (!PluginTools.checkDependencyPlugin(getContext(), ModelColumnPlugin.class)) {
+        if (!PluginTools.checkDependencyPlugin(context, ModelColumnPlugin.class)) {
             warnings.add("itfsw:插件" + this.getClass().getTypeName() + "插件需配合" + ModelColumnPlugin.class.getTypeName() + "插件使用！");
             return false;
         }
@@ -64,11 +60,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
 
     /**
      * insertSelective 方法生成
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param method
-     * @param interfaze
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean clientInsertSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
@@ -84,17 +76,13 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
 
         FormatTools.replaceGeneralMethodComment(commentGenerator, method, introspectedTable);
-
+        method.setAbstract(true);
         return super.clientInsertSelectiveMethodGenerated(method, interfaze, introspectedTable);
     }
 
     /**
      * updateByExampleSelective
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param method
-     * @param interfaze
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean clientUpdateByExampleSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
@@ -113,16 +101,13 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
 
         FormatTools.replaceGeneralMethodComment(commentGenerator, method, introspectedTable);
+        method.setAbstract(true);
         return super.clientUpdateByExampleSelectiveMethodGenerated(method, interfaze, introspectedTable);
     }
 
     /**
      * updateByPrimaryKeySelective
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param method
-     * @param interfaze
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean clientUpdateByPrimaryKeySelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
@@ -144,16 +129,13 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
 
         FormatTools.replaceGeneralMethodComment(commentGenerator, method, introspectedTable);
-
+        method.setAbstract(true);
         return super.clientUpdateByPrimaryKeySelectiveMethodGenerated(method, interfaze, introspectedTable);
     }
 
     /**
      * insertSelective
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param element
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean sqlMapInsertSelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
@@ -164,16 +146,17 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
 
         commentGenerator.addComment(answer);
 
-        GeneratedKey gk = introspectedTable.getGeneratedKey();
-        if (gk != null) {
-            IntrospectedColumn introspectedColumn = introspectedTable.getColumn(gk.getColumn());
+        Optional<GeneratedKey> generatedKeyOptional = introspectedTable.getGeneratedKey();
+        if (generatedKeyOptional.isPresent()) {
+            GeneratedKey generatedKey = generatedKeyOptional.get();
+            Optional<IntrospectedColumn> introspectedColumnOptional = introspectedTable.getColumn(generatedKey.getColumn());
             // if the column is null, then it's a configuration error. The
             // warning has already been reported
-            if (introspectedColumn != null) {
-                if (gk.isJdbcStandard()) {
+            if (introspectedColumnOptional.isPresent()) {
+                if (generatedKey.isJdbcStandard()) {
                     XmlElementGeneratorTools.useGeneratedKeys(answer, introspectedTable, "record.");
                 } else {
-                    answer.addElement(XmlElementGeneratorTools.getSelectKey(introspectedColumn, gk, "record."));
+                    answer.addElement(XmlElementGeneratorTools.getSelectKey(introspectedColumnOptional.get(), generatedKey, "record."));
                 }
             }
         }
@@ -197,10 +180,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
 
     /**
      * updateByExampleSelective
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param element
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean sqlMapUpdateByExampleSelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
@@ -229,10 +209,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
 
     /**
      * updateByPrimaryKeySelective
-     * 具体执行顺序 http://www.mybatis.org/generator/reference/pluggingIn.html
-     * @param element
-     * @param introspectedTable
-     * @return
+     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
     @Override
     public boolean sqlMapUpdateByPrimaryKeySelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
@@ -264,10 +241,6 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
 
     /**
      * upsertSelective 方法
-     * @param method
-     * @param interfaze
-     * @param introspectedTable
-     * @return
      */
     @Override
     public boolean clientUpsertSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
@@ -278,15 +251,12 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         FullyQualifiedJavaType fullFieldModel = introspectedTable.getRules().calculateAllFieldsClass();
         FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
         method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
+        method.setAbstract(true);
         return true;
     }
 
     /**
      * upsertByExampleSelective 方法
-     * @param method
-     * @param interfaze
-     * @param introspectedTable
-     * @return
      */
     @Override
     public boolean clientUpsertByExampleSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
@@ -295,18 +265,12 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         FullyQualifiedJavaType fullFieldModel = introspectedTable.getRules().calculateAllFieldsClass();
         FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
         method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
+        method.setAbstract(true);
         return true;
     }
 
     /**
      * upsertSelective xml
-     * @param element
-     * @param columns
-     * @param insertColumnsEle
-     * @param insertValuesEle
-     * @param setsEle
-     * @param introspectedTable
-     * @return
      */
     @Override
     public boolean sqlMapUpsertSelectiveElementGenerated(XmlElement element, List<IntrospectedColumn> columns, XmlElement insertColumnsEle, XmlElement insertValuesEle, XmlElement setsEle, IntrospectedTable introspectedTable) {
@@ -334,13 +298,6 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
 
     /**
      * upsertByExampleSelective xml
-     * @param element
-     * @param columns
-     * @param insertColumnsEle
-     * @param insertValuesEle
-     * @param setsEle
-     * @param introspectedTable
-     * @return
      */
     @Override
     public boolean sqlMapUpsertByExampleSelectiveElementGenerated(XmlElement element, List<IntrospectedColumn> columns, XmlElement insertColumnsEle, XmlElement insertValuesEle, XmlElement setsEle, IntrospectedTable introspectedTable) {
@@ -369,7 +326,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
             FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
             method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
         }
-
+        method.setAbstract(true);
         return true;
     }
 
@@ -383,6 +340,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
             FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
             method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
         }
+        method.setAbstract(true);
         return true;
     }
 
@@ -397,8 +355,6 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
 
     /**
      * insert column selective
-     * @param columns
-     * @return
      */
     private XmlElement generateInsertColumnSelective(List<IntrospectedColumn> columns) {
         XmlElement insertColumnsChooseEle = new XmlElement("choose");
@@ -431,8 +387,6 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
 
     /**
      * insert column selective
-     * @param columns
-     * @return
      */
     private XmlElement generateInsertValuesSelective(List<IntrospectedColumn> columns) {
         return generateInsertValuesSelective(columns, true);
@@ -440,9 +394,6 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
 
     /**
      * insert column selective
-     * @param columns
-     * @param bracket
-     * @return
      */
     private XmlElement generateInsertValuesSelective(List<IntrospectedColumn> columns, boolean bracket) {
         XmlElement insertValuesChooseEle = new XmlElement("choose");
@@ -471,8 +422,6 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
 
     /**
      * sets selective
-     * @param columns
-     * @return
      */
     private XmlElement generateSetsSelective(List<IntrospectedColumn> columns) {
         return generateSetsSelective(columns, null);
@@ -480,8 +429,6 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
 
     /**
      * sets selective
-     * @param columns
-     * @return
      */
     private XmlElement generateSetsSelective(List<IntrospectedColumn> columns, IntrospectedColumn versionColumn) {
         XmlElement setsChooseEle = new XmlElement("choose");
@@ -513,7 +460,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
             if (StringUtility.stringHasValue(column.getTypeHandler())
                     && !(PluginTools.getHook(IIncrementsPluginHook.class).supportIncrement(column))
                     || PluginTools.getHook(IIncrementPluginHook.class).supportIncrement(column)
-                    ) {
+            ) {
                 XmlElement whenEle = new XmlElement("when");
                 whenEle.addAttribute(new Attribute("test", "'" + column.getActualColumnName() + "'.toString() == column.value"));
                 whenEle.addElement(new TextElement("${column.escapedColumnName} = " + XmlElementGeneratorTools.getParameterClause("record.${column.javaProperty}", column)));
