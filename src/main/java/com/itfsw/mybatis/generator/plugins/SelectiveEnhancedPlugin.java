@@ -65,6 +65,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
     @Override
     public boolean clientInsertSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         method.getParameters().clear();
+        method.setAbstract(true);
 
         FullyQualifiedJavaType parameterType = introspectedTable.getRules().calculateAllFieldsClass();
         method.addParameter(new Parameter(parameterType, "record", "@Param(\"record\")"));
@@ -76,7 +77,6 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
 
         FormatTools.replaceGeneralMethodComment(commentGenerator, method, introspectedTable);
-        method.setAbstract(true);
         return super.clientInsertSelectiveMethodGenerated(method, interfaze, introspectedTable);
     }
 
@@ -87,6 +87,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
     @Override
     public boolean clientUpdateByExampleSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         method.getParameters().clear();
+        method.setAbstract(true);
 
         FullyQualifiedJavaType parameterType = introspectedTable.getRules().calculateAllFieldsClass();
         method.addParameter(new Parameter(parameterType, "record", "@Param(\"record\")"));
@@ -101,7 +102,6 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
 
         FormatTools.replaceGeneralMethodComment(commentGenerator, method, introspectedTable);
-        method.setAbstract(true);
         return super.clientUpdateByExampleSelectiveMethodGenerated(method, interfaze, introspectedTable);
     }
 
@@ -112,6 +112,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
     @Override
     public boolean clientUpdateByPrimaryKeySelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         method.getParameters().clear();
+        method.setAbstract(true);
 
         FullyQualifiedJavaType parameterType;
         if (introspectedTable.getRules().generateRecordWithBLOBsClass()) {
@@ -129,7 +130,6 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
 
         FormatTools.replaceGeneralMethodComment(commentGenerator, method, introspectedTable);
-        method.setAbstract(true);
         return super.clientUpdateByPrimaryKeySelectiveMethodGenerated(method, interfaze, introspectedTable);
     }
 
@@ -244,6 +244,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
      */
     @Override
     public boolean clientUpsertSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        method.setAbstract(true);
         // @Param("record")
         method.getParameters().get(0).addAnnotation("@Param(\"record\")");
         // column枚举
@@ -251,7 +252,6 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         FullyQualifiedJavaType fullFieldModel = introspectedTable.getRules().calculateAllFieldsClass();
         FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
         method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
-        method.setAbstract(true);
         return true;
     }
 
@@ -260,12 +260,12 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
      */
     @Override
     public boolean clientUpsertByExampleSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        method.setAbstract(true);
         // column枚举
         // 找出全字段对应的Model
         FullyQualifiedJavaType fullFieldModel = introspectedTable.getRules().calculateAllFieldsClass();
         FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
         method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
-        method.setAbstract(true);
         return true;
     }
 
@@ -318,6 +318,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
 
     @Override
     public boolean clientUpdateWithVersionByExampleSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        method.setAbstract(true);
         // issue#69 OptimisticLockerPlugin 插件updateWithVersionByExampleSelective方法的生成是基于updateByExampleSelective的，
         // 这个方法在配置了SelectiveEnhancedPlugin时可能已经被先配置的SelectiveEnhancedPlugin改变了
         if (!"selective".equals(method.getParameters().get(method.getParameters().size() - 1).getName())) {
@@ -326,12 +327,12 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
             FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
             method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
         }
-        method.setAbstract(true);
         return true;
     }
 
     @Override
     public boolean clientUpdateWithVersionByPrimaryKeySelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+        method.setAbstract(true);
         // issue#69 OptimisticLockerPlugin 插件updateWithVersionByExampleSelective方法的生成是基于updateByExampleSelective的，
         // 这个方法在配置了SelectiveEnhancedPlugin时可能已经被先配置的SelectiveEnhancedPlugin改变了
         if (!"selective".equals(method.getParameters().get(method.getParameters().size() - 1).getName())) {
@@ -340,7 +341,6 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
             FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(fullFieldModel.getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
             method.addParameter(new Parameter(selectiveType, "selective", "@Param(\"selective\")", true));
         }
-        method.setAbstract(true);
         return true;
     }
 

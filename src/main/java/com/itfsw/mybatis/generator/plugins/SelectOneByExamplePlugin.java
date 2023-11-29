@@ -57,6 +57,7 @@ public class SelectOneByExamplePlugin extends BasePlugin {
                 JavaElementGeneratorTools.getModelTypeWithBLOBs(introspectedTable),
                 new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example")
         );
+        selectOneMethod.setAbstract(true);
         commentGenerator.addGeneralMethodComment(selectOneMethod, introspectedTable);
 
         // hook
@@ -81,6 +82,7 @@ public class SelectOneByExamplePlugin extends BasePlugin {
                 JavaElementGeneratorTools.getModelTypeWithoutBLOBs(introspectedTable),
                 new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example")
         );
+        selectOneMethod.setAbstract(true);
         commentGenerator.addGeneralMethodComment(selectOneMethod, introspectedTable);
 
         // hook

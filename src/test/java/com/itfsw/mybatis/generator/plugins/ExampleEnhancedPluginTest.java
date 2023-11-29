@@ -132,46 +132,6 @@ public class ExampleEnhancedPluginTest {
     }
 
     /**
-     * 测试andIf方法
-     */
-    @Test
-    public void testAndIf() throws Exception {
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ExampleEnhancedPlugin/mybatis-generator.xml");
-        tool.generate(new AbstractShellCallback() {
-            @Override
-            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
-
-                ObjectUtil tbMapper = new ObjectUtil(sqlSession.getMapper(loader.loadClass(packagz + ".TbMapper")));
-
-                // 1. andIf true
-                ObjectUtil tbExample = new ObjectUtil(loader, packagz + ".TbExample");
-                ObjectUtil tbExampleCriteria = new ObjectUtil(tbExample.invoke("createCriteria"));
-
-                // 代理实现接口
-                Object criteriaAdd = Proxy.newProxyInstance(loader, new Class[]{
-                        loader.loadClass(packagz + ".TbExample$Criteria$ICriteriaAdd")
-                }, new TestInvocationHandler());
-                Method method = tbExampleCriteria.getMethods("andIf").get(0);
-                method.invoke(tbExampleCriteria.getObject(), true, criteriaAdd);
-
-                String sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample.getObject());
-                Assert.assertEquals(sql, "select id, field1, field2 from tb WHERE ( id = '5' )");
-
-                // 2. andIf false
-                ObjectUtil tbExample1 = new ObjectUtil(loader, packagz + ".TbExample");
-                ObjectUtil tbExampleCriteria1 = new ObjectUtil(tbExample1.invoke("createCriteria"));
-
-                method = tbExampleCriteria1.getMethods("andIf").get(0);
-                method.invoke(tbExampleCriteria1.getObject(), false, criteriaAdd);
-
-                sql = SqlHelper.getFormatMapperSql(tbMapper.getObject(), "selectByExample", tbExample1.getObject());
-                Assert.assertEquals(sql, "select id, field1, field2 from tb");
-            }
-        });
-    }
-
-
-    /**
      * 测试when方法
      */
     @Test

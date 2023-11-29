@@ -99,6 +99,7 @@ public class UpsertPlugin extends BasePlugin {
                 FullyQualifiedJavaType.getIntInstance(),
                 new Parameter(JavaElementGeneratorTools.getModelTypeWithoutBLOBs(introspectedTable), "record")
         );
+        mUpsert.setAbstract(true);
         commentGenerator.addGeneralMethodComment(mUpsert, introspectedTable);
         // interface 增加方法
         FormatTools.addMethodWithBestPosition(interfaze, mUpsert);
@@ -113,6 +114,7 @@ public class UpsertPlugin extends BasePlugin {
                     FullyQualifiedJavaType.getIntInstance(),
                     new Parameter(JavaElementGeneratorTools.getModelTypeWithBLOBs(introspectedTable), "record")
             );
+            mUpsertWithBLOBs.setAbstract(true);
             commentGenerator.addGeneralMethodComment(mUpsertWithBLOBs, introspectedTable);
             // interface 增加方法
             FormatTools.addMethodWithBestPosition(interfaze, mUpsertWithBLOBs);
@@ -128,6 +130,7 @@ public class UpsertPlugin extends BasePlugin {
                 FullyQualifiedJavaType.getIntInstance(),
                 new Parameter(fullFieldModel, "record")
         );
+        mUpsertSelective.setAbstract(true);
         commentGenerator.addGeneralMethodComment(mUpsertSelective, introspectedTable);
         // hook
         if (PluginTools.getHook(IUpsertPluginHook.class).clientUpsertSelectiveMethodGenerated(mUpsertSelective, interfaze, introspectedTable)) {
@@ -145,6 +148,7 @@ public class UpsertPlugin extends BasePlugin {
                     new Parameter(JavaElementGeneratorTools.getModelTypeWithoutBLOBs(introspectedTable), "record", "@Param(\"record\")"),
                     new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")")
             );
+            mUpsertByExample.setAbstract(true);
             commentGenerator.addGeneralMethodComment(mUpsertByExample, introspectedTable);
             // interface 增加方法
             FormatTools.addMethodWithBestPosition(interfaze, mUpsertByExample);
@@ -160,6 +164,7 @@ public class UpsertPlugin extends BasePlugin {
                         new Parameter(JavaElementGeneratorTools.getModelTypeWithBLOBs(introspectedTable), "record", "@Param(\"record\")"),
                         new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")")
                 );
+                mUpsertByExampleWithBLOBs.setAbstract(true);
                 commentGenerator.addGeneralMethodComment(mUpsertByExampleWithBLOBs, introspectedTable);
                 // interface 增加方法
                 FormatTools.addMethodWithBestPosition(interfaze, mUpsertByExampleWithBLOBs);
@@ -174,6 +179,7 @@ public class UpsertPlugin extends BasePlugin {
                     new Parameter(introspectedTable.getRules().calculateAllFieldsClass(), "record", "@Param(\"record\")"),
                     new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")")
             );
+            mUpsertByExampleSelective.setAbstract(true);
             commentGenerator.addGeneralMethodComment(mUpsertByExampleSelective, introspectedTable);
             // hook
             if (PluginTools.getHook(IUpsertPluginHook.class).clientUpsertByExampleSelectiveMethodGenerated(mUpsertByExampleSelective, interfaze, introspectedTable)) {
@@ -193,6 +199,7 @@ public class UpsertPlugin extends BasePlugin {
                     FullyQualifiedJavaType.getIntInstance(),
                     new Parameter(returnType, "list", "@Param(\"list\")")
             );
+            mBatchUpsert.setAbstract(true);
             commentGenerator.addGeneralMethodComment(mBatchUpsert, introspectedTable);
             // interface 增加方法
             FormatTools.addMethodWithBestPosition(interfaze, mBatchUpsert);
@@ -209,6 +216,7 @@ public class UpsertPlugin extends BasePlugin {
                         FullyQualifiedJavaType.getIntInstance(),
                         new Parameter(returnType, "list", "@Param(\"list\")")
                 );
+                mBatchUpsertWithBLOBs.setAbstract(true);
                 commentGenerator.addGeneralMethodComment(mBatchUpsertWithBLOBs, introspectedTable);
                 // interface 增加方法
                 FormatTools.addMethodWithBestPosition(interfaze, mBatchUpsertWithBLOBs);
@@ -226,6 +234,7 @@ public class UpsertPlugin extends BasePlugin {
                     new Parameter(returnType, "list", "@Param(\"list\")"),
                     new Parameter(selectiveType, "selective", "@Param(\"selective\")", true)
             );
+            mBatchUpsertSelective.setAbstract(true);
             commentGenerator.addGeneralMethodComment(mBatchUpsertSelective, introspectedTable);
             // interface 增加方法
             FormatTools.addMethodWithBestPosition(interfaze, mBatchUpsertSelective);
