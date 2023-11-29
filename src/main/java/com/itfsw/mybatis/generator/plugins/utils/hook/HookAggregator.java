@@ -36,7 +36,6 @@ import java.util.List;
 
 public class HookAggregator implements IUpsertPluginHook,
         IModelBuilderPluginHook,
-        IIncrementsPluginHook,
         IIncrementPluginHook,
         IOptimisticLockerPluginHook,
         ISelectOneByExamplePluginHook,
@@ -62,6 +61,7 @@ public class HookAggregator implements IUpsertPluginHook,
 
     /**
      * Setter method for property <tt>context</tt>.
+     *
      * @param context value to be assigned to property context
      * @author hewei
      */
@@ -89,60 +89,38 @@ public class HookAggregator implements IUpsertPluginHook,
         return list;
     }
 
-    // ============================================= IIncrementsPluginHook ==============================================
-
-    @Override
-    public List<VisitableElement> incrementSetElementGenerated(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma) {
-        if (this.getPlugins(IIncrementsPluginHook.class).isEmpty()) {
-            return new ArrayList<>();
-        } else {
-            return this.getPlugins(IIncrementsPluginHook.class).get(0).incrementSetElementGenerated(introspectedColumn, prefix, hasComma);
-        }
-    }
-
-    @Override
-    public List<XmlElement> incrementSetsWithSelectiveEnhancedPluginElementGenerated(List<IntrospectedColumn> columns) {
-        if (this.getPlugins(IIncrementsPluginHook.class).isEmpty()) {
-            return null;
-        } else {
-            return this.getPlugins(IIncrementsPluginHook.class).get(0).incrementSetsWithSelectiveEnhancedPluginElementGenerated(columns);
-        }
-    }
-
     // ============================================= IIncrementPluginHook ==============================================
 
     @Override
-    public XmlElement generateIncrementSet(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma) {
+    public XmlElement generateIncrementSet(IntrospectedTable introspectedTable,IntrospectedColumn introspectedColumn, String prefix, boolean hasComma) {
         if (this.getPlugins(IIncrementPluginHook.class).isEmpty()) {
             return null;
         } else {
-            return this.getPlugins(IIncrementPluginHook.class).get(0).generateIncrementSet(introspectedColumn, prefix, hasComma);
+            return this.getPlugins(IIncrementPluginHook.class).get(0).generateIncrementSet(introspectedTable,introspectedColumn, prefix, hasComma);
         }
     }
 
     @Override
-    public XmlElement generateIncrementSetSelective(IntrospectedColumn introspectedColumn, String prefix) {
+    public XmlElement generateIncrementSetSelective(IntrospectedTable introspectedTable, IntrospectedColumn introspectedColumn, String prefix) {
         if (this.getPlugins(IIncrementPluginHook.class).isEmpty()) {
             return null;
         } else {
-            return this.getPlugins(IIncrementPluginHook.class).get(0).generateIncrementSetSelective(introspectedColumn, prefix);
+            return this.getPlugins(IIncrementPluginHook.class).get(0).generateIncrementSetSelective(introspectedTable,introspectedColumn, prefix);
         }
     }
 
     @Override
-    public boolean supportIncrement(IntrospectedColumn column) {
+    public boolean supportIncrement(IntrospectedTable introspectedTable, IntrospectedColumn column) {
         if (!this.getPlugins(IIncrementPluginHook.class).isEmpty()) {
-            return this.getPlugins(IIncrementPluginHook.class).get(0).supportIncrement(column);
-        } else if (!this.getPlugins(IIncrementsPluginHook.class).isEmpty()) {
-            return this.getPlugins(IIncrementsPluginHook.class).get(0).supportIncrement(column);
+            return this.getPlugins(IIncrementPluginHook.class).get(0).supportIncrement(introspectedTable, column);
         }
         return false;
     }
 
     @Override
-    public List<XmlElement> generateIncrementSetForSelectiveEnhancedPlugin(List<IntrospectedColumn> columns) {
+    public List<XmlElement> generateIncrementSetForSelectiveEnhancedPlugin(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns) {
         if (!this.getPlugins(IIncrementPluginHook.class).isEmpty()) {
-            return this.getPlugins(IIncrementPluginHook.class).get(0).generateIncrementSetForSelectiveEnhancedPlugin(columns);
+            return this.getPlugins(IIncrementPluginHook.class).get(0).generateIncrementSetForSelectiveEnhancedPlugin(introspectedTable, columns);
         }
         return null;
     }
@@ -234,11 +212,11 @@ public class HookAggregator implements IUpsertPluginHook,
     }
 
     @Override
-    public boolean generateSetsSelectiveElement(List<IntrospectedColumn> columns, IntrospectedColumn versionColumn, XmlElement setsElement) {
+    public boolean generateSetsSelectiveElement(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, IntrospectedColumn versionColumn, XmlElement setsElement) {
         if (this.getPlugins(IOptimisticLockerPluginHook.class).isEmpty()) {
             return false;
         } else {
-            return this.getPlugins(IOptimisticLockerPluginHook.class).get(0).generateSetsSelectiveElement(columns, versionColumn, setsElement);
+            return this.getPlugins(IOptimisticLockerPluginHook.class).get(0).generateSetsSelectiveElement(introspectedTable, columns, versionColumn, setsElement);
         }
     }
 

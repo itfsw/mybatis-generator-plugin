@@ -121,6 +121,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
                         new Parameter(versionColumn.getFullyQualifiedJavaType(), "nextVersion", "@Param(\"nextVersion\")"),
                         new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")")
                 );
+                method.setAbstract(true);
                 commentGenerator.addGeneralMethodComment(newMethod, introspectedTable);
                 FormatTools.addMethodWithBestPosition(interfaze, newMethod);
             } else {
@@ -146,6 +147,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
                         new Parameter(versionColumn.getFullyQualifiedJavaType(), "nextVersion", "@Param(\"nextVersion\")"),
                         new Parameter(method.getParameters().get(0).getType(), method.getParameters().get(0).getName(), "@Param(\"key\")")
                 );
+                newMethod.setAbstract(true);
                 commentGenerator.addGeneralMethodComment(newMethod, introspectedTable);
                 FormatTools.addMethodWithBestPosition(interfaze, newMethod);
             } else {
@@ -494,7 +496,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
     /**
      * 生成版本判断节点
      */
-    private String generateVersionEleStr( IntrospectedColumn versionColumn) {
+    private String generateVersionEleStr(IntrospectedColumn versionColumn) {
         StringBuilder sb = new StringBuilder();
         sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(versionColumn));
         sb.append(" = ");
@@ -694,11 +696,11 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
             updateEle.addElement(setEle);
 
             // set 节点
-            XmlElement setsEle = XmlElementGeneratorTools.generateSetsSelective(columns, "row.");
+            XmlElement setsEle = XmlElementGeneratorTools.generateSetsSelective(introspectedTable, columns, "row.");
             setEle.addElement(setsEle);
 
             XmlElement needVersionEle;
-            if (PluginTools.getHook(IOptimisticLockerPluginHook.class).generateSetsSelectiveElement(columns, versionColumn, setsEle)) {
+            if (PluginTools.getHook(IOptimisticLockerPluginHook.class).generateSetsSelectiveElement(introspectedTable, columns, versionColumn, setsEle)) {
                 needVersionEle = setEle;
             } else {
                 needVersionEle = setsEle;
@@ -710,7 +712,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
             // 版本自增
             updateEle.addElement(this.generateVersionSetEle(versionColumn, selective));
             // set 节点
-            List<VisitableElement> setsEles = XmlElementGeneratorTools.generateSets(columns, "row.");
+            List<VisitableElement> setsEles = XmlElementGeneratorTools.generateSets(introspectedTable, columns, "row.");
             //  XmlElementGeneratorTools.generateSets, 因为传入参数不可能带IdentityAndGeneratedAlwaysColumn所以返回的是set列表而不可能是trim 元素
             for (VisitableElement ele : setsEles) {
                 updateEle.addElement(ele);

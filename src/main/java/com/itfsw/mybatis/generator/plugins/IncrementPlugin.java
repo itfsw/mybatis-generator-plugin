@@ -30,7 +30,9 @@ import org.mybatis.generator.internal.util.JavaBeansUtil;
 import org.mybatis.generator.internal.util.StringUtility;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook {
     public static final String PRO_INCREMENT_COLUMNS = "incrementColumns";
@@ -62,7 +64,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
     /**
      * 表启用增量操作的字段
      */
-    private List<IntrospectedColumn> incColumns;
+    private final Map<IntrospectedTable, List<IntrospectedColumn>> incColumnsMap = new HashMap<>();
 
     /**
      * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
@@ -85,7 +87,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
         super.initialized(introspectedTable);
-        this.incColumns = new ArrayList<>();
+        List<IntrospectedColumn> incColumns = new ArrayList<>();
 
         String incrementColumns = introspectedTable.getTableConfigurationProperty(PRO_INCREMENT_COLUMNS);
         if (StringUtility.stringHasValue(incrementColumns)) {
@@ -99,6 +101,9 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
                     incColumns.add(column);
                 }
             }
+        }
+        if (!incColumns.isEmpty()) {
+            incColumnsMap.put(introspectedTable, incColumns);
         }
     }
 
@@ -188,13 +193,13 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
     // ================================================== IIncrementPluginHook =================================================
 
     @Override
-    public XmlElement generateIncrementSet(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma) {
-        if (this.supportIncrement(introspectedColumn)) {
+    public XmlElement generateIncrementSet(IntrospectedTable introspectedTable, IntrospectedColumn introspectedColumn, String prefix, boolean hasComma) {
+        if (this.supportIncrement(introspectedTable, introspectedColumn)) {
             // 条件
             XmlElement choose = new XmlElement("choose");
 
             // 启用增量操作
-            String columnMap = (prefix != null ? prefix : "_parameter.") + FIELD_INC_MAP + "." + MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn);
+            String columnMap = (prefix != null ? prefix : "_parameter.") + FIELD_INC_MAP + "." + introspectedColumn.getActualColumnName();
             XmlElement whenIncEle = new XmlElement("when");
             whenIncEle.addAttribute(new Attribute("test", columnMap + " != null"));
             TextElement spec = new TextElement(
@@ -220,13 +225,13 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
     }
 
     @Override
-    public XmlElement generateIncrementSetSelective(IntrospectedColumn introspectedColumn, String prefix) {
-        if (this.supportIncrement(introspectedColumn)) {
+    public XmlElement generateIncrementSetSelective(IntrospectedTable introspectedTable, IntrospectedColumn introspectedColumn, String prefix) {
+        if (this.supportIncrement(introspectedTable, introspectedColumn)) {
             // 条件
             XmlElement choose = new XmlElement("choose");
 
             // 启用增量操作
-            String columnMap = (prefix != null ? prefix : "_parameter.") + FIELD_INC_MAP + "." + MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn);
+            String columnMap = (prefix != null ? prefix : "_parameter.") + FIELD_INC_MAP + "." + introspectedColumn.getActualColumnName();
             XmlElement whenIncEle = new XmlElement("when");
             whenIncEle.addAttribute(new Attribute("test", columnMap + " != null"));
             TextElement spec = new TextElement(
@@ -253,10 +258,10 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
      * 生成增量操作节点(SelectiveEnhancedPlugin)
      */
     @Override
-    public List<XmlElement> generateIncrementSetForSelectiveEnhancedPlugin(List<IntrospectedColumn> columns) {
-        if (this.support()) {
+    public List<XmlElement> generateIncrementSetForSelectiveEnhancedPlugin(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns) {
+        if (incColumnsMap.containsKey(introspectedTable)) {
             List<XmlElement> results = new ArrayList<>();
-            for (IntrospectedColumn incColumn : this.incColumns) {
+            for (IntrospectedColumn incColumn : incColumnsMap.get(introspectedTable)) {
                 // !!! 不能用contains,IntrospectedColumn对象不同
                 for (IntrospectedColumn column : columns) {
                     if (incColumn.getActualColumnName().equals(column.getActualColumnName())) {
@@ -285,10 +290,12 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
      * 判断是否为需要进行增量操作的column
      */
     @Override
-    public boolean supportIncrement(IntrospectedColumn column) {
-        for (IntrospectedColumn incColumn : this.incColumns) {
-            if (incColumn.getActualColumnName().equals(column.getActualColumnName())) {
-                return true;
+    public boolean supportIncrement(IntrospectedTable introspectedTable, IntrospectedColumn column) {
+        if (incColumnsMap.containsKey(introspectedTable)) {
+            for (IntrospectedColumn incColumn : incColumnsMap.get(introspectedTable)) {
+                if (incColumn.getActualColumnName().equals(column.getActualColumnName())) {
+                    return true;
+                }
             }
         }
         return false;
@@ -300,7 +307,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
      * 向topLevelClass 添加必要的操作函数
      */
     private void generateIncrement(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        if (this.support()) {
+        if (incColumnsMap.containsKey(introspectedTable)) {
             // 向topLevelClass 添加必要的操作函数
             this.addIncMethodToTopLevelClass(topLevelClass, introspectedTable);
 
@@ -353,7 +360,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
         innerEnum.addMethod(mDec);
 
         // Enum枚举
-        for (IntrospectedColumn introspectedColumn : this.incColumns) {
+        for (IntrospectedColumn introspectedColumn : incColumnsMap.get(introspectedTable)) {
             Field field = JavaBeansUtil.getJavaBeansField(introspectedColumn, context, introspectedTable);
 
             String sb = field.getName() +
@@ -410,7 +417,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
      * 有Selective代码生成
      */
     private void generatedWithSelective(XmlElement element, IntrospectedTable introspectedTable, boolean hasPrefix) {
-        if (this.support()) {
+        if (incColumnsMap.containsKey(introspectedTable)) {
             // 查找 set->if->text
             List<XmlElement> sets = XmlElementTools.findXmlElements(element, "set");
             if (!sets.isEmpty()) {
@@ -423,8 +430,8 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
                         String[] strs = textEle.getContent().split("=");
                         String columnName = strs[0].trim();
                         IntrospectedColumn introspectedColumn = IntrospectedTableTools.safeGetColumn(introspectedTable, columnName);
-                        if (this.supportIncrement(introspectedColumn)) {
-                            XmlElementTools.replaceXmlElement(xmlElement, PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSetSelective(introspectedColumn, hasPrefix ? "row." : null));
+                        if (this.supportIncrement(introspectedTable, introspectedColumn)) {
+                            XmlElementTools.replaceXmlElement(xmlElement, PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSetSelective(introspectedTable, introspectedColumn, hasPrefix ? "row." : null));
                         }
                     }
                 }
@@ -447,19 +454,12 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
                     String columnName = text.split("=")[0].trim();
                     IntrospectedColumn introspectedColumn = IntrospectedTableTools.safeGetColumn(introspectedTable, columnName);
                     // 查找判断是否需要进行节点替换
-                    if (this.supportIncrement(introspectedColumn)) {
-                        xmlElement.getElements().set(i, PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSet(introspectedColumn, hasPrefix ? "row." : null, text.endsWith(",")));
+                    if (this.supportIncrement(introspectedTable, introspectedColumn)) {
+                        xmlElement.getElements().set(i, PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSet(introspectedTable, introspectedColumn, hasPrefix ? "row." : null, text.endsWith(",")));
                     }
                 }
             }
         }
-    }
-
-    /**
-     * 是否启用了
-     */
-    private boolean support() {
-        return !this.incColumns.isEmpty();
     }
 
     /**

@@ -19,25 +19,20 @@
 * [MySQL分页插件（LimitPlugin）](#2-mysql分页插件)
 * [数据Model链式构建插件（ModelBuilderPlugin）](#3-数据model链式构建插件)
 * [Example Criteria 增强插件（ExampleEnhancedPlugin）](#4-example-增强插件exampleandiforderby)
-* [Example 目标包修改插件（ExampleTargetPlugin）](#5-example-目标包修改插件)
-* [批量插入插件（BatchInsertPlugin）](#6-批量插入插件)
-* [逻辑删除插件（LogicalDeletePlugin）](#7-逻辑删除插件)
-* [数据Model属性对应Column获取插件（ModelColumnPlugin）](#8-数据model属性对应column获取插件)
-* [存在即更新插件（UpsertPlugin）](#9-存在即更新插件)
-* [Selective选择插入更新增强插件（SelectiveEnhancedPlugin）](#10-selective选择插入更新增强插件)
-* [~~Table增加前缀插件（TablePrefixPlugin）~~](#11-table增加前缀插件)
-* [~~Table重命名插件（TableRenamePlugin）~~](#12-table重命名插件)
-* [自定义注释插件（CommentPlugin）](#13-自定义注释插件)
-* [~~增量插件（IncrementsPlugin）~~](#14-增量插件)
-* [查询结果选择性返回插件（SelectSelectivePlugin）](#15-查询结果选择性返回插件)
-* [~~官方ConstructorBased配置BUG临时修正插件（ConstructorBasedBugFixPlugin）~~](#16-官方constructorbased配置bug临时修正插件)
-* [乐观锁插件（OptimisticLockerPlugin）](#17-乐观锁插件)
-* [表重命名配置插件（TableRenameConfigurationPlugin）](#18-表重命名配置插件)
-* [Lombok插件（LombokPlugin）](#19-Lombok插件)
-* [数据ModelCloneable插件（ModelCloneablePlugin）](#20-数据ModelCloneable插件)
-* [状态枚举生成插件（EnumTypeStatusPlugin）](#21-状态枚举生成插件)
-* [增量插件（IncrementPlugin）](#22-增量插件)
-* [Mapper注解插件（MapperAnnotationPlugin）](#23-Mapper注解插件)
+* [批量插入插件（BatchInsertPlugin）](#5-批量插入插件)
+* [逻辑删除插件（LogicalDeletePlugin）](#6-逻辑删除插件)
+* [数据Model属性对应Column获取插件（ModelColumnPlugin）](#7-数据model属性对应column获取插件)
+* [存在即更新插件（UpsertPlugin）](#8-存在即更新插件)
+* [Selective选择插入更新增强插件（SelectiveEnhancedPlugin）](#9-selective选择插入更新增强插件)
+* [自定义注释插件（CommentPlugin）](#10-自定义注释插件)
+* [查询结果选择性返回插件（SelectSelectivePlugin）](#11-查询结果选择性返回插件)
+* [乐观锁插件（OptimisticLockerPlugin）](#12-乐观锁插件)
+* [表重命名配置插件（TableRenameConfigurationPlugin）](#13-表重命名配置插件)
+* [Lombok插件（LombokPlugin）](#14-Lombok插件)
+* [数据ModelCloneable插件（ModelCloneablePlugin）](#15-数据ModelCloneable插件)
+* [状态枚举生成插件（EnumTypeStatusPlugin）](#16-状态枚举生成插件)
+* [增量插件（IncrementPlugin）](#17-增量插件)
+* [Mapper注解插件（MapperAnnotationPlugin）](#18-Mapper注解插件)
 
 ---------------------------------------
 Maven引用：  
@@ -297,7 +292,6 @@ public class Test {
 ```
 ### 4. Example 增强插件(example,andIf,orderBy)
 * Criteria的快速返回example()方法。  
-* ~~Criteria链式调用增强，以前如果有按条件增加的查询语句会打乱链式查询构建，现在有了andIf(boolean ifAdd, CriteriaAdd add)方法可一直使用链式调用下去。~~
 * Example增强了setOrderByClause方法，新增orderBy(String orderByClause)、orderBy(String ... orderByClauses)方法直接返回example，增强链式调用，配合数据Model属性对应Column获取插件（ModelColumnPlugin）使用效果更佳。 
 * 增加基于column的操作，当配置了[数据Model属性对应Column获取插件（ModelColumnPlugin）](#8-数据model属性对应column获取插件)插件时，提供column之间的比对操作。  
 * 增加createCriteria静态方法newAndCreateCriteria简写example的创建。
@@ -387,7 +381,7 @@ public class Test {
     }
 }
 ```
-### 6. 批量插入插件
+### 5. 批量插入插件
 提供了批量插入batchInsert和batchInsertSelective方法，需配合数据Model属性对应Column获取插件（ModelColumnPlugin）插件使用，实现类似于insertSelective插入列！    
 >warning: 插件生成的batchInsertSelective方法在使用时必须指定selective列，因为插件本身是预编译生成sql,对于批量数据是无法提供类似insertSelective非空插入的方式的;    
 
@@ -433,7 +427,7 @@ public class Test {
     }
 }
 ```
-### 7. 逻辑删除插件
+### 6. 逻辑删除插件
 因为很多实际项目数据都不允许物理删除，多采用逻辑删除，所以单独为逻辑删除做了一个插件，方便使用。  
 - 增加logicalDeleteByExample和logicalDeleteByPrimaryKey方法；
 - 增加selectByPrimaryKeyWithLogicalDelete方法（[[pull#12]](https://github.com/itfsw/mybatis-generator-plugin/pull/12)）；
@@ -562,7 +556,7 @@ public class Tb {
 }
 ```
 
-### 8. 数据Model属性对应Column获取插件
+### 7. 数据Model属性对应Column获取插件
 项目中我们有时需要获取数据Model对应数据库字段的名称，一般直接根据数据Model的属性就可以猜出数据库对应column的名字，可是有的时候当column使用了columnOverride或者columnRenamingRule时就需要去看数据库设计了，所以提供了这个插件获取model对应的数据库Column。  
 * 配合Example Criteria 增强插件（ExampleEnhancedPlugin）使用，这个插件还提供了asc()和desc()方法配合Example的orderBy方法效果更佳。
 * 配合批量插入插件（BatchInsertPlugin）使用，batchInsertSelective(@Param("list") List<XXX> list, @Param("selective") XXX.Column ... insertColumns)。  
@@ -630,7 +624,7 @@ public class Test {
     }
 }
 ```
-### 9. 存在即更新插件
+### 8. 存在即更新插件
 1. 使用MySQL的[“insert ... on duplicate key update”](https://dev.mysql.com/doc/refman/5.7/en/insert-on-duplicate.html)实现存在即更新操作，简化数据入库操作（[[issues#2]](https://github.com/itfsw/mybatis-generator-plugin/issues/2)）。  
 2. 在开启allowMultiQueries=true（默认不会开启）情况下支持upsertByExample，upsertByExampleSelective操作，但强力建议不要使用（需保证团队没有使用statement提交sql,否则会存在sql注入风险）（[[issues#2]](https://github.com/itfsw/mybatis-generator-plugin/issues/2)）。
 
@@ -731,7 +725,7 @@ public class Test {
     }
 }
 ```
-### 10. Selective选择插入更新增强插件
+### 9. Selective选择插入更新增强插件
 项目中往往需要指定某些字段进行插入或者更新，或者把某些字段进行设置null处理，这种情况下原生xxxSelective方法往往不能达到需求，因为它的判断条件是对象字段是否为null，这种情况下可使用该插件对xxxSelective方法进行增强。  
 >warning: 以前老版本（1.1.x）插件处理需要指定的列时是放入Model中指定的，但在实际使用过程中有同事反馈这个处理有点反直觉，导致某些新同事不能及时找到对应方法，而且和增强的SelectSelectivePlugin以及UpsertSelective使用方式都不一致，所以统一修改之。  
 
@@ -788,7 +782,7 @@ public class Test {
 }
 ```
 
-### 13. 自定义注释插件
+### 10. 自定义注释插件
 Mybatis Generator是原生支持自定义注释的（commentGenerator配置type属性），但使用比较麻烦需要自己实现CommentGenerator接口并打包配置赖等等。  
 该插件借助freemarker极佳的灵活性实现了自定义注释的快速配置。  
 >warning: 下方提供了一个参考模板，需要注意${mgb}的输出，因为Mybatis Generator就是通过该字符串判断是否为自身生成代码进行覆盖重写。  
@@ -1108,7 +1102,7 @@ Mybatis Generator是原生支持自定义注释的（commentGenerator配置type�
         ]]></comment>
 </template>
 ```
-### 15. 查询结果选择性返回插件
+### 11. 查询结果选择性返回插件
 一般我们在做查询优化的时候会要求查询返回时不要返回自己不需要的字段数据，因为Sending data所花费的时间和加大内存的占用
 ，所以我们看到官方对于大数据的字段会拆分成xxxWithBLOBs的操作，但是这种拆分还是不能精确到具体列返回。  
 所以该插件的作用就是精确指定查询操作所需要返回的字段信息，实现查询的精确返回。  
@@ -1148,7 +1142,7 @@ public class Test {
     }
 }
 ```
-### 17. 乐观锁插件
+### 12. 乐观锁插件
 为并发操作引入乐观锁，当发生删除或者更新操作时调用相应的WithVersion方法传入版本号，插件会在相应的查询条件上附加上版本号的检查，防止非法操作的发生。  
 同时在更新操作中支持自定义nextVersion或者利用sql 的“set column = column + 1”去维护版本号。   
 
@@ -1214,7 +1208,7 @@ public class Test {
     }
 }
 ```
-### 18. 表重命名配置插件
+### 13. 表重命名配置插件
 官方提供了domainObjectRenamingRule(官方最新版本已提供)、columnRenamingRule分别进行生成的表名称和对应表字段的重命名支持，但是它需要每个表单独进行配置，对于常用的如表附带前缀“t_”、字段前缀“f_”这种全局性替换会比较麻烦。   
 该插件提供了一种全局替换机制，当表没有单独指定domainObjectRenamingRule、columnRenamingRule时采用全局性配置。   
 同时插件提供clientSuffix、exampleSuffix、modelSuffix来修改对应生成的类和文件的结尾（之前issue中有用户希望能把Mapper替换成Dao）。       
@@ -1273,7 +1267,7 @@ public class Test {
     </plugin>
 </xml>
 ```
-### 19. Lombok插件
+### 14. Lombok插件
 使用Lombok的使用可以减少很多重复代码的书写，目前项目中已大量使用。
 但Lombok的@Builder对于类的继承支持很不好，最近发现新版(>=1.18.2)已经提供了对@SuperBuilder的支持，所以新增该插件方便简写代码。
 
@@ -1300,7 +1294,7 @@ public class Test {
     </plugin>
 </xml>
 ```
-### 20. 数据ModelCloneable插件
+### 15. 数据ModelCloneable插件
 数据Model实现Cloneable接口。
 
 ```xml
@@ -1309,7 +1303,7 @@ public class Test {
     <plugin type="com.itfsw.mybatis.generator.plugins.ModelCloneablePlugin"/>
 </xml>
 ```
-### 21. 状态枚举生成插件
+### 16. 状态枚举生成插件
 数据库中经常会定义一些状态字段，该工具可根据约定的注释格式生成对应的枚举类，方便使用。
 >warning：插件1.2.18版本以后默认开启自动扫描，根据约定注释格式自动生成对应枚举类
 ```xml
@@ -1477,7 +1471,7 @@ public class Tb {
     }
 }
 ```
-### 22. 增量插件
+### 17. 增量插件
 为更新操作生成set filedxxx = filedxxx +/- inc 操作，方便某些统计字段的更新操作，常用于某些需要计数的场景,需配合（[ModelColumnPlugin](#8-数据model属性对应column获取插件)）插件使用；     
 
 插件：
@@ -1509,7 +1503,7 @@ public class Test {
     }
 }
 ```
-### 23. Mapper注解插件
+### 18. Mapper注解插件
 对官方的（[MapperAnnotationPlugin](http://www.mybatis.org/generator/reference/plugins.html)）增强，可自定义附加@Repository注解（IDEA工具对@Mapper注解支持有问题，使用@Autowired会报无法找到对应bean，附加@Repository后解决）；     
 
 插件：

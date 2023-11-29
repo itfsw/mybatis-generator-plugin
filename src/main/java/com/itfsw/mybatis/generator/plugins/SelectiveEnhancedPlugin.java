@@ -18,7 +18,6 @@ package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.*;
 import com.itfsw.mybatis.generator.plugins.utils.hook.IIncrementPluginHook;
-import com.itfsw.mybatis.generator.plugins.utils.hook.IIncrementsPluginHook;
 import com.itfsw.mybatis.generator.plugins.utils.hook.IOptimisticLockerPluginHook;
 import com.itfsw.mybatis.generator.plugins.utils.hook.IUpsertPluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
@@ -168,10 +167,10 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         answer.addElement(new TextElement(sb.toString()));
 
         // columns
-        answer.addElement(this.generateInsertColumnSelective(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns())));
+        answer.addElement(this.generateInsertColumnSelective(introspectedTable, ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns())));
         // values
         answer.addElement(new TextElement("values"));
-        answer.addElement(this.generateInsertValuesSelective(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns())));
+        answer.addElement(this.generateInsertValuesSelective(introspectedTable, ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns())));
 
         XmlElementTools.replaceXmlElement(element, answer);
 
@@ -198,7 +197,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
 
         // selective
         answer.addElement(new TextElement("SET"));
-        answer.addElement(this.generateSetsSelective(ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getAllColumns())));
+        answer.addElement(this.generateSetsSelective(introspectedTable, ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getAllColumns())));
 
         answer.addElement(XmlElementGeneratorTools.getUpdateByExampleIncludeElement(introspectedTable));
 
@@ -228,7 +227,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
 
         // selective
         answer.addElement(new TextElement("SET"));
-        answer.addElement(this.generateSetsSelective(ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getNonPrimaryKeyColumns())));
+        answer.addElement(this.generateSetsSelective(introspectedTable, ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getNonPrimaryKeyColumns())));
 
         XmlElementGeneratorTools.generateWhereByPrimaryKeyTo(answer, introspectedTable.getPrimaryKeyColumns(), "row.");
 
@@ -285,13 +284,13 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
 
 
         // 替换insert column
-        XmlElementTools.replaceXmlElement(insertColumnsEle, this.generateInsertColumnSelective(columns));
+        XmlElementTools.replaceXmlElement(insertColumnsEle, this.generateInsertColumnSelective(introspectedTable, columns));
 
         // 替换insert values
-        XmlElementTools.replaceXmlElement(insertValuesEle, this.generateInsertValuesSelective(columns));
+        XmlElementTools.replaceXmlElement(insertValuesEle, this.generateInsertValuesSelective(introspectedTable, columns));
 
         // 替换update set
-        XmlElementTools.replaceXmlElement(setsEle, this.generateSetsSelective(columns));
+        XmlElementTools.replaceXmlElement(setsEle, this.generateSetsSelective(introspectedTable, columns));
 
         return true;
     }
@@ -303,13 +302,13 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
     public boolean sqlMapUpsertByExampleSelectiveElementGenerated(XmlElement element, List<IntrospectedColumn> columns, XmlElement insertColumnsEle, XmlElement insertValuesEle, XmlElement setsEle, IntrospectedTable introspectedTable) {
 
         // 替换insert column
-        XmlElementTools.replaceXmlElement(insertColumnsEle, this.generateInsertColumnSelective(columns));
+        XmlElementTools.replaceXmlElement(insertColumnsEle, this.generateInsertColumnSelective(introspectedTable, columns));
 
         // 替换insert values
-        XmlElementTools.replaceXmlElement(insertValuesEle, this.generateInsertValuesSelective(columns, false));
+        XmlElementTools.replaceXmlElement(insertValuesEle, this.generateInsertValuesSelective(introspectedTable, columns, false));
 
         // 替换update set
-        XmlElementTools.replaceXmlElement(setsEle, this.generateSetsSelective(columns));
+        XmlElementTools.replaceXmlElement(setsEle, this.generateSetsSelective(introspectedTable, columns));
 
         return true;
     }
@@ -345,9 +344,9 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
     }
 
     @Override
-    public boolean generateSetsSelectiveElement(List<IntrospectedColumn> columns, IntrospectedColumn versionColumn, XmlElement setsElement) {
+    public boolean generateSetsSelectiveElement(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, IntrospectedColumn versionColumn, XmlElement setsElement) {
         // 替换update set
-        XmlElementTools.replaceXmlElement(setsElement, this.generateSetsSelective(columns, versionColumn));
+        XmlElementTools.replaceXmlElement(setsElement, this.generateSetsSelective(introspectedTable, columns, versionColumn));
         return true;
     }
 
@@ -356,7 +355,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
     /**
      * insert column selective
      */
-    private XmlElement generateInsertColumnSelective(List<IntrospectedColumn> columns) {
+    private XmlElement generateInsertColumnSelective(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns) {
         XmlElement insertColumnsChooseEle = new XmlElement("choose");
 
         XmlElement insertWhenEle = new XmlElement("when");
@@ -373,7 +372,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         insertWhenEle.addElement(insertForeachEle);
 
         XmlElement insertOtherwiseEle = new XmlElement("otherwise");
-        insertOtherwiseEle.addElement(XmlElementGeneratorTools.generateKeysSelective(columns, "row."));
+        insertOtherwiseEle.addElement(XmlElementGeneratorTools.generateKeysSelective(introspectedTable, columns, "row."));
         insertColumnsChooseEle.addElement(insertOtherwiseEle);
 
         XmlElement insertTrimElement = new XmlElement("trim");
@@ -388,14 +387,14 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
     /**
      * insert column selective
      */
-    private XmlElement generateInsertValuesSelective(List<IntrospectedColumn> columns) {
-        return generateInsertValuesSelective(columns, true);
+    private XmlElement generateInsertValuesSelective(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns) {
+        return generateInsertValuesSelective(introspectedTable, columns, true);
     }
 
     /**
      * insert column selective
      */
-    private XmlElement generateInsertValuesSelective(List<IntrospectedColumn> columns, boolean bracket) {
+    private XmlElement generateInsertValuesSelective(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, boolean bracket) {
         XmlElement insertValuesChooseEle = new XmlElement("choose");
 
         XmlElement valuesWhenEle = new XmlElement("when");
@@ -415,7 +414,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
 
         XmlElement valuesOtherwiseEle = new XmlElement("otherwise");
         insertValuesChooseEle.addElement(valuesOtherwiseEle);
-        valuesOtherwiseEle.addElement(XmlElementGeneratorTools.generateValuesSelective(columns, "row.", bracket));
+        valuesOtherwiseEle.addElement(XmlElementGeneratorTools.generateValuesSelective(introspectedTable, columns, "row.", bracket));
 
         return insertValuesChooseEle;
     }
@@ -423,14 +422,14 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
     /**
      * sets selective
      */
-    private XmlElement generateSetsSelective(List<IntrospectedColumn> columns) {
-        return generateSetsSelective(columns, null);
+    private XmlElement generateSetsSelective(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns) {
+        return generateSetsSelective(introspectedTable, columns, null);
     }
 
     /**
      * sets selective
      */
-    private XmlElement generateSetsSelective(List<IntrospectedColumn> columns, IntrospectedColumn versionColumn) {
+    private XmlElement generateSetsSelective(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, IntrospectedColumn versionColumn) {
         XmlElement setsChooseEle = new XmlElement("choose");
 
         XmlElement setWhenEle = new XmlElement("when");
@@ -450,16 +449,12 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
             versionColumnCheckEle.addAttribute(new Attribute("test", "column.value != '" + versionColumn.getActualColumnName() + "'.toString()"));
         }
         // 2. Increment Sets
-        List<XmlElement> incrementSetEles = PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSetForSelectiveEnhancedPlugin(columns);
-        if (incrementSetEles == null) {
-            incrementSetEles = PluginTools.getHook(IIncrementsPluginHook.class).incrementSetsWithSelectiveEnhancedPluginElementGenerated(columns);
-        }
+        List<XmlElement> incrementSetEles = PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSetForSelectiveEnhancedPlugin(introspectedTable, columns);
         // 3. typeHandler 节点
         List<XmlElement> typeHandlerSetEles = new ArrayList<>();
         for (IntrospectedColumn column : columns) {
             if (StringUtility.stringHasValue(column.getTypeHandler())
-                    && !(PluginTools.getHook(IIncrementsPluginHook.class).supportIncrement(column))
-                    || PluginTools.getHook(IIncrementPluginHook.class).supportIncrement(column)
+                    || PluginTools.getHook(IIncrementPluginHook.class).supportIncrement(introspectedTable, column)
             ) {
                 XmlElement whenEle = new XmlElement("when");
                 whenEle.addAttribute(new Attribute("test", "'" + column.getActualColumnName() + "'.toString() == column.value"));
@@ -501,7 +496,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
 
         // 普通Selective
         XmlElement setOtherwiseEle = new XmlElement("otherwise");
-        setOtherwiseEle.addElement(XmlElementGeneratorTools.generateSetsSelective(columns, "row."));
+        setOtherwiseEle.addElement(XmlElementGeneratorTools.generateSetsSelective(introspectedTable, columns, "row."));
         setsChooseEle.addElement(setOtherwiseEle);
 
         return setsChooseEle;

@@ -17,7 +17,6 @@
 package com.itfsw.mybatis.generator.plugins.utils;
 
 import com.itfsw.mybatis.generator.plugins.utils.hook.IIncrementPluginHook;
-import com.itfsw.mybatis.generator.plugins.utils.hook.IIncrementsPluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.OutputUtilities;
@@ -124,127 +123,127 @@ public class XmlElementGeneratorTools {
     /**
      * 生成keys Ele
      */
-    public static List<VisitableElement> generateKeys(List<IntrospectedColumn> columns) {
-        return generateKeys(columns, false);
+    public static List<VisitableElement> generateKeys(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns) {
+        return generateKeys(introspectedTable, columns, false);
     }
 
     /**
      * 生成keys Ele
      */
-    public static List<VisitableElement> generateKeys(List<IntrospectedColumn> columns, boolean bracket) {
-        return generateCommColumns(columns, null, bracket, 1);
+    public static List<VisitableElement> generateKeys(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, boolean bracket) {
+        return generateCommColumns(introspectedTable, columns, null, bracket, 1);
     }
 
     /**
      * 生成keys Selective Ele
      */
-    public static XmlElement generateKeysSelective(List<IntrospectedColumn> columns) {
-        return generateKeysSelective(columns, null);
+    public static XmlElement generateKeysSelective(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns) {
+        return generateKeysSelective(introspectedTable, columns, null);
     }
 
     /**
      * 生成keys Selective Ele
      */
-    public static XmlElement generateKeysSelective(List<IntrospectedColumn> columns, String prefix) {
-        return generateKeysSelective(columns, prefix, true);
+    public static XmlElement generateKeysSelective(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, String prefix) {
+        return generateKeysSelective(introspectedTable, columns, prefix, true);
     }
 
     /**
      * 生成keys Selective Ele
      */
-    public static XmlElement generateKeysSelective(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
-        return generateCommColumnsSelective(columns, prefix, bracket, 1);
+    public static XmlElement generateKeysSelective(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, String prefix, boolean bracket) {
+        return generateCommColumnsSelective(introspectedTable, columns, prefix, bracket, 1);
     }
 
     /**
      * 生成values Ele
      */
-    public static List<VisitableElement> generateValues(List<IntrospectedColumn> columns) {
-        return generateValues(columns, null);
+    public static List<VisitableElement> generateValues(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns) {
+        return generateValues(introspectedTable, columns, null);
     }
 
     /**
      * 生成values Ele
      */
-    public static List<VisitableElement> generateValues(List<IntrospectedColumn> columns, String prefix) {
-        return generateValues(columns, prefix, true);
+    public static List<VisitableElement> generateValues(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, String prefix) {
+        return generateValues(introspectedTable, columns, prefix, true);
     }
 
     /**
      * 生成values Ele
      */
-    public static List<VisitableElement> generateValues(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
-        return generateCommColumns(columns, prefix, bracket, 2);
+    public static List<VisitableElement> generateValues(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, String prefix, boolean bracket) {
+        return generateCommColumns(introspectedTable, columns, prefix, bracket, 2);
     }
 
     /**
      * 生成values Selective Ele
      */
-    public static XmlElement generateValuesSelective(List<IntrospectedColumn> columns) {
-        return generateValuesSelective(columns, null);
+    public static XmlElement generateValuesSelective(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns) {
+        return generateValuesSelective(introspectedTable, columns, null);
     }
 
     /**
      * 生成values Selective Ele
      */
-    public static XmlElement generateValuesSelective(List<IntrospectedColumn> columns, String prefix) {
-        return generateValuesSelective(columns, prefix, true);
+    public static XmlElement generateValuesSelective(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, String prefix) {
+        return generateValuesSelective(introspectedTable, columns, prefix, true);
     }
 
     /**
      * 生成values Selective Ele
      */
-    public static XmlElement generateValuesSelective(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
-        return generateCommColumnsSelective(columns, prefix, bracket, 2);
+    public static XmlElement generateValuesSelective(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, String prefix, boolean bracket) {
+        return generateCommColumnsSelective(introspectedTable, columns, prefix, bracket, 2);
     }
 
     /**
      * 生成sets Ele
      */
-    public static List<VisitableElement> generateSets(List<IntrospectedColumn> columns) {
-        return generateSets(columns, null);
+    public static List<VisitableElement> generateSets(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns) {
+        return generateSets(introspectedTable, columns, null);
     }
 
     /**
      * 生成sets Ele
      */
-    public static List<VisitableElement> generateSets(List<IntrospectedColumn> columns, String prefix) {
-        return generateCommColumns(columns, prefix, false, 3);
+    public static List<VisitableElement> generateSets(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, String prefix) {
+        return generateCommColumns(introspectedTable, columns, prefix, false, 3);
     }
 
     /**
      * 生成sets Selective Ele
      */
-    public static XmlElement generateSetsSelective(List<IntrospectedColumn> columns) {
-        return generateSetsSelective(columns, null);
+    public static XmlElement generateSetsSelective(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns) {
+        return generateSetsSelective(introspectedTable, columns, null);
     }
 
     /**
      * 生成sets Selective Ele
      */
-    public static XmlElement generateSetsSelective(List<IntrospectedColumn> columns, String prefix) {
-        return generateCommColumnsSelective(columns, prefix, false, 3);
+    public static XmlElement generateSetsSelective(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, String prefix) {
+        return generateCommColumnsSelective(introspectedTable, columns, prefix, false, 3);
     }
 
     /**
      * 生成keys Ele (upsert)
      */
-    public static List<VisitableElement> generateUpsertKeys(List<IntrospectedColumn> columns, String prefix) {
-        return generateCommColumns(columns, prefix, true, 1, true);
+    public static List<VisitableElement> generateUpsertKeys(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, String prefix) {
+        return generateCommColumns(introspectedTable, columns, prefix, true, 1, true);
     }
 
     /**
      * 生成values Ele (upsert)
      */
-    public static List<VisitableElement> generateUpsertValues(List<IntrospectedColumn> columns, String prefix, boolean bracket) {
-        return generateCommColumns(columns, prefix, bracket, 2, true);
+    public static List<VisitableElement> generateUpsertValues(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, String prefix, boolean bracket) {
+        return generateCommColumns(introspectedTable, columns, prefix, bracket, 2, true);
     }
 
     /**
      * 生成sets Ele (upsert)
      */
-    public static List<VisitableElement> generateUpsertSets(List<IntrospectedColumn> columns, String prefix) {
-        return generateCommColumns(columns, prefix, false, 3, true);
+    public static List<VisitableElement> generateUpsertSets(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, String prefix) {
+        return generateCommColumns(introspectedTable, columns, prefix, false, 3, true);
     }
 
     /**
@@ -252,8 +251,8 @@ public class XmlElementGeneratorTools {
      *
      * @param type 1:key,2:value,3:set
      */
-    private static List<VisitableElement> generateCommColumns(List<IntrospectedColumn> columns, String prefix, boolean bracket, int type) {
-        return generateCommColumns(columns, prefix, bracket, type, false);
+    private static List<VisitableElement> generateCommColumns(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, String prefix, boolean bracket, int type) {
+        return generateCommColumns(introspectedTable, columns, prefix, bracket, type, false);
     }
 
     /**
@@ -261,7 +260,7 @@ public class XmlElementGeneratorTools {
      *
      * @param type 1:key,2:value,3:set
      */
-    private static List<VisitableElement> generateCommColumns(List<IntrospectedColumn> columns, String prefix, boolean bracket, int type, boolean upsert) {
+    private static List<VisitableElement> generateCommColumns(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, String prefix, boolean bracket, int type, boolean upsert) {
         List<VisitableElement> list = new ArrayList<>();
 
         // 只有upsert插件才会传入 IdentityAndGeneratedAlwaysColumn
@@ -270,10 +269,10 @@ public class XmlElementGeneratorTools {
 
             for (IntrospectedColumn introspectedColumn : columns) {
                 if (introspectedColumn.isGeneratedAlways() || introspectedColumn.isIdentity()) {
-                    generateSelectiveToTrimEleTo(trimEle, introspectedColumn, prefix, type);
-                } else if (type == 3 && PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSetSelective(introspectedColumn, prefix) != null) {
+                    generateSelectiveToTrimEleTo(introspectedTable, trimEle, introspectedColumn, prefix, type);
+                } else if (type == 3 && PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSetSelective(introspectedTable, introspectedColumn, prefix) != null) {
                     // IncrementPlugin 插件支持
-                    trimEle.addElement(PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSetSelective(introspectedColumn, prefix));
+                    trimEle.addElement(PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSetSelective(introspectedTable, introspectedColumn, prefix));
                 } else {
                     generateSelectiveCommColumnTo(trimEle, introspectedColumn, prefix, type);
                 }
@@ -288,8 +287,7 @@ public class XmlElementGeneratorTools {
 
                 switch (type) {
                     case 3:
-                        List<VisitableElement> incrementEles = PluginTools.getHook(IIncrementsPluginHook.class).incrementSetElementGenerated(introspectedColumn, prefix, false);
-                        XmlElement incrementEle = PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSet(introspectedColumn, prefix, false);
+                        XmlElement incrementEle = PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSet(introspectedTable, introspectedColumn, prefix, false);
 
                         if (incrementEle != null) {
                             // 增量插件支持
@@ -298,13 +296,6 @@ public class XmlElementGeneratorTools {
                                 sb.setLength(0);
                             }
                             list.add(incrementEle);
-                        } else if (!incrementEles.isEmpty()) {
-                            // 增量插件支持
-                            if (sb.length() > 0) {
-                                list.add(new TextElement(sb.toString()));
-                                sb.setLength(0);
-                            }
-                            list.addAll(incrementEles);
                         } else {
                             sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
                             sb.append(" = ");
@@ -349,10 +340,10 @@ public class XmlElementGeneratorTools {
      *
      * @param type 1:key,2:value,3:set
      */
-    private static XmlElement generateCommColumnsSelective(List<IntrospectedColumn> columns, String prefix, boolean bracket, int type) {
+    private static XmlElement generateCommColumnsSelective(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, String prefix, boolean bracket, int type) {
         XmlElement trimEle = generateTrim(bracket);
         for (IntrospectedColumn introspectedColumn : columns) {
-            generateSelectiveToTrimEleTo(trimEle, introspectedColumn, prefix, type);
+            generateSelectiveToTrimEleTo(introspectedTable, trimEle, introspectedColumn, prefix, type);
         }
         return trimEle;
     }
@@ -377,7 +368,7 @@ public class XmlElementGeneratorTools {
      *
      * @param type 1:key,2:value,3:set
      */
-    private static void generateSelectiveToTrimEleTo(XmlElement trimEle, IntrospectedColumn introspectedColumn, String prefix, int type) {
+    private static void generateSelectiveToTrimEleTo(IntrospectedTable introspectedTable, XmlElement trimEle, IntrospectedColumn introspectedColumn, String prefix, int type) {
         if (type != 3 && (introspectedColumn.isSequenceColumn() || introspectedColumn.getFullyQualifiedJavaType().isPrimitive())) {
             // if it is a sequence column, it is not optional
             // This is required for MyBatis3 because MyBatis3 parses
@@ -385,9 +376,9 @@ public class XmlElementGeneratorTools {
 
             // if it is primitive, we cannot do a null check
             generateSelectiveCommColumnTo(trimEle, introspectedColumn, prefix, type);
-        } else if (type == 3 && PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSetSelective(introspectedColumn, prefix) != null) {
+        } else if (type == 3 && PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSetSelective(introspectedTable, introspectedColumn, prefix) != null) {
             // IncrementPlugin 插件支持
-            trimEle.addElement(PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSetSelective(introspectedColumn, prefix));
+            trimEle.addElement(PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSetSelective(introspectedTable, introspectedColumn, prefix));
         } else {
             XmlElement eleIf = new XmlElement("if");
             eleIf.addAttribute(new Attribute("test", introspectedColumn.getJavaProperty(prefix) + " != null"));
@@ -406,15 +397,7 @@ public class XmlElementGeneratorTools {
     private static void generateSelectiveCommColumnTo(XmlElement element, IntrospectedColumn introspectedColumn, String prefix, int type) {
         switch (type) {
             case 3:
-                List<VisitableElement> incrementEles = PluginTools.getHook(IIncrementsPluginHook.class).incrementSetElementGenerated(introspectedColumn, prefix, true);
-                if (!incrementEles.isEmpty()) {
-                    // 增量插件支持
-                    for (VisitableElement ele : incrementEles) {
-                        element.addElement(ele);
-                    }
-                } else {
-                    element.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = " + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
-                }
+                element.addElement(new TextElement(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn) + " = " + MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));
                 break;
             case 2:
                 element.addElement(new TextElement(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, prefix) + ","));

@@ -17,6 +17,7 @@
 package com.itfsw.mybatis.generator.plugins.utils.hook;
 
 import org.mybatis.generator.api.IntrospectedColumn;
+import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 
 import java.util.List;
@@ -25,20 +26,20 @@ public interface IIncrementPluginHook {
     /**
      * 生成增量操作节点
      */
-    XmlElement generateIncrementSet(IntrospectedColumn introspectedColumn, String prefix, boolean hasComma);
+    XmlElement generateIncrementSet(IntrospectedTable introspectedTable, IntrospectedColumn introspectedColumn, String prefix, boolean hasComma);
 
     /**
      * 生成增量操作节点
      */
-    XmlElement generateIncrementSetSelective(IntrospectedColumn introspectedColumn, String prefix);
+    XmlElement generateIncrementSetSelective(IntrospectedTable introspectedTable, IntrospectedColumn introspectedColumn, String prefix);
 
     /**
      * 生成增量操作节点(SelectiveEnhancedPlugin)
      */
-    List<XmlElement> generateIncrementSetForSelectiveEnhancedPlugin(List<IntrospectedColumn> columns);
+    List<XmlElement> generateIncrementSetForSelectiveEnhancedPlugin(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns);
 
     /**
      * 是否支持increment
      */
-    boolean supportIncrement(IntrospectedColumn column);
+    boolean supportIncrement(IntrospectedTable introspectedTable, IntrospectedColumn column);
 }

@@ -33,5 +33,5 @@ public interface IOptimisticLockerPluginHook {
 
     // ========================================= sqlMap 生成 ============================================
 
-    boolean generateSetsSelectiveElement(List<IntrospectedColumn> columns, IntrospectedColumn versionColumn, XmlElement setsElement);
+    boolean generateSetsSelectiveElement(IntrospectedTable introspectedTable, List<IntrospectedColumn> columns, IntrospectedColumn versionColumn, XmlElement setsElement);
 }

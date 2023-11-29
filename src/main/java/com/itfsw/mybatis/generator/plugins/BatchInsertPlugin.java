@@ -129,7 +129,7 @@ public class BatchInsertPlugin extends BasePlugin {
         XmlElementGeneratorTools.useGeneratedKeys(batchInsertEle, introspectedTable);
 
         batchInsertEle.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-        for (VisitableElement element : XmlElementGeneratorTools.generateKeys(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()), true)) {
+        for (VisitableElement element : XmlElementGeneratorTools.generateKeys(introspectedTable, ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()), true)) {
             batchInsertEle.addElement(element);
         }
 
@@ -139,7 +139,7 @@ public class BatchInsertPlugin extends BasePlugin {
         foreachElement.addAttribute(new Attribute("item", "item"));
         foreachElement.addAttribute(new Attribute("separator", ","));
 
-        for (VisitableElement element : XmlElementGeneratorTools.generateValues(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()), "item.")) {
+        for (VisitableElement element : XmlElementGeneratorTools.generateValues(introspectedTable, ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()), "item.")) {
             foreachElement.addElement(element);
         }
 
@@ -188,13 +188,13 @@ public class BatchInsertPlugin extends BasePlugin {
 
             XmlElement insertTrimElement = new XmlElement("trim");
             foreachEle.addElement(insertTrimElement);
-            insertTrimElement.addElement(XmlElementGeneratorTools.generateKeysSelective(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()), "item."));
+            insertTrimElement.addElement(XmlElementGeneratorTools.generateKeysSelective(introspectedTable, ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()), "item."));
 
             foreachEle.addElement(new TextElement("values"));
 
             XmlElement valuesTrimElement = new XmlElement("trim");
             foreachEle.addElement(valuesTrimElement);
-            valuesTrimElement.addElement(XmlElementGeneratorTools.generateValuesSelective(ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()), "item."));
+            valuesTrimElement.addElement(XmlElementGeneratorTools.generateValuesSelective(introspectedTable, ListUtilities.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns()), "item."));
 
             batchInsertSelectiveEle.addElement(chooseEle);
         } else {
