@@ -53,7 +53,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
 
     private final Map<IntrospectedTable, List<XmlElement>> sqlMaps = new HashMap<>(); // sqlMap xml 节点
     private final Map<IntrospectedTable, IntrospectedColumn> tableVersionColumns = new HashMap<>();
-    private boolean customizedNextVersion;  // 使用用户自定义nextVersion
+    private final Map<IntrospectedTable, Boolean> tableCustomizedNextVersion = new HashMap<>();
 
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
@@ -80,7 +80,10 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
         if (introspectedTable.getTableConfigurationProperty(PRO_CUSTOMIZED_NEXT_VERSION) != null) {
             customizedNextVersion = introspectedTable.getTableConfigurationProperty(PRO_CUSTOMIZED_NEXT_VERSION);
         }
-        this.customizedNextVersion = StringUtility.stringHasValue(customizedNextVersion) && StringUtility.isTrue(customizedNextVersion);
+        this.tableCustomizedNextVersion.put(
+                introspectedTable,
+                StringUtility.stringHasValue(customizedNextVersion) && StringUtility.isTrue(customizedNextVersion)
+        );
 
         super.initialized(introspectedTable);
     }
@@ -112,7 +115,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
     public boolean clientLogicalDeleteByExampleMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         if (tableVersionColumns.containsKey(introspectedTable)) {
             IntrospectedColumn versionColumn = tableVersionColumns.get(introspectedTable);
-            if (this.customizedNextVersion) {
+            if (tableCustomizedNextVersion.get(introspectedTable)) {
                 Method newMethod = JavaElementGeneratorTools.generateAbstractMethod(
                         METHOD_LOGICAL_DELETE_WITH_VERSION_BY_EXAMPLE,
                         JavaVisibility.DEFAULT,
@@ -137,7 +140,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
     public boolean clientLogicalDeleteByPrimaryKeyMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         if (tableVersionColumns.containsKey(introspectedTable)) {
             IntrospectedColumn versionColumn = tableVersionColumns.get(introspectedTable);
-            if (this.customizedNextVersion) {
+            if (tableVersionColumns.containsKey(introspectedTable)) {
                 Method newMethod = JavaElementGeneratorTools.generateAbstractMethod(
                         METHOD_LOGICAL_DELETE_WITH_VERSION_BY_PRIMARY_KEY,
                         JavaVisibility.DEFAULT,
@@ -229,7 +232,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
     @Override
     public boolean modelSetterMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable, ModelClassType modelClassType) {
         IntrospectedColumn versionColumn = tableVersionColumns.get(introspectedTable);
-        if (versionColumn != null && this.customizedNextVersion && introspectedColumn.getActualColumnName().equals(versionColumn.getActualColumnName())) {
+        if (versionColumn != null && tableCustomizedNextVersion.get(introspectedTable) && introspectedColumn.getActualColumnName().equals(versionColumn.getActualColumnName())) {
             // nextVersion 方法
             Method nextVersion = JavaElementGeneratorTools.generateMethod(
                     METHOD_NEXT_VERSION,
@@ -256,7 +259,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
     @Override
     public boolean modelBuilderSetterMethodGenerated(Method method, TopLevelClass topLevelClass, InnerClass builderClass, IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable) {
         IntrospectedColumn versionColumn = tableVersionColumns.get(introspectedTable);
-        if (versionColumn != null && this.customizedNextVersion && introspectedColumn.getActualColumnName().equals(versionColumn.getActualColumnName())) {
+        if (versionColumn != null && tableCustomizedNextVersion.get(introspectedTable) && introspectedColumn.getActualColumnName().equals(versionColumn.getActualColumnName())) {
             // nextVersion 方法
             Method nextVersion = JavaElementGeneratorTools.generateMethod(
                     METHOD_NEXT_VERSION,
@@ -701,10 +704,10 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
             }
 
             // 版本自增
-            needVersionEle.addElement(0, this.generateVersionSetEle(versionColumn, selective));
+            needVersionEle.addElement(0, this.generateVersionSetEle(introspectedTable, versionColumn, selective));
         } else {
             // 版本自增
-            updateEle.addElement(this.generateVersionSetEle(versionColumn, selective));
+            updateEle.addElement(this.generateVersionSetEle(introspectedTable, versionColumn, selective));
             // set 节点
             List<VisitableElement> setsEles = XmlElementGeneratorTools.generateSets(introspectedTable, columns, "row.");
             //  XmlElementGeneratorTools.generateSets, 因为传入参数不可能带IdentityAndGeneratedAlwaysColumn所以返回的是set列表而不可能是trim 元素
@@ -745,7 +748,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
 
         StringBuilder sb = new StringBuilder("set ");
         // 版本自增
-        if (this.customizedNextVersion) {
+        if (tableCustomizedNextVersion.get(introspectedTable)) {
             sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(versionColumn));
             sb.append(" = ");
             sb.append("#{nextVersion,jdbcType=");
@@ -789,8 +792,8 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
     /**
      * 生成版本号set节点
      */
-    private TextElement generateVersionSetEle(IntrospectedColumn versionColumn, boolean selective) {
-        if (this.customizedNextVersion) {
+    private TextElement generateVersionSetEle(IntrospectedTable introspectedTable, IntrospectedColumn versionColumn, boolean selective) {
+        if (tableCustomizedNextVersion.get(introspectedTable)) {
             return new TextElement(
                     (selective ? "" : "set ")
                             + MyBatis3FormattingUtilities.getEscapedColumnName(versionColumn)
