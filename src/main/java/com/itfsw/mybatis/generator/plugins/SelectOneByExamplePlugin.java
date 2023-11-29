@@ -51,13 +51,12 @@ public class SelectOneByExamplePlugin extends BasePlugin {
     @Override
     public boolean clientSelectByExampleWithBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         // 方法生成 selectOneByExample
-        Method selectOneMethod = JavaElementGeneratorTools.generateMethod(
+        Method selectOneMethod = JavaElementGeneratorTools.generateAbstractMethod(
                 METHOD_SELECT_ONE_BY_EXAMPLE_WITH_BLOBS,
                 JavaVisibility.DEFAULT,
                 JavaElementGeneratorTools.getModelTypeWithBLOBs(introspectedTable),
                 new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example")
         );
-        selectOneMethod.setAbstract(true);
         commentGenerator.addGeneralMethodComment(selectOneMethod, introspectedTable);
 
         // hook
@@ -76,13 +75,12 @@ public class SelectOneByExamplePlugin extends BasePlugin {
     @Override
     public boolean clientSelectByExampleWithoutBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         // 方法生成 selectOneByExample
-        Method selectOneMethod = JavaElementGeneratorTools.generateMethod(
+        Method selectOneMethod = JavaElementGeneratorTools.generateAbstractMethod(
                 METHOD_SELECT_ONE_BY_EXAMPLE,
                 JavaVisibility.DEFAULT,
                 JavaElementGeneratorTools.getModelTypeWithoutBLOBs(introspectedTable),
                 new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example")
         );
-        selectOneMethod.setAbstract(true);
         commentGenerator.addGeneralMethodComment(selectOneMethod, introspectedTable);
 
         // hook

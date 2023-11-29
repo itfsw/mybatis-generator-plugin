@@ -226,13 +226,12 @@ public class ExampleEnhancedPlugin extends BasePlugin {
         whenInterface.setVisibility(JavaVisibility.PUBLIC);
 
         // ICriteriaAdd增加接口add
-        Method addMethod = JavaElementGeneratorTools.generateMethod(
+        Method addMethod = JavaElementGeneratorTools.generateAbstractMethod(
                 type,
                 JavaVisibility.DEFAULT,
                 null,
                 new Parameter(clazz.getType(), type)
         );
-        addMethod.setAbstract(true);
         commentGenerator.addGeneralMethodComment(addMethod, introspectedTable);
         whenInterface.addMethod(addMethod);
 

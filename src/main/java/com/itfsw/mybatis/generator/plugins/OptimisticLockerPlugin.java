@@ -113,7 +113,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
         if (tableVersionColumns.containsKey(introspectedTable)) {
             IntrospectedColumn versionColumn = tableVersionColumns.get(introspectedTable);
             if (this.customizedNextVersion) {
-                Method newMethod = JavaElementGeneratorTools.generateMethod(
+                Method newMethod = JavaElementGeneratorTools.generateAbstractMethod(
                         METHOD_LOGICAL_DELETE_WITH_VERSION_BY_EXAMPLE,
                         JavaVisibility.DEFAULT,
                         FullyQualifiedJavaType.getIntInstance(),
@@ -121,7 +121,6 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
                         new Parameter(versionColumn.getFullyQualifiedJavaType(), "nextVersion", "@Param(\"nextVersion\")"),
                         new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")")
                 );
-                method.setAbstract(true);
                 commentGenerator.addGeneralMethodComment(newMethod, introspectedTable);
                 FormatTools.addMethodWithBestPosition(interfaze, newMethod);
             } else {
@@ -139,7 +138,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
         if (tableVersionColumns.containsKey(introspectedTable)) {
             IntrospectedColumn versionColumn = tableVersionColumns.get(introspectedTable);
             if (this.customizedNextVersion) {
-                Method newMethod = JavaElementGeneratorTools.generateMethod(
+                Method newMethod = JavaElementGeneratorTools.generateAbstractMethod(
                         METHOD_LOGICAL_DELETE_WITH_VERSION_BY_PRIMARY_KEY,
                         JavaVisibility.DEFAULT,
                         FullyQualifiedJavaType.getIntInstance(),
@@ -147,7 +146,6 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
                         new Parameter(versionColumn.getFullyQualifiedJavaType(), "nextVersion", "@Param(\"nextVersion\")"),
                         new Parameter(method.getParameters().get(0).getType(), method.getParameters().get(0).getName(), "@Param(\"key\")")
                 );
-                newMethod.setAbstract(true);
                 commentGenerator.addGeneralMethodComment(newMethod, introspectedTable);
                 FormatTools.addMethodWithBestPosition(interfaze, newMethod);
             } else {
@@ -516,7 +514,6 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
     private Method replaceUpdateExampleMethod(IntrospectedTable introspectedTable, Method method, Interface interfaze, String methodName) {
         IntrospectedColumn versionColumn = tableVersionColumns.get(introspectedTable);
         Method withVersionMethod = new Method(method);
-        withVersionMethod.setAbstract(true);
         // 替换方法名
         withVersionMethod.setName(methodName);
         FormatTools.replaceGeneralMethodComment(commentGenerator, withVersionMethod, introspectedTable);
@@ -534,7 +531,6 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
     private Method replaceDeleteExampleMethod(IntrospectedTable introspectedTable, Method method, Interface interfaze, String methodName) {
         IntrospectedColumn versionColumn = tableVersionColumns.get(introspectedTable);
         Method withVersionMethod = new Method(method);
-        withVersionMethod.setAbstract(true);
         // 替换方法名
         withVersionMethod.setName(methodName);
         FormatTools.replaceGeneralMethodComment(commentGenerator, withVersionMethod, introspectedTable);
@@ -555,7 +551,6 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
     private Method replaceUpdatePrimaryKeyMethod(IntrospectedTable introspectedTable, Method method, Interface interfaze, String methodName) {
         IntrospectedColumn versionColumn = tableVersionColumns.get(introspectedTable);
         Method withVersionMethod = new Method(method);
-        withVersionMethod.setAbstract(true);
         // 替换方法名
         withVersionMethod.setName(methodName);
         FormatTools.replaceGeneralMethodComment(commentGenerator, withVersionMethod, introspectedTable);
@@ -576,7 +571,6 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
     private Method replaceDeletePrimaryKeyMethod(IntrospectedTable introspectedTable, Method method, Interface interfaze, String methodName) {
         IntrospectedColumn versionColumn = tableVersionColumns.get(introspectedTable);
         Method withVersionMethod = new Method(method);
-        withVersionMethod.setAbstract(true);
         // 替换方法名
         withVersionMethod.setName(methodName);
         FormatTools.replaceGeneralMethodComment(commentGenerator, withVersionMethod, introspectedTable);

@@ -228,13 +228,12 @@ public class LogicalDeletePlugin extends BasePlugin {
     public boolean clientGenerated(Interface interfaze, IntrospectedTable introspectedTable) {
         if (this.logicalDeleteColumn != null) {
             // 1. 逻辑删除ByExample
-            Method mLogicalDeleteByExample = JavaElementGeneratorTools.generateMethod(
+            Method mLogicalDeleteByExample = JavaElementGeneratorTools.generateAbstractMethod(
                     METHOD_LOGICAL_DELETE_BY_EXAMPLE,
                     JavaVisibility.DEFAULT,
                     FullyQualifiedJavaType.getIntInstance(),
                     new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")")
             );
-            mLogicalDeleteByExample.setAbstract(true);
             // 添加方法说明
             commentGenerator.addGeneralMethodComment(mLogicalDeleteByExample, introspectedTable);
             // interface 增加方法
@@ -246,21 +245,19 @@ public class LogicalDeletePlugin extends BasePlugin {
             // 2. 判断是否有主键，生成主键删除方法
             if (introspectedTable.hasPrimaryKeyColumns()) {
                 // 2.1. 逻辑删除ByExample
-                Method mLogicalDeleteByPrimaryKey = JavaElementGeneratorTools.generateMethod(
+                Method mLogicalDeleteByPrimaryKey = JavaElementGeneratorTools.generateAbstractMethod(
                         METHOD_LOGICAL_DELETE_BY_PRIMARY_KEY,
                         JavaVisibility.DEFAULT,
                         FullyQualifiedJavaType.getIntInstance()
                 );
-                mLogicalDeleteByPrimaryKey.setAbstract(true);
                 commentGenerator.addGeneralMethodComment(mLogicalDeleteByPrimaryKey, introspectedTable);
 
                 // 2.2 增强selectByPrimaryKey
-                Method mSelectByPrimaryKey = JavaElementGeneratorTools.generateMethod(
+                Method mSelectByPrimaryKey = JavaElementGeneratorTools.generateAbstractMethod(
                         METHOD_SELECT_BY_PRIMARY_KEY_WITH_LOGICAL_DELETE,
                         JavaVisibility.DEFAULT,
                         introspectedTable.getRules().calculateAllFieldsClass()
                 );
-                mSelectByPrimaryKey.setAbstract(true);
 
                 // 添加参数
                 Set<FullyQualifiedJavaType> importedTypes = new TreeSet<>();

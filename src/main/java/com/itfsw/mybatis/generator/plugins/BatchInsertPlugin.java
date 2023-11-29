@@ -80,14 +80,13 @@ public class BatchInsertPlugin extends BasePlugin {
         // 1. batchInsert
         FullyQualifiedJavaType listType = FullyQualifiedJavaType.getNewListInstance();
         listType.addTypeArgument(introspectedTable.getRules().calculateAllFieldsClass());
-        Method mBatchInsert = JavaElementGeneratorTools.generateMethod(
+        Method mBatchInsert = JavaElementGeneratorTools.generateAbstractMethod(
                 METHOD_BATCH_INSERT,
                 JavaVisibility.DEFAULT,
                 FullyQualifiedJavaType.getIntInstance(),
                 new Parameter(listType, "list", "@Param(\"list\")")
 
         );
-        mBatchInsert.setAbstract(true);
         commentGenerator.addGeneralMethodComment(mBatchInsert, introspectedTable);
         // interface 增加方法
         FormatTools.addMethodWithBestPosition(interfaze, mBatchInsert);
@@ -95,14 +94,13 @@ public class BatchInsertPlugin extends BasePlugin {
 
         // 2. batchInsertSelective
         FullyQualifiedJavaType selectiveType = new FullyQualifiedJavaType(introspectedTable.getRules().calculateAllFieldsClass().getShortName() + "." + ModelColumnPlugin.ENUM_NAME);
-        Method mBatchInsertSelective = JavaElementGeneratorTools.generateMethod(
+        Method mBatchInsertSelective = JavaElementGeneratorTools.generateAbstractMethod(
                 METHOD_BATCH_INSERT_SELECTIVE,
                 JavaVisibility.DEFAULT,
                 FullyQualifiedJavaType.getIntInstance(),
                 new Parameter(listType, "list", "@Param(\"list\")"),
                 new Parameter(selectiveType, "selective", "@Param(\"selective\")", true)
         );
-        mBatchInsertSelective.setAbstract(true);
         commentGenerator.addGeneralMethodComment(mBatchInsertSelective, introspectedTable);
         // interface 增加方法
         FormatTools.addMethodWithBestPosition(interfaze, mBatchInsertSelective);

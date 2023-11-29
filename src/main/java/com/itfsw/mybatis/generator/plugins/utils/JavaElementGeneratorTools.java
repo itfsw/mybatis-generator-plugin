@@ -28,6 +28,7 @@ public class JavaElementGeneratorTools {
 
     /**
      * 生成静态常量
+     *
      * @param fieldName  常量名称
      * @param javaType   类型
      * @param initString 初始化字段
@@ -45,6 +46,7 @@ public class JavaElementGeneratorTools {
 
     /**
      * 生成属性
+     *
      * @param fieldName  常量名称
      * @param visibility 可见性
      * @param javaType   类型
@@ -61,6 +63,7 @@ public class JavaElementGeneratorTools {
 
     /**
      * 生成方法
+     *
      * @param methodName 方法名
      * @param visibility 可见性
      * @param returnType 返回值类型
@@ -80,7 +83,29 @@ public class JavaElementGeneratorTools {
     }
 
     /**
+     * 生成方法
+     *
+     * @param methodName 方法名
+     * @param visibility 可见性
+     * @param returnType 返回值类型
+     * @param parameters 参数列表
+     */
+    public static Method generateAbstractMethod(String methodName, JavaVisibility visibility, FullyQualifiedJavaType returnType, Parameter... parameters) {
+        Method method = new Method(methodName);
+        method.setVisibility(visibility);
+        method.setReturnType(returnType);
+        if (parameters != null) {
+            for (Parameter parameter : parameters) {
+                method.addParameter(parameter);
+            }
+        }
+        method.setAbstract(true);
+        return method;
+    }
+
+    /**
      * 生成方法实现体
+     *
      * @param method    方法
      * @param bodyLines 方法实现行
      */
@@ -95,6 +120,7 @@ public class JavaElementGeneratorTools {
 
     /**
      * 生成Filed的Set方法
+     *
      * @param field field
      */
     public static Method generateSetterMethod(Field field) {
@@ -109,6 +135,7 @@ public class JavaElementGeneratorTools {
 
     /**
      * 生成Filed的Get方法
+     *
      * @param field field
      */
     public static Method generateGetterMethod(Field field) {

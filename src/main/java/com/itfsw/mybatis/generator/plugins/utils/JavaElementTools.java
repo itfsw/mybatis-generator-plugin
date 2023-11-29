@@ -52,6 +52,7 @@ public class JavaElementTools {
         dest.setFinal(method.isFinal());
         dest.setStatic(method.isStatic());
         dest.setVisibility(method.getVisibility());
+        dest.setAbstract(method.isAbstract());
         return dest;
     }
 

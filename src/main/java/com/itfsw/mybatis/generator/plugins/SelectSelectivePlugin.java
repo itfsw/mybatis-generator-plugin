@@ -108,7 +108,6 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
             ));
         } else {
             Method withSelective = JavaElementTools.clone(method);
-            withSelective.setAbstract(true);
             FormatTools.replaceGeneralMethodComment(commentGenerator, withSelective, introspectedTable);
 
             withSelective.setName(METHOD_SELECT_BY_PRIMARY_KEY_SELECTIVE);
@@ -354,7 +353,6 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
      */
     private Method replaceMethodWithSelective(Method method, String name, String firstAnnotation, IntrospectedTable introspectedTable) {
         Method withSelective = JavaElementTools.clone(method);
-        withSelective.setAbstract(true);
         FormatTools.replaceGeneralMethodComment(commentGenerator, withSelective, introspectedTable);
 
         withSelective.setName(name);
