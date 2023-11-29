@@ -263,7 +263,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
                         XmlElement when = new XmlElement("when");
 
                         // 需要 inc 的列
-                        String columnMap = "record." + FIELD_INC_MAP + "." + MyBatis3FormattingUtilities.getEscapedColumnName(incColumn);
+                        String columnMap = "row." + FIELD_INC_MAP + "." + MyBatis3FormattingUtilities.getEscapedColumnName(incColumn);
 
                         when.addAttribute(new Attribute("test", "'" + column.getActualColumnName() + "'.toString() == column.value and " + columnMap + " != null"));
                         when.addElement(new TextElement("${column.escapedColumnName} = ${column.escapedColumnName} "
@@ -424,7 +424,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
                         String columnName = strs[0].trim();
                         IntrospectedColumn introspectedColumn = IntrospectedTableTools.safeGetColumn(introspectedTable, columnName);
                         if (this.supportIncrement(introspectedColumn)) {
-                            XmlElementTools.replaceXmlElement(xmlElement, PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSetSelective(introspectedColumn, hasPrefix ? "record." : null));
+                            XmlElementTools.replaceXmlElement(xmlElement, PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSetSelective(introspectedColumn, hasPrefix ? "row." : null));
                         }
                     }
                 }
@@ -448,7 +448,7 @@ public class IncrementPlugin extends BasePlugin implements IIncrementPluginHook 
                     IntrospectedColumn introspectedColumn = IntrospectedTableTools.safeGetColumn(introspectedTable, columnName);
                     // 查找判断是否需要进行节点替换
                     if (this.supportIncrement(introspectedColumn)) {
-                        xmlElement.getElements().set(i, PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSet(introspectedColumn, hasPrefix ? "record." : null, text.endsWith(",")));
+                        xmlElement.getElements().set(i, PluginTools.getHook(IIncrementPluginHook.class).generateIncrementSet(introspectedColumn, hasPrefix ? "row." : null, text.endsWith(",")));
                     }
                 }
             }

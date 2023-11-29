@@ -1148,18 +1148,6 @@ public class Test {
     }
 }
 ```
-### 16. 官方ConstructorBased配置BUG临时修正插件
-当javaModelGenerator配置constructorBased=true时，如果表中只有一个column类型为“blob”时java model没有生成BaseResultMap对应的构造函数，
-这个bug已经反馈给官方[issues#267](https://github.com/mybatis/generator/issues/267)。  
-> 官方V1.3.6版本将解决这个bug,老版本的可以使用这个插件临时修正问题。  
-
-插件：
-```xml
-<xml>
-    <!-- 官方ConstructorBased配置BUG临时修正插件 -->
-    <plugin type="com.itfsw.mybatis.generator.plugins.ConstructorBasedBugFixPlugin" />
-</xml>
-```
 ### 17. 乐观锁插件
 为并发操作引入乐观锁，当发生删除或者更新操作时调用相应的WithVersion方法传入版本号，插件会在相应的查询条件上附加上版本号的检查，防止非法操作的发生。  
 同时在更新操作中支持自定义nextVersion或者利用sql 的“set column = column + 1”去维护版本号。   

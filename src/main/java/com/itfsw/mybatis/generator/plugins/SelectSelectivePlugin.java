@@ -103,7 +103,7 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
             FormatTools.addMethodWithBestPosition(interfaze, this.replaceMethodWithSelective(
                     method,
                     METHOD_SELECT_BY_PRIMARY_KEY_SELECTIVE,
-                    "@Param(\"record\")",
+                    "@Param(\"row\")",
                     introspectedTable
             ));
         } else {
@@ -304,7 +304,7 @@ public class SelectSelectivePlugin extends BasePlugin implements ISelectOneByExa
 
                 sb.append(MyBatis3FormattingUtilities.getAliasedEscapedColumnName(introspectedColumn));
                 sb.append(" = ");
-                sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, introspectedTable.getRules().generatePrimaryKeyClass() ? "record." : null));
+                sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, introspectedTable.getRules().generatePrimaryKeyClass() ? "row." : null));
                 selectSelectiveEle.addElement(new TextElement(sb.toString()));
             }
         }

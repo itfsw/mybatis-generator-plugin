@@ -68,7 +68,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         method.setAbstract(true);
 
         FullyQualifiedJavaType parameterType = introspectedTable.getRules().calculateAllFieldsClass();
-        method.addParameter(new Parameter(parameterType, "record", "@Param(\"record\")"));
+        method.addParameter(new Parameter(parameterType, "row", "@Param(\"row\")"));
 
         // 找出全字段对应的Model
         FullyQualifiedJavaType fullFieldModel = introspectedTable.getRules().calculateAllFieldsClass();
@@ -90,7 +90,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         method.setAbstract(true);
 
         FullyQualifiedJavaType parameterType = introspectedTable.getRules().calculateAllFieldsClass();
-        method.addParameter(new Parameter(parameterType, "record", "@Param(\"record\")"));
+        method.addParameter(new Parameter(parameterType, "row", "@Param(\"row\")"));
 
         FullyQualifiedJavaType exampleType = new FullyQualifiedJavaType(introspectedTable.getExampleType());
         method.addParameter(new Parameter(exampleType, "example", "@Param(\"example\")"));
@@ -121,7 +121,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
             parameterType = new FullyQualifiedJavaType(introspectedTable.getBaseRecordType());
         }
 
-        method.addParameter(new Parameter(parameterType, "record", "@Param(\"record\")"));
+        method.addParameter(new Parameter(parameterType, "row", "@Param(\"row\")"));
 
         // 找出全字段对应的Model
         FullyQualifiedJavaType fullFieldModel = introspectedTable.getRules().calculateAllFieldsClass();
@@ -154,9 +154,9 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
             // warning has already been reported
             if (introspectedColumnOptional.isPresent()) {
                 if (generatedKey.isJdbcStandard()) {
-                    XmlElementGeneratorTools.useGeneratedKeys(answer, introspectedTable, "record.");
+                    XmlElementGeneratorTools.useGeneratedKeys(answer, introspectedTable, "row.");
                 } else {
-                    answer.addElement(XmlElementGeneratorTools.getSelectKey(introspectedColumnOptional.get(), generatedKey, "record."));
+                    answer.addElement(XmlElementGeneratorTools.getSelectKey(introspectedColumnOptional.get(), generatedKey, "row."));
                 }
             }
         }
@@ -230,7 +230,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         answer.addElement(new TextElement("SET"));
         answer.addElement(this.generateSetsSelective(ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getNonPrimaryKeyColumns())));
 
-        XmlElementGeneratorTools.generateWhereByPrimaryKeyTo(answer, introspectedTable.getPrimaryKeyColumns(), "record.");
+        XmlElementGeneratorTools.generateWhereByPrimaryKeyTo(answer, introspectedTable.getPrimaryKeyColumns(), "row.");
 
         XmlElementTools.replaceXmlElement(element, answer);
         return super.sqlMapUpdateByPrimaryKeySelectiveElementGenerated(element, introspectedTable);
@@ -245,8 +245,8 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
     @Override
     public boolean clientUpsertSelectiveMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         method.setAbstract(true);
-        // @Param("record")
-        method.getParameters().get(0).addAnnotation("@Param(\"record\")");
+        // @Param("row")
+        method.getParameters().get(0).addAnnotation("@Param(\"row\")");
         // column枚举
         // 找出全字段对应的Model
         FullyQualifiedJavaType fullFieldModel = introspectedTable.getRules().calculateAllFieldsClass();
@@ -281,7 +281,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
             String name = attribute.getName();
             return name.equals("useGeneratedKeys") || name.equals("keyProperty") || name.equals("keyColumn");
         });
-        XmlElementGeneratorTools.useGeneratedKeys(element, introspectedTable, "record.");
+        XmlElementGeneratorTools.useGeneratedKeys(element, introspectedTable, "row.");
 
 
         // 替换insert column
@@ -373,7 +373,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
         insertWhenEle.addElement(insertForeachEle);
 
         XmlElement insertOtherwiseEle = new XmlElement("otherwise");
-        insertOtherwiseEle.addElement(XmlElementGeneratorTools.generateKeysSelective(columns, "record."));
+        insertOtherwiseEle.addElement(XmlElementGeneratorTools.generateKeysSelective(columns, "row."));
         insertColumnsChooseEle.addElement(insertOtherwiseEle);
 
         XmlElement insertTrimElement = new XmlElement("trim");
@@ -410,12 +410,12 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
             valuesForeachEle.addAttribute(new Attribute("open", "("));
             valuesForeachEle.addAttribute(new Attribute("close", ")"));
         }
-        valuesForeachEle.addElement(new TextElement("#{record.${column.javaProperty},jdbcType=${column.jdbcType}}"));
+        valuesForeachEle.addElement(new TextElement("#{row.${column.javaProperty},jdbcType=${column.jdbcType}}"));
         valuesWhenEle.addElement(valuesForeachEle);
 
         XmlElement valuesOtherwiseEle = new XmlElement("otherwise");
         insertValuesChooseEle.addElement(valuesOtherwiseEle);
-        valuesOtherwiseEle.addElement(XmlElementGeneratorTools.generateValuesSelective(columns, "record.", bracket));
+        valuesOtherwiseEle.addElement(XmlElementGeneratorTools.generateValuesSelective(columns, "row.", bracket));
 
         return insertValuesChooseEle;
     }
@@ -463,13 +463,13 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
             ) {
                 XmlElement whenEle = new XmlElement("when");
                 whenEle.addAttribute(new Attribute("test", "'" + column.getActualColumnName() + "'.toString() == column.value"));
-                whenEle.addElement(new TextElement("${column.escapedColumnName} = " + XmlElementGeneratorTools.getParameterClause("record.${column.javaProperty}", column)));
+                whenEle.addElement(new TextElement("${column.escapedColumnName} = " + XmlElementGeneratorTools.getParameterClause("row.${column.javaProperty}", column)));
 
                 typeHandlerSetEles.add(whenEle);
             }
         }
         // 3. 普通节点
-        TextElement normalEle = new TextElement("${column.escapedColumnName} = #{record.${column.javaProperty},jdbcType=${column.jdbcType}}");
+        TextElement normalEle = new TextElement("${column.escapedColumnName} = #{row.${column.javaProperty},jdbcType=${column.jdbcType}}");
 
         // 4. 如果Increment Sets不为空 或者 typeHandler不为空，生成Choose节点
         XmlElement chooseEle = null;
@@ -501,7 +501,7 @@ public class SelectiveEnhancedPlugin extends BasePlugin implements IUpsertPlugin
 
         // 普通Selective
         XmlElement setOtherwiseEle = new XmlElement("otherwise");
-        setOtherwiseEle.addElement(XmlElementGeneratorTools.generateSetsSelective(columns, "record."));
+        setOtherwiseEle.addElement(XmlElementGeneratorTools.generateSetsSelective(columns, "row."));
         setsChooseEle.addElement(setOtherwiseEle);
 
         return setsChooseEle;

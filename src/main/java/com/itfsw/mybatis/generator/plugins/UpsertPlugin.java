@@ -97,7 +97,7 @@ public class UpsertPlugin extends BasePlugin {
                 METHOD_UPSERT,
                 JavaVisibility.DEFAULT,
                 FullyQualifiedJavaType.getIntInstance(),
-                new Parameter(JavaElementGeneratorTools.getModelTypeWithoutBLOBs(introspectedTable), "record")
+                new Parameter(JavaElementGeneratorTools.getModelTypeWithoutBLOBs(introspectedTable), "row")
         );
         mUpsert.setAbstract(true);
         commentGenerator.addGeneralMethodComment(mUpsert, introspectedTable);
@@ -112,7 +112,7 @@ public class UpsertPlugin extends BasePlugin {
                     METHOD_UPSERT_WITH_BLOBS,
                     JavaVisibility.DEFAULT,
                     FullyQualifiedJavaType.getIntInstance(),
-                    new Parameter(JavaElementGeneratorTools.getModelTypeWithBLOBs(introspectedTable), "record")
+                    new Parameter(JavaElementGeneratorTools.getModelTypeWithBLOBs(introspectedTable), "row")
             );
             mUpsertWithBLOBs.setAbstract(true);
             commentGenerator.addGeneralMethodComment(mUpsertWithBLOBs, introspectedTable);
@@ -128,7 +128,7 @@ public class UpsertPlugin extends BasePlugin {
                 METHOD_UPSERT_SELECTIVE,
                 JavaVisibility.DEFAULT,
                 FullyQualifiedJavaType.getIntInstance(),
-                new Parameter(fullFieldModel, "record")
+                new Parameter(fullFieldModel, "row")
         );
         mUpsertSelective.setAbstract(true);
         commentGenerator.addGeneralMethodComment(mUpsertSelective, introspectedTable);
@@ -145,7 +145,7 @@ public class UpsertPlugin extends BasePlugin {
                     METHOD_UPSERT_BY_EXAMPLE,
                     JavaVisibility.DEFAULT,
                     FullyQualifiedJavaType.getIntInstance(),
-                    new Parameter(JavaElementGeneratorTools.getModelTypeWithoutBLOBs(introspectedTable), "record", "@Param(\"record\")"),
+                    new Parameter(JavaElementGeneratorTools.getModelTypeWithoutBLOBs(introspectedTable), "row", "@Param(\"row\")"),
                     new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")")
             );
             mUpsertByExample.setAbstract(true);
@@ -161,7 +161,7 @@ public class UpsertPlugin extends BasePlugin {
                         METHOD_UPSERT_BY_EXAMPLE_WITH_BLOBS,
                         JavaVisibility.DEFAULT,
                         FullyQualifiedJavaType.getIntInstance(),
-                        new Parameter(JavaElementGeneratorTools.getModelTypeWithBLOBs(introspectedTable), "record", "@Param(\"record\")"),
+                        new Parameter(JavaElementGeneratorTools.getModelTypeWithBLOBs(introspectedTable), "row", "@Param(\"row\")"),
                         new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")")
                 );
                 mUpsertByExampleWithBLOBs.setAbstract(true);
@@ -176,7 +176,7 @@ public class UpsertPlugin extends BasePlugin {
                     METHOD_UPSERT_BY_EXAMPLE_SELECTIVE,
                     JavaVisibility.DEFAULT,
                     FullyQualifiedJavaType.getIntInstance(),
-                    new Parameter(introspectedTable.getRules().calculateAllFieldsClass(), "record", "@Param(\"record\")"),
+                    new Parameter(introspectedTable.getRules().calculateAllFieldsClass(), "row", "@Param(\"row\")"),
                     new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")")
             );
             mUpsertByExampleSelective.setAbstract(true);
@@ -437,14 +437,14 @@ public class UpsertPlugin extends BasePlugin {
             commentGenerator.addComment(updateEle);
 
             // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-            // XmlElementGeneratorTools.useGeneratedKeys(updateEle, introspectedTable, "record.");
+            // XmlElementGeneratorTools.useGeneratedKeys(updateEle, introspectedTable, "row.");
             // upsertByExample 先执行的update，所以没法获取id
 
             // update
             updateEle.addElement(new TextElement("update " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
             updateEle.addElement(new TextElement("set"));
             // set 操作增加增量插件支持
-            setsEle = XmlElementGeneratorTools.generateSetsSelective(columns, "record.");
+            setsEle = XmlElementGeneratorTools.generateSetsSelective(columns, "row.");
             updateEle.addElement(setsEle);
 
             // update where
@@ -455,10 +455,10 @@ public class UpsertPlugin extends BasePlugin {
 
             // insert
             updateEle.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-            insertColumnsEle = XmlElementGeneratorTools.generateKeysSelective(columns, "record.");
+            insertColumnsEle = XmlElementGeneratorTools.generateKeysSelective(columns, "row.");
             updateEle.addElement(insertColumnsEle);
 
-            insertValuesEle = XmlElementGeneratorTools.generateValuesSelective(columns, "record.", false);
+            insertValuesEle = XmlElementGeneratorTools.generateValuesSelective(columns, "row.", false);
             // 查询值
             this.generateExistsClause(introspectedTable, updateEle, Collections.singletonList(insertValuesEle));
 
@@ -517,14 +517,14 @@ public class UpsertPlugin extends BasePlugin {
             commentGenerator.addComment(updateEle);
 
             // 使用JDBC的getGenereatedKeys方法获取主键并赋值到keyProperty设置的领域模型属性中。所以只支持MYSQL和SQLServer
-            // XmlElementGeneratorTools.useGeneratedKeys(updateEle, introspectedTable, "record.");
+            // XmlElementGeneratorTools.useGeneratedKeys(updateEle, introspectedTable, "row.");
             // upsertByExample 先执行的update，所以没法获取id
 
             // update
             updateEle.addElement(new TextElement("update " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
             updateEle.addElement(new TextElement("set"));
             // set
-            for (VisitableElement set : XmlElementGeneratorTools.generateUpsertSets(columns, "record.")) {
+            for (VisitableElement set : XmlElementGeneratorTools.generateUpsertSets(columns, "row.")) {
                 updateEle.addElement(set);
             }
 
@@ -536,10 +536,10 @@ public class UpsertPlugin extends BasePlugin {
 
             // insert
             updateEle.addElement(new TextElement("insert into " + introspectedTable.getFullyQualifiedTableNameAtRuntime()));
-            for (VisitableElement element : XmlElementGeneratorTools.generateUpsertKeys(columns, "record.")) {
+            for (VisitableElement element : XmlElementGeneratorTools.generateUpsertKeys(columns, "row.")) {
                 updateEle.addElement(element);
             }
-            this.generateExistsClause(introspectedTable, updateEle, XmlElementGeneratorTools.generateUpsertValues(columns, "record.", false));
+            this.generateExistsClause(introspectedTable, updateEle, XmlElementGeneratorTools.generateUpsertValues(columns, "row.", false));
 
             document.getRootElement().addElement(updateEle);
             logger.debug("itfsw(存在即更新插件):" + introspectedTable.getMyBatis3XmlMapperFileName() + "增加" + (withBLOBs ? "upsertByExampleWithBLOBs" : "upsertByExample") + "实现方法。");

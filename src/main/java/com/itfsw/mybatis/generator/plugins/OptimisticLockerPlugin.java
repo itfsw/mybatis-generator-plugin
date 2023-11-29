@@ -559,7 +559,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
         FormatTools.replaceGeneralMethodComment(commentGenerator, withVersionMethod, introspectedTable);
 
         Parameter versionParam = new Parameter(versionColumn.getFullyQualifiedJavaType(), "version", "@Param(\"version\")");
-        Parameter recordParam = new Parameter(method.getParameters().get(0).getType(), "record", "@Param(\"record\")");
+        Parameter recordParam = new Parameter(method.getParameters().get(0).getType(), "row", "@Param(\"row\")");
 
         withVersionMethod.getParameters().clear();
         withVersionMethod.addParameter(versionParam);
@@ -649,7 +649,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
             sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
             sb.append(" = ");
             if (update) {
-                sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, "record."));
+                sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, "row."));
             } else {
                 sb.append("#{key,jdbcType=");
                 sb.append(introspectedColumn.getJdbcTypeName());
@@ -666,7 +666,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
                 sb.append("  and ");
                 sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
                 sb.append(" = ");
-                sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, update ? "record." : "key."));
+                sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, update ? "row." : "key."));
                 withVersionEle.addElement(new TextElement(sb.toString()));
             }
         }
@@ -694,7 +694,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
             updateEle.addElement(setEle);
 
             // set 节点
-            XmlElement setsEle = XmlElementGeneratorTools.generateSetsSelective(columns, "record.");
+            XmlElement setsEle = XmlElementGeneratorTools.generateSetsSelective(columns, "row.");
             setEle.addElement(setsEle);
 
             XmlElement needVersionEle;
@@ -710,7 +710,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
             // 版本自增
             updateEle.addElement(this.generateVersionSetEle(versionColumn, selective));
             // set 节点
-            List<VisitableElement> setsEles = XmlElementGeneratorTools.generateSets(columns, "record.");
+            List<VisitableElement> setsEles = XmlElementGeneratorTools.generateSets(columns, "row.");
             //  XmlElementGeneratorTools.generateSets, 因为传入参数不可能带IdentityAndGeneratedAlwaysColumn所以返回的是set列表而不可能是trim 元素
             for (VisitableElement ele : setsEles) {
                 updateEle.addElement(ele);
@@ -799,7 +799,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
                     (selective ? "" : "set ")
                             + MyBatis3FormattingUtilities.getEscapedColumnName(versionColumn)
                             + " = "
-                            + MyBatis3FormattingUtilities.getParameterClause(versionColumn, "record.")
+                            + MyBatis3FormattingUtilities.getParameterClause(versionColumn, "row.")
                             + ","
             );
         } else {
