@@ -140,7 +140,7 @@ public class OptimisticLockerPlugin extends BasePlugin implements IModelBuilderP
     public boolean clientLogicalDeleteByPrimaryKeyMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         if (tableVersionColumns.containsKey(introspectedTable)) {
             IntrospectedColumn versionColumn = tableVersionColumns.get(introspectedTable);
-            if (tableVersionColumns.containsKey(introspectedTable)) {
+            if (tableCustomizedNextVersion.get(introspectedTable)) {
                 Method newMethod = JavaElementGeneratorTools.generateAbstractMethod(
                         METHOD_LOGICAL_DELETE_WITH_VERSION_BY_PRIMARY_KEY,
                         JavaVisibility.DEFAULT,
