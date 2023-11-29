@@ -234,7 +234,7 @@ public class LogicalDeletePlugin extends BasePlugin {
                     FullyQualifiedJavaType.getIntInstance(),
                     new Parameter(new FullyQualifiedJavaType(introspectedTable.getExampleType()), "example", "@Param(\"example\")")
             );
-
+            mLogicalDeleteByExample.setAbstract(true);
             // 添加方法说明
             commentGenerator.addGeneralMethodComment(mLogicalDeleteByExample, introspectedTable);
             // interface 增加方法
@@ -251,6 +251,7 @@ public class LogicalDeletePlugin extends BasePlugin {
                         JavaVisibility.DEFAULT,
                         FullyQualifiedJavaType.getIntInstance()
                 );
+                mLogicalDeleteByPrimaryKey.setAbstract(true);
                 commentGenerator.addGeneralMethodComment(mLogicalDeleteByPrimaryKey, introspectedTable);
 
                 // 2.2 增强selectByPrimaryKey
@@ -259,6 +260,7 @@ public class LogicalDeletePlugin extends BasePlugin {
                         JavaVisibility.DEFAULT,
                         introspectedTable.getRules().calculateAllFieldsClass()
                 );
+                mSelectByPrimaryKey.setAbstract(true);
 
                 // 添加参数
                 Set<FullyQualifiedJavaType> importedTypes = new TreeSet<>();
