@@ -232,13 +232,13 @@ public class ExampleEnhancedPlugin extends BasePlugin {
                 null,
                 new Parameter(clazz.getType(), type)
         );
+        addMethod.setAbstract(true);
         commentGenerator.addGeneralMethodComment(addMethod, introspectedTable);
         whenInterface.addMethod(addMethod);
 
-        InnerClass innerClassWrapper = new InnerInterfaceWrapperToInnerClass(whenInterface);
         // 添加注释
-        commentGenerator.addClassComment(innerClassWrapper, introspectedTable);
-        topLevelClass.addInnerClass(innerClassWrapper);
+        commentGenerator.addClassComment(new InnerInterfaceWrapperToInnerClass(whenInterface), introspectedTable);
+        topLevelClass.addInnerInterface(whenInterface);
 
         // 添加when方法
         Method whenMethod = JavaElementGeneratorTools.generateMethod(
