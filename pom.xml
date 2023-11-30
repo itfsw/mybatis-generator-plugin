@@ -147,7 +147,6 @@
                                     <goal>jar</goal>
                                 </goals>
                                 <configuration>
-                                    <additionalparam>${javadoc.opts}</additionalparam>
                                     <failOnError>false</failOnError>
                                     <doclint>none</doclint>
                                 </configuration>

@@ -387,7 +387,7 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
                 if ("NULL".equalsIgnoreCase(value)) {
                     return "null";
                 } else {
-                    return "new " + javaType + "(\"" + value + "\")";
+                    return javaType + ".valueOf(\"" + value + "\")";
                 }
             }
 
