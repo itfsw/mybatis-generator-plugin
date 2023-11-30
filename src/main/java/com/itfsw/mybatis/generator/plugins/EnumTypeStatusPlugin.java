@@ -30,10 +30,7 @@ import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.internal.util.StringUtility;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,7 +51,7 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
     public final static String REMARKS_PATTERN = ".*\\s*\\[\\s*(\\w+\\s*\\(\\s*[\\u4e00-\\u9fa5_\\-a-zA-Z0-9]+\\s*\\)\\s*:\\s*[\\u4e00-\\u9fa5_\\-a-zA-Z0-9]+\\s*\\,?\\s*)+\\s*\\]\\s*.*";
     public final static String NEED_PATTERN = "\\[\\s*((\\w+\\s*\\(\\s*[\\u4e00-\\u9fa5_\\-a-zA-Z0-9]+\\s*\\)\\s*:\\s*[\\u4e00-\\u9fa5_\\-a-zA-Z0-9]+\\s*\\,?\\s*)+)\\s*\\]";
     public final static String ITEM_PATTERN = "(\\w+)\\s*\\(\\s*([\\u4e00-\\u9fa5_\\-a-zA-Z0-9]+)\\s*\\)\\s*:\\s*([\\u4e00-\\u9fa5_\\-a-zA-Z0-9]+)";
-    private Map<String, EnumInfo> enumColumns;
+    private Map<IntrospectedTable, Map<String, EnumInfo>> enumColumnsMap = new HashMap<>();
 
     /**
      * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
@@ -62,23 +59,23 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
         super.initialized(introspectedTable);
-        this.enumColumns = new LinkedHashMap<>();
+        Map<String, EnumInfo> enumColumns = new LinkedHashMap<>();
         String autoScan = properties.getProperty(PRO_AUTO_SCAN);
         // 是否开启了自动扫描
         if (StringUtility.stringHasValue(autoScan) && !StringUtility.isTrue(autoScan)) {
             // 获取全局配置
-            String enumColumns = properties.getProperty(EnumTypeStatusPlugin.PRO_ENUM_COLUMNS);
+            String enumColumnsPro = properties.getProperty(EnumTypeStatusPlugin.PRO_ENUM_COLUMNS);
             // 如果有局部配置，则附加上去
             String tableEnumColumns = introspectedTable.getTableConfigurationProperty(EnumTypeStatusPlugin.PRO_ENUM_COLUMNS);
             if (tableEnumColumns != null) {
-                enumColumns = enumColumns == null ? "" : (enumColumns + ",");
+                enumColumnsPro = enumColumnsPro == null ? "" : (enumColumnsPro + ",");
 
-                enumColumns += introspectedTable.getTableConfigurationProperty(EnumTypeStatusPlugin.PRO_ENUM_COLUMNS);
+                enumColumnsPro += introspectedTable.getTableConfigurationProperty(EnumTypeStatusPlugin.PRO_ENUM_COLUMNS);
             }
 
-            if (StringUtility.stringHasValue(enumColumns)) {
+            if (StringUtility.stringHasValue(enumColumnsPro)) {
                 // 切分
-                String[] enumColumnsStrs = enumColumns.split(",");
+                String[] enumColumnsStrs = enumColumnsPro.split(",");
                 for (String enumColumnsStr : enumColumnsStrs) {
                     IntrospectedColumn column = IntrospectedTableTools.safeGetColumn(introspectedTable, enumColumnsStr);
                     if (column != null) {
@@ -87,7 +84,7 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
                             // 解析注释
                             enumInfo.parseRemarks(column.getRemarks());
                             if (enumInfo.hasItems()) {
-                                this.enumColumns.put(column.getJavaProperty(), enumInfo);
+                                enumColumns.put(column.getJavaProperty(), enumInfo);
                             }
                         } catch (EnumInfo.CannotParseException e) {
                             warnings.add("itfsw:插件" + EnumTypeStatusPlugin.class.getTypeName() + "没有找到column为" + enumColumnsStr.trim() + "对应格式的注释的字段！");
@@ -104,13 +101,15 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
                     // 解析注释
                     enumInfo.parseRemarks(column.getRemarks());
                     if (enumInfo.hasItems()) {
-                        this.enumColumns.put(column.getJavaProperty(), enumInfo);
+                        enumColumns.put(column.getJavaProperty(), enumInfo);
                     }
                 } catch (Exception e) {
                     // nothing
                 }
             }
         }
+
+        enumColumnsMap.put(introspectedTable, enumColumns);
     }
 
     /**
@@ -156,8 +155,8 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
     }
 
     @Override
-    public boolean logicalDeleteEnumGenerated(IntrospectedColumn logicalDeleteColumn) {
-        return this.enumColumns.containsKey(logicalDeleteColumn.getJavaProperty());
+    public boolean logicalDeleteEnumGenerated(IntrospectedTable introspectedTable, IntrospectedColumn logicalDeleteColumn) {
+        return this.enumColumnsMap.get(introspectedTable).containsKey(logicalDeleteColumn.getJavaProperty());
     }
 
     /**
@@ -166,8 +165,8 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
     private void generateModelEnum(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         // 枚举跟随字段走
         for (Field field : topLevelClass.getFields()) {
-            if (this.enumColumns.get(field.getName()) != null) {
-                InnerEnum innerEnum = this.enumColumns.get(field.getName()).generateEnum(commentGenerator, introspectedTable);
+            if (this.enumColumnsMap.get(introspectedTable).get(field.getName()) != null) {
+                InnerEnum innerEnum = this.enumColumnsMap.get(introspectedTable).get(field.getName()).generateEnum(commentGenerator, introspectedTable);
                 topLevelClass.addInnerEnum(innerEnum);
             }
         }

@@ -48,5 +48,5 @@ public interface ILogicalDeletePluginHook {
     /**
      * 逻辑删除枚举是否生成
      */
-    boolean logicalDeleteEnumGenerated(IntrospectedColumn logicalDeleteColumn);
+    boolean logicalDeleteEnumGenerated(IntrospectedTable introspectedTable, IntrospectedColumn logicalDeleteColumn);
 }

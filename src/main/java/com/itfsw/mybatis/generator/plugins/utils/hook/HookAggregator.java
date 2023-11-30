@@ -24,7 +24,6 @@ import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.Plugin;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.api.dom.xml.Document;
-import org.mybatis.generator.api.dom.xml.VisitableElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.config.Context;
 import org.mybatis.generator.internal.PluginAggregator;
@@ -92,11 +91,11 @@ public class HookAggregator implements IUpsertPluginHook,
     // ============================================= IIncrementPluginHook ==============================================
 
     @Override
-    public XmlElement generateIncrementSet(IntrospectedTable introspectedTable,IntrospectedColumn introspectedColumn, String prefix, boolean hasComma) {
+    public XmlElement generateIncrementSet(IntrospectedTable introspectedTable, IntrospectedColumn introspectedColumn, String prefix, boolean hasComma) {
         if (this.getPlugins(IIncrementPluginHook.class).isEmpty()) {
             return null;
         } else {
-            return this.getPlugins(IIncrementPluginHook.class).get(0).generateIncrementSet(introspectedTable,introspectedColumn, prefix, hasComma);
+            return this.getPlugins(IIncrementPluginHook.class).get(0).generateIncrementSet(introspectedTable, introspectedColumn, prefix, hasComma);
         }
     }
 
@@ -105,7 +104,7 @@ public class HookAggregator implements IUpsertPluginHook,
         if (this.getPlugins(IIncrementPluginHook.class).isEmpty()) {
             return null;
         } else {
-            return this.getPlugins(IIncrementPluginHook.class).get(0).generateIncrementSetSelective(introspectedTable,introspectedColumn, prefix);
+            return this.getPlugins(IIncrementPluginHook.class).get(0).generateIncrementSetSelective(introspectedTable, introspectedColumn, prefix);
         }
     }
 
@@ -314,9 +313,9 @@ public class HookAggregator implements IUpsertPluginHook,
     }
 
     @Override
-    public boolean logicalDeleteEnumGenerated(IntrospectedColumn logicalDeleteColumn) {
+    public boolean logicalDeleteEnumGenerated(IntrospectedTable introspectedTable, IntrospectedColumn logicalDeleteColumn) {
         for (ILogicalDeletePluginHook plugin : this.getPlugins(ILogicalDeletePluginHook.class)) {
-            if (plugin.logicalDeleteEnumGenerated(logicalDeleteColumn)) {
+            if (plugin.logicalDeleteEnumGenerated(introspectedTable, logicalDeleteColumn)) {
                 return true;
             }
         }

@@ -10,7 +10,9 @@ import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.*;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Example 增强插件
@@ -19,7 +21,7 @@ public class ExampleEnhancedPlugin extends BasePlugin {
     // newAndCreateCriteria 方法
     public static final String METHOD_NEW_AND_CREATE_CRITERIA = "newAndCreateCriteria";
     // 是否启用column的操作
-    private boolean enableColumnOperate = false;
+    private Map<IntrospectedTable, Boolean> configs = new HashMap<>();
 
     /**
      * {@inheritDoc}
@@ -29,7 +31,7 @@ public class ExampleEnhancedPlugin extends BasePlugin {
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
         super.initialized(introspectedTable);
-        this.enableColumnOperate = PluginTools.checkDependencyPlugin(context, ModelColumnPlugin.class);
+        this.configs.put(introspectedTable, PluginTools.checkDependencyPlugin(context, ModelColumnPlugin.class));
     }
 
     /**
@@ -48,7 +50,7 @@ public class ExampleEnhancedPlugin extends BasePlugin {
                 addWhenToCriteria(topLevelClass, innerClass, introspectedTable);
             } else if ("GeneratedCriteria".equals(innerClass.getType().getShortName())) {
                 // column 方法
-                if (this.enableColumnOperate) {
+                if (this.configs.get(introspectedTable)) {
                     addColumnMethodToCriteria(topLevelClass, innerClass, introspectedTable);
                 }
             }
