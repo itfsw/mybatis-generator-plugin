@@ -94,7 +94,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>[1.18.2,)</version>
+            <version>[1.18.22,)</version>
             <scope>test</scope>
         </dependency>
         <!-- lombok 的测试用例依赖tools.jar, 但直接使用以下方式配置会导致gradle报错

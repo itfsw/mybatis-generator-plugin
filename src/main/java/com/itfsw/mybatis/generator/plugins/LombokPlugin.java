@@ -20,9 +20,7 @@ import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.EnumModelType;
 import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
 import com.itfsw.mybatis.generator.plugins.utils.hook.ILombokPluginHook;
-import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
-import org.mybatis.generator.api.dom.java.Method;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
 import org.mybatis.generator.config.PluginConfiguration;
 import org.mybatis.generator.internal.ObjectFactory;
@@ -31,7 +29,6 @@ import org.mybatis.generator.internal.util.StringUtility;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -130,32 +127,6 @@ public class LombokPlugin extends BasePlugin {
     public boolean modelRecordWithBLOBsClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         this.addAnnotations(topLevelClass, introspectedTable, EnumModelType.MODEL_RECORD_WITH_BLOBS);
         return super.modelRecordWithBLOBsClassGenerated(topLevelClass, introspectedTable);
-    }
-
-    /**
-     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
-     */
-    @Override
-    public boolean modelGetterMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable, ModelClassType modelClassType) {
-        for (String annotation : this.annotations) {
-            if (annotation.startsWith("@Data") || annotation.startsWith("@Getter")) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
-     */
-    @Override
-    public boolean modelSetterMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable, ModelClassType modelClassType) {
-        for (String annotation : this.annotations) {
-            if (annotation.startsWith("@Data") || annotation.startsWith("@Setter")) {
-                return false;
-            }
-        }
-        return true;
     }
 
     /**
