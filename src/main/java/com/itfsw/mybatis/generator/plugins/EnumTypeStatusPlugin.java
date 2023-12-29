@@ -165,9 +165,22 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
     private void generateModelEnum(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         // 枚举跟随字段走
         for (Field field : topLevelClass.getFields()) {
-            if (this.enumColumnsMap.get(introspectedTable).get(field.getName()) != null) {
-                InnerEnum innerEnum = this.enumColumnsMap.get(introspectedTable).get(field.getName()).generateEnum(commentGenerator, introspectedTable);
+            EnumInfo enumInfo = this.enumColumnsMap.get(introspectedTable).get(field.getName());
+            if (enumInfo != null) {
+                InnerEnum innerEnum = enumInfo.generateEnum(commentGenerator, introspectedTable);
                 topLevelClass.addInnerEnum(innerEnum);
+                // set 方法
+                Method method = JavaElementGeneratorTools.generateMethod(
+                        "set" + FormatTools.upFirstChar(field.getName()),
+                        JavaVisibility.PUBLIC,
+                        null,
+                        new Parameter(innerEnum.getType(), field.getName())
+                );
+                JavaElementGeneratorTools.generateMethodBody(method,
+                        "this." + field.getName() + " = " + field.getName() + ".value();"
+                );
+                commentGenerator.addSetterComment(method, introspectedTable, enumInfo.column);
+                FormatTools.addMethodWithBestPosition(topLevelClass, method);
             }
         }
     }
