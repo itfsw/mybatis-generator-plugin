@@ -20,11 +20,8 @@ import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
 import org.mybatis.generator.api.dom.java.Interface;
-import org.mybatis.generator.api.dom.java.TopLevelClass;
-import org.mybatis.generator.internal.util.StringUtility;
 
 import java.util.Map;
-import java.util.Properties;
 
 public class MapperAnnotationPlugin extends BasePlugin {
     /**
@@ -42,28 +39,12 @@ public class MapperAnnotationPlugin extends BasePlugin {
      */
     @Override
     public boolean clientGenerated(Interface interfaze, IntrospectedTable introspectedTable) {
-        // 和官方插件一致支持，没有配置特殊注解时默认开启@Mapper
-        if ("true".equalsIgnoreCase(properties.getProperty("@Mapper", "true")) && introspectedTable.getTargetRuntime() == IntrospectedTable.TargetRuntime.MYBATIS3) {
-            // don't need to do this for MYBATIS3_DSQL as that runtime already adds this annotation
-            interfaze.addImportedType(new FullyQualifiedJavaType("org.apache.ibatis.annotations.Mapper"));
-            interfaze.addAnnotation("@Mapper");
-        }
-
         for (Map.Entry<Object, Object> prop : properties.entrySet()) {
             String annotationName = prop.getKey().toString().trim();
             String annotationImport = prop.getValue().toString().trim();
-            // TODO 兼容老版本
-            if ("@Repository".equals(annotationName) && ("true".equalsIgnoreCase(annotationImport) || "false".equalsIgnoreCase(annotationImport))) {
-                if (StringUtility.isTrue(annotationImport)) {
-                    interfaze.addImportedType(new FullyQualifiedJavaType("org.springframework.stereotype.Repository"));
-                    interfaze.addAnnotation("@Repository");
-                }
-            } else if (!"@Mapper".equals(annotationName)) {
-                interfaze.addImportedType(new FullyQualifiedJavaType(annotationImport));
-                interfaze.addAnnotation(annotationName);
-            }
+            interfaze.addImportedType(new FullyQualifiedJavaType(annotationImport));
+            interfaze.addAnnotation(annotationName);
         }
-
         return true;
     }
 }

@@ -24,7 +24,6 @@
     <context id="default" targetRuntime="MyBatis3">
         <!-- 插件 -->
         <plugin type="com.itfsw.mybatis.generator.plugins.MapperAnnotationPlugin">
-            <property name="@Mapper" value="false"/>
             <property name="@Repository" value="org.springframework.test.Repository"/>
             <property name="@DS(&quot;master&quot;)" value="com.baomidou.dynamic.datasource.annotation.DS"/>
         </plugin>

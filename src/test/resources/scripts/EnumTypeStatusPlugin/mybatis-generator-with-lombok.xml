@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright (c) 2019.
+  ~ Copyright (c) 2018.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -20,21 +20,34 @@
         "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
 <generatorConfiguration>
     <properties resource="db.properties"/>
+
     <!--导入属性配置 -->
     <context id="default" targetRuntime="MyBatis3">
         <!-- 插件 -->
-        <plugin type="com.itfsw.mybatis.generator.plugins.MapperAnnotationPlugin">
-            <property name="@Repository" value="true"/>
+        <plugin type="com.itfsw.mybatis.generator.plugins.EnumTypeStatusPlugin"/>
+        <!-- Lombok插件 -->
+        <plugin type="com.itfsw.mybatis.generator.plugins.LombokPlugin">
+            <property name="@Builder" value="true"/>
+            <property name="@AllArgsConstructor" value="true"/>
+            <property name="@NoArgsConstructor" value="true"/>
         </plugin>
 
+        <commentGenerator>
+            <property name="addRemarkComments" value="true"/>
+        </commentGenerator>
         <!--jdbc的数据库连接 -->
-        <jdbcConnection driverClass="${driver}" connectionURL="${url}" userId="${username}" password="${password}"/>
+        <jdbcConnection driverClass="${driver}" connectionURL="${url}" userId="${username}" password="${password}" />
         <!-- Model模型生成器,用来生成含有主键key的类，记录类 以及查询Example类
             targetPackage     指定生成的model生成所在的包名
             targetProject     指定在该项目下所在的路径  -->
-        <javaModelGenerator targetPackage="" targetProject=""/>
+        <javaModelGenerator targetPackage="" targetProject="">
+            <!-- 是否对model添加 构造函数 -->
+            <property name="constructorBased" value="true"/>
+            <!-- 给Model添加一个父类 -->
+            <!--<property name="rootClass" value="com.itfsw.base"/>-->
+        </javaModelGenerator>
         <!--Mapper映射文件生成所在的目录 为每一个数据库的表生成对应的SqlMap文件 -->
-        <sqlMapGenerator targetPackage="" targetProject=""/>
+        <sqlMapGenerator targetPackage="" targetProject="" />
         <!-- 客户端代码，生成易于使用的针对Model对象和XML配置文件 的代码
             type="ANNOTATEDMAPPER",生成Java Model 和基于注解的Mapper对象
             type="MIXEDMAPPER",生成基于注解的Java Model 和相应的Mapper对象

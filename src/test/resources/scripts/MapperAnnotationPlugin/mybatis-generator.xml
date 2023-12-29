@@ -23,7 +23,9 @@
     <!--导入属性配置 -->
     <context id="default" targetRuntime="MyBatis3">
         <!-- 插件 -->
-        <plugin type="com.itfsw.mybatis.generator.plugins.MapperAnnotationPlugin"/>
+        <plugin type="com.itfsw.mybatis.generator.plugins.MapperAnnotationPlugin">
+            <property name="@Mapper" value="org.apache.ibatis.annotations.Mapper"/>
+        </plugin>
 
         <!--jdbc的数据库连接 -->
         <jdbcConnection driverClass="${driver}" connectionURL="${url}" userId="${username}" password="${password}"/>
