@@ -23,7 +23,8 @@
     <!--导入属性配置 -->
     <context id="default" targetRuntime="MyBatis3">
         <!-- 插件 -->
-        <plugin type="com.itfsw.mybatis.generator.plugins.LombokPlugin">
+        <plugin type="com.itfsw.mybatis.generator.plugins.ModelAnnotationPlugin">
+            <property name="@Data" value="true"/>
             <property name="@Builder" value="true"/>
             <property name="@AllArgsConstructor" value="true"/>
             <property name="@NoArgsConstructor" value="true"/>

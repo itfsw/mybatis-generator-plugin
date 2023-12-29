@@ -1277,9 +1277,10 @@ public class Test {
 插件模拟Lombok插件生成了一些附加代码可能在某些编译器上会提示错误，请忽略（Lombok = 1.18.2 已测试）。
 
 ```xml
+
 <xml>
     <!-- Lombok插件 -->
-    <plugin type="com.itfsw.mybatis.generator.plugins.LombokPlugin">
+    <plugin type="com.itfsw.mybatis.generator.plugins.ModelAnnotationPlugin">
         <!-- @Data 默认开启,同时插件会对子类自动附加@EqualsAndHashCode(callSuper = true)，@ToString(callSuper = true) -->
         <property name="@Data" value="true"/>
         <!-- @Builder 必须在 Lombok 版本 >= 1.18.2 的情况下开启，对存在继承关系的类自动替换成@SuperBuilder -->

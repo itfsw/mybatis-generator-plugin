@@ -42,13 +42,13 @@ import java.util.List;
  * @time:2018/10/29 15:45
  * ---------------------------------------------------------------------------
  */
-public class LombokPluginTest {
+public class ModelAnnotationPluginTest {
     /**
      * 初始化
      */
     @BeforeClass
     public static void init() throws Exception {
-        DBHelper.createDB("scripts/LombokPlugin/init.sql");
+        DBHelper.createDB("scripts/ModelAnnotationPlugin/init.sql");
     }
 
     /**
@@ -56,7 +56,7 @@ public class LombokPluginTest {
      */
     @Test
     public void testGenerate() throws Exception {
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LombokPlugin/mybatis-generator.xml");
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ModelAnnotationPlugin/mybatis-generator.xml");
         MyBatisGenerator myBatisGenerator = tool.generate();
 
         List<String> comm = Arrays.asList("@Data", "@NoArgsConstructor", "@AllArgsConstructor");
@@ -104,7 +104,7 @@ public class LombokPluginTest {
      */
     @Test
     public void testGenerateDefault() throws Exception {
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LombokPlugin/mybatis-generator-default.xml");
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ModelAnnotationPlugin/mybatis-generator-default.xml");
         MyBatisGenerator myBatisGenerator = tool.generate();
 
         List<String> comm = Arrays.asList("@Data");
@@ -138,7 +138,7 @@ public class LombokPluginTest {
      */
     @Test
     public void testGenerateWithOnlyKeys() throws Exception {
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LombokPlugin/mybatis-generator-with-only-keys.xml");
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ModelAnnotationPlugin/mybatis-generator-with-only-keys.xml");
         MyBatisGenerator myBatisGenerator = tool.generate();
 
         for (GeneratedJavaFile file : myBatisGenerator.getGeneratedJavaFiles()) {
@@ -159,7 +159,7 @@ public class LombokPluginTest {
      */
     @Test
     public void testDataAnnotation() throws Exception {
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LombokPlugin/mybatis-generator-data.xml");
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ModelAnnotationPlugin/mybatis-generator-data.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
@@ -205,7 +205,7 @@ public class LombokPluginTest {
      */
     @Test
     public void testBuilderAnnotation() throws Exception {
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LombokPlugin/mybatis-generator-builder.xml");
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ModelAnnotationPlugin/mybatis-generator-builder.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
@@ -232,7 +232,7 @@ public class LombokPluginTest {
      */
     @Test
     public void testConstructorAnnotation() throws Exception {
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LombokPlugin/mybatis-generator-constructor.xml");
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ModelAnnotationPlugin/mybatis-generator-constructor.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
@@ -261,7 +261,7 @@ public class LombokPluginTest {
      */
     @Test
     public void testAccessorsAnnotation() throws Exception {
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LombokPlugin/mybatis-generator-accessors.xml");
+        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/ModelAnnotationPlugin/mybatis-generator-accessors.xml");
         tool.generate(new AbstractShellCallback() {
             @Override
             public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
@@ -269,27 +269,6 @@ public class LombokPluginTest {
                     ObjectUtil tbLombok = new ObjectUtil(loader, packagz + ".TbLombok");
 
                     Assert.assertEquals(tbLombok.invoke("setField1", "test").getClass().getTypeName(), packagz + ".TbLombok");
-                } catch (Exception e) {
-                    Assert.assertTrue(false);
-                }
-            }
-        });
-    }
-
-    /**
-     * 测试 SuperBuilder 兼容 IDEA
-     * @throws Exception
-     */
-    @Test
-    public void testWithSupportSuperBuilderForIdea() throws Exception{
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/LombokPlugin/mybatis-generator-with-supportSuperBuilderForIdea.xml");
-        tool.generate(new AbstractShellCallback() {
-            @Override
-            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
-                try {
-                    Object tbKeyBlobWithBLOBs = loader.loadClass(packagz + ".TbKeyBlobWithBLOBs").getMethod("builder").invoke(null);
-
-                    Assert.assertEquals(tbKeyBlobWithBLOBs.getClass().getTypeName(), packagz + ".TbKeyBlobWithBLOBs$Builder");
                 } catch (Exception e) {
                     Assert.assertTrue(false);
                 }

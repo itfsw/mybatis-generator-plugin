@@ -21,7 +21,6 @@ import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
 import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
 import com.itfsw.mybatis.generator.plugins.utils.PluginTools;
 import com.itfsw.mybatis.generator.plugins.utils.enhanced.InnerTypeFullyQualifiedJavaType;
-import com.itfsw.mybatis.generator.plugins.utils.hook.ILombokPluginHook;
 import com.itfsw.mybatis.generator.plugins.utils.hook.IModelBuilderPluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
@@ -33,7 +32,7 @@ import java.util.List;
 /**
  * 增加Model Builder方法
  */
-public class ModelBuilderPlugin extends BasePlugin implements ILombokPluginHook {
+public class ModelBuilderPlugin extends BasePlugin {
     public static final String BUILDER_CLASS_NAME = "Builder";  // Builder 类名
 
     /**
@@ -68,31 +67,6 @@ public class ModelBuilderPlugin extends BasePlugin implements ILombokPluginHook 
         InnerClass innerClass = this.generateModelBuilder(topLevelClass, introspectedTable, introspectedTable.getPrimaryKeyColumns());
         topLevelClass.addInnerClass(innerClass);
         return super.modelPrimaryKeyClassGenerated(topLevelClass, introspectedTable);
-    }
-
-    // ------------------------------------------------------- LombokPluginHook -------------------------------------------------------
-
-    @Override
-    public boolean modelBaseRecordBuilderClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        // 判断是否有生成Model的WithBLOBs类
-        List<IntrospectedColumn> columns = introspectedTable.getRules().generateRecordWithBLOBsClass() ? introspectedTable.getNonBLOBColumns() : introspectedTable.getAllColumns();
-        InnerClass innerClass = this.generateModelBuilder(topLevelClass, introspectedTable, columns);
-        topLevelClass.addInnerClass(innerClass);
-        return true;
-    }
-
-    @Override
-    public boolean modelPrimaryKeyBuilderClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        InnerClass innerClass = this.generateModelBuilder(topLevelClass, introspectedTable, introspectedTable.getPrimaryKeyColumns());
-        topLevelClass.addInnerClass(innerClass);
-        return true;
-    }
-
-    @Override
-    public boolean modelRecordWithBLOBsBuilderClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        InnerClass innerClass = this.generateModelBuilder(topLevelClass, introspectedTable, introspectedTable.getAllColumns());
-        topLevelClass.addInnerClass(innerClass);
-        return true;
     }
 
     /**

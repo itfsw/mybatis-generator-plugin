@@ -39,7 +39,6 @@ public class HookAggregator implements IUpsertPluginHook,
         IOptimisticLockerPluginHook,
         ISelectOneByExamplePluginHook,
         ITableConfigurationHook,
-        ILombokPluginHook,
         ILogicalDeletePluginHook,
         IModelColumnPluginHook,
         ISelectSelectivePluginHook {
@@ -320,39 +319,6 @@ public class HookAggregator implements IUpsertPluginHook,
             }
         }
         return false;
-    }
-
-    // ============================================= ILombokPluginHook ==============================================
-
-
-    @Override
-    public boolean modelBaseRecordBuilderClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        for (ILombokPluginHook plugin : this.getPlugins(ILombokPluginHook.class)) {
-            if (!plugin.modelBaseRecordBuilderClassGenerated(topLevelClass, introspectedTable)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public boolean modelPrimaryKeyBuilderClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        for (ILombokPluginHook plugin : this.getPlugins(ILombokPluginHook.class)) {
-            if (!plugin.modelPrimaryKeyBuilderClassGenerated(topLevelClass, introspectedTable)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public boolean modelRecordWithBLOBsBuilderClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        for (ILombokPluginHook plugin : this.getPlugins(ILombokPluginHook.class)) {
-            if (!plugin.modelRecordWithBLOBsBuilderClassGenerated(topLevelClass, introspectedTable)) {
-                return false;
-            }
-        }
-        return true;
     }
 
     // ============================================= ISelectSelectivePluginHook ==============================================
