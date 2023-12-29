@@ -26,6 +26,7 @@
         <!-- 插件 -->
         <plugin type="com.itfsw.mybatis.generator.plugins.EnumTypeStatusPlugin"/>
         <plugin type="com.itfsw.mybatis.generator.plugins.ModelAnnotationPlugin">
+            <property name="@Data" value="lombok.Data"/>
             <property name="@Builder" value="lombok.Builder"/>
         </plugin>
 

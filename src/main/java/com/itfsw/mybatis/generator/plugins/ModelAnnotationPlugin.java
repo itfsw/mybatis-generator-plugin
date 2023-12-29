@@ -17,15 +17,19 @@
 package com.itfsw.mybatis.generator.plugins;
 
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
+import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
+import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
+import com.itfsw.mybatis.generator.plugins.utils.hook.IModelAnnotationPluginHook;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
+import org.mybatis.generator.api.dom.java.Field;
 import org.mybatis.generator.api.dom.java.Method;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
 
 /**
  * ModelAnnotationPlugin
  */
-public class ModelAnnotationPlugin extends BasePlugin {
+public class ModelAnnotationPlugin extends BasePlugin implements IModelAnnotationPluginHook {
     /**
      * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
@@ -131,5 +135,26 @@ public class ModelAnnotationPlugin extends BasePlugin {
     private void addAnnotation(TopLevelClass topLevelClass, String annotation, String pkg) {
         topLevelClass.addImportedType(pkg);
         topLevelClass.addAnnotation(annotation);
+    }
+
+    /**
+     * Model Setter 生成
+     */
+    @Override
+    public void modelSetterGenerated(IntrospectedTable introspectedTable, IntrospectedColumn introspectedColumn, TopLevelClass topLevelClass, Field field) {
+        boolean generated = true;
+        for (Object key : properties.keySet()) {
+            if (key instanceof String) {
+                String annotation = (String) key;
+                if (annotation.startsWith("@Data") || annotation.startsWith("@Setter")) {
+                    generated = false;
+                }
+            }
+        }
+        if (!generated) {
+            Method method = JavaElementGeneratorTools.generateSetterMethod(field);
+            commentGenerator.addSetterComment(method, introspectedTable, introspectedColumn);
+            FormatTools.addMethodWithBestPosition(topLevelClass, method);
+        }
     }
 }

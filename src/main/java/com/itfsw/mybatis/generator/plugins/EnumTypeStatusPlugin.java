@@ -16,11 +16,9 @@
 
 package com.itfsw.mybatis.generator.plugins;
 
-import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
-import com.itfsw.mybatis.generator.plugins.utils.FormatTools;
-import com.itfsw.mybatis.generator.plugins.utils.IntrospectedTableTools;
-import com.itfsw.mybatis.generator.plugins.utils.JavaElementGeneratorTools;
+import com.itfsw.mybatis.generator.plugins.utils.*;
 import com.itfsw.mybatis.generator.plugins.utils.hook.ILogicalDeletePluginHook;
+import com.itfsw.mybatis.generator.plugins.utils.hook.IModelAnnotationPluginHook;
 import org.mybatis.generator.api.CommentGenerator;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
@@ -169,7 +167,7 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
             if (enumInfo != null) {
                 InnerEnum innerEnum = enumInfo.generateEnum(commentGenerator, introspectedTable);
                 topLevelClass.addInnerEnum(innerEnum);
-                // set 方法
+                // set Enum 方法
                 Method method = JavaElementGeneratorTools.generateMethod(
                         "set" + FormatTools.upFirstChar(field.getName()),
                         JavaVisibility.PUBLIC,
@@ -181,6 +179,9 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
                 );
                 commentGenerator.addSetterComment(method, introspectedTable, enumInfo.column);
                 FormatTools.addMethodWithBestPosition(topLevelClass, method);
+                // 解决整合lombok后 setter字段没有生成问题
+                PluginTools.getHook(IModelAnnotationPluginHook.class)
+                        .modelSetterGenerated(introspectedTable, enumInfo.column, topLevelClass, field);
             }
         }
     }
