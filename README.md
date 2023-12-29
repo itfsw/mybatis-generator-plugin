@@ -28,7 +28,7 @@
 * [查询结果选择性返回插件（SelectSelectivePlugin）](#11-查询结果选择性返回插件)
 * [乐观锁插件（OptimisticLockerPlugin）](#12-乐观锁插件)
 * [表重命名配置插件（TableRenameConfigurationPlugin）](#13-表重命名配置插件)
-* [Lombok插件（LombokPlugin）](#14-Lombok插件)
+* [数据Model注解插件（ModelAnnotationPlugin）](#14-数据Model注解插件)
 * [数据ModelCloneable插件（ModelCloneablePlugin）](#15-数据ModelCloneable插件)
 * [状态枚举生成插件（EnumTypeStatusPlugin）](#16-状态枚举生成插件)
 * [增量插件（IncrementPlugin）](#17-增量插件)
@@ -1267,31 +1267,26 @@ public class Test {
     </plugin>
 </xml>
 ```
-### 14. Lombok插件
-使用Lombok的使用可以减少很多重复代码的书写，目前项目中已大量使用。
-但Lombok的@Builder对于类的继承支持很不好，最近发现新版(>=1.18.2)已经提供了对@SuperBuilder的支持，所以新增该插件方便简写代码。
-
->warning1: @Builder注解在Lombok 版本 >= 1.18.2 的情况下才能开启，对于存在继承关系的model会自动替换成@SuperBuilder注解(目前IDEA的插件对于SuperBuilder的还不支持（作者已经安排上更新日程）, 可以开启配置supportSuperBuilderForIdea使插件在遇到@SuperBuilder注解时使用ModelBuilderPlugin替代该注解)。  
-
->warning2: 配合插件IncrementsPlugin（已不推荐使用，请使用新版[IncrementPlugin](#22-增量插件)解决该问题） 并且 @Builder开启的情况下，因为@SuperBuilder的一些限制，
-插件模拟Lombok插件生成了一些附加代码可能在某些编译器上会提示错误，请忽略（Lombok = 1.18.2 已测试）。
+### 14. 数据Model注解插件
+使用Lombok的使用可以减少很多重复代码的书写，目前项目中已大量使用，结合数据Model注解插件可以简化Model代码。
 
 ```xml
 
 <xml>
-    <!-- Lombok插件 -->
+    <!-- 数据Model注解插件 -->
     <plugin type="com.itfsw.mybatis.generator.plugins.ModelAnnotationPlugin">
-        <!-- @Data 默认开启,同时插件会对子类自动附加@EqualsAndHashCode(callSuper = true)，@ToString(callSuper = true) -->
-        <property name="@Data" value="true"/>
-        <!-- @Builder 必须在 Lombok 版本 >= 1.18.2 的情况下开启，对存在继承关系的类自动替换成@SuperBuilder -->
-        <property name="@Builder" value="false"/>
+        <!-- @Data 插件会对子类自动附加@EqualsAndHashCode(callSuper = true)，@ToString(callSuper = true) -->
+        <property name="@Data" value="lombok.Data"/>
+        <!-- @Builder 对存在继承关系的类自动替换成@SuperBuilder -->
+        <property name="@Builder" value="lombok.Builder"/>
         <!-- @NoArgsConstructor 和 @AllArgsConstructor 使用规则和Lombok一致 -->
-        <property name="@AllArgsConstructor" value="false"/>
-        <property name="@NoArgsConstructor" value="false"/>
+        <property name="@AllArgsConstructor" value="lombok.AllArgsConstructor"/>
+        <property name="@NoArgsConstructor" value="lombok.NoArgsConstructor"/>
+        
         <!-- @Getter、@Setter、@Accessors 等使用规则参见官方文档 -->
-        <property name="@Accessors(chain = true)" value="false"/>
-        <!-- 临时解决IDEA工具对@SuperBuilder的不支持问题，开启后(默认未开启)插件在遇到@SuperBuilder注解时会调用ModelBuilderPlugin来生成相应的builder代码 -->
-        <property name="supportSuperBuilderForIdea" value="false"/>
+        <property name="@Accessors(chain = true)" value="lombok.experimental.Accessors"/>
+        <!-- 其他 -->
+        <property name="@Example" value="com.iwhere.Example"/>
     </plugin>
 </xml>
 ```

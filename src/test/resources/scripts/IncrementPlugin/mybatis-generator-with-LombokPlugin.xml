@@ -27,7 +27,7 @@
         <plugin type="com.itfsw.mybatis.generator.plugins.IncrementPlugin" />
         <plugin type="com.itfsw.mybatis.generator.plugins.ModelColumnPlugin"/>
         <plugin type="com.itfsw.mybatis.generator.plugins.ModelAnnotationPlugin">
-            <property name="@Builder" value="true"/>
+            <property name="@Builder" value="lombok.Builder"/>
         </plugin>
 
         <!--jdbc的数据库连接 -->

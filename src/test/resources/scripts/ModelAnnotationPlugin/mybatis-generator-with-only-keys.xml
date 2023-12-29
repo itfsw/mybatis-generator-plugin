@@ -24,7 +24,7 @@
     <context id="default" targetRuntime="MyBatis3">
         <!-- 插件 -->
         <plugin type="com.itfsw.mybatis.generator.plugins.ModelAnnotationPlugin">
-            <property name="@Builder" value="true"/>
+            <property name="@Builder" value="lombok.Builder"/>
         </plugin>
 
         <!--jdbc的数据库连接 -->

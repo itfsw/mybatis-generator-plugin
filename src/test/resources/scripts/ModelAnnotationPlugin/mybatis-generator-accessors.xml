@@ -24,8 +24,8 @@
     <context id="default" targetRuntime="MyBatis3">
         <!-- 插件 -->
         <plugin type="com.itfsw.mybatis.generator.plugins.ModelAnnotationPlugin">
-            <property name="@Setter" value="true"/>
-            <property name="@Accessors(chain = true)" value="true"/>
+            <property name="@Setter" value="lombok.Setter"/>
+            <property name="@Accessors(chain = true)" value="lombok.experimental.Accessors"/>
         </plugin>
 
         <!--jdbc的数据库连接 -->

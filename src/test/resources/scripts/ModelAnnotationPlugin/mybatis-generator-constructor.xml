@@ -24,9 +24,9 @@
     <context id="default" targetRuntime="MyBatis3">
         <!-- 插件 -->
         <plugin type="com.itfsw.mybatis.generator.plugins.ModelAnnotationPlugin">
-            <property name="@Data" value="true"/>
-            <property name="@NoArgsConstructor" value="true"/>
-            <property name="@AllArgsConstructor" value="true"/>
+            <property name="@Data" value="lombok.Data"/>
+            <property name="@NoArgsConstructor" value="lombok.NoArgsConstructor"/>
+            <property name="@AllArgsConstructor" value="lombok.AllArgsConstructor"/>
         </plugin>
 
         <!--jdbc的数据库连接 -->

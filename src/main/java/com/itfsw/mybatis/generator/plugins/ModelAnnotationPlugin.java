@@ -22,29 +22,10 @@ import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.Method;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /**
  * ModelAnnotationPlugin
  */
 public class ModelAnnotationPlugin extends BasePlugin {
-    private final static List<String> LOMBOK_FEATURES;
-    private final static List<String> LOMBOK_EXPERIMENTAL_FEATURES;
-    private final static Pattern LOMBOK_ANNOTATION = Pattern.compile("@([a-zA-z]+)(\\(.*\\))?");
-
-    static {
-        LOMBOK_FEATURES = Arrays.asList(
-                "Getter", "Setter", "ToString", "EqualsAndHashCode", "NoArgsConstructor",
-                "RequiredArgsConstructor", "AllArgsConstructor", "Data", "Value", "Builder", "Log"
-        );
-        LOMBOK_EXPERIMENTAL_FEATURES = Arrays.asList(
-                "Accessors", "FieldDefaults", "Wither", "UtilityClass", "Helper", "FieldNameConstants", "SuperBuilder"
-        );
-    }
-
     /**
      * <a href="http://www.mybatis.org/generator/reference/pluggingIn.html">具体执行顺序</a>
      */
@@ -111,12 +92,13 @@ public class ModelAnnotationPlugin extends BasePlugin {
         for (Object key : properties.keySet()) {
             if (key instanceof String) {
                 String annotation = (String) key;
+                String pkg = properties.getProperty(annotation);
                 // @Data
                 if (annotation.startsWith("@Data")) {
-                    this.addAnnotation(topLevelClass, annotation);
+                    this.addAnnotation(topLevelClass, annotation, pkg);
                     if (topLevelClass.getSuperClass().isPresent()) {
-                        this.addAnnotation(topLevelClass, "@EqualsAndHashCode(callSuper = true)");
-                        this.addAnnotation(topLevelClass, "@ToString(callSuper = true)");
+                        this.addAnnotation(topLevelClass, "@EqualsAndHashCode(callSuper = true)", "lombok.EqualsAndHashCode");
+                        this.addAnnotation(topLevelClass, "@ToString(callSuper = true)", "lombok.ToString");
                     }
                 } else if (annotation.startsWith("@Builder")) {
                     // 有子类或者父类
@@ -132,12 +114,12 @@ public class ModelAnnotationPlugin extends BasePlugin {
                     }
 
                     if (topLevelClass.getSuperClass().isPresent() || count >= 2) {
-                        this.addAnnotation(topLevelClass, "@SuperBuilder");
+                        this.addAnnotation(topLevelClass, "@SuperBuilder", "lombok.experimental.SuperBuilder");
                     } else {
-                        this.addAnnotation(topLevelClass, annotation);
+                        this.addAnnotation(topLevelClass, annotation, pkg);
                     }
                 } else {
-                    this.addAnnotation(topLevelClass, annotation);
+                    this.addAnnotation(topLevelClass, annotation, pkg);
                 }
             }
         }
@@ -146,20 +128,8 @@ public class ModelAnnotationPlugin extends BasePlugin {
     /**
      * 添加注解
      */
-    private void addAnnotation(TopLevelClass topLevelClass, String annotation) {
-        // 正则提取annotation
-        Matcher matcher = LOMBOK_ANNOTATION.matcher(annotation);
-        if (matcher.find()) {
-            String annotationName = matcher.group(1);
-            if (LOMBOK_FEATURES.contains(annotationName)) {
-                topLevelClass.addImportedType("lombok." + annotationName);
-            } else if (LOMBOK_EXPERIMENTAL_FEATURES.contains(annotationName)) {
-                topLevelClass.addImportedType("lombok.experimental." + annotationName);
-            } else {
-                this.warnings.add("itfsw:插件" + ModelAnnotationPlugin.class.getTypeName() + "没有找到注解（" + annotation + "）！");
-                return;
-            }
-            topLevelClass.addAnnotation(annotation);
-        }
+    private void addAnnotation(TopLevelClass topLevelClass, String annotation, String pkg) {
+        topLevelClass.addImportedType(pkg);
+        topLevelClass.addAnnotation(annotation);
     }
 }
