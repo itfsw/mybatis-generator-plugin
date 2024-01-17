@@ -400,6 +400,8 @@ public class EnumTypeStatusPlugin extends BasePlugin implements ILogicalDeletePl
                 String javaType = this.column.getFullyQualifiedJavaType().getShortName();
                 if ("NULL".equalsIgnoreCase(value)) {
                     return "null";
+                } else if(Boolean.class.getSimpleName().equals(javaType)){
+                    return "true".equalsIgnoreCase(value) ? "Boolean.TRUE" : "Boolean.FALSE";
                 } else {
                     return javaType + ".valueOf(\"" + value + "\")";
                 }
