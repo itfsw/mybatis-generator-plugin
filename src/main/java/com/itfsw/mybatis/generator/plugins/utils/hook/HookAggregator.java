@@ -16,7 +16,6 @@
 
 package com.itfsw.mybatis.generator.plugins.utils.hook;
 
-import com.itfsw.mybatis.generator.plugins.ModelAnnotationPlugin;
 import com.itfsw.mybatis.generator.plugins.utils.BasePlugin;
 import com.itfsw.mybatis.generator.plugins.utils.BeanUtils;
 import org.mybatis.generator.api.CompositePlugin;
@@ -42,7 +41,6 @@ public class HookAggregator implements IUpsertPluginHook,
         ITableConfigurationHook,
         ILogicalDeletePluginHook,
         IModelColumnPluginHook,
-        IModelAnnotationPluginHook,
         ISelectSelectivePluginHook {
 
     protected static final Logger logger = LoggerFactory.getLogger(BasePlugin.class);
@@ -87,18 +85,6 @@ public class HookAggregator implements IUpsertPluginHook,
             logger.error("获取插件列表失败！", e);
         }
         return list;
-    }
-
-    // ============================================= IModelAnnotationPluginHook ==============================================
-
-    /**
-     * Model Setter 生成
-     */
-    @Override
-    public void modelSetterGenerated(IntrospectedTable introspectedTable, IntrospectedColumn introspectedColumn, TopLevelClass topLevelClass, Field field) {
-        if (!this.getPlugins(ModelAnnotationPlugin.class).isEmpty()) {
-            this.getPlugins(IModelAnnotationPluginHook.class).get(0).modelSetterGenerated(introspectedTable, introspectedColumn, topLevelClass, field);
-        }
     }
 
     // ============================================= IIncrementPluginHook ==============================================
