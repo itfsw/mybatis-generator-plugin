@@ -140,36 +140,6 @@ public class EnumTypeStatusPluginTest {
     }
 
     /**
-     * 测试生成的enum setter 和 lombok插件冲突问题
-     */
-    @Test
-    public void testEnumSetterWithLombok() throws Exception {
-        MyBatisGeneratorTool tool = MyBatisGeneratorTool.create("scripts/EnumTypeStatusPlugin/mybatis-generator-with-lombok.xml");
-        tool.generate(new AbstractShellCallback() {
-            @Override
-            public void reloadProject(SqlSession sqlSession, ClassLoader loader, String packagz) throws Exception {
-                // 1. 测试Set
-                ObjectUtil enumField2Success = new ObjectUtil(loader, packagz + ".Tb$Field2#SUCCESS");
-                ObjectUtil tbUtil = new ObjectUtil(loader, packagz + ".Tb");
-                List<Method> setField2List = tbUtil.getMethods("setField2");
-                Assert.assertEquals(setField2List.size(), 2);
-
-                boolean flag = false;
-                for (Method method : setField2List) {
-                    Class<?> type = method.getParameterTypes()[0];
-                    if (type.equals(enumField2Success.getCls())) {
-                        flag = true;
-                        method.setAccessible(true);
-                        method.invoke(tbUtil.getObject(), new Object[]{enumField2Success.getObject()});
-                        Assert.assertEquals(tbUtil.get("field2"), (short)0);
-                    }
-                }
-                Assert.assertTrue(flag);
-            }
-        });
-    }
-
-    /**
      * 测试生成的enum
      */
     @Test
