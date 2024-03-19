@@ -25,24 +25,19 @@ import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 
 /**
  * 增加查询一条数据方法
  */
 public class SelectOneByExamplePlugin extends BasePlugin {
-    public static final String METHOD_SELECT_ONE_BY_EXAMPLE = "selectOneByExample";  // 方法名
-    public static final String METHOD_SELECT_ONE_BY_EXAMPLE_WITH_BLOBS = "selectOneByExampleWithBLOBs";  // 方法名
-    private XmlElement selectOneByExampleEle;
-    private XmlElement selectOneByExampleWithBLOBsEle;
-
-    @Override
-    public void initialized(IntrospectedTable introspectedTable) {
-        super.initialized(introspectedTable);
-        // bug:26,27
-        this.selectOneByExampleWithBLOBsEle = null;
-        this.selectOneByExampleEle = null;
-    }
+    public static final String METHOD_SELECT_ONE_BY_EXAMPLE = "selectOneByExample";
+    public static final String METHOD_SELECT_ONE_BY_EXAMPLE_WITH_BLOBS = "selectOneByExampleWithBLOBs";
+    private final Map<IntrospectedTable, XmlElement> selectOneByExampleEls = new HashMap<>();
+    private final Map<IntrospectedTable, XmlElement> selectOneByExampleWithBLOBsEls = new HashMap<>();
 
     /**
      * Java Client Methods 生成
@@ -133,7 +128,7 @@ public class SelectOneByExamplePlugin extends BasePlugin {
 
         // 只查询一条
         selectOneElement.addElement(new TextElement("limit 1"));
-        this.selectOneByExampleEle = selectOneElement;
+        selectOneByExampleEls.put(introspectedTable, selectOneElement);
         return super.sqlMapSelectByExampleWithoutBLOBsElementGenerated(element, introspectedTable);
     }
 
@@ -182,7 +177,7 @@ public class SelectOneByExamplePlugin extends BasePlugin {
         // 只查询一条
         selectOneWithBLOBsElement.addElement(new TextElement("limit 1"));
 
-        this.selectOneByExampleWithBLOBsEle = selectOneWithBLOBsElement;
+        selectOneByExampleWithBLOBsEls.put(introspectedTable, selectOneWithBLOBsElement);
         return super.sqlMapSelectByExampleWithBLOBsElementGenerated(element, introspectedTable);
     }
 
@@ -192,7 +187,8 @@ public class SelectOneByExamplePlugin extends BasePlugin {
      */
     @Override
     public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
-        if (selectOneByExampleEle != null) {
+        if (selectOneByExampleEls.containsKey(introspectedTable)) {
+            XmlElement selectOneByExampleEle = selectOneByExampleEls.get(introspectedTable);
             // hook
             if (PluginTools.getHook(ISelectOneByExamplePluginHook.class).sqlMapSelectOneByExampleWithoutBLOBsElementGenerated(document, selectOneByExampleEle, introspectedTable)) {
                 // 添加到根节点
@@ -201,7 +197,8 @@ public class SelectOneByExamplePlugin extends BasePlugin {
             }
         }
 
-        if (selectOneByExampleWithBLOBsEle != null) {
+        if (selectOneByExampleWithBLOBsEls.containsKey(introspectedTable)) {
+            XmlElement selectOneByExampleWithBLOBsEle = selectOneByExampleWithBLOBsEls.get(introspectedTable);
             // hook
             if (PluginTools.getHook(ISelectOneByExamplePluginHook.class).sqlMapSelectOneByExampleWithBLOBsElementGenerated(document, selectOneByExampleWithBLOBsEle, introspectedTable)) {
                 // 添加到根节点
